@@ -11250,6 +11250,7 @@ class ApiController extends BaseController
             'to_do_list_id' => 'required',
             'branch_id' => 'required'
         ]);
+        
         if (!$validator->passes()) {
             return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
         } else {
