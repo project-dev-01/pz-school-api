@@ -7499,8 +7499,6 @@ class ApiController extends BaseController
         $validator = \Validator::make($request->all(), [
             'token' => 'required',
             'branch_id' => 'required',
-            'class_id' => 'required',
-            'section_id' => 'required',
             'subject_id' => 'required',
             'year_month' => 'required'
         ]);
@@ -7510,57 +7508,109 @@ class ApiController extends BaseController
             $year_month = explode('-', $request->year_month);
             // create new connection
             $Connection = $this->createNewConnection($request->branch_id);
-            $getAttendanceList = $Connection->table('students as stud')
-                ->select(
-                    'stud.first_name',
-                    'stud.last_name',
-                    'sa.student_id',
-                    'sa.date',
-                    'sa.status',
-                    DB::raw('COUNT(CASE WHEN sa.status = "present" then 1 ELSE NULL END) as "presentCount"'),
-                    DB::raw('COUNT(CASE WHEN sa.status = "absent" then 1 ELSE NULL END) as "absentCount"'),
-                    DB::raw('COUNT(CASE WHEN sa.status = "late" then 1 ELSE NULL END) as "lateCount"'),
-                    DB::raw('COUNT(CASE WHEN sa.status = "excused" then 1 ELSE NULL END) as "excusedCount"'),
-                )
-                // ->join('enrolls as en', 'en.student_id', '=', 'stud.id')
-                ->leftJoin('student_attendances as sa', 'sa.student_id', '=', 'stud.id')
-                ->join('enrolls as en', function ($join) {
-                    $join->on('stud.id', '=', 'en.student_id')
-                        ->on('sa.class_id', '=', 'en.class_id')
-                        ->on('sa.section_id', '=', 'en.section_id');
-                })
-                ->where([
-                    // ['stud.id', '=', $request->student_id],
-                    ['sa.class_id', '=', $request->class_id],
-                    ['sa.section_id', '=', $request->section_id],
-                    ['sa.subject_id', '=', $request->subject_id],
-                    ['sa.semester_id', '=', $request->semester_id],
-                    ['sa.session_id', '=', $request->session_id]
-                ])
-                ->whereMonth('sa.date', $year_month[0])
-                ->whereYear('sa.date', $year_month[1])
-                ->groupBy('sa.student_id')
-                ->get();
+            if($request->student_id){
+                $getAttendanceList = $Connection->table('students as stud')
+                    ->select(
+                        'stud.first_name',
+                        'stud.last_name',
+                        'sa.student_id',
+                        'sa.date',
+                        'sa.status',
+                        DB::raw('COUNT(CASE WHEN sa.status = "present" then 1 ELSE NULL END) as "presentCount"'),
+                        DB::raw('COUNT(CASE WHEN sa.status = "absent" then 1 ELSE NULL END) as "absentCount"'),
+                        DB::raw('COUNT(CASE WHEN sa.status = "late" then 1 ELSE NULL END) as "lateCount"'),
+                        DB::raw('COUNT(CASE WHEN sa.status = "excused" then 1 ELSE NULL END) as "excusedCount"'),
+                    )
+                    // ->join('enrolls as en', 'en.student_id', '=', 'stud.id')
+                    ->leftJoin('student_attendances as sa', 'sa.student_id', '=', 'stud.id')
+                    ->join('enrolls as en', function ($join) {
+                        $join->on('stud.id', '=', 'en.student_id')
+                            ->on('sa.class_id', '=', 'en.class_id')
+                            ->on('sa.section_id', '=', 'en.section_id');
+                    })
+                    ->where([
+                        // ['stud.id', '=', $request->student_id],
+                        ['sa.student_id', '=', $request->student_id],
+                        ['sa.subject_id', '=', $request->subject_id],
+                    ])
+                    ->whereMonth('sa.date', $year_month[0])
+                    ->whereYear('sa.date', $year_month[1])
+                    ->groupBy('sa.student_id')
+                    ->get();
 
-            $studentDetails = array();
-            if (!empty($getAttendanceList)) {
-                foreach ($getAttendanceList as $value) {
-                    $object = new \stdClass();
+                $studentDetails = array();
+                if (!empty($getAttendanceList)) {
+                    foreach ($getAttendanceList as $value) {
+                        $object = new \stdClass();
 
-                    $object->first_name = $value->first_name;
-                    $object->last_name = $value->last_name;
-                    $object->student_id = $value->student_id;
-                    $object->presentCount = $value->presentCount;
-                    $object->absentCount = $value->absentCount;
-                    $object->lateCount = $value->lateCount;
-                    $student_id = $value->student_id;
-                    $date = $value->date;
-                    $getStudentsAttData = $this->getAttendanceByDateStudent($request, $student_id, $date, $request->semester_id, $request->session_id);
-                    $object->attendance_details = $getStudentsAttData;
+                        $object->first_name = $value->first_name;
+                        $object->last_name = $value->last_name;
+                        $object->student_id = $value->student_id;
+                        $object->presentCount = $value->presentCount;
+                        $object->absentCount = $value->absentCount;
+                        $object->lateCount = $value->lateCount;
+                        $student_id = $value->student_id;
+                        $date = $value->date;
+                        $getStudentsAttData = $this->getAttendanceByDateStudentParent($request, $student_id, $date);
+                        $object->attendance_details = $getStudentsAttData;
 
-                    array_push($studentDetails, $object);
+                        array_push($studentDetails, $object);
+                    }
+                }
+            }else{
+                $getAttendanceList = $Connection->table('students as stud')
+                    ->select(
+                        'stud.first_name',
+                        'stud.last_name',
+                        'sa.student_id',
+                        'sa.date',
+                        'sa.status',
+                        DB::raw('COUNT(CASE WHEN sa.status = "present" then 1 ELSE NULL END) as "presentCount"'),
+                        DB::raw('COUNT(CASE WHEN sa.status = "absent" then 1 ELSE NULL END) as "absentCount"'),
+                        DB::raw('COUNT(CASE WHEN sa.status = "late" then 1 ELSE NULL END) as "lateCount"'),
+                        DB::raw('COUNT(CASE WHEN sa.status = "excused" then 1 ELSE NULL END) as "excusedCount"'),
+                    )
+                    // ->join('enrolls as en', 'en.student_id', '=', 'stud.id')
+                    ->leftJoin('student_attendances as sa', 'sa.student_id', '=', 'stud.id')
+                    ->join('enrolls as en', function ($join) {
+                        $join->on('stud.id', '=', 'en.student_id')
+                            ->on('sa.class_id', '=', 'en.class_id')
+                            ->on('sa.section_id', '=', 'en.section_id');
+                    })
+                    ->where([
+                        // ['stud.id', '=', $request->student_id],
+                        ['sa.class_id', '=', $request->class_id],
+                        ['sa.section_id', '=', $request->section_id],
+                        ['sa.subject_id', '=', $request->subject_id],
+                        ['sa.semester_id', '=', $request->semester_id],
+                        ['sa.session_id', '=', $request->session_id]
+                    ])
+                    ->whereMonth('sa.date', $year_month[0])
+                    ->whereYear('sa.date', $year_month[1])
+                    ->groupBy('sa.student_id')
+                    ->get();
+
+                $studentDetails = array();
+                if (!empty($getAttendanceList)) {
+                    foreach ($getAttendanceList as $value) {
+                        $object = new \stdClass();
+
+                        $object->first_name = $value->first_name;
+                        $object->last_name = $value->last_name;
+                        $object->student_id = $value->student_id;
+                        $object->presentCount = $value->presentCount;
+                        $object->absentCount = $value->absentCount;
+                        $object->lateCount = $value->lateCount;
+                        $student_id = $value->student_id;
+                        $date = $value->date;
+                        $getStudentsAttData = $this->getAttendanceByDateStudent($request, $student_id, $date, $request->semester_id, $request->session_id);
+                        $object->attendance_details = $getStudentsAttData;
+
+                        array_push($studentDetails, $object);
+                    }
                 }
             }
+            
             // date wise late present analysis
             $getLatePresentData = $Connection->table('student_attendances as sa')
                 ->select(
@@ -7622,6 +7672,38 @@ class ApiController extends BaseController
                 ['sa.subject_id', '=', $request->subject_id],
                 ['sa.semester_id', '=', $semester],
                 ['sa.session_id', '=', $session]
+            ])
+            ->whereBetween(DB::raw('date(date)'), [$startDate, $endDate])
+            ->groupBy('sa.date')
+            ->orderBy('sa.date', 'asc')
+            ->get();
+        return $studentList;
+    }
+    // by student ,date
+    function getAttendanceByDateStudentParent($request, $student_id, $date)
+    {
+        // create new connection
+        $Connection = $this->createNewConnection($request->branch_id);
+
+        $query_date = $date;
+        // First day of the month.
+        $startDate = date('Y-m-01', strtotime($query_date));
+        // Last day of the month.
+        $endDate = date('Y-m-t', strtotime($query_date));
+
+        $studentList = $Connection->table('student_attendances as sa')
+            ->select(
+                // 'stud.first_name',
+                // 'stud.last_name',
+                // 'sa.student_id',
+                'sa.date',
+                'sa.status'
+            )
+            ->join('enrolls as en', 'sa.student_id', '=', 'en.student_id')
+            ->join('students as stud', 'sa.student_id', '=', 'stud.id')
+            ->where([
+                ['sa.student_id', '=', $student_id],
+                ['sa.subject_id', '=', $request->subject_id],
             ])
             ->whereBetween(DB::raw('date(date)'), [$startDate, $endDate])
             ->groupBy('sa.date')
@@ -14768,6 +14850,7 @@ class ApiController extends BaseController
                     DB::raw('COUNT(CASE WHEN sa.status = "present" then 1 ELSE NULL END) as "presentCount"'),
                     DB::raw('COUNT(CASE WHEN sa.status = "absent" then 1 ELSE NULL END) as "absentCount"'),
                     DB::raw('COUNT(CASE WHEN sa.status = "late" then 1 ELSE NULL END) as "lateCount"'),
+                    DB::raw('COUNT(CASE WHEN sa.status = "excused" then 1 ELSE NULL END) as "excusedCount"'),
 
                 )
                 ->join('staffs as st', 'sa.staff_id', '=', 'st.id')
@@ -14807,6 +14890,7 @@ class ApiController extends BaseController
                     $object->presentCount = $value->presentCount;
                     $object->absentCount = $value->absentCount;
                     $object->lateCount = $value->lateCount;
+                    $object->excusedCount = $value->excusedCount;
                     $object->session_name = $value->session_name;
                     $staff_id = $value->staff_id;
                     $sess = $value->session_id;
