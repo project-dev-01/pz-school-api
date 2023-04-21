@@ -48,6 +48,8 @@ Route::post('reset/expire_reset_password', [AuthController::class, 'expireResetP
 Route::post('2fa/two_fa_generate_secret_qr', [TwoFactorAuth::class, 'twoFaGenerateSecretQr']);
 Route::post('2fa/two_fa_otp_valid', [TwoFactorAuth::class, 'twoFaOtpValid']);
 Route::post('2fa/update_two_fa_secret', [TwoFactorAuth::class, 'updateTwoFASecret']);
+
+Route::post('get_school_type', [ApiController::class, 'getSchoolType']);
 // 2fa end
 // Route::group(['middleware' => ['auth:api', 'logroute']], function () {
 // Route::group(['middleware' => ['auth:api','check-single-session-api', 'logroute']], function () {
@@ -382,6 +384,7 @@ Route::group(['middleware' => ['auth:api', 'throttle:limit_per_user', 'logroute'
     Route::post('get_attendance_list', [ApiController::class, 'getAttendanceList']);
     Route::post('get_child_subjects', [ApiController::class, 'getChildSubjects']);
     Route::post('get_attendance_list_teacher', [ApiController::class, 'getAttendanceListTeacher']);
+    Route::post('get_attendance_list_parent', [ApiController::class, 'getAttendanceListParent']);
     Route::post('get_reasons_by_student', [ApiController::class, 'getReasonsByStudent']);
     // get calendor data by teacher
     Route::get('get_timetable_calendor', [ApiController::class, 'getTimetableCalendor']);
@@ -758,6 +761,9 @@ Route::group(['middleware' => ['auth:api', 'throttle:limit_per_user', 'logroute'
     Route::post('soap_notes/delete', [ApiControllerOne::class, 'deleteSoapNotes']);
     // download csv api
     Route::post('exam_timetable/list/download', [ApiControllerOne::class, 'getExamTimetableDown']);
+    Route::post('staff_attendance/export', [ApiControllerOne::class, 'staffAttendanceReport']);
+    Route::post('student_attendance/export', [ApiControllerOne::class, 'studentAttendanceReport']);
+    
 
 
     Route::get('student_soap_list', [ApiControllerOne::class, 'studentSoapList']);
@@ -838,4 +844,5 @@ Route::group(['middleware' => ['auth:api', 'throttle:limit_per_user', 'logroute'
     Route::post('get_like_column_name', [ImportController::class, 'getLikeColumnName']);
     Route::post('faq/email', [ApiControllerOne::class, 'faqEmail']);
     Route::post('first/name', [ApiControllerOne::class, 'firstName']);
+    
 });

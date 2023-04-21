@@ -51,6 +51,7 @@ class AuthController extends BaseController
     }
     public function authenticate(Request $request)
     {
+        // return 1;
         $credentials = $request->only('email', 'password', 'branch_id');
         //valid credential
         $validator = Validator::make($credentials, [
@@ -66,9 +67,11 @@ class AuthController extends BaseController
         // check auth
         if (Auth::attempt(['email' => $request->email, 'password' => $request->password, 'branch_id' => $request->branch_id])) {
             // after auth login
+            // return $request;
             $user = Auth::user();
             $token =  $user->createToken('paxsuzen')->accessToken;
 
+            // return $user;
             // $success['name'] =  $user->name;
             // return $this->successResponse($success, 'User signed in successfully');
             // $user = auth()->user();

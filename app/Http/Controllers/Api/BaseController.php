@@ -108,29 +108,33 @@ class BaseController extends Controller
         return response()->json($response, $code);
     }
     // create migration file
-    function DBMigrationCall($dbName, $dbUsername, $dbPass)
+    function DBMigrationCall($dbName, $dbUsername, $dbPass, $dbPort, $dbHost)
     {
 
-        // Artisan::call("migrate", ['name' => 'test', '--fieldsFile' => 'database/migrations/dynamic_migrate']);
-        config(['database.connections.mysql_new_connection' => [
-            'driver'    => 'mysql',
-            'host'      => '127.0.0.1',
-            'database'  => trim($dbName),
-            'username'  => $dbUsername,
-            'password'  => $dbPass,
-            'charset'   => 'utf8',
-            // 'collation' => 'utf8_unicode_ci'
-        ]]);
-
-        Artisan::call(
-            'migrate',
-            array(
-                '--path' => 'database/migrations/dynamic_migrate',
-                '--database' => 'mysql_new_connection',
-                '--force' => true
-            )
-        );
-        return true;
+        try {
+            config(['database.connections.mysql_new_connection' => [
+                'driver'    => 'mysql',
+                'host'      => $dbHost,
+                'port'      => $dbPort,
+                'database'  => trim($dbName),
+                'username'  => $dbUsername,
+                'password'  => $dbPass,
+                'charset'   => 'utf8',
+                // 'collation' => 'utf8_unicode_ci'
+            ]]);
+    
+            Artisan::call(
+                'migrate',
+                array(
+                    '--path' => 'database/migrations/dynamic_migrate',
+                    '--database' => 'mysql_new_connection',
+                    '--force' => true
+                )
+            );
+            return true;
+        } catch (\Exception $e) {
+             return false;
+        }
     }
     // create users
     function createUser(Request $request, $lastInsertID, $Staffid)

@@ -20,8 +20,9 @@ class CreateBranchesTable extends Migration
             $table->string('db_name');
             $table->string('db_username');
             $table->string('db_password')->nullable();
-            $table->string('db_port')->nullable();
-            $table->string('db_host')->nullable();
+            $table->string('db_port');
+            $table->string('db_host');
+            $table->string('school_type');
             $table->string('school_code')->nullable();
             $table->string('school_name');
             $table->string('email');
