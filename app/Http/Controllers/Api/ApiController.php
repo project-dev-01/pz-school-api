@@ -176,6 +176,25 @@ class ApiController extends BaseController
             }
         }
     }
+    // get School Type 
+    public function getSchoolType(Request $request)
+    {
+        $branch_id = $request->branch_id;
+        $validator = \Validator::make($request->all(), [
+            'branch_id' => 'required',
+        ]);
+
+        if (!$validator->passes()) {
+            return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
+        } else {
+            $success= DB::table('branches as br')
+                ->select('br.school_type' )
+                ->where('br.id', $branch_id)
+                ->first();
+            return $this->successResponse($success, 'School Type record fetch successfully');
+        }
+    }
+    
     // add branch 
     public function addBranch(Request $request)
     {
@@ -196,6 +215,9 @@ class ApiController extends BaseController
             'db_name' => 'required',
             'db_username' => 'required',
             'password' => 'required',
+            'db_host' => 'required',
+            'db_port' => 'required',
+            'school_type' => 'required',
         ]);
 
         if (!$validator->passes()) {
@@ -210,9 +232,11 @@ class ApiController extends BaseController
                     $db_name = $request->db_name;
                     $db_username = $request->db_username;
                     $db_password = $request->db_password;
+                    $db_port = $request->db_port;
+                    $db_host = $request->db_host;
                     $branch_code = Helper::CodeGenerator(new Branches, 'branch_code', 4, 'PZ');
                     // to migrate database structure
-                    $migrate = $this->DBMigrationCall($db_name, $db_username, $db_password);
+                    $migrate = $this->DBMigrationCall($db_name, $db_username, $db_password,$db_port,$db_host);
                     if ($migrate) {
                         // create new branches
                         $branch = new Branches();
@@ -240,8 +264,10 @@ class ApiController extends BaseController
                         $branch->db_name = $request->db_name;
                         $branch->db_username = $request->db_username;
                         $branch->db_password = isset($request->db_password) ? $request->db_password : "";
+                        $branch->school_type = $request->school_type;
+                        $branch->db_host = $request->db_host;
+                        $branch->db_port = $request->db_port;
                         $query = $branch->save();
-
                         $success = [];
                         if (!$query) {
                             return $this->send500Error('Error while creating branch', ['error' => 'Error while creating branch']);
@@ -346,7 +372,6 @@ class ApiController extends BaseController
             'school_name' => 'required',
             'passport' => 'required',
             'nric_number' => 'required',
-            'email' => 'required',
             'mobile_no' => 'required',
             'currency' => 'required',
             'symbol' => 'required',
@@ -369,7 +394,6 @@ class ApiController extends BaseController
             $branch->school_code = isset($request->school_code) ? $request->school_code : "";
             $branch->passport = $request->passport;
             $branch->nric_number = $request->nric_number;
-            $branch->email = $request->email;
             $branch->mobile_no = $request->mobile_no;
             $branch->currency = $request->currency;
             $branch->symbol = $request->symbol;
@@ -380,6 +404,7 @@ class ApiController extends BaseController
             $branch->post_code = isset($request->post_code) ? $request->post_code : "";
             $branch->address = $request->address;
             $branch->address1 = isset($request->address1) ? $request->address1 : "";
+            $branch->school_type = $request->school_type;
             $query = $branch->save();
 
             $success = [];
