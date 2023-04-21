@@ -2985,7 +2985,7 @@ class ApiController extends BaseController
                         $user->picture = $fileName;
                         $user->email = $request->email;
                         $user->status = $request->status;
-                        $user->google2fa_secret_enable = isset($request->google2fa_secret_enable) ? $request->google2fa_secret_enable : 0;
+                        $user->google2fa_secret_enable = isset($request->google2fa_secret_enable) ? '1' : '0';
                         $user->password_changed_at = date("Y-m-d H:i:s");
                         $user->password = bcrypt($request->password);
                         $query = $user->save();
@@ -3254,7 +3254,7 @@ class ApiController extends BaseController
                         $user->picture = $fileName;
                         $user->password = bcrypt($request->password);
                         $user->status = $request->status;
-                        $user->google2fa_secret_enable = isset($request->google2fa_secret_enable) ? $request->google2fa_secret_enable : 0;
+                        $user->google2fa_secret_enable = isset($request->google2fa_secret_enable) ? '1' : '0';
                         $user->role_id = $request->role_id;
                         $updateUser = $user->save();
                     }
@@ -3264,7 +3264,7 @@ class ApiController extends BaseController
                         $user->email = $request->email;
                         $user->picture = $fileName;
                         $user->status = $request->status;
-                        $user->google2fa_secret_enable = isset($request->google2fa_secret_enable) ? $request->google2fa_secret_enable : 0;
+                        $user->google2fa_secret_enable = isset($request->google2fa_secret_enable) ? '1' : '0';
                         $user->role_id = $request->role_id;
                         $updateUser = $user->save();
                     }
@@ -3273,7 +3273,7 @@ class ApiController extends BaseController
                         $user->name = (isset($request->first_name) ? $request->first_name : "") . " " . (isset($request->last_name) ? $request->last_name : "");
                         $user->picture = $fileName;
                         $user->status = $request->status;
-                        $user->google2fa_secret_enable = isset($request->google2fa_secret_enable) ? $request->google2fa_secret_enable : 0;
+                        $user->google2fa_secret_enable = isset($request->google2fa_secret_enable) ? '1' : '0';
                         $user->role_id = $request->role_id;
                         $updateUser = $user->save();
                     }
@@ -10612,6 +10612,7 @@ class ApiController extends BaseController
                     $user->branch_id = $request->branch_id;
                     $user->email = $request->email;
                     $user->status = $request->status;
+                    $user->google2fa_secret_enable = isset($request->google2fa_secret_enable) ? '1' : '0';
                     $user->password = bcrypt($request->password);
                     $query = $user->save();
 
@@ -11250,7 +11251,7 @@ class ApiController extends BaseController
             'to_do_list_id' => 'required',
             'branch_id' => 'required'
         ]);
-        
+
         if (!$validator->passes()) {
             return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
         } else {
@@ -11706,6 +11707,7 @@ class ApiController extends BaseController
                                 'name' => $studentName,
                                 'email' => $request->email,
                                 'status' => $request->status,
+                                'google2fa_secret_enable' => isset($request->google2fa_secret_enable) ? '1' : '0',
                                 'password' => bcrypt($request->password)
                             ]);
                     }
@@ -11714,7 +11716,8 @@ class ApiController extends BaseController
                         ->update([
                             'name' => $studentName,
                             'email' => $request->email,
-                            'status' => $request->status
+                            'status' => $request->status,
+                            'google2fa_secret_enable' => isset($request->google2fa_secret_enable) ? '1' : '0'
                         ]);
                 }
 
@@ -11803,7 +11806,19 @@ class ApiController extends BaseController
             $studentDetail['room'] = $conn->table('hostel_room')->select('hostel_room.id as room_id', 'hostel_room.name as room_name')
                 ->where('hostel_room.hostel_id', $hostel_id)
                 ->get();
-
+            $staffRoles = array('6');
+            $sql = "";
+            for ($x = 0; $x < count($staffRoles); $x++) {
+                $getRow = User::select('google2fa_secret_enable', 'id')->where('user_id', $id)
+                    ->where('branch_id', $request->branch_id)
+                    ->whereRaw("find_in_set('$staffRoles[$x]',role_id)")
+                    ->first();
+                if (isset($getRow->id)) {
+                    $sql = $getRow;
+                    break;
+                }
+            }
+            $studentDetail['user'] = $sql;
             return $this->successResponse($studentDetail, 'Student record fetch successfully');
         }
     }
@@ -11947,6 +11962,7 @@ class ApiController extends BaseController
                     $query->branch_id = $request->branch_id;
                     $query->email = $request->email;
                     $query->status = $request->status;
+                    $query->google2fa_secret_enable = isset($request->google2fa_secret_enable) ? '1' : '0';
                     $query->password = bcrypt($request->password);
                     $query->save();
                 }
@@ -12024,7 +12040,19 @@ class ApiController extends BaseController
                 ->where('father_id', $id)
                 ->orWhere('mother_id', $id)
                 ->orWhere('guardian_id', $id)->get();
-
+            $staffRoles = array('5');
+            $sql = "";
+            for ($x = 0; $x < count($staffRoles); $x++) {
+                $getRow = User::select('google2fa_secret_enable', 'id')->where('user_id', $id)
+                    ->where('branch_id', $request->branch_id)
+                    ->whereRaw("find_in_set('$staffRoles[$x]',role_id)")
+                    ->first();
+                if (isset($getRow->id)) {
+                    $sql = $getRow;
+                    break;
+                }
+            }
+            $parentDetails['user'] = $sql;
             return $this->successResponse($parentDetails, 'Parent row fetch successfully');
         }
     }
@@ -12085,7 +12113,8 @@ class ApiController extends BaseController
         if (!$validator->passes()) {
             return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
         } else {
-
+            // return isset($request->google2fa_secret_enable) ? '1' : '0';
+            // return $request;
             // create new connection
             $staffConn = $this->createNewConnection($request->branch_id);
             // check exist email
@@ -12135,6 +12164,7 @@ class ApiController extends BaseController
                                 'name' => $name,
                                 'email' => $request->email,
                                 'status' => $request->status,
+                                'google2fa_secret_enable' => isset($request->google2fa_secret_enable) ? '1' : '0',
                                 'password' => $updatePassword
                             ]);
                     }
@@ -12143,7 +12173,8 @@ class ApiController extends BaseController
                         ->update([
                             'name' => $name,
                             'email' => $request->email,
-                            'status' => $request->status
+                            'status' => $request->status,
+                            'google2fa_secret_enable' => isset($request->google2fa_secret_enable) ? '1' : '0',
                         ]);
                 }
 

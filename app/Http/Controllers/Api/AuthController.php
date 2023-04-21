@@ -595,8 +595,8 @@ class AuthController extends BaseController
     public function allLogout(Request $request)
     {
         //valid credential
-        $validator = Validator::make($request->only('token'), [
-            'token' => 'required'
+        $validator = Validator::make($request->only('session_id'), [
+            'session_id' => 'required'
         ]);
         //Send failed response if request is not valid
         if ($validator->fails()) {

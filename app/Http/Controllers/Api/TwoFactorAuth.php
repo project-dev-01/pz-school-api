@@ -89,7 +89,6 @@ class TwoFactorAuth extends BaseController
                 return $this->send404Error('no user is found', ['error' => 'no user is found']);
             }
             $secret_key = isset($request->google2fa_secret) ? $request->google2fa_secret : $user->google2fa_secret;
-            // dd($secret_key);
             if ($google2fa->verifyKey($secret_key, $user_provided_code)) {
                 // echo "Code is valid";
                 // Code is valid
