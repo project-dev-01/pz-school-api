@@ -12,8 +12,8 @@ class DatabaseConnection
     {
         config(['database.connections.tenant' => [
             'driver'    => 'mysql',
-            'host'      => '127.0.0.1',
-            'port'      => '3306',
+            'host'      => $params->db_host,
+            'port'      => $params->db_port,
             'database'  => $params->db_name,
             'username'  => $params->db_username,
             'password'  => $params->db_password,
@@ -25,8 +25,8 @@ class DatabaseConnection
     {
         config(['database.connections.mysql_new_connection' => [
             'driver'    => 'mysql',
-            'host'      => '127.0.0.1',
-            'port'      => '3306',
+            'host'      => $params->db_host,
+            'port'      => $params->db_port,
             'database'  => $params->db_name,
             'username'  => $params->db_username,
             'password'  => $params->db_password,

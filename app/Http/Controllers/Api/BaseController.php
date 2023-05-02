@@ -174,7 +174,7 @@ class BaseController extends Controller
     // create new connection
     function createNewConnection($branch_id)
     {
-        $params = Branches::find($branch_id);
+        $params = Branches::select('id','db_name','db_username','db_password','db_port','db_host')->where('id',$branch_id)->first();
         $staffConn = DatabaseConnection::setConnection($params);
         return $staffConn;
     }

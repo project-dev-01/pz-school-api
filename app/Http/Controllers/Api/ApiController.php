@@ -7541,6 +7541,7 @@ class ApiController extends BaseController
                         'sa.student_id',
                         'sa.date',
                         'sa.status',
+                        'stud.photo',
                         DB::raw('COUNT(CASE WHEN sa.status = "present" then 1 ELSE NULL END) as "presentCount"'),
                         DB::raw('COUNT(CASE WHEN sa.status = "absent" then 1 ELSE NULL END) as "absentCount"'),
                         DB::raw('COUNT(CASE WHEN sa.status = "late" then 1 ELSE NULL END) as "lateCount"'),
@@ -7575,6 +7576,7 @@ class ApiController extends BaseController
                         $object->absentCount = $value->absentCount;
                         $object->lateCount = $value->lateCount;
                         $student_id = $value->student_id;
+                        $object->photo = $value->photo;
                         $date = $value->date;
                         $getStudentsAttData = $this->getAttendanceByDateStudentParent($request, $student_id, $date);
                         $object->attendance_details = $getStudentsAttData;
@@ -7590,6 +7592,7 @@ class ApiController extends BaseController
                         'sa.student_id',
                         'sa.date',
                         'sa.status',
+                        'stud.photo',
                         DB::raw('COUNT(CASE WHEN sa.status = "present" then 1 ELSE NULL END) as "presentCount"'),
                         DB::raw('COUNT(CASE WHEN sa.status = "absent" then 1 ELSE NULL END) as "absentCount"'),
                         DB::raw('COUNT(CASE WHEN sa.status = "late" then 1 ELSE NULL END) as "lateCount"'),
@@ -7626,6 +7629,7 @@ class ApiController extends BaseController
                         $object->presentCount = $value->presentCount;
                         $object->absentCount = $value->absentCount;
                         $object->lateCount = $value->lateCount;
+                        $object->photo = $value->photo;
                         $student_id = $value->student_id;
                         $date = $value->date;
                         $getStudentsAttData = $this->getAttendanceByDateStudent($request, $student_id, $date, $request->semester_id, $request->session_id);
