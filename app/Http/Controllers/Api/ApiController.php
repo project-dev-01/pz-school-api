@@ -16276,19 +16276,24 @@ class ApiController extends BaseController
             // create new connection
             $conn = $this->createNewConnection($request->branch_id);
 
-            // insert data
-            $query = $conn->table('transport_assign')->insert([
-                'route_id' => $request->route_id,
-                'stoppage_id' => $request->stoppage_id,
-                'vehicle_id' => $request->vehicle_id,
-                'created_at' => date("Y-m-d H:i:s")
-            ]);
-            $success = [];
-            if (!$query) {
-                return $this->send500Error('Something went wrong.', ['error' => 'Something went wrong']);
+            if ($conn->table('transport_assign')->where([['route_id', '=', $request->route_id],['stoppage_id', '=', $request->stoppage_id],['vehicle_id', '=', $request->vehicle_id]])->count() > 0) {
+                return $this->send422Error('Vehicle Already Assigned', ['error' => 'Vehicle Already Assigned']);
             } else {
-                return $this->successResponse($success, 'Transport Assign has been successfully saved');
+                // insert data
+                $query = $conn->table('transport_assign')->insert([
+                    'route_id' => $request->route_id,
+                    'stoppage_id' => $request->stoppage_id,
+                    'vehicle_id' => $request->vehicle_id,
+                    'created_at' => date("Y-m-d H:i:s")
+                ]);
+                $success = [];
+                if (!$query) {
+                    return $this->send500Error('Something went wrong.', ['error' => 'Something went wrong']);
+                } else {
+                    return $this->successResponse($success, 'Transport Assign has been successfully saved');
+                }
             }
+            
         }
     }
     // getTransportAssignList
@@ -17339,7 +17344,21 @@ class ApiController extends BaseController
             // create new connection
             $conn = $this->createNewConnection($request->branch_id);
             // get data
-            $groupDetails = $conn->table('hostel_groups')->get()->toArray();
+            $groupDetails = $conn->table('hostel_groups as hg')
+                ->select(
+                    'hg.id',
+                    'hg.name',
+                    'hg.color',
+                    DB::raw("GROUP_CONCAT( DISTINCT s.first_name, ' ', s.last_name) as incharge_staff"),
+                    DB::raw("GROUP_CONCAT( DISTINCT st.first_name, ' ', st.last_name) as incharge_student"),
+                    DB::raw("GROUP_CONCAT( DISTINCT stu.first_name, ' ', stu.last_name) as student"),
+                )
+                ->leftJoin('staffs as s', 'hg.incharge_staff', '=', 's.id')
+                ->leftJoin('students as st', 'hg.incharge_student', '=', 'st.id')
+                ->leftJoin("students as stu", DB::raw("FIND_IN_SET(stu.id,hg.student)"), ">", DB::raw("'0'"))
+                ->groupBy('hg.id')
+                ->get();
+            
             return $this->successResponse($groupDetails, 'Hostel Group record fetch successfully');
         }
     }
@@ -17365,11 +17384,11 @@ class ApiController extends BaseController
             $groupDetails = $conn->table('hostel_groups as hg')
                 ->select(
                     'hg.*',
-                    DB::raw("GROUP_CONCAT( DISTINCT s.first_name, ' ', s.last_name) as name"),
+                    // DB::raw("GROUP_CONCAT( DISTINCT s.first_name, ' ', s.last_name) as name"),
                 )
                 ->leftJoin('staffs as s', 'hg.incharge_staff', '=', 's.id')
                 ->leftJoin('students as st', 'hg.incharge_student', '=', 'st.id')
-                ->leftJoin("students as s", DB::raw("FIND_IN_SET(s.id,hg.student)"), ">", DB::raw("'0'"))
+                ->leftJoin("students as stu", DB::raw("FIND_IN_SET(stu.id,hg.student)"), ">", DB::raw("'0'"))
                 ->where('hg.id', $id)
                 ->first();
 
