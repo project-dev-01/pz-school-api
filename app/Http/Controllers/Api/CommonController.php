@@ -53,7 +53,8 @@ class CommonController extends BaseController
         }
     }
     function databaseMigrate(Request $request){
-        $params = Branches::find($request->branch_id);
+       
+        $params =  Branches::select('id','db_name','db_username','db_password','db_port','db_host')->where('id',$request->branch_id)->first();
         $staffConn = DatabaseConnection::databaseMigrate($params);
         return $this->successResponse([], 'Migrated successfully');
 
