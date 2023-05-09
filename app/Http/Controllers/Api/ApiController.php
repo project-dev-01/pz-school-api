@@ -208,9 +208,6 @@ class ApiController extends BaseController
             'mobile_no' => 'required',
             'currency' => 'required',
             'symbol' => 'required',
-            'country_id' => 'required',
-            'state_id' => 'required',
-            'city_id' => 'required',
             'address' => 'required',
             'db_name' => 'required',
             'db_username' => 'required',
@@ -3010,7 +3007,7 @@ class ApiController extends BaseController
                         $user->picture = $fileName;
                         $user->email = $request->email;
                         $user->status = $request->status;
-                        $user->google2fa_secret_enable = $request->google2fa_secret_enable;
+                        $user->google2fa_secret_enable = isset($request->google2fa_secret_enable) ? '1' : '0';
                         $user->password_changed_at = date("Y-m-d H:i:s");
                         $user->password = bcrypt($request->password);
                         $query = $user->save();
@@ -3279,7 +3276,7 @@ class ApiController extends BaseController
                         $user->picture = $fileName;
                         $user->password = bcrypt($request->password);
                         $user->status = $request->status;
-                        $user->google2fa_secret_enable = $request->google2fa_secret_enable;
+                        $user->google2fa_secret_enable = isset($request->google2fa_secret_enable) ? '1' : '0';
                         $user->role_id = $request->role_id;
                         $updateUser = $user->save();
                     }
@@ -3289,7 +3286,7 @@ class ApiController extends BaseController
                         $user->email = $request->email;
                         $user->picture = $fileName;
                         $user->status = $request->status;
-                        $user->google2fa_secret_enable = $request->google2fa_secret_enable;
+                        $user->google2fa_secret_enable = isset($request->google2fa_secret_enable) ? '1' : '0';
                         $user->role_id = $request->role_id;
                         $updateUser = $user->save();
                     }
@@ -3298,7 +3295,7 @@ class ApiController extends BaseController
                         $user->name = (isset($request->first_name) ? $request->first_name : "") . " " . (isset($request->last_name) ? $request->last_name : "");
                         $user->picture = $fileName;
                         $user->status = $request->status;
-                        $user->google2fa_secret_enable = $request->google2fa_secret_enable;
+                        $user->google2fa_secret_enable = isset($request->google2fa_secret_enable) ? '1' : '0';
                         $user->role_id = $request->role_id;
                         $updateUser = $user->save();
                     }
@@ -17368,7 +17365,8 @@ class ApiController extends BaseController
 
         $validator = \Validator::make($request->all(), [
             'id' => 'required',
-            'branch_id' => 'required'
+            'branch_id' => 'required',
+            'token' => 'required',
         ]);
 
         if (!$validator->passes()) {
@@ -17385,7 +17383,7 @@ class ApiController extends BaseController
                     'hg.*',
                     // DB::raw("GROUP_CONCAT( DISTINCT s.first_name, ' ', s.last_name) as name"),
                 )
-                ->leftJoin('staffs as stf', 'hg.incharge_staff', '=', 'stf.id')
+                ->leftJoin('staffs as s', 'hg.incharge_staff', '=', 's.id')
                 ->leftJoin('students as st', 'hg.incharge_student', '=', 'st.id')
                 ->leftJoin("students as stu", DB::raw("FIND_IN_SET(stu.id,hg.student)"), ">", DB::raw("'0'"))
                 ->where('hg.id', $id)

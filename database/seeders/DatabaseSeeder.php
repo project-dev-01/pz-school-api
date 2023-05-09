@@ -16,6 +16,7 @@ class DatabaseSeeder extends Seeder
         $this->call([
             forumcategorySeeder::class,
             RolesSeeder::class,
+            
         ]);
         // User::factory(10)->create();
     }

@@ -131,6 +131,12 @@ class BaseController extends Controller
                     '--force' => true
                 )
             );
+            Artisan::call('db:seed',
+                [
+                    '--class' => 'DatabaseSeederDynamic',
+                    '--database' => 'mysql_new_connection'
+                ]
+            );
             return true;
         } catch (\Exception $e) {
              return false;
