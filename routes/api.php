@@ -50,6 +50,7 @@ Route::post('2fa/two_fa_otp_valid', [TwoFactorAuth::class, 'twoFaOtpValid']);
 Route::post('2fa/update_two_fa_secret', [TwoFactorAuth::class, 'updateTwoFASecret']);
 
 Route::post('get_school_type', [ApiController::class, 'getSchoolType']);
+Route::post('get_home_page_details', [ApiController::class, 'getHomePageDetails']);
 // 2fa end
 // Route::group(['middleware' => ['auth:api', 'logroute']], function () {
 // Route::group(['middleware' => ['auth:api','check-single-session-api', 'logroute']], function () {

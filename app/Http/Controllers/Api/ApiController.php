@@ -180,7 +180,7 @@ class ApiController extends BaseController
     public function getSchoolType(Request $request)
     {
         $branch_id = $request->branch_id;
-        $validator = \Validator::make($request->all(), [
+        $validator = Validator::make($request->all(), [
             'branch_id' => 'required',
         ]);
 
@@ -194,7 +194,27 @@ class ApiController extends BaseController
             return $this->successResponse($success, 'School Type record fetch successfully');
         }
     }
+
+    // get Home Page 
+    public function getHomePageDetails(Request $request)
+    {
+        $branch_id = $request->branch_id;
+        $validator = Validator::make($request->all(), [
+            'branch_id' => 'required',
+        ]);
+
+        if (!$validator->passes()) {
+            return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
+        } else {
+            $success= DB::table('branches')
+                ->select('address','mobile_no','email','location')
+                ->where('id', $branch_id)
+                ->first();
+            return $this->successResponse($success, 'Branch record fetch successfully');
+        }
+    }
     
+
     // add branch 
     public function addBranch(Request $request)
     {
@@ -256,6 +276,7 @@ class ApiController extends BaseController
                         $branch->city_id = $request->city_id;
                         $branch->status = isset($request->status) ? 1 : 0;
                         $branch->post_code = isset($request->post_code) ? $request->post_code : "";
+                        $branch->location = isset($request->location) ? $request->location : "";
                         $branch->address = $request->address;
                         $branch->address1 = isset($request->address1) ? $request->address1 : "";
                         $branch->db_name = $request->db_name;
@@ -399,6 +420,7 @@ class ApiController extends BaseController
             $branch->city_id = $request->city_id;
             $branch->status = isset($request->status) ? 1 : 0;
             $branch->post_code = isset($request->post_code) ? $request->post_code : "";
+            $branch->location = isset($request->location) ? $request->location : "";
             $branch->address = $request->address;
             $branch->address1 = isset($request->address1) ? $request->address1 : "";
             $branch->school_type = $request->school_type;

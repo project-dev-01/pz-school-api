@@ -42,6 +42,7 @@ class CreateBranchesTable extends Migration
             $table->text('address');
             $table->text('address1')->nullable();
             $table->string('logo')->nullable();
+            $table->text('location')->nullable();
             $table->tinyInteger('status');
             $table->timestamps();
         });
