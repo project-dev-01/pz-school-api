@@ -187,8 +187,8 @@ class ApiController extends BaseController
         if (!$validator->passes()) {
             return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
         } else {
-            $success= DB::table('branches as br')
-                ->select('br.school_type' )
+            $success = DB::table('branches as br')
+                ->select('br.school_type')
                 ->where('br.id', $branch_id)
                 ->first();
             return $this->successResponse($success, 'School Type record fetch successfully');
@@ -206,14 +206,14 @@ class ApiController extends BaseController
         if (!$validator->passes()) {
             return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
         } else {
-            $success= DB::table('branches')
-                ->select('address','mobile_no','email','location')
+            $success = DB::table('branches')
+                ->select('address', 'mobile_no', 'email', 'location')
                 ->where('id', $branch_id)
                 ->first();
             return $this->successResponse($success, 'Branch record fetch successfully');
         }
     }
-    
+
 
     // add branch 
     public function addBranch(Request $request)
@@ -253,7 +253,7 @@ class ApiController extends BaseController
                     $db_host = $request->db_host;
                     $branch_code = Helper::CodeGenerator(new Branches, 'branch_code', 4, 'PZ');
                     // to migrate database structure
-                    $migrate = $this->DBMigrationCall($db_name, $db_username, $db_password,$db_port,$db_host);
+                    $migrate = $this->DBMigrationCall($db_name, $db_username, $db_password, $db_port, $db_host);
                     if ($migrate) {
                         // create new branches
                         $branch = new Branches();
@@ -5711,7 +5711,7 @@ class ApiController extends BaseController
             // create new connection
             $Connection = $this->createNewConnection($request->branch_id);
             $getTeachersClassName = $Connection->table('subject_assigns as sa')
-                ->select('sa.class_id', 'sa.section_id', 'sa.teacher_id', 's.name as section_name')
+                ->select('sa.class_isd', 'sa.section_id', 'sa.teacher_id', 's.name as section_name')
                 ->join('sections as s', 'sa.section_id', '=', 's.id')
                 // ->where('sa.teacher_id',$request->teacher_id)
                 ->where([
@@ -7379,6 +7379,7 @@ class ApiController extends BaseController
                 'schedule_date' => $request['schedule_date'],
                 'description' => $request['description'],
                 'document' => $fileName,
+                'status' => isset($request['status']) ? $request['status'] : "",
                 'created_by' => $request['created_by'],
                 'academic_session_id' => $request['academic_session_id'],
                 'created_at' => date("Y-m-d H:i:s")
@@ -7552,7 +7553,7 @@ class ApiController extends BaseController
             $year_month = explode('-', $request->year_month);
             // create new connection
             $Connection = $this->createNewConnection($request->branch_id);
-            if($request->student_id){
+            if ($request->student_id) {
                 $getAttendanceList = $Connection->table('students as stud')
                     ->select(
                         'stud.first_name',
@@ -7603,7 +7604,7 @@ class ApiController extends BaseController
                         array_push($studentDetails, $object);
                     }
                 }
-            }else{
+            } else {
                 $getAttendanceList = $Connection->table('students as stud')
                     ->select(
                         'stud.first_name',
@@ -7658,7 +7659,7 @@ class ApiController extends BaseController
                     }
                 }
             }
-            
+
             // date wise late present analysis
             $getLatePresentData = $Connection->table('student_attendances as sa')
                 ->select(
@@ -8104,8 +8105,6 @@ class ApiController extends BaseController
                     'c.name as class_name',
                     'sb.subject_color_calendor as color',
                     'sb.name as subject_name',
-                    // 'sb.name as title',
-                    // DB::raw('CONCAT(c.name," (",s.name,") " " - ", sb.short_name) as title'),
                     DB::raw('CONCAT(c.short_name," (",s.name,") " " - ", sb.short_name) as title'),
                     'st.first_name as teacher_name',
                     'dr.report',
@@ -15041,7 +15040,6 @@ class ApiController extends BaseController
     // calendorAddTask
     public function calendorAddTask(Request $request)
     {
-
         $validator = \Validator::make($request->all(), [
             'branch_id' => 'required',
             'token' => 'required',
@@ -15062,6 +15060,7 @@ class ApiController extends BaseController
                 'end' => $request->end,
                 'description' => isset($request->description) ? $request->description : "",
                 'login_id' => $request->login_id,
+                'all_day' => !empty($request->all_day == "true") ? "1" : "0",
                 'task_color' => "bg-info",
                 'created_at' => date("Y-m-d H:i:s")
             ]);
@@ -15092,7 +15091,7 @@ class ApiController extends BaseController
             $secConn = $this->createNewConnection($request->branch_id);
             // get data
             $section = $secConn->table('calendors')
-                ->select('id', 'title', 'start', 'end', 'description')
+                ->select('id', 'title', 'start', 'end', 'description','all_day')
                 ->where('id', '=', $request->calendor_id)
                 ->first();
             return $this->successResponse($section, 'calendors tast row details fetch successfully');
@@ -15144,12 +15143,12 @@ class ApiController extends BaseController
             $start = date('Y-m-d 00:00:00', strtotime($request->start));
             $end = date('Y-m-d 00:00:00', strtotime($request->end));
             $section = $secConn->table('calendors')
-                ->select('id', 'title', 'start', 'end', 'description', 'task_color as className')
+                ->select('id', 'title', 'start', 'end', 'description', 'task_color')
                 ->where('login_id', '=', $request->login_id)
                 ->whereRaw('start between "' . $start . '" and "' . $end . '"')
                 ->whereRaw('end between "' . $start . '" and "' . $end . '"')
                 ->get();
-            return $this->successResponse($section, 'calendors tast details fetch successfully');
+            return $this->successResponse($section, 'calendors task details fetch successfully');
         }
     }
     // delete calendor row
@@ -16295,7 +16294,7 @@ class ApiController extends BaseController
             // create new connection
             $conn = $this->createNewConnection($request->branch_id);
 
-            if ($conn->table('transport_assign')->where([['route_id', '=', $request->route_id],['stoppage_id', '=', $request->stoppage_id],['vehicle_id', '=', $request->vehicle_id]])->count() > 0) {
+            if ($conn->table('transport_assign')->where([['route_id', '=', $request->route_id], ['stoppage_id', '=', $request->stoppage_id], ['vehicle_id', '=', $request->vehicle_id]])->count() > 0) {
                 return $this->send422Error('Vehicle Already Assigned', ['error' => 'Vehicle Already Assigned']);
             } else {
                 // insert data
@@ -16312,7 +16311,6 @@ class ApiController extends BaseController
                     return $this->successResponse($success, 'Transport Assign has been successfully saved');
                 }
             }
-            
         }
     }
     // getTransportAssignList
@@ -17377,7 +17375,7 @@ class ApiController extends BaseController
                 ->leftJoin("students as stu", DB::raw("FIND_IN_SET(stu.id,hg.student)"), ">", DB::raw("'0'"))
                 ->groupBy('hg.id')
                 ->get();
-            
+
             return $this->successResponse($groupDetails, 'Hostel Group record fetch successfully');
         }
     }

@@ -40,5 +40,24 @@ class DatabaseConnection
         return true;
 
     }
+    public static function indexingMigrate($params)
+    {
+        config(['database.connections.mysql_new_connection' => [
+            'driver'    => 'mysql',
+            'host'      => $params->db_host,
+            'port'      => $params->db_port,
+            'database'  => $params->db_name,
+            'username'  => $params->db_username,
+            'password'  => $params->db_password,
+            'charset'   => 'utf8',
+        ]]);
+        Artisan::call('migrate',
+        array(
+        '--path' => 'database/migrations/indexing_migrate',
+        '--database' => 'mysql_new_connection',
+        '--force' => true));
+        return true;
+
+    }
     
 }

@@ -27,6 +27,7 @@ use App\Http\Controllers\Api\TwoFactorAuth;
 // });
 Route::post('register', [RegisterController::class, 'register']);
 // Route::post('login', [RegisterController::class, 'login']);
+Route::post('indexing_migrate', [CommonController::class, 'indexingMigrate']);
 
 Route::post('login', [AuthController::class, 'authenticate']);
 Route::post('loginSA', [AuthController::class, 'authenticateSA']);
@@ -303,6 +304,7 @@ Route::group(['middleware' => ['auth:api', 'throttle:limit_per_user', 'logroute'
     // create database_migrate
 
     Route::post('database_migrate', [CommonController::class, 'databaseMigrate']);
+    // Route::post('indexing_migrate', [CommonController::class, 'indexingMigrate']);
     // forum     
     Route::get('get-category', [CommonController::class, 'categoryList']);
     Route::get('get-dbnames', [CommonController::class, 'dbnameslist']);

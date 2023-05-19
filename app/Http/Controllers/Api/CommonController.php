@@ -59,6 +59,13 @@ class CommonController extends BaseController
         return $this->successResponse([], 'Migrated successfully');
 
     }
+    function indexingMigrate(Request $request){
+       
+        $params =  Branches::select('id','db_name','db_username','db_password','db_port','db_host')->where('id',$request->branch_id)->first();
+        $staffConn = DatabaseConnection::indexingMigrate($params);
+        return $this->successResponse([], 'Migrated successfully');
+
+    }
     public function categoryList(Request $request)
     {
         $validator = \Validator::make($request->all(), [
