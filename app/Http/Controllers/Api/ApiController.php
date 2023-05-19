@@ -15103,7 +15103,9 @@ class ApiController extends BaseController
         $validator = \Validator::make($request->all(), [
             'branch_id' => 'required',
             'calendor_id' => 'required',
-            'title' => 'required'
+            'title' => 'required',
+            'start' => 'required',
+            'end' => 'required'
         ]);
         if (!$validator->passes()) {
             return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
@@ -15113,6 +15115,9 @@ class ApiController extends BaseController
             // update data
             $query = $conn->table('calendors')->where('id', $request->calendor_id)->update([
                 'title' => $request->title,
+                'start' => $request->start,
+                'end' => $request->end,
+                'all_day' => !empty($request->all_day == "true") ? "1" : "0",
                 'description' => $request->description,
                 'updated_at' => date("Y-m-d H:i:s")
             ]);
