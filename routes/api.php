@@ -52,6 +52,9 @@ Route::post('2fa/update_two_fa_secret', [TwoFactorAuth::class, 'updateTwoFASecre
 
 Route::post('get_school_type', [ApiController::class, 'getSchoolType']);
 Route::post('get_home_page_details', [ApiController::class, 'getHomePageDetails']);
+
+Route::post('application/relation/list', [ApiController::class, 'getApplicationRelationList']);
+Route::post('application/academic_year/list', [ApiController::class, 'applicationAcademicYearList']);
 // 2fa end
 // Route::group(['middleware' => ['auth:api', 'logroute']], function () {
 // Route::group(['middleware' => ['auth:api','check-single-session-api', 'logroute']], function () {
@@ -848,4 +851,8 @@ Route::group(['middleware' => ['auth:api', 'throttle:limit_per_user', 'logroute'
     Route::post('faq/email', [ApiControllerOne::class, 'faqEmail']);
     Route::post('first/name', [ApiControllerOne::class, 'firstName']);
     
+    
+    Route::post('application_add', [ApiController::class, 'addApplication']);
+    Route::get('student_application_list', [ApiController::class, 'studentApplicationList']);
+    Route::post('student_application', [ApiController::class, 'studentApplication']);
 });

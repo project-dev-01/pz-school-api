@@ -10667,7 +10667,53 @@ class ApiController extends BaseController
                 $current_address = isset($request->current_address) ? Crypt::encryptString($request->current_address) : "";
                 $permanent_address = isset($request->permanent_address) ? Crypt::encryptString($request->permanent_address) : "";
 
-                // return $request;
+// if($request->sudent_application_id){
+                //     $student_application = $conn->table('student_applications')->where('id', '=', $request->sudent_application_id)->first();
+
+                //     if($student_application->parent_type=="parent"){
+
+                //         $father_id = "";
+                //         $mother_id = "";
+                //         $parent_id = $conn->table('parent')->insertGetId([
+
+                //             'first_name' => isset($student_application->parent_first_name) ? $student_application->parent_first_name : "",
+                //             'last_name' => isset($student_application->parent_last_name) ? $student_application->parent_last_name : "",
+                //             'occupation' => $student_application->parent_occupation,
+                //             'mobile_no' => $student_application->parent_phone_number,
+                //             'email' => $student_application->parent_email,
+                //             'status' => $student_application->parent_status,
+                //             'created_at' => date("Y-m-d H:i:s")
+                //         ]);
+                        
+                //         $parent_name = $student_application->parent_first_name . ' ' . $student_application->parent_last_name;
+                //         if (!$parent_id) {
+                //             return $this->send500Error('Something went wrong.', ['error' => 'Something went wrong add Parent']);
+                //         } else {
+        
+                //             // add User
+                //             $query = new User();
+                //             $query->name = $parent_name;
+                //             $query->user_id = $parent_id;
+                //             $query->role_id = "5";
+                //             $query->branch_id = $request->branch_id;
+                //             $query->email = $request->email;
+                //             $query->status = $request->status;
+                //             $query->google2fa_secret_enable = isset($request->google2fa_secret_enable) ? '1' : '0';
+                //             $query->password = bcrypt($request->password);
+                //             $query->save();
+                //         }
+                //         if($student_application->parent_relation==2){
+                //             $father_id = $parent_id;
+                //         }
+                //         if($student_application->parent_relation==2){
+                //             $mother_id = $parent_id;
+                //         }
+
+                //     }
+                // }else{
+                //     $father_id = $request->father_id;
+                //     $mother_id = $request->mother_id;
+                // }                // return $request;
                 $studentId = $conn->table('students')->insertGetId([
                     'year' => $request->year,
                     'father_id' => $request->father_id,
@@ -18260,6 +18306,221 @@ class ApiController extends BaseController
             // $empDetails['user'] = User::where('user_id', $id)->where('branch_id', $request->branch_id)->first();
             $query = User::where('role_id', 4)->where('branch_id', $request->branch_id)->count();
             return $this->successResponse($query, 'Student Count has been Fetched Successfully');
+        }
+    }
+
+    // add Application
+    public function addApplication(Request $request)
+    {
+       // return $request;
+        $validator = \Validator::make($request->all(), [
+            'first_name' => 'required',
+            'mobile_no' => 'required',
+            'mobile_no' => 'required',
+            'address_1' => 'required',
+            'country' => 'required',
+            'city' => 'required',
+            'state' => 'required',
+            'postal_code' => 'required',
+            'grade' => 'required',
+            'school_year' => 'required',
+            'school_last_attended' => 'required',
+            'school_address_1' => 'required',
+            'school_country' => 'required',
+            'school_city' => 'required',
+            'school_state' => 'required',
+            'school_postal_code' => 'required',
+            'parent_type' => 'required',
+            'parent_relation' => 'required',
+            'parent_first_name' => 'required',
+            'parent_phone_number' => 'required',
+            'parent_occupation' => 'required',
+            'parent_email' => 'required',
+            'secondary_type' => 'required',
+            'secondary_relation' => 'required',
+            'secondary_first_name' => 'required',
+            'secondary_phone_number' => 'required',
+            'secondary_occupation' => 'required',
+            'secondary_email' => 'required',
+            'emergency_contact_person' => 'required',
+            'emergency_contact_first_name' => 'required',
+            'emergency_contact_phone_number' => 'required',
+
+            'branch_id' => 'required',
+            'token' => 'required',
+        ]);
+
+
+
+        if (!$validator->passes()) {
+            return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
+        } else {
+            // create new connection
+            $conn = $this->createNewConnection($request->branch_id);
+            // insert data
+
+            if ($conn->table('student_applications')->where('email', '=', $request->email)->count() > 0) {
+                return $this->send422Error('Student Email Already Exist', ['error' => 'Student Email Already Exist']);
+            } else {
+
+                // return $request;
+                $query = $conn->table('student_applications')->insert([
+                   'first_name' => $request->first_name,
+                   'last_name' => $request->last_name,
+                   'gender' => $request->gender,
+                   'date_of_birth' => $request->date_of_birth,
+                   'mobile_no' => $request->mobile_no,
+                   'email' => $request->email,
+                   'address_1' => $request->address_1,
+                   'address_2' => $request->address_2,
+                   'country' => $request->country,
+                   'city' => $request->city,
+                   'state' => $request->state,
+                   'postal_code' => $request->postal_code,
+                   'grade' => $request->grade,
+                   'school_year' => $request->school_year,
+                   'school_last_attended' => $request->school_last_attended,
+                   'school_address_1' => $request->school_address_1,
+                   'school_address_2' => $request->school_address_2,
+                   'school_country' => $request->school_country,
+                   'school_city' => $request->school_city,
+                   'school_state' => $request->school_state,
+                   'school_postal_code' => $request->school_postal_code,
+                   'parent_type' => $request->parent_type,
+                   'parent_relation' => $request->parent_relation,
+                   'parent_first_name' => $request->parent_first_name,
+                   'parent_last_name' => $request->parent_last_name,
+                   'parent_phone_number' => $request->parent_phone_number,
+                   'parent_occupation' => $request->parent_occupation,
+                   'parent_email' => $request->parent_email,
+                   'secondary_type' => $request->secondary_type,
+                   'secondary_relation' => $request->secondary_relation,
+                   'secondary_first_name' => $request->secondary_first_name,
+                   'secondary_last_name' => $request->secondary_last_name,
+                   'secondary_phone_number' => $request->secondary_phone_number,
+                   'secondary_occupation' => $request->secondary_occupation,
+                   'secondary_email' => $request->secondary_email,
+                   'emergency_contact_person' => $request->emergency_contact_person,
+                   'emergency_contact_first_name' => $request->emergency_contact_first_name,
+                   'emergency_contact_last_name' => $request->emergency_contact_last_name,
+                   'emergency_contact_phone_number' => $request->emergency_contact_phone_number,
+                   'created_at' => date("Y-m-d H:i:s")
+                ]);
+
+                $success = [];
+                    if (!$query) {
+                        return $this->send500Error('Something went wrong.', ['error' => 'Something went wrong']);
+                    } else {
+                        return $this->successResponse($success, 'Application has been successfully saved');
+                    }
+                
+           }
+
+            // return $request;
+        }
+    }
+
+    // get studentApplication
+   public function studentApplicationList(Request $request)
+   {
+
+       $validator = \Validator::make($request->all(), [
+           'branch_id' => 'required',
+           'token' => 'required'
+       ]);
+       if (!$validator->passes()) {
+           return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
+       } else {
+           // create new connection
+           $conn = $this->createNewConnection($request->branch_id);
+           // get data
+           $data = $conn->table('student_applications')
+               ->select("id", 'email','first_name','last_name')
+               ->where("first_name", "LIKE", "%{$request->name}%")
+               ->orWhere("last_name", "LIKE", "%{$request->name}%")
+               ->get();
+
+           $output = '';
+           if ($request->name) {
+               if (!$data->isEmpty()) {
+                   $output = '<ul class="list-group" style="display: block; position: relative; z-index: 1">';
+                   foreach ($data as $row) {
+
+                       $output .= '<li class="list-group-item" value="' . $row->id . '">' . $row->first_name .' '. $row->last_name . ' ( ' . $row->email . ' ) </li>';
+                   }
+                   $output .= '</ul>';
+               } else {
+                   $output .= '<li class="list-group-item">' . 'No results Found' . '</li>';
+               }
+           } else {
+               $output .= '<li class="list-group-item">' . 'No results Found' . '</li>';
+           }
+           return $output;
+       }
+   }
+
+   // student Application
+   public function studentApplication(Request $request)
+   {
+
+       $validator = \Validator::make($request->all(), [
+           'id' => 'required',
+           'branch_id' => 'required',
+           'token' => 'required'
+       ]);
+
+       if (!$validator->passes()) {
+           return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
+       } else {
+           $id = $request->id;
+           // create new connection
+           $conn = $this->createNewConnection($request->branch_id);
+           // get data
+           $getstudentDetails = $conn->table('student_applications as s')
+               ->select(
+                   's.*',
+                   DB::raw("CONCAT(s.first_name, ' ', s.last_name) as name")
+               )
+               ->where('s.id', $id)
+               ->first();
+           return $this->successResponse($getstudentDetails, 'Student row fetch successfully');
+       }
+   }
+
+    // getRelationList
+    public function getApplicationRelationList(Request $request)
+    {
+        $validator = \Validator::make($request->all(), [
+            'branch_id' => 'required',
+        ]);
+
+        if (!$validator->passes()) {
+            return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
+        } else {
+            // create new connection
+            $conn = $this->createNewConnection($request->branch_id);
+            // get data
+            $relationDetails = $conn->table('relations')->get();
+            return $this->successResponse($relationDetails, 'Relation record fetch successfully');
+        }
+    }
+
+    
+    // academic Year List
+    public function applicationAcademicYearList(Request $request)
+    {
+        $validator = \Validator::make($request->all(), [
+            'branch_id' => 'required',
+        ]);
+
+        if (!$validator->passes()) {
+            return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
+        } else {
+            // create new connection
+            $Connection = $this->createNewConnection($request->branch_id);
+            // get data
+            $Department = $Connection->table('academic_year')->get();
+            return $this->successResponse($Department, 'Academic year record fetch successfully');
         }
     }
 }
