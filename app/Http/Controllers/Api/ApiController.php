@@ -10667,58 +10667,114 @@ class ApiController extends BaseController
                 $current_address = isset($request->current_address) ? Crypt::encryptString($request->current_address) : "";
                 $permanent_address = isset($request->permanent_address) ? Crypt::encryptString($request->permanent_address) : "";
 
-// if($request->sudent_application_id){
-                //     $student_application = $conn->table('student_applications')->where('id', '=', $request->sudent_application_id)->first();
+                if($request->sudent_application_id){
+                    $student_application = $conn->table('student_applications')->where('id', '=', $request->sudent_application_id)->first();
 
-                //     if($student_application->parent_type=="parent"){
-
-                //         $father_id = "";
-                //         $mother_id = "";
-                //         $parent_id = $conn->table('parent')->insertGetId([
-
-                //             'first_name' => isset($student_application->parent_first_name) ? $student_application->parent_first_name : "",
-                //             'last_name' => isset($student_application->parent_last_name) ? $student_application->parent_last_name : "",
-                //             'occupation' => $student_application->parent_occupation,
-                //             'mobile_no' => $student_application->parent_phone_number,
-                //             'email' => $student_application->parent_email,
-                //             'status' => $student_application->parent_status,
-                //             'created_at' => date("Y-m-d H:i:s")
-                //         ]);
+                    $father_id = "";
+                    $mother_id = "";
+                    $guardian_id = "";
+                    if($student_application->father_first_name){
                         
-                //         $parent_name = $student_application->parent_first_name . ' ' . $student_application->parent_last_name;
-                //         if (!$parent_id) {
-                //             return $this->send500Error('Something went wrong.', ['error' => 'Something went wrong add Parent']);
-                //         } else {
-        
-                //             // add User
-                //             $query = new User();
-                //             $query->name = $parent_name;
-                //             $query->user_id = $parent_id;
-                //             $query->role_id = "5";
-                //             $query->branch_id = $request->branch_id;
-                //             $query->email = $request->email;
-                //             $query->status = $request->status;
-                //             $query->google2fa_secret_enable = isset($request->google2fa_secret_enable) ? '1' : '0';
-                //             $query->password = bcrypt($request->password);
-                //             $query->save();
-                //         }
-                //         if($student_application->parent_relation==2){
-                //             $father_id = $parent_id;
-                //         }
-                //         if($student_application->parent_relation==2){
-                //             $mother_id = $parent_id;
-                //         }
+                        $father_id = $conn->table('parent')->insertGetId([
 
-                //     }
-                // }else{
-                //     $father_id = $request->father_id;
-                //     $mother_id = $request->mother_id;
-                // }                // return $request;
+                            'first_name' => isset($student_application->father_first_name) ? $student_application->father_first_name : "",
+                            'last_name' => isset($student_application->father_last_name) ? $student_application->father_last_name : "",
+                            'occupation' => $student_application->father_occupation,
+                            'mobile_no' => $student_application->father_phone_number,
+                            'email' => $student_application->father_email,
+                            'status' => "0",
+                            'created_at' => date("Y-m-d H:i:s")
+                        ]);
+                        
+                        $father_name = $student_application->father_first_name . ' ' . $student_application->father_last_name;
+                        if (!$father_id) {
+                            return $this->send500Error('Something went wrong.', ['error' => 'Something went wrong add Parent']);
+                        } else {
+        
+                            // add User
+                            $query = new User();
+                            $query->name = $father_name;
+                            $query->user_id = $father_id;
+                            $query->role_id = "5";
+                            $query->branch_id = $request->branch_id;
+                            $query->email = $student_application->father_email;
+                            $query->status = "0";
+                            $query->google2fa_secret_enable = '0';
+                            $query->password = bcrypt($student_application->father_email);
+                            $query->save();
+                        }
+                    }
+                    if($student_application->mother_first_name){
+                        $mother_id = $conn->table('parent')->insertGetId([
+
+                            'first_name' => isset($student_application->mother_first_name) ? $student_application->mother_first_name : "",
+                            'last_name' => isset($student_application->mother_last_name) ? $student_application->mother_last_name : "",
+                            'occupation' => $student_application->mother_occupation,
+                            'mobile_no' => $student_application->mother_phone_number,
+                            'email' => $student_application->mother_email,
+                            'status' => "0",
+                            'created_at' => date("Y-m-d H:i:s")
+                        ]);
+                        
+                        $mother_name = $student_application->mother_first_name . ' ' . $student_application->mother_last_name;
+                        if (!$mother_id) {
+                            return $this->send500Error('Something went wrong.', ['error' => 'Something went wrong add Parent']);
+                        } else {
+        
+                            // add User
+                            $query = new User();
+                            $query->name = $mother_name;
+                            $query->user_id = $mother_id;
+                            $query->role_id = "5";
+                            $query->branch_id = $request->branch_id;
+                            $query->email = $student_application->mother_email;
+                            $query->status = "0";
+                            $query->google2fa_secret_enable = '0';
+                            $query->password = bcrypt($student_application->mother_email);
+                            $query->save();
+                        }
+                    }
+                    if($student_application->guardian_first_name){
+                        // return $student_application;
+                        $guardian_id = $conn->table('parent')->insertGetId([
+
+                            'first_name' => isset($student_application->guardian_first_name) ? $student_application->guardian_first_name : "",
+                            'last_name' => isset($student_application->guardian_last_name) ? $student_application->guardian_last_name : "",
+                            'occupation' => $student_application->guardian_occupation,
+                            'mobile_no' => $student_application->guardian_phone_number,
+                            'email' => $student_application->guardian_email,
+                            'status' => "0",
+                            'created_at' => date("Y-m-d H:i:s")
+                        ]);
+                        
+                        $guardian_name = $student_application->guardian_first_name . ' ' . $student_application->guardian_last_name;
+                        if (!$guardian_id) {
+                            return $this->send500Error('Something went wrong.', ['error' => 'Something went wrong add Parent']);
+                        } else {
+        
+                            // add User
+                            $query = new User();
+                            $query->name = $guardian_name;
+                            $query->user_id = $guardian_id;
+                            $query->role_id = "5";
+                            $query->branch_id = $request->branch_id;
+                            $query->email = $student_application->guardian_email;
+                            $query->status = "0";
+                            $query->google2fa_secret_enable = '0';
+                            $query->password = bcrypt($student_application->guardian_email);
+                            $query->save();
+                        }
+                    }
+                }else{
+                    $father_id = $request->father_id;
+                    $mother_id = $request->mother_id;
+                    $guardian_id = $request->guardian_id;
+                }                // return $request;
                 $studentId = $conn->table('students')->insertGetId([
                     'year' => $request->year,
-                    'father_id' => $request->father_id,
-                    'mother_id' => $request->mother_id,
-                    'guardian_id' => $request->guardian_id,
+                    'father_id' => $father_id,
+                    'mother_id' => $mother_id,
+                    'guardian_id' => $guardian_id,
                     'passport' => $passport,
                     'nric' => $nric,
                     'relation' => $request->relation,
@@ -18330,21 +18386,19 @@ class ApiController extends BaseController
             'school_city' => 'required',
             'school_state' => 'required',
             'school_postal_code' => 'required',
-            'parent_type' => 'required',
-            'parent_relation' => 'required',
-            'parent_first_name' => 'required',
-            'parent_phone_number' => 'required',
-            'parent_occupation' => 'required',
-            'parent_email' => 'required',
-            'secondary_type' => 'required',
-            'secondary_relation' => 'required',
-            'secondary_first_name' => 'required',
-            'secondary_phone_number' => 'required',
-            'secondary_occupation' => 'required',
-            'secondary_email' => 'required',
-            'emergency_contact_person' => 'required',
-            'emergency_contact_first_name' => 'required',
-            'emergency_contact_phone_number' => 'required',
+            'father_first_name' => 'required',
+            'father_phone_number' => 'required',
+            'father_occupation' => 'required',
+            'father_email' => 'required',
+            'mother_first_name' => 'required',
+            'mother_phone_number' => 'required',
+            'mother_occupation' => 'required',
+            'mother_email' => 'required',
+            'guardian_first_name' => 'required',
+            'guardian_phone_number' => 'required',
+            'guardian_occupation' => 'required',
+            'guardian_email' => 'required',
+            'guardian_relation' => 'required',
 
             'branch_id' => 'required',
             'token' => 'required',
@@ -18386,24 +18440,22 @@ class ApiController extends BaseController
                    'school_city' => $request->school_city,
                    'school_state' => $request->school_state,
                    'school_postal_code' => $request->school_postal_code,
-                   'parent_type' => $request->parent_type,
-                   'parent_relation' => $request->parent_relation,
-                   'parent_first_name' => $request->parent_first_name,
-                   'parent_last_name' => $request->parent_last_name,
-                   'parent_phone_number' => $request->parent_phone_number,
-                   'parent_occupation' => $request->parent_occupation,
-                   'parent_email' => $request->parent_email,
-                   'secondary_type' => $request->secondary_type,
-                   'secondary_relation' => $request->secondary_relation,
-                   'secondary_first_name' => $request->secondary_first_name,
-                   'secondary_last_name' => $request->secondary_last_name,
-                   'secondary_phone_number' => $request->secondary_phone_number,
-                   'secondary_occupation' => $request->secondary_occupation,
-                   'secondary_email' => $request->secondary_email,
-                   'emergency_contact_person' => $request->emergency_contact_person,
-                   'emergency_contact_first_name' => $request->emergency_contact_first_name,
-                   'emergency_contact_last_name' => $request->emergency_contact_last_name,
-                   'emergency_contact_phone_number' => $request->emergency_contact_phone_number,
+                   'father_first_name' => $request->father_first_name,
+                   'father_last_name' => $request->father_last_name,
+                   'father_phone_number' => $request->father_phone_number,
+                   'father_occupation' => $request->father_occupation,
+                   'father_email' => $request->father_email,
+                   'mother_first_name' => $request->mother_first_name,
+                   'mother_last_name' => $request->mother_last_name,
+                   'mother_phone_number' => $request->mother_phone_number,
+                   'mother_occupation' => $request->mother_occupation,
+                   'mother_email' => $request->mother_email,
+                   'guardian_first_name' => $request->guardian_first_name,
+                   'guardian_last_name' => $request->guardian_last_name,
+                   'guardian_relation' => $request->guardian_relation,
+                   'guardian_phone_number' => $request->guardian_phone_number,
+                   'guardian_occupation' => $request->guardian_occupation,
+                   'guardian_email' => $request->guardian_email,
                    'created_at' => date("Y-m-d H:i:s")
                 ]);
 
