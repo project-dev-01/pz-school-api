@@ -18606,6 +18606,8 @@ class ApiController extends BaseController
         File::ensureDirectoryExists(base_path() . $path);
         $file = base_path() . $path . $fileName;
         $suc = file_put_contents($file, $base64);
+        $data['path'] = $path;
+        $data['file_name'] = $fileName;
         return  $data;
     }
 }
