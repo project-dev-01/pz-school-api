@@ -35,6 +35,8 @@ use Illuminate\Support\Facades\Notification;
 // encrypt and decrypt
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Contracts\Encryption\DecryptException;
+Use File;
+
 
 class ApiController extends BaseController
 {
@@ -2949,9 +2951,10 @@ class ApiController extends BaseController
                         $name = strtotime($now);
                         $extension = $request->file_extension;
                         $fileName = $name . "." . $extension;
-
+                        $path = '/public/'. $request->branch_id .'/users/images/';
                         $base64 = base64_decode($request->photo);
-                        $file = base_path() . '/public/users/images/' . $fileName;
+                        File::ensureDirectoryExists(base_path() . $path);
+                        $file = base_path() . $path . $fileName;
                         $picture = file_put_contents($file, $base64);
                     } else {
                         $fileName = null;
@@ -3230,9 +3233,10 @@ class ApiController extends BaseController
                         $name = strtotime($now);
                         $extension = $request->file_extension;
                         $fileName = $name . "." . $extension;
-
+                        $path = '/public/'. $request->branch_id .'/users/images/';
                         $base64 = base64_decode($request->photo);
-                        $file = base_path() . '/public/users/images/' . $fileName;
+                        File::ensureDirectoryExists(base_path() . $path);
+                        $file = base_path() . $path . $fileName;
                         $picture = file_put_contents($file, $base64);
                     } else {
                         $fileName = null;
@@ -4957,10 +4961,10 @@ class ApiController extends BaseController
             return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
         } else {
 
-            $path = 'users/images/';
+            $path = $request->branch_id.'/users/images/';
             $file = $request->file('profile_image');
             $new_name = 'UIMG_' . date('Ymd') . uniqid() . '.jpg';
-
+            File::ensureDirectoryExists(public_path($path));
             //Upload new image
             $upload = $file->move(public_path($path), $new_name);
 
@@ -5004,10 +5008,10 @@ class ApiController extends BaseController
             return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
         } else {
 
-            $path = 'images/sub-logo/';
+            $path = $request->id.'/images/sub-logo/';
             $file = $request->file('change_logo');
             $new_name = 'ULOGO_' . date('Ymd') . uniqid() . '.jpg';
-
+            File::ensureDirectoryExists(public_path($path));
             //Upload new image
             $upload = $file->move(public_path($path), $new_name);
 
@@ -5711,7 +5715,7 @@ class ApiController extends BaseController
             // create new connection
             $Connection = $this->createNewConnection($request->branch_id);
             $getTeachersClassName = $Connection->table('subject_assigns as sa')
-                ->select('sa.class_isd', 'sa.section_id', 'sa.teacher_id', 's.name as section_name')
+                ->select('sa.class_id', 'sa.section_id', 'sa.teacher_id', 's.name as section_name')
                 ->join('sections as s', 'sa.section_id', '=', 's.id')
                 // ->where('sa.teacher_id',$request->teacher_id)
                 ->where([
@@ -7361,9 +7365,10 @@ class ApiController extends BaseController
             $name = strtotime($now);
             $extension = $request->file_extension;
             $fileName = $name . "." . $extension;
-
+            $path = '/public/'. $request->branch_id .'/teacher/homework/';
+            File::ensureDirectoryExists(base_path() . $path);
             $base64 = base64_decode($request->file);
-            $file = base_path() . '/public/teacher/homework/' . $fileName;
+            $file = base_path() . $path . $fileName;
             $suc = file_put_contents($file, $base64);
 
 
@@ -8051,9 +8056,10 @@ class ApiController extends BaseController
             $name = strtotime($now);
             $extension = $request->file_extension;
             $fileName = $name . "." . $extension;
-
+            $path = '/public/'. $request->branch_id .'/student/homework/';
             $base64 = base64_decode($request->file);
-            $file = base_path() . '/public/student/homework/' . $fileName;
+            File::ensureDirectoryExists(base_path() . $path);
+            $file = base_path() . $path . $fileName;
             $suc = file_put_contents($file, $base64);
 
             $query = $con->table('homework_evaluation')->insert([
@@ -10653,11 +10659,13 @@ class ApiController extends BaseController
 
                 $fileName = "";
                 if ($request->photo) {
+                    $path = '/public/'. $request->branch_id .'/users/images/';
                     $extension = $request->file_extension;
                     $fileName = 'UIMG_' . date('Ymd') . uniqid() . '.' . $extension;
 
                     $base64 = base64_decode($request->photo);
-                    $file = base_path() . '/public/users/images/' . $fileName;
+                    File::ensureDirectoryExists(base_path() . $path);
+                    $file = base_path() . $path . $fileName;
                     $suc = file_put_contents($file, $base64);
                 }
 
@@ -11202,8 +11210,10 @@ class ApiController extends BaseController
                     $name = strtotime($now);
                     $extension = $value['extension'];
                     $fileName = $name . uniqid() . "." . $extension;
+                    $path = '/public/'. $request->branch_id .'/images/todolist/';
                     $base64 = base64_decode($value['base64']);
-                    $file = base_path() . '/public/images/todolist/' . $fileName;
+                    File::ensureDirectoryExists(base_path() . $path);
+                    $file = base_path() . $path . $fileName;
                     $upload = file_put_contents($file, $base64);
                     array_push($fileNames, $fileName);
                 }
@@ -11246,7 +11256,6 @@ class ApiController extends BaseController
         if (!$validator->passes()) {
             return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
         } else {
-
             // create new connection
             $Connection = $this->createNewConnection($request->branch_id);
             $fileDetails = $request->file;
@@ -11258,7 +11267,7 @@ class ApiController extends BaseController
                 $delete_files = array_diff($old_file, $old_updated_file);
                 foreach ($delete_files as $delete) {
 
-                    $file = base_path() . '/public/images/todolist/' . $delete;
+                    $file = base_path() . '/public/'. $request->branch_id .'/images/todolist/' . $delete;
                     if (file_exists($file)) {
                         unlink($file);
                     }
@@ -11268,14 +11277,17 @@ class ApiController extends BaseController
                     array_push($fileNames, $file_name);
                 }
             }
+            
             if ($fileDetails) {
                 foreach ($fileDetails as $key => $value) {
                     $now = now();
                     $name = strtotime($now);
                     $extension = $value['extension'];
                     $fileName = $name . uniqid() . "." . $extension;
+                    $path = '/public/'. $request->branch_id .'/images/todolist/';
                     $base64 = base64_decode($value['base64']);
-                    $file = base_path() . '/public/images/todolist/' . $fileName;
+                    File::ensureDirectoryExists(base_path() . $path);
+                    $file = base_path() . $path . $fileName;
                     $upload = file_put_contents($file, $base64);
                     array_push($fileNames, $fileName);
                 }
@@ -11354,7 +11366,7 @@ class ApiController extends BaseController
                 $arrayVal = explode(',', $getRow->file);
                 foreach ($arrayVal as $key => $value) {
                     if ($value) {
-                        $file = base_path() . '/public/images/todolist/' . $value;
+                        $file = base_path() . '/public/'.$request->branch_id.'/images/todolist/' . $value;
                         if (file_exists($file)) {
                             unlink($file);
                         }
@@ -11834,8 +11846,9 @@ class ApiController extends BaseController
                     $fileName = 'UIMG_' . date('Ymd') . uniqid() . '.' . $extension;
 
                     // return $fileName;
-                    $path = '/public/users/images/';
+                    $path = '/public/'. $request->branch_id .'/users/images/';
                     $base64 = base64_decode($request->photo);
+                    File::ensureDirectoryExists(base_path() . $path);
                     $file = base_path() . $path . $fileName;
                     $suc = file_put_contents($file, $base64);
 
@@ -12070,7 +12083,7 @@ class ApiController extends BaseController
             // create new connection
             $conn = $this->createNewConnection($request->branch_id);
             // get data
-            $path = '/public/users/images/';
+            $path = '/public/'.$request->branch_id.'/users/images/';
             $data = $conn->table('students as s')->select('s.photo', 'e.*')
                 ->leftJoin('enrolls as e', 's.id', '=', 'e.student_id')
                 ->where('s.id', $id)
@@ -12135,8 +12148,9 @@ class ApiController extends BaseController
                     $fileName = 'UIMG_' . date('Ymd') . uniqid() . '.' . $extension;
 
                     // return $fileName;
-                    $path = '/public/users/images/';
+                    $path = '/public/'. $request->branch_id .'/users/images/';
                     $base64 = base64_decode($request->photo);
+                    File::ensureDirectoryExists(base_path() . $path);
                     $file = base_path() . $path . $fileName;
                     $suc = file_put_contents($file, $base64);
                 }
@@ -12360,8 +12374,9 @@ class ApiController extends BaseController
                     $fileName = 'UIMG_' . date('Ymd') . uniqid() . '.' . $extension;
 
                     // return $fileName;
-                    $path = '/public/users/images/';
+                    $path = '/public/'. $request->branch_id .'/users/images/';
                     $base64 = base64_decode($request->photo);
+                    File::ensureDirectoryExists(base_path() . $path);
                     $file = base_path() . $path . $fileName;
                     $suc = file_put_contents($file, $base64);
 
@@ -13341,9 +13356,10 @@ class ApiController extends BaseController
                     $name = strtotime($now);
                     $extension = $request->file_extension;
                     $fileName = $name . "." . $extension;
-
+                    $path = '/public/'. $request->branch_id .'/teacher/student-leaves/';
                     $base64 = base64_decode($request->file);
-                    $file = base_path() . '/public/teacher/student-leaves/' . $fileName;
+                    File::ensureDirectoryExists(base_path() . $path);
+                    $file = base_path() . $path . $fileName;
                     $suc = file_put_contents($file, $base64);
                 } else {
                     $fileName = null;
@@ -13432,11 +13448,12 @@ class ApiController extends BaseController
                 $extension = $request->file_extension;
                 $fileName = $name . "." . $extension;
 
+                $path = '/public/'. $request->branch_id .'/teacher/student-leaves/';
                 $base64 = base64_decode($request->file);
-                $file = base_path() . '/public/teacher/student-leaves/' . $fileName;
+                File::ensureDirectoryExists(base_path() . $path);
+                $file = base_path() . $path . $fileName;
                 $suc = file_put_contents($file, $base64);
                 // return $fileName;
-                $path = '/public/teacher/student-leaves/';
                 if (isset($request->document)) {
                     if (\File::exists(base_path($path . $request->document))) {
                         \File::delete(base_path($path . $request->document));
@@ -13481,11 +13498,12 @@ class ApiController extends BaseController
                 $extension = $request->file_extension;
                 $fileName = $name . "." . $extension;
 
+                $path = '/public/'. $request->branch_id .'/admin-documents/leaves/';
                 $base64 = base64_decode($request->file);
-                $file = base_path() . '/public/admin-documents/leaves/' . $fileName;
+                File::ensureDirectoryExists(base_path() . $path);
+                $file = base_path() . $path . $fileName;
                 $suc = file_put_contents($file, $base64);
                 // return $fileName;
-                $path = '/public/admin-documents/leaves/';
                 if (isset($request->document)) {
                     if (\File::exists(base_path($path . $request->document))) {
                         \File::delete(base_path($path . $request->document));
@@ -14385,8 +14403,10 @@ class ApiController extends BaseController
                     $extension = $request->file_extension;
                     $fileName = $name . "." . $extension;
 
+                    $path = '/public/'. $request->branch_id .'/admin-documents/leaves/';
                     $base64 = base64_decode($request->document);
-                    $file = base_path() . '/public/admin-documents/leaves/' . $fileName;
+                    File::ensureDirectoryExists(base_path() . $path);
+                    $file = base_path() . $path . $fileName;
                     $suc = file_put_contents($file, $base64);
                 } else {
                     $fileName = null;
@@ -18574,5 +18594,18 @@ class ApiController extends BaseController
             $Department = $Connection->table('academic_year')->get();
             return $this->successResponse($Department, 'Academic year record fetch successfully');
         }
+    }
+
+    // updatePicture settings
+    public function forumImageStore(Request $request)
+    {
+        $path = '/public/'. $request->branch_id .'/forum/upload/';
+
+        $fileName = $request->filename . '_' . time() . '.' .  $request->file_extension;
+        $base64 = base64_decode($request->photo);
+        File::ensureDirectoryExists(base_path() . $path);
+        $file = base_path() . $path . $fileName;
+        $suc = file_put_contents($file, $base64);
+        return  $data;
     }
 }

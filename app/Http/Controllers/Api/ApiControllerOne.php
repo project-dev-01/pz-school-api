@@ -18,6 +18,7 @@ use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Mail;
 use Carbon\Carbon;
+Use File;
 
 class ApiControllerOne extends BaseController
 {
@@ -4233,7 +4234,6 @@ class ApiControllerOne extends BaseController
     // addSoapSubCategory
     public function addSoapSubCategory(Request $request)
     {
-
         $validator = \Validator::make($request->all(), [
             'name' => 'required',
             'soap_category_id' => 'required',
@@ -4248,10 +4248,11 @@ class ApiControllerOne extends BaseController
             $conn = $this->createNewConnection($request->branch_id);
             // insert data
             if ($request->photo) {
-                $path = '/public/soap/images/';
+                $path = '/public/'. $request->branch_id .'/soap/images/';
 
                 $fileName = 'SCIMG_' . date('Ymd') . uniqid() . '.' . $request->file_extension;
                 $base64 = base64_decode($request->photo);
+                File::ensureDirectoryExists(base_path() . $path);
                 $file = base_path() . $path . $fileName;
                 $suc = file_put_contents($file, $base64);
             } else {
@@ -4331,7 +4332,7 @@ class ApiControllerOne extends BaseController
             // create new connection
             $conn = $this->createNewConnection($request->branch_id);
             if ($request->photo) {
-                $path = '/public/soap/images/';
+                $path = '/public/'. $request->branch_id .'/soap/images/';
                 $oldPicture = $conn->table('soap_sub_category')->where('id', $id)->first();
 
                 // return $oldPicture->photo;
@@ -6170,6 +6171,7 @@ class ApiControllerOne extends BaseController
                     'st.email',
                     'cl.name as class_name',
                     'sc.name as section_name',
+                    'st.photo',
                     // 'fa.id as allocation_id',
                     DB::raw('CONCAT(st.first_name, " ", st.last_name) as name'),
                     DB::raw("group_concat(fa.group_id) as all_group_id")
@@ -6207,6 +6209,7 @@ class ApiControllerOne extends BaseController
                     $object->class_name = $value->class_name;
                     $object->section_name = $value->section_name;
                     $object->name = $value->name;
+                    $object->photo = $value->photo;
                     $object->all_group_id = $value->all_group_id;
                     $all_group_id = explode(",", $value->all_group_id);
                     $group_arr = [];

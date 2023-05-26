@@ -855,4 +855,7 @@ Route::group(['middleware' => ['auth:api', 'throttle:limit_per_user', 'logroute'
     Route::post('application_add', [ApiController::class, 'addApplication']);
     Route::get('student_application_list', [ApiController::class, 'studentApplicationList']);
     Route::post('student_application', [ApiController::class, 'studentApplication']);
+
+    
+    Route::post('forum_image_store', [ApiController::class, 'forumImageStore']);
 });
