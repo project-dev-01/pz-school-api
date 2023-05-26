@@ -35,7 +35,7 @@ use Illuminate\Support\Facades\Notification;
 // encrypt and decrypt
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Contracts\Encryption\DecryptException;
-Use File;
+use File;
 
 
 class ApiController extends BaseController
@@ -2951,7 +2951,7 @@ class ApiController extends BaseController
                         $name = strtotime($now);
                         $extension = $request->file_extension;
                         $fileName = $name . "." . $extension;
-                        $path = '/public/'. $request->branch_id .'/users/images/';
+                        $path = '/public/' . $request->branch_id . '/users/images/';
                         $base64 = base64_decode($request->photo);
                         File::ensureDirectoryExists(base_path() . $path);
                         $file = base_path() . $path . $fileName;
@@ -3064,6 +3064,7 @@ class ApiController extends BaseController
                 's.email',
                 's.mobile_no',
                 's.photo',
+                's.is_active',
                 'stp.name as stream_type',
                 DB::raw("GROUP_CONCAT(DISTINCT  dp.name) as department_name"),
                 DB::raw("GROUP_CONCAT(DISTINCT  ds.name) as designation_name")
@@ -3071,6 +3072,7 @@ class ApiController extends BaseController
             ->leftJoin("staff_departments as dp", DB::raw("FIND_IN_SET(dp.id,s.department_id)"), ">", DB::raw("'0'"))
             ->leftJoin("staff_designations as ds", DB::raw("FIND_IN_SET(ds.id,s.designation_id)"), ">", DB::raw("'0'"))
             ->leftJoin('stream_types as stp', 's.stream_type_id', '=', 'stp.id')
+            ->where('s.is_active','=','0')
             ->orderBy('stp.name', 'desc')
             ->orderBy('s.salary_grade', 'desc')
             ->groupBy("s.id")
@@ -3233,7 +3235,7 @@ class ApiController extends BaseController
                         $name = strtotime($now);
                         $extension = $request->file_extension;
                         $fileName = $name . "." . $extension;
-                        $path = '/public/'. $request->branch_id .'/users/images/';
+                        $path = '/public/' . $request->branch_id . '/users/images/';
                         $base64 = base64_decode($request->photo);
                         File::ensureDirectoryExists(base_path() . $path);
                         $file = base_path() . $path . $fileName;
@@ -4961,7 +4963,7 @@ class ApiController extends BaseController
             return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
         } else {
 
-            $path = $request->branch_id.'/users/images/';
+            $path = $request->branch_id . '/users/images/';
             $file = $request->file('profile_image');
             $new_name = 'UIMG_' . date('Ymd') . uniqid() . '.jpg';
             File::ensureDirectoryExists(public_path($path));
@@ -5008,7 +5010,7 @@ class ApiController extends BaseController
             return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
         } else {
 
-            $path = $request->id.'/images/sub-logo/';
+            $path = $request->id . '/images/sub-logo/';
             $file = $request->file('change_logo');
             $new_name = 'ULOGO_' . date('Ymd') . uniqid() . '.jpg';
             File::ensureDirectoryExists(public_path($path));
@@ -7365,7 +7367,7 @@ class ApiController extends BaseController
             $name = strtotime($now);
             $extension = $request->file_extension;
             $fileName = $name . "." . $extension;
-            $path = '/public/'. $request->branch_id .'/teacher/homework/';
+            $path = '/public/' . $request->branch_id . '/teacher/homework/';
             File::ensureDirectoryExists(base_path() . $path);
             $base64 = base64_decode($request->file);
             $file = base_path() . $path . $fileName;
@@ -8056,7 +8058,7 @@ class ApiController extends BaseController
             $name = strtotime($now);
             $extension = $request->file_extension;
             $fileName = $name . "." . $extension;
-            $path = '/public/'. $request->branch_id .'/student/homework/';
+            $path = '/public/' . $request->branch_id . '/student/homework/';
             $base64 = base64_decode($request->file);
             File::ensureDirectoryExists(base_path() . $path);
             $file = base_path() . $path . $fileName;
@@ -10659,7 +10661,7 @@ class ApiController extends BaseController
 
                 $fileName = "";
                 if ($request->photo) {
-                    $path = '/public/'. $request->branch_id .'/users/images/';
+                    $path = '/public/' . $request->branch_id . '/users/images/';
                     $extension = $request->file_extension;
                     $fileName = 'UIMG_' . date('Ymd') . uniqid() . '.' . $extension;
 
@@ -10675,14 +10677,14 @@ class ApiController extends BaseController
                 $current_address = isset($request->current_address) ? Crypt::encryptString($request->current_address) : "";
                 $permanent_address = isset($request->permanent_address) ? Crypt::encryptString($request->permanent_address) : "";
 
-                if($request->sudent_application_id){
+                if ($request->sudent_application_id) {
                     $student_application = $conn->table('student_applications')->where('id', '=', $request->sudent_application_id)->first();
 
                     $father_id = "";
                     $mother_id = "";
                     $guardian_id = "";
-                    if($student_application->father_first_name){
-                        
+                    if ($student_application->father_first_name) {
+
                         $father_id = $conn->table('parent')->insertGetId([
 
                             'first_name' => isset($student_application->father_first_name) ? $student_application->father_first_name : "",
@@ -10693,12 +10695,12 @@ class ApiController extends BaseController
                             'status' => "0",
                             'created_at' => date("Y-m-d H:i:s")
                         ]);
-                        
+
                         $father_name = $student_application->father_first_name . ' ' . $student_application->father_last_name;
                         if (!$father_id) {
                             return $this->send500Error('Something went wrong.', ['error' => 'Something went wrong add Parent']);
                         } else {
-        
+
                             // add User
                             $query = new User();
                             $query->name = $father_name;
@@ -10712,7 +10714,7 @@ class ApiController extends BaseController
                             $query->save();
                         }
                     }
-                    if($student_application->mother_first_name){
+                    if ($student_application->mother_first_name) {
                         $mother_id = $conn->table('parent')->insertGetId([
 
                             'first_name' => isset($student_application->mother_first_name) ? $student_application->mother_first_name : "",
@@ -10723,12 +10725,12 @@ class ApiController extends BaseController
                             'status' => "0",
                             'created_at' => date("Y-m-d H:i:s")
                         ]);
-                        
+
                         $mother_name = $student_application->mother_first_name . ' ' . $student_application->mother_last_name;
                         if (!$mother_id) {
                             return $this->send500Error('Something went wrong.', ['error' => 'Something went wrong add Parent']);
                         } else {
-        
+
                             // add User
                             $query = new User();
                             $query->name = $mother_name;
@@ -10742,7 +10744,7 @@ class ApiController extends BaseController
                             $query->save();
                         }
                     }
-                    if($student_application->guardian_first_name){
+                    if ($student_application->guardian_first_name) {
                         // return $student_application;
                         $guardian_id = $conn->table('parent')->insertGetId([
 
@@ -10754,12 +10756,12 @@ class ApiController extends BaseController
                             'status' => "0",
                             'created_at' => date("Y-m-d H:i:s")
                         ]);
-                        
+
                         $guardian_name = $student_application->guardian_first_name . ' ' . $student_application->guardian_last_name;
                         if (!$guardian_id) {
                             return $this->send500Error('Something went wrong.', ['error' => 'Something went wrong add Parent']);
                         } else {
-        
+
                             // add User
                             $query = new User();
                             $query->name = $guardian_name;
@@ -10773,7 +10775,7 @@ class ApiController extends BaseController
                             $query->save();
                         }
                     }
-                }else{
+                } else {
                     $father_id = $request->father_id;
                     $mother_id = $request->mother_id;
                     $guardian_id = $request->guardian_id;
@@ -11210,7 +11212,7 @@ class ApiController extends BaseController
                     $name = strtotime($now);
                     $extension = $value['extension'];
                     $fileName = $name . uniqid() . "." . $extension;
-                    $path = '/public/'. $request->branch_id .'/images/todolist/';
+                    $path = '/public/' . $request->branch_id . '/images/todolist/';
                     $base64 = base64_decode($value['base64']);
                     File::ensureDirectoryExists(base_path() . $path);
                     $file = base_path() . $path . $fileName;
@@ -11267,7 +11269,7 @@ class ApiController extends BaseController
                 $delete_files = array_diff($old_file, $old_updated_file);
                 foreach ($delete_files as $delete) {
 
-                    $file = base_path() . '/public/'. $request->branch_id .'/images/todolist/' . $delete;
+                    $file = base_path() . '/public/' . $request->branch_id . '/images/todolist/' . $delete;
                     if (file_exists($file)) {
                         unlink($file);
                     }
@@ -11277,14 +11279,14 @@ class ApiController extends BaseController
                     array_push($fileNames, $file_name);
                 }
             }
-            
+
             if ($fileDetails) {
                 foreach ($fileDetails as $key => $value) {
                     $now = now();
                     $name = strtotime($now);
                     $extension = $value['extension'];
                     $fileName = $name . uniqid() . "." . $extension;
-                    $path = '/public/'. $request->branch_id .'/images/todolist/';
+                    $path = '/public/' . $request->branch_id . '/images/todolist/';
                     $base64 = base64_decode($value['base64']);
                     File::ensureDirectoryExists(base_path() . $path);
                     $file = base_path() . $path . $fileName;
@@ -11366,7 +11368,7 @@ class ApiController extends BaseController
                 $arrayVal = explode(',', $getRow->file);
                 foreach ($arrayVal as $key => $value) {
                     if ($value) {
-                        $file = base_path() . '/public/'.$request->branch_id.'/images/todolist/' . $value;
+                        $file = base_path() . '/public/' . $request->branch_id . '/images/todolist/' . $value;
                         if (file_exists($file)) {
                             unlink($file);
                         }
@@ -11846,7 +11848,7 @@ class ApiController extends BaseController
                     $fileName = 'UIMG_' . date('Ymd') . uniqid() . '.' . $extension;
 
                     // return $fileName;
-                    $path = '/public/'. $request->branch_id .'/users/images/';
+                    $path = '/public/' . $request->branch_id . '/users/images/';
                     $base64 = base64_decode($request->photo);
                     File::ensureDirectoryExists(base_path() . $path);
                     $file = base_path() . $path . $fileName;
@@ -12083,7 +12085,7 @@ class ApiController extends BaseController
             // create new connection
             $conn = $this->createNewConnection($request->branch_id);
             // get data
-            $path = '/public/'.$request->branch_id.'/users/images/';
+            $path = '/public/' . $request->branch_id . '/users/images/';
             $data = $conn->table('students as s')->select('s.photo', 'e.*')
                 ->leftJoin('enrolls as e', 's.id', '=', 'e.student_id')
                 ->where('s.id', $id)
@@ -12148,7 +12150,7 @@ class ApiController extends BaseController
                     $fileName = 'UIMG_' . date('Ymd') . uniqid() . '.' . $extension;
 
                     // return $fileName;
-                    $path = '/public/'. $request->branch_id .'/users/images/';
+                    $path = '/public/' . $request->branch_id . '/users/images/';
                     $base64 = base64_decode($request->photo);
                     File::ensureDirectoryExists(base_path() . $path);
                     $file = base_path() . $path . $fileName;
@@ -12374,7 +12376,7 @@ class ApiController extends BaseController
                     $fileName = 'UIMG_' . date('Ymd') . uniqid() . '.' . $extension;
 
                     // return $fileName;
-                    $path = '/public/'. $request->branch_id .'/users/images/';
+                    $path = '/public/' . $request->branch_id . '/users/images/';
                     $base64 = base64_decode($request->photo);
                     File::ensureDirectoryExists(base_path() . $path);
                     $file = base_path() . $path . $fileName;
@@ -13356,7 +13358,7 @@ class ApiController extends BaseController
                     $name = strtotime($now);
                     $extension = $request->file_extension;
                     $fileName = $name . "." . $extension;
-                    $path = '/public/'. $request->branch_id .'/teacher/student-leaves/';
+                    $path = '/public/' . $request->branch_id . '/teacher/student-leaves/';
                     $base64 = base64_decode($request->file);
                     File::ensureDirectoryExists(base_path() . $path);
                     $file = base_path() . $path . $fileName;
@@ -13448,7 +13450,7 @@ class ApiController extends BaseController
                 $extension = $request->file_extension;
                 $fileName = $name . "." . $extension;
 
-                $path = '/public/'. $request->branch_id .'/teacher/student-leaves/';
+                $path = '/public/' . $request->branch_id . '/teacher/student-leaves/';
                 $base64 = base64_decode($request->file);
                 File::ensureDirectoryExists(base_path() . $path);
                 $file = base_path() . $path . $fileName;
@@ -13498,7 +13500,7 @@ class ApiController extends BaseController
                 $extension = $request->file_extension;
                 $fileName = $name . "." . $extension;
 
-                $path = '/public/'. $request->branch_id .'/admin-documents/leaves/';
+                $path = '/public/' . $request->branch_id . '/admin-documents/leaves/';
                 $base64 = base64_decode($request->file);
                 File::ensureDirectoryExists(base_path() . $path);
                 $file = base_path() . $path . $fileName;
@@ -14403,7 +14405,7 @@ class ApiController extends BaseController
                     $extension = $request->file_extension;
                     $fileName = $name . "." . $extension;
 
-                    $path = '/public/'. $request->branch_id .'/admin-documents/leaves/';
+                    $path = '/public/' . $request->branch_id . '/admin-documents/leaves/';
                     $base64 = base64_decode($request->document);
                     File::ensureDirectoryExists(base_path() . $path);
                     $file = base_path() . $path . $fileName;
@@ -15213,7 +15215,7 @@ class ApiController extends BaseController
             $secConn = $this->createNewConnection($request->branch_id);
             // get data
             $section = $secConn->table('calendors')
-                ->select('id', 'title', 'start', 'end', 'description','all_day')
+                ->select('id', 'title', 'start', 'end', 'description', 'all_day')
                 ->where('id', '=', $request->calendor_id)
                 ->first();
             return $this->successResponse($section, 'calendors tast row details fetch successfully');
@@ -18327,7 +18329,7 @@ class ApiController extends BaseController
             $createConnection = $this->createNewConnection($request->branch_id);
             // get data
 
-            $query = $createConnection->table('staffs')->count();
+            $query = $createConnection->table('staffs')->where('is_active','=','0')->count();
             return $this->successResponse($query, 'Staff Count has been Fetched Successfully');
         }
     }
@@ -18388,7 +18390,7 @@ class ApiController extends BaseController
     // add Application
     public function addApplication(Request $request)
     {
-       // return $request;
+        // return $request;
         $validator = \Validator::make($request->all(), [
             'first_name' => 'required',
             'mobile_no' => 'required',
@@ -18439,125 +18441,124 @@ class ApiController extends BaseController
 
                 // return $request;
                 $query = $conn->table('student_applications')->insert([
-                   'first_name' => $request->first_name,
-                   'last_name' => $request->last_name,
-                   'gender' => $request->gender,
-                   'date_of_birth' => $request->date_of_birth,
-                   'mobile_no' => $request->mobile_no,
-                   'email' => $request->email,
-                   'address_1' => $request->address_1,
-                   'address_2' => $request->address_2,
-                   'country' => $request->country,
-                   'city' => $request->city,
-                   'state' => $request->state,
-                   'postal_code' => $request->postal_code,
-                   'grade' => $request->grade,
-                   'school_year' => $request->school_year,
-                   'school_last_attended' => $request->school_last_attended,
-                   'school_address_1' => $request->school_address_1,
-                   'school_address_2' => $request->school_address_2,
-                   'school_country' => $request->school_country,
-                   'school_city' => $request->school_city,
-                   'school_state' => $request->school_state,
-                   'school_postal_code' => $request->school_postal_code,
-                   'father_first_name' => $request->father_first_name,
-                   'father_last_name' => $request->father_last_name,
-                   'father_phone_number' => $request->father_phone_number,
-                   'father_occupation' => $request->father_occupation,
-                   'father_email' => $request->father_email,
-                   'mother_first_name' => $request->mother_first_name,
-                   'mother_last_name' => $request->mother_last_name,
-                   'mother_phone_number' => $request->mother_phone_number,
-                   'mother_occupation' => $request->mother_occupation,
-                   'mother_email' => $request->mother_email,
-                   'guardian_first_name' => $request->guardian_first_name,
-                   'guardian_last_name' => $request->guardian_last_name,
-                   'guardian_relation' => $request->guardian_relation,
-                   'guardian_phone_number' => $request->guardian_phone_number,
-                   'guardian_occupation' => $request->guardian_occupation,
-                   'guardian_email' => $request->guardian_email,
-                   'created_at' => date("Y-m-d H:i:s")
+                    'first_name' => $request->first_name,
+                    'last_name' => $request->last_name,
+                    'gender' => $request->gender,
+                    'date_of_birth' => $request->date_of_birth,
+                    'mobile_no' => $request->mobile_no,
+                    'email' => $request->email,
+                    'address_1' => $request->address_1,
+                    'address_2' => $request->address_2,
+                    'country' => $request->country,
+                    'city' => $request->city,
+                    'state' => $request->state,
+                    'postal_code' => $request->postal_code,
+                    'grade' => $request->grade,
+                    'school_year' => $request->school_year,
+                    'school_last_attended' => $request->school_last_attended,
+                    'school_address_1' => $request->school_address_1,
+                    'school_address_2' => $request->school_address_2,
+                    'school_country' => $request->school_country,
+                    'school_city' => $request->school_city,
+                    'school_state' => $request->school_state,
+                    'school_postal_code' => $request->school_postal_code,
+                    'father_first_name' => $request->father_first_name,
+                    'father_last_name' => $request->father_last_name,
+                    'father_phone_number' => $request->father_phone_number,
+                    'father_occupation' => $request->father_occupation,
+                    'father_email' => $request->father_email,
+                    'mother_first_name' => $request->mother_first_name,
+                    'mother_last_name' => $request->mother_last_name,
+                    'mother_phone_number' => $request->mother_phone_number,
+                    'mother_occupation' => $request->mother_occupation,
+                    'mother_email' => $request->mother_email,
+                    'guardian_first_name' => $request->guardian_first_name,
+                    'guardian_last_name' => $request->guardian_last_name,
+                    'guardian_relation' => $request->guardian_relation,
+                    'guardian_phone_number' => $request->guardian_phone_number,
+                    'guardian_occupation' => $request->guardian_occupation,
+                    'guardian_email' => $request->guardian_email,
+                    'created_at' => date("Y-m-d H:i:s")
                 ]);
 
                 $success = [];
-                    if (!$query) {
-                        return $this->send500Error('Something went wrong.', ['error' => 'Something went wrong']);
-                    } else {
-                        return $this->successResponse($success, 'Application has been successfully saved');
-                    }
-                
-           }
+                if (!$query) {
+                    return $this->send500Error('Something went wrong.', ['error' => 'Something went wrong']);
+                } else {
+                    return $this->successResponse($success, 'Application has been successfully saved');
+                }
+            }
 
             // return $request;
         }
     }
 
     // get studentApplication
-   public function studentApplicationList(Request $request)
-   {
+    public function studentApplicationList(Request $request)
+    {
 
-       $validator = \Validator::make($request->all(), [
-           'branch_id' => 'required',
-           'token' => 'required'
-       ]);
-       if (!$validator->passes()) {
-           return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
-       } else {
-           // create new connection
-           $conn = $this->createNewConnection($request->branch_id);
-           // get data
-           $data = $conn->table('student_applications')
-               ->select("id", 'email','first_name','last_name')
-               ->where("first_name", "LIKE", "%{$request->name}%")
-               ->orWhere("last_name", "LIKE", "%{$request->name}%")
-               ->get();
+        $validator = \Validator::make($request->all(), [
+            'branch_id' => 'required',
+            'token' => 'required'
+        ]);
+        if (!$validator->passes()) {
+            return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
+        } else {
+            // create new connection
+            $conn = $this->createNewConnection($request->branch_id);
+            // get data
+            $data = $conn->table('student_applications')
+                ->select("id", 'email', 'first_name', 'last_name')
+                ->where("first_name", "LIKE", "%{$request->name}%")
+                ->orWhere("last_name", "LIKE", "%{$request->name}%")
+                ->get();
 
-           $output = '';
-           if ($request->name) {
-               if (!$data->isEmpty()) {
-                   $output = '<ul class="list-group" style="display: block; position: relative; z-index: 1">';
-                   foreach ($data as $row) {
+            $output = '';
+            if ($request->name) {
+                if (!$data->isEmpty()) {
+                    $output = '<ul class="list-group" style="display: block; position: relative; z-index: 1">';
+                    foreach ($data as $row) {
 
-                       $output .= '<li class="list-group-item" value="' . $row->id . '">' . $row->first_name .' '. $row->last_name . ' ( ' . $row->email . ' ) </li>';
-                   }
-                   $output .= '</ul>';
-               } else {
-                   $output .= '<li class="list-group-item">' . 'No results Found' . '</li>';
-               }
-           } else {
-               $output .= '<li class="list-group-item">' . 'No results Found' . '</li>';
-           }
-           return $output;
-       }
-   }
+                        $output .= '<li class="list-group-item" value="' . $row->id . '">' . $row->first_name . ' ' . $row->last_name . ' ( ' . $row->email . ' ) </li>';
+                    }
+                    $output .= '</ul>';
+                } else {
+                    $output .= '<li class="list-group-item">' . 'No results Found' . '</li>';
+                }
+            } else {
+                $output .= '<li class="list-group-item">' . 'No results Found' . '</li>';
+            }
+            return $output;
+        }
+    }
 
-   // student Application
-   public function studentApplication(Request $request)
-   {
+    // student Application
+    public function studentApplication(Request $request)
+    {
 
-       $validator = \Validator::make($request->all(), [
-           'id' => 'required',
-           'branch_id' => 'required',
-           'token' => 'required'
-       ]);
+        $validator = \Validator::make($request->all(), [
+            'id' => 'required',
+            'branch_id' => 'required',
+            'token' => 'required'
+        ]);
 
-       if (!$validator->passes()) {
-           return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
-       } else {
-           $id = $request->id;
-           // create new connection
-           $conn = $this->createNewConnection($request->branch_id);
-           // get data
-           $getstudentDetails = $conn->table('student_applications as s')
-               ->select(
-                   's.*',
-                   DB::raw("CONCAT(s.first_name, ' ', s.last_name) as name")
-               )
-               ->where('s.id', $id)
-               ->first();
-           return $this->successResponse($getstudentDetails, 'Student row fetch successfully');
-       }
-   }
+        if (!$validator->passes()) {
+            return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
+        } else {
+            $id = $request->id;
+            // create new connection
+            $conn = $this->createNewConnection($request->branch_id);
+            // get data
+            $getstudentDetails = $conn->table('student_applications as s')
+                ->select(
+                    's.*',
+                    DB::raw("CONCAT(s.first_name, ' ', s.last_name) as name")
+                )
+                ->where('s.id', $id)
+                ->first();
+            return $this->successResponse($getstudentDetails, 'Student row fetch successfully');
+        }
+    }
 
     // getRelationList
     public function getApplicationRelationList(Request $request)
@@ -18577,7 +18578,7 @@ class ApiController extends BaseController
         }
     }
 
-    
+
     // academic Year List
     public function applicationAcademicYearList(Request $request)
     {
@@ -18599,7 +18600,7 @@ class ApiController extends BaseController
     // updatePicture settings
     public function forumImageStore(Request $request)
     {
-        $path = '/public/'. $request->branch_id .'/forum/upload/';
+        $path = '/public/' . $request->branch_id . '/forum/upload/';
 
         $fileName = $request->filename . '_' . time() . '.' .  $request->file_extension;
         $base64 = base64_decode($request->photo);
