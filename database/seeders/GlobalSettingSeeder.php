@@ -17,7 +17,7 @@ class GlobalSettingSeeder extends Seeder
         
         DB::table('global_settings')->insert(
             [
-                'year_id' => '5',
+                'year_id' => '1',
                 'footer_text' => '© 2020 Paxsuzen School Management - Developed by Aibots',
                 'timezone' => 'Pacific/Midway',
                 'facebook_url' => 'https://www.facebook.com/username',

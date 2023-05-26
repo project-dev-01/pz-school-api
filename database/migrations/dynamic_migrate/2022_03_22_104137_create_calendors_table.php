@@ -22,7 +22,7 @@ class CreateCalendorsTable extends Migration
             $table->string('timing')->nullable();
             $table->string('teacher_id')->nullable();
             $table->string('sem_id')->nullable();
-            $table->integer('session_id');
+            $table->integer('session_id')->default('0');
             $table->integer('time_table_id')->nullable();
             $table->integer('bulk_id')->nullable();
             $table->integer('event_id')->nullable();
@@ -30,6 +30,7 @@ class CreateCalendorsTable extends Migration
             $table->dateTime('start')->nullable();
             $table->dateTime('end')->nullable();
             $table->text('description')->nullable();
+            $table->enum('all_day', ['0', '1'])->default('0');
             $table->string('task_color')->nullable();
             $table->integer('login_id')->nullable();
             $table->integer('relief_assignment_id')->nullable();

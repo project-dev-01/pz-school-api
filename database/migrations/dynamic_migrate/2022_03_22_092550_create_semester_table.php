@@ -19,6 +19,7 @@ class CreateSemesterTable extends Migration
             $table->date('start_date')->nullable();
             $table->date('end_date')->nullable();
             $table->integer('academic_session_id');
+            $table->string('year')->nullable();
             $table->timestamps();
         });
     }

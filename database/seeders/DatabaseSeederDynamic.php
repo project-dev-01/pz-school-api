@@ -15,7 +15,6 @@ class DatabaseSeederDynamic extends Seeder
     {
         $this->call([
             GlobalSettingSeeder::class,
-            LeaveTypeSeeder::class,
             PaymentModeSeeder::class,
             PaymentStatusSeeder::class,
             RelationSeeder::class,
