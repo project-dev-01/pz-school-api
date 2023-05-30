@@ -629,9 +629,9 @@ Route::group(['middleware' => ['auth:api', 'throttle:limit_per_user', 'logroute'
     Route::post('classes/all_subjects', [ApiControllerOne::class, 'classByAllSubjects']);
     Route::get('paper_type/list', [ApiControllerOne::class, 'getPaperTypeList']);
     // import parent details in csv
-    Route::post('importcsv/parents', [ApiControllerOne::class, 'importCsvParents']);
+    Route::post('importcsv/parent', [ImportController::class, 'importCsvParents']);
     // import students details in csv
-    Route::post('importcsv/students', [ApiControllerOne::class, 'importCsvStudents']);
+    Route::post('importcsv/student', [ImportController::class, 'importCsvStudents']);
     // import timetable details in csv
     Route::post('importcsv/timetable', [ApiControllerOne::class, 'importCsvTimetable']);
     // import add exam timetable details in csv

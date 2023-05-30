@@ -20,6 +20,7 @@ use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Mail;
 use Carbon\Carbon;
+use File;
 
 class ImportController extends BaseController
 {
@@ -35,10 +36,6 @@ class ImportController extends BaseController
         } else {
             // create new connection
             $Connection = $this->createNewConnection($request->branch_id);
-
-            // $base64 = base64_decode($request->file);
-            $base64 = base64_decode($request->file);
-            // $file = $request->file('file');
             // File Details 
 
             $filename = $request->fileName;
@@ -57,22 +54,14 @@ class ImportController extends BaseController
                 // Check file size
                 if ($fileSize <= $maxFileSize) {
 
-
-                    $file = base_path() . '/uploads/delete/' . $filename;
-                    $suc = file_put_contents($file, $base64);
-                    // File upload location
-                    $location = 'uploads/delete/';
+                    $path = base_path().'/public/' . $request->branch_id . '/uploads/';
+                    $base64 = base64_decode($request->file);
+                    File::ensureDirectoryExists($path);
+                    $file = $path . $filename;
+                    $picture = file_put_contents($file, $base64);
                     // Upload file
-                    // $file->move($location, $filename);
                     // Import CSV to Database
-                    // $filepath = public_path($location."/".$filename);
-                    $filepath = $location . "/" . $filename;
-                    // $file = fopen($filename, "r");
-                    // if ($handle) {
-                    //     // Use $handle
-                    // } else {
-                    //     die("Unable to open file");
-                    // }
+                    $filepath = $path . "/" . $filename;
                     // Reading file
                     $file = fopen($filepath, "r");
                     $importData_arr = array();
@@ -99,7 +88,6 @@ class ImportController extends BaseController
 
 
                         $dummyInc++;
-                        
                         $first_name = $importData[1];
                         $last_name = $importData[2];
                         $gender = $importData[3];
@@ -157,6 +145,8 @@ class ImportController extends BaseController
                         ];
                         $userValidator = \Validator::make( $user_data, $user_rules );
                         if($userValidator->passes()) {
+                            
+                        
                             $dynamic_row = [ 
                                 ['table_name'=>'religions','number'=>'5'],
                                 ['table_name'=>'races','number'=>'6'],
@@ -217,43 +207,46 @@ class ImportController extends BaseController
                                 'facebook_url' => $facebook_url,
                                 'linkedin_url' => $linkedin_url,
                                 'created_at' => date("Y-m-d H:i:s")
-                            ];
-                            if ($Connection->table('staffs')->where('email', '=', $email)->count() < 1) {
-                                $staffId = $Connection->table('staffs')->insertGetId($employee_data);
+                            ]; 
+                            
+                            if (DB::table('users')->where([['email', '=', $email],['branch_id', '=', $request->branch_id]])->count() < 1) {
+                                if ($Connection->table('staffs')->where('email', '=', $email)->count() < 1) {
+                                    $staffId = $Connection->table('staffs')->insertGetId($employee_data);
 
-                                $bank_data = [
-                                    'bank_name' => $bank_name,
-                                    'holder_name' => $holder_name,
-                                    'bank_branch' => $bank_branch,
-                                    'bank_address'    => $bank_address,
-                                    'ifsc_code' => $ifsc_code,
-                                    'account_no' => $account_no
-                                ];
-                                $bank_rules = [
-                                    'bank_name' => 'required',
-                                    'holder_name' => 'required',
-                                    'bank_branch' => 'required',
-                                    'bank_address' => 'required',
-                                    'account_no' => 'required',
-                                    'ifsc_code' => 'required'
-                                ];
-                                $bankValidator = \Validator::make( $bank_data, $bank_rules );
-                                // add bank details
-                                if ($bankValidator->passes()) {
-                                    $bank = $Connection->table('staff_bank_accounts')->insert($bank_data);
-                                }
-    
-                                if ($staffId) {
-                                    $user = new User();
-                                    $user->name = (isset($first_name) ? $first_name : "") . " " . (isset($last_name) ? $last_name : "");
-                                    $user->user_id = $staffId;
-                                    $user->role_id = $dynamic_data[18];
-                                    $user->branch_id = $request->branch_id;
-                                    $user->email = $email;
-                                    $user->status = "0";
-                                    $user->password_changed_at = date("Y-m-d H:i:s");
-                                    $user->password = bcrypt($password);
-                                    $query = $user->save();
+                                    $bank_data = [
+                                        'bank_name' => $bank_name,
+                                        'holder_name' => $holder_name,
+                                        'bank_branch' => $bank_branch,
+                                        'bank_address'    => $bank_address,
+                                        'ifsc_code' => $ifsc_code,
+                                        'account_no' => $account_no
+                                    ];
+                                    $bank_rules = [
+                                        'bank_name' => 'required',
+                                        'holder_name' => 'required',
+                                        'bank_branch' => 'required',
+                                        'bank_address' => 'required',
+                                        'account_no' => 'required',
+                                        'ifsc_code' => 'required'
+                                    ];
+                                    $bankValidator = \Validator::make( $bank_data, $bank_rules );
+                                    // add bank details
+                                    if ($bankValidator->passes()) {
+                                        $bank = $Connection->table('staff_bank_accounts')->insert($bank_data);
+                                    }
+        
+                                    if ($staffId) {
+                                        $user = new User();
+                                        $user->name = (isset($first_name) ? $first_name : "") . " " . (isset($last_name) ? $last_name : "");
+                                        $user->user_id = $staffId;
+                                        $user->role_id = $dynamic_data[18];
+                                        $user->branch_id = $request->branch_id;
+                                        $user->email = $email;
+                                        $user->status = "0";
+                                        $user->password_changed_at = date("Y-m-d H:i:s");
+                                        $user->password = bcrypt($password);
+                                        $query = $user->save();
+                                    }
                                 }
                             } 
                             
@@ -266,8 +259,8 @@ class ImportController extends BaseController
                         //     $query = $Connection->table($table)->insert($data);
                         // }
                     }
-                    if (\File::exists(base_path($filepath))) {
-                        \File::delete(base_path($filepath));
+                    if (\File::exists($filepath)) {
+                        \File::delete($filepath);
                     }
                     return $this->successResponse([], 'Import Successful');
                 } else {
@@ -277,30 +270,6 @@ class ImportController extends BaseController
                 return $this->send422Error('Validation error.', ['error' => 'Invalid File Extension']);
             }
         }
-    }
-
-    
-    // getLikeColumnName
-    public function getLikeColumnName($request)
-    {
-        // return $request;
-        // create new connection
-        $conn = $this->createNewConnection($request['branch_id']);
-        // get dat
-        $table_name = $request['table_name'];
-        $name = explode(',',$request['name']);
-
-        if ($request['table_name']=="role") {
-            $data = DB::table('roles')->select(DB::raw("group_concat(id) as id"))->whereIn('role_name',$name)->get();
-        } else {
-            $data = $conn->table($table_name)->select(DB::raw("group_concat(id) as id"))->whereIn('name',$name )->get();
-        }
-
-        $response = "";
-        if ($data) {
-            $response = $data[0]->id;
-        }
-        return $response;
     }
 
     // getLikeColumnName
@@ -332,5 +301,437 @@ class ImportController extends BaseController
     //     }
     //     return $response;
     // }
+    // import Csv Parents
+    public function importCsvParents(Request $request)
+    {
+        $validator = \Validator::make($request->all(), [
+            'branch_id' => 'required',
+            'file' => 'required'
+        ]);
+        if (!$validator->passes()) {
+            return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
+        } else {
+            // create new connection
+            $Connection = $this->createNewConnection($request->branch_id);
+
+            $filename = $request->fileName;
+            $extension = $request->extension;
+            $tempPath = $request->tempPath;
+            $fileSize = $request->fileSize;
+            $mimeType = $request->mimeType;
+           
+            // File Details 
+            header('Content-type: text/plain; charset=utf-8');
+            // Valid File Extensions
+            $valid_extension = array("csv");
+            // 2MB in Bytes
+            $maxFileSize = 2097152;
+            // return $maxFileSize;
+            // Check file extension
+            if (in_array(strtolower($extension), $valid_extension)) {
+                // Check file size
+                if ($fileSize <= $maxFileSize) {
+                    // File upload location
+                    $path = base_path().'/public/' . $request->branch_id . '/uploads/';
+                    $base64 = base64_decode($request->file);
+                    File::ensureDirectoryExists($path);
+                    $file = $path . $filename;
+                    $picture = file_put_contents($file, $base64);
+                    // Upload file
+                    // Import CSV to Database
+                    $filepath = $path . "/" . $filename;
+                    // Reading file
+                    $file = fopen($filepath, "r");
+                    $importData_arr = array();
+                    $i = 0;
+                    while (($filedata = fgetcsv($file, 1000, ",")) !== FALSE) {
+                        $num = count($filedata);
+                        // Skip first row (Remove below comment if you want to skip the first row)
+                        if ($i == 0) {
+                            $i++;
+                            continue;
+                        }
+                        for ($c = 0; $c < $num; $c++) {
+                            $importData_arr[$i][] = $filedata[$c];
+                        }
+                        $i++;
+                    }
+                    // exit();
+                    fclose($file);
+                    // dummyemail
+                    $dummyInc = 1;
+                    // Insert to MySQL database
+                    foreach ($importData_arr as $importData) {
+                        // return $importData[1];
+                        $dummyInc++;
+                        // insert data
+                        $first_name =  isset($importData[1]) ? $importData[1] : "";
+                        $last_name =  isset($importData[2]) ? $importData[2] : "";
+                        $gender =  isset($importData[3]) ? $importData[3] : "";
+                        $dob = date("Y-m-d", strtotime($importData[4]));
+                        $passport = isset($importData[5]) ? Crypt::encryptString($importData[5]) : "";
+                        $nric = isset($importData[6]) ? Crypt::encryptString($importData[6]) : "";
+                        $blood_group =  isset($importData[7]) ? $importData[7] : "";
+                        $mobile_no = isset($importData[8]) ? Crypt::encryptString($importData[8]) : "";
+                        $occupation = isset($importData[12]) ? $importData[12] : "";
+                        $income = isset($importData[13]) ? $importData[13] : "";
+                        $country = isset($importData[14]) ? $importData[14] : "";
+                        $state = isset($importData[15]) ? $importData[15] : "";
+                        $city = isset($importData[16]) ? $importData[16] : "";
+                        $zip_code = isset($importData[17]) ? $importData[17] : "";
+                        $address_1 = isset($importData[18]) ? Crypt::encryptString($importData[18]) : "";
+                        $address_2 = isset($importData[19]) ? Crypt::encryptString($importData[19]) : "";
+                        $email = $importData[20];
+                        $password =  $importData[21];
+                        $confirm_password =  $importData[22];
+                        $twitter_url = $importData[23];
+                        $facebook_url = $importData[24];
+                        $linkedin_url = $importData[25];
+
+                        $role = "5";
+                        
+                        $user_data = [
+                            'email' => $email,
+                            'first_name' => $first_name,
+                            'last_name' => $last_name,
+                            'mobile_number' => $mobile_no,
+                            'occupation' => $occupation,
+                            'password' => $password,
+                            'role' => $role,
+                            'confirm_password' => $confirm_password,
+                        ];
+                    
+                        $user_rules = [
+                            'email' => 'required',
+                            'occupation' => 'required',
+                            'first_name' => 'required',
+                            'role' => 'required',
+                            'mobile_number' => 'required',
+                            'password' => 'required|min:6',
+                            'confirm_password' => 'required|same:password|min:6'
+                        ];
+
+                        $userValidator = \Validator::make( $user_data, $user_rules );
+                        if($userValidator->passes()) {
+                            $dynamic_row = [ 
+                                ['table_name'=>'religions','number'=>'9'],
+                                ['table_name'=>'races','number'=>'10'],
+                                ['table_name'=>'educations','number'=>'11'],
+                            ];
+    
+                            $dynamic_data = [];
+                            foreach($dynamic_row as $row) {
+                                $number = $row['number'];
+                                $column = [
+                                    'token' => $request->token,
+                                    'branch_id' => $request->branch_id,
+                                    'name' => $importData[$number],
+                                    'table_name' => $row['table_name']
+                                ];
+                                $row = $this->getLikeColumnName($column);
+                                $dynamic_data[$number] = $row;
+                            }
+    
+                            $parent_data = [
+                                'first_name' => $first_name,
+                                'last_name' => $last_name,
+                                'gender' => $gender,
+                                'date_of_birth' => $dob,
+                                'passport' => $passport,
+                                'nric' => $nric,
+                                'blood_group' => $blood_group,
+                                'mobile_no' => $mobile_no,
+                                'religion' => $dynamic_data[9],
+                                'race' => $dynamic_data[10],
+                                'education' => $dynamic_data[11],
+                                'occupation' => $occupation,
+                                'income' => $income,
+                                'country' => $country,
+                                'state' => $state,
+                                'city' => $city,
+                                'post_code' => $zip_code,
+                                'address' => $address_1,
+                                'address_2' => $address_2,
+                                'email' => $email,
+                                'twitter_url' => $twitter_url,
+                                'facebook_url' => $facebook_url,
+                                'linkedin_url' => $linkedin_url,
+                                'status' => "0",
+                                'created_at' => date("Y-m-d H:i:s")
+                            ];
+                            if (DB::table('users')->where([['email', '=', $email],['branch_id', '=', $request->branch_id]])->count() < 1) {
+                                if ($Connection->table('parent')->where('email', '=', $email)->count() < 1) {
+                                    $parentId = $Connection->table('parent')->insertGetId($parent_data);
+                                    if ($parentId) {
+                                        $user = new User();
+                                        $user->name = (isset($first_name) ? $first_name : "") . " " . (isset($last_name) ? $last_name : "");
+                                        $user->user_id = $parentId;
+                                        $user->role_id = $role;
+                                        $user->branch_id = $request->branch_id;
+                                        $user->email = $email;
+                                        $user->status = "0";
+                                        $user->password_changed_at = date("Y-m-d H:i:s");
+                                        $user->password = bcrypt($password);
+                                        $query = $user->save();
+                                    }
+                                } 
+                            }
+                        }
+                    }
+                    
+                    if (\File::exists($filepath)) {
+                        \File::delete($filepath);
+                    }
+                    return $this->successResponse([], 'Import Successful');
+                } else {
+                    return $this->send422Error('Validation error.', ['error' => 'File too large. File must be less than 2MB.']);
+                }
+            } else {
+                return $this->send422Error('Validation error.', ['error' => 'Invalid File Extension']);
+            }
+        }
+    }
+
+    // import Csv Students
+    public function importCsvStudents(Request $request)
+    {
+        $validator = \Validator::make($request->all(), [
+            'branch_id' => 'required',
+            'file' => 'required'
+        ]);
+
+        if (!$validator->passes()) {
+            return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
+        } else {
+            // create new connection
+            $Connection = $this->createNewConnection($request->branch_id);
+            
+            $filename = $request->fileName;
+            $extension = $request->extension;
+            $tempPath = $request->tempPath;
+            $fileSize = $request->fileSize;
+            $mimeType = $request->mimeType;
+            header('Content-type: text/plain; charset=utf-8');
+            // Valid File Extensions
+            $valid_extension = array("csv");
+            // 2MB in Bytes
+            $maxFileSize = 2097152;
+            // Check file extension
+            if (in_array(strtolower($extension), $valid_extension)) {
+                // Check file size
+                if ($fileSize <= $maxFileSize) {
+
+                    
+                    // File upload location
+                    $path = base_path().'/public/' . $request->branch_id . '/uploads/';
+                    $base64 = base64_decode($request->file);
+                    File::ensureDirectoryExists($path);
+                    $file = $path . $filename;
+                    $picture = file_put_contents($file, $base64);
+                    // Upload file
+                    // Import CSV to Database
+                    $filepath = $path . "/" . $filename;
+                    // Reading file
+                    $file = fopen($filepath, "r");
+                    $importData_arr = array();
+                    $i = 0;
+                    while (($filedata = fgetcsv($file, 1000, ",")) !== FALSE) {
+                        $num = count($filedata);
+                        // Skip first row (Remove below comment if you want to skip the first row)
+                        if ($i == 0) {
+                            $i++;
+                            continue;
+                        }
+                        for ($c = 0; $c < $num; $c++) {
+                            $importData_arr[$i][] = $filedata[$c];
+                        }
+                        $i++;
+                    }
+                    // exit();
+                    fclose($file);
+                    // dummyemail
+                    $dummyInc = 1;
+                    // Insert to MySQL database
+                    foreach ($importData_arr as $importData) {
+                        $dummyInc++;
+                        // dd($importData);
+                        $first_name = $importData[1];
+                        $last_name = $importData[2];
+                        $gender = $importData[3];
+                        $blood_group = $importData[4];
+                        $date_of_birth = date("Y-m-d", strtotime($importData[5]));;
+                        $passport = isset($importData[6]) ? Crypt::encryptString($importData[6]) : "";
+                        $nric = isset($importData[7]) ? Crypt::encryptString($importData[7]) : "";
+                        $mobile_no = isset($importData[10]) ? Crypt::encryptString($importData[10]) : "";
+                        $country = $importData[11];
+                        $state = $importData[12];
+                        $city = $importData[13];
+                        $zip_code = $importData[14];
+                        $address_1 = isset($importData[15]) ? Crypt::encryptString($importData[15]) : "";
+                        $address_2 = isset($importData[16]) ? Crypt::encryptString($importData[16]) : "";
+                        $register_no = $importData[18];
+                        $roll_no = $importData[19];
+                        $admission_date = $importData[20];
+                        $email = isset($importData[25]) ? $importData[25] : null;
+                        $password = $importData[26];
+                        $confirm_password = $importData[27];
+                        $previous['school_name'] = $importData[32];
+                        $previous['qualification'] = $importData[33];
+                        $previous['remarks'] = $importData[34];
+                        $previous_details = json_encode($previous);
+
+                        $role = "6";
+                        $user_data = [
+                            'email' => $email,
+                            'first_name' => $first_name,
+                            'last_name' => $last_name,
+                            'mobile_number' => $mobile_no,
+                            'password' => $password,
+                            'role' => $role,
+                            'confirm_password' => $confirm_password,
+                        ];
+                    
+                        $user_rules = [
+                            'email' => 'required',
+                            'first_name' => 'required',
+                            'role' => 'required',
+                            'mobile_number' => 'required',
+                            'password' => 'required|min:6',
+                            'confirm_password' => 'required|same:password|min:6'
+                        ];
+
+                        $userValidator = \Validator::make( $user_data, $user_rules );
+                        if($userValidator->passes()) {
+                            
+                        
+                            $dynamic_row = [ 
+                                ['table_name'=>'religions','number'=>'8'],
+                                ['table_name'=>'races','number'=>'9'],
+                                ['table_name'=>'academic_year','number'=>'17'],
+                                ['table_name'=>'classes','number'=>'21'],
+                                ['table_name'=>'sections','number'=>'22'],
+                                ['table_name'=>'session','number'=>'23'],
+                                ['table_name'=>'semester','number'=>'24'],
+                                ['table_name'=>'parent','number'=>'28'],
+                                ['table_name'=>'parent','number'=>'29'],
+                                ['table_name'=>'parent','number'=>'30'],
+                                ['table_name'=>'relations','number'=>'31'],
+                            ];
+    
+                            $dynamic_data = [];
+                            foreach($dynamic_row as $row) {
+                                $number = $row['number'];
+                                $column = [
+                                    'token' => $request->token,
+                                    'branch_id' => $request->branch_id,
+                                    'name' => $importData[$number],
+                                    'table_name' => $row['table_name']
+                                ];
+                                // return $column;
+                                $row = $this->getLikeColumnName($column);
+                                $dynamic_data[$number] = $row;
+                            }
+                            $student_data = [
+                                'first_name' => $first_name,
+                                'last_name' => $last_name,
+                                'gender' => $gender,
+                                'blood_group' => $blood_group,
+                                'birthday' => $date_of_birth,
+                                'passport' => $passport,
+                                'nric' => $nric,
+                                'religion' => $dynamic_data[8],
+                                'race' => $dynamic_data[9],
+                                'mobile_no' => $mobile_no,
+                                'country' => $country,
+                                'state' => $state,
+                                'city' => $city,
+                                'post_code' => $zip_code,
+                                'current_address' => $address_1,
+                                'permanent_address' => $address_2,
+                                'year' => $dynamic_data[17],
+                                'register_no' => $register_no,
+                                'roll_no' => $roll_no,
+                                'admission_date' => $admission_date,
+                                'email' => $email,
+                                'father_id' => $dynamic_data[28],
+                                'mother_id' => $dynamic_data[29],
+                                'guardian_id' => $dynamic_data[30],
+                                'relation' => $dynamic_data[31],
+                                'previous_details' => $previous_details,
+                                'status' => "0",
+                                'created_at' => date("Y-m-d H:i:s")
+                            ];
+                            // return $dynamic_data;
+                            
+                            if (DB::table('users')->where([['email', '=', $email],['branch_id', '=', $request->branch_id]])->count() < 1) {
+                                if ($Connection->table('students')->where('email', '=', $email)->count() < 1) {
+                                    $studentId = $Connection->table('students')->insertGetId($student_data);
+
+                                    $classDetails = [
+                                        'student_id' => $studentId,
+                                        'class_id' => $dynamic_data[21],
+                                        'section_id' => $dynamic_data[22],
+                                        'academic_session_id' => $dynamic_data[17],
+                                        'roll' => $roll_no,
+                                        'session_id' => isset($dynamic_data[23]) ? $dynamic_data[23] : 0,
+                                        'semester_id' => isset($dynamic_data[23]) ? $dynamic_data[24] : 0,
+                                    ];
+                                    $Connection->table('enrolls')->insert($classDetails);
+
+                                    if ($studentId) {
+                                        $user = new User();
+                                        $user->name = (isset($first_name) ? $first_name : "") . " " . (isset($last_name) ? $last_name : "");
+                                        $user->user_id = $studentId;
+                                        $user->role_id = $role;
+                                        $user->branch_id = $request->branch_id;
+                                        $user->email = $email;
+                                        $user->status = "0";
+                                        $user->password_changed_at = date("Y-m-d H:i:s");
+                                        $user->password = bcrypt($password);
+                                        $query = $user->save();
+                                    }
+                                }
+                            } 
+                        }
+                    }
+                    
+                    if (\File::exists($filepath)) {
+                        \File::delete($filepath);
+                    }
+                    return $this->successResponse([], 'Import Successful');
+                } else {
+                    return $this->send422Error('Validation error.', ['error' => 'File too large. File must be less than 2MB.']);
+                }
+            } else {
+                return $this->send422Error('Validation error.', ['error' => 'Invalid File Extension']);
+            }
+        }
+    }
+    // getLikeColumnName
+    public function getLikeColumnName($request)
+    {
+        // return $request;
+        // create new connection
+        $conn = $this->createNewConnection($request['branch_id']);
+        // get dat
+        $table_name = $request['table_name'];
+        $name = explode(',',$request['name']);
+        if ($request['table_name']=="role") {
+            $data = DB::table('roles')->select(DB::raw("group_concat(id) as id"))->whereIn('role_name',$name)->get();
+        } else if ($request['table_name']=="parent") {
+            $data = $conn->table($table_name)->select("id")->whereIn('first_name',$name)->orWhereIn('last_name',$name)->get();
+        } else {
+            $data = $conn->table($table_name)->select(DB::raw("group_concat(id) as id"))->whereIn('name',$name )->get();
+        }
+
+        // return $data;
+        $response = "";
+        if (!$data->isEmpty()) {
+            if($data[0]->id != null){
+                $response = $data[0]->id;
+            }
+        }
+        return $response;
+    }
     
 }
