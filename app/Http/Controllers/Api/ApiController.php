@@ -3032,7 +3032,7 @@ class ApiController extends BaseController
                         $user->picture = $fileName;
                         $user->email = $request->email;
                         $user->status = $request->status;
-                        $user->google2fa_secret_enable = isset($request->google2fa_secret_enable) ? '1' : '0';
+                        $user->google2fa_secret_enable = $request->google2fa_secret_enable;
                         $user->password_changed_at = date("Y-m-d H:i:s");
                         $user->password = bcrypt($request->password);
                         $query = $user->save();
@@ -3304,7 +3304,7 @@ class ApiController extends BaseController
                         $user->picture = $fileName;
                         $user->password = bcrypt($request->password);
                         $user->status = $request->status;
-                        $user->google2fa_secret_enable = isset($request->google2fa_secret_enable) ? '1' : '0';
+                        $user->google2fa_secret_enable = $request->google2fa_secret_enable;
                         $user->role_id = $request->role_id;
                         $updateUser = $user->save();
                     }
@@ -3314,7 +3314,7 @@ class ApiController extends BaseController
                         $user->email = $request->email;
                         $user->picture = $fileName;
                         $user->status = $request->status;
-                        $user->google2fa_secret_enable = isset($request->google2fa_secret_enable) ? '1' : '0';
+                        $user->google2fa_secret_enable = $request->google2fa_secret_enable;
                         $user->role_id = $request->role_id;
                         $updateUser = $user->save();
                     }
@@ -3323,7 +3323,7 @@ class ApiController extends BaseController
                         $user->name = (isset($request->first_name) ? $request->first_name : "") . " " . (isset($request->last_name) ? $request->last_name : "");
                         $user->picture = $fileName;
                         $user->status = $request->status;
-                        $user->google2fa_secret_enable = isset($request->google2fa_secret_enable) ? '1' : '0';
+                        $user->google2fa_secret_enable = $request->google2fa_secret_enable;
                         $user->role_id = $request->role_id;
                         $updateUser = $user->save();
                     }
