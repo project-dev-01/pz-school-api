@@ -27,7 +27,7 @@ class CreateEventsTable extends Migration
             $table->string('all_day')->nullable();
             $table->integer('holiday');
             $table->tinyInteger('status');            
-            $table->string('created_by');
+            $table->string('created_by')->nullable();
             $table->timestamps();
         });
     }

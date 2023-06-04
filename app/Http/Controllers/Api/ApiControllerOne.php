@@ -240,7 +240,8 @@ class ApiControllerOne extends BaseController
                 // Check file size
                 if ($fileSize <= $maxFileSize) {
                     // File upload location
-                    $location = 'uploads';
+                    // $location = 'uploads';
+                    $location = base_path().'/public/' . $request->branch_id . '/uploads/';
                     // Upload file
                     $file->move($location, $filename);
                     // Import CSV to Database
@@ -264,6 +265,7 @@ class ApiControllerOne extends BaseController
                         $i++;
                     }
                     fclose($file);
+                    // dd($importData_arr);
                     // Insert to MySQL database
                     foreach ($importData_arr as $importData) {
                         $class_id = 0;
@@ -301,13 +303,19 @@ class ApiControllerOne extends BaseController
                             $teacher_id =  $importData[6];
                         }
                         if (isset($importData[5])) {
-                            if ($importData[5] == "" || trim($importData[5]) == "Rehat") {
-                                $break = 1;
-                            } else {
+                            // if ($importData[5] == "" || trim($importData[5]) == "Rehat") {
+                            //     $break = 1;
+                            // } else {
+                            //     $subject_id =  $importData[5];
+                            // }
+                            if (is_numeric($importData[5])) {
                                 $subject_id =  $importData[5];
+                            } else {
+                                $break = 1;
                             }
                         }
-                        $breakType = ($break == 1 ? "Break" : null);
+                        // $breakType = ($break == 1 ? "Break" : null);
+                        $breakType = ($break == 1 ? $importData[5] : null);
                         $time_start = date("H:i:s", strtotime($importData[7]));
                         $time_end = date("H:i:s", strtotime($importData[8]));
 

@@ -79,7 +79,7 @@ class AuthController extends BaseController
             // Auth::logoutOtherDevices($request->password);
             if ($user->status == 0) {
                 // update left to 0
-                $getUser = User::where('email', $request->email)->first();
+                $getUser = User::where(['email' => $request->email, 'branch_id' => $request->branch_id])->first();
                 $user = User::find($getUser->id);
                 $user->login_attempt = 0;
                 $user->session_id = $token;

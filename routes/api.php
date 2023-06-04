@@ -52,6 +52,7 @@ Route::post('2fa/update_two_fa_secret', [TwoFactorAuth::class, 'updateTwoFASecre
 
 Route::post('get_school_type', [ApiController::class, 'getSchoolType']);
 Route::post('get_home_page_details', [ApiController::class, 'getHomePageDetails']);
+Route::post('firstlastscript', [CommonController::class, 'fistLastScript']);
 
 Route::post('application/relation/list', [ApiController::class, 'getApplicationRelationList']);
 Route::post('application/academic_year/list', [ApiController::class, 'applicationAcademicYearList']);

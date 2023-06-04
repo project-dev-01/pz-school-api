@@ -9,6 +9,8 @@ use App\Models\Branches;
 use App\Models\Cities;
 use App\Models\Countries;
 use App\Models\States;
+use App\Models\User;
+
 // db connection
 use App\Helpers\DatabaseConnection;
 use App\Models\Category;
@@ -52,19 +54,19 @@ class CommonController extends BaseController
             return $this->successResponse($success, 'Citites record fetch successfully');
         }
     }
-    function databaseMigrate(Request $request){
-       
-        $params =  Branches::select('id','db_name','db_username','db_password','db_port','db_host')->where('id',$request->branch_id)->first();
+    function databaseMigrate(Request $request)
+    {
+
+        $params =  Branches::select('id', 'db_name', 'db_username', 'db_password', 'db_port', 'db_host')->where('id', $request->branch_id)->first();
         $staffConn = DatabaseConnection::databaseMigrate($params);
         return $this->successResponse([], 'Migrated successfully');
-
     }
-    function indexingMigrate(Request $request){
-       
-        $params =  Branches::select('id','db_name','db_username','db_password','db_port','db_host')->where('id',$request->branch_id)->first();
+    function indexingMigrate(Request $request)
+    {
+
+        $params =  Branches::select('id', 'db_name', 'db_username', 'db_password', 'db_port', 'db_host')->where('id', $request->branch_id)->first();
         $staffConn = DatabaseConnection::indexingMigrate($params);
         return $this->successResponse([], 'Migrated successfully');
-
     }
     public function categoryList(Request $request)
     {
@@ -75,11 +77,11 @@ class CommonController extends BaseController
         if (!$validator->passes()) {
             return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
         } else {
-               // create new connection              
+            // create new connection              
             $success = DB::table('forum_categorys')->where('branch_id', $request->branch_id)->get();
             $success = Category::all();
             return $this->successResponse($success, 'category record fetch successfully');
-        }       
+        }
     }
     public function dbnameslist(Request $request)
     {
@@ -89,10 +91,57 @@ class CommonController extends BaseController
         if (!$validator->passes()) {
             return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
         } else {
-               // create new connection              
-            $success = DB::table('branches')->select('school_name','id')->get();
-            
+            // create new connection              
+            $success = DB::table('branches')->select('school_name', 'id')->get();
+
             return $this->successResponse($success, 'school db names fetch successfully');
-        }  
+        }
+    }
+    public function fistLastScript(Request $request)
+    {
+        $validator = \Validator::make($request->all(), [
+            'branch_id' => 'required',
+            'table_name' => 'required',
+            'role_id' => 'required'
+        ]);
+        if (!$validator->passes()) {
+            return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
+        } else {
+            // create new connection
+            $Connection = $this->createNewConnection($request->branch_id);
+            // get data
+            $details = $Connection->table($request->table_name)
+                ->get();
+            foreach ($details as $val) {
+                $id = $val->id;
+                $email = $val->email;
+                $firstName = $val->first_name;
+                $lastName = $val->last_name;
+                $name = $lastName . " " . $firstName;
+                $data = [
+                    'first_name' => $lastName,
+                    'last_name' => $firstName
+                ];
+                $Connection->table($request->table_name)->where('id', $id)->update($data);
+
+                // $usersDetails = User::where([['user_id', '=', $id], ['role_id', '=', $request->role_id], ['branch_id', '=', $request->branch_id]])
+                //             ->get();
+                // ->orWhere('name', 'like', '%' . Input::get('name') . '%')
+                // $query = User::where([['user_id', '=', $id], ['role_id', '=', $request->role_id], ['branch_id', '=', $request->branch_id]])
+                // // $query = User::where([['user_id', '=', $id], ['branch_id', '=', $request->branch_id]])
+                // // ->orWhere('role_id', 'like', '%' . Input::get('name') . '%')    
+                // ->update([
+                //         'name' => $name
+                //     ]);
+                $query = User::where([['email', '=', $email],  ['branch_id', '=', $request->branch_id]])
+                ->update([
+                        'name' => $name
+                    ]);
+                // print_r($data);
+                // echo "count no of names". count($usersDetails);
+                // User
+            }
+            return $this->successResponse([], 'reverse update record successfully');
+        }
     }
 }

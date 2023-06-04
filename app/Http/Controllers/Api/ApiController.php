@@ -1766,6 +1766,7 @@ class ApiController extends BaseController
                 'all_day' => $request->all_day,
                 'holiday' => isset($request->holiday) ? 0 : 1,
                 'remarks' => $request->description,
+                'created_by' => $request->created_by,
                 'created_at' => date("Y-m-d H:i:s")
             ]);
 
@@ -2014,6 +2015,7 @@ class ApiController extends BaseController
                 'all_day' => $request->all_day,
                 'holiday' => isset($request->holiday) ? 0 : 1,
                 'remarks' => $request->description,
+                'created_by' => $request->created_by,
                 'updated_at' => date("Y-m-d H:i:s")
             ]);
 
@@ -3072,7 +3074,7 @@ class ApiController extends BaseController
             ->leftJoin("staff_departments as dp", DB::raw("FIND_IN_SET(dp.id,s.department_id)"), ">", DB::raw("'0'"))
             ->leftJoin("staff_designations as ds", DB::raw("FIND_IN_SET(ds.id,s.designation_id)"), ">", DB::raw("'0'"))
             ->leftJoin('stream_types as stp', 's.stream_type_id', '=', 'stp.id')
-            ->where('s.is_active','=','0')
+            ->where('s.is_active', '=', '0')
             ->orderBy('stp.name', 'desc')
             ->orderBy('s.salary_grade', 'desc')
             ->groupBy("s.id")
@@ -3174,6 +3176,12 @@ class ApiController extends BaseController
     // update updateEmployee
     public function updateEmployee(Request $request)
     {
+        // $birthday = $request->birthday;
+        // if (preg_match("/^[0-9]{4}-(0[1-9]|1[0-2])-(0[1-9]|[1-2][0-9]|3[0-1])$/",$birthday)) {
+        //     $reqbirthday = $request->birthday;
+        // } else {
+        //     $reqbirthday = "0000-00-00";
+        // }
         $id = $request->id;
 
         $validator = \Validator::make($request->all(), [
@@ -10814,7 +10822,7 @@ class ApiController extends BaseController
                     'hostel_id' => $request->hostel_id,
                     'room_id' => $request->room_id,
                     'previous_details' => $previous_details,
-                    'status' => $request->status,
+                    'status' => isset($request->status) ? $request->status : "0",
                     'created_at' => date("Y-m-d H:i:s")
                 ]);
                 // return $studentId;
@@ -11904,7 +11912,7 @@ class ApiController extends BaseController
                     'hostel_id' => $request->hostel_id,
                     'room_id' => $request->room_id,
                     'previous_details' => $previous_details,
-                    'status' => $request->status,
+                    'status' => isset($request->status) ? $request->status : "0",
                     'created_at' => date("Y-m-d H:i:s")
                 ]);
 
@@ -12510,9 +12518,13 @@ class ApiController extends BaseController
             $main_db = config('constants.main_db');
             // create new connection
             $conn = $this->createNewConnection($request->branch_id);
+            $branchID = $request->branch_id;
             // get all teachers
             $allTeachers = $conn->table('staffs as stf')
                 ->select(
+                    'us.id as uuid',
+                    'us.role_id',
+                    'us.branch_id',
                     'stf.id',
                     DB::raw("CONCAT(stf.first_name, ' ', stf.last_name) as name"),
                     'us.role_id',
@@ -12520,14 +12532,28 @@ class ApiController extends BaseController
                     'us.email',
                     'rol.role_name'
                 )
-                ->join('' . $main_db . '.users as us', 'stf.id', '=', 'us.user_id')
+                // ->join('' . $main_db . '.users as us', 'stf.id', '=', 'us.user_id')
+                // ->join('' . $main_db . '.roles as rol', 'rol.id', '=', 'us.role_id')
+                // // ->join('paxsuzen_pz-school.users as us', 'stf.id', '=', 'us.user_id')
+                // // ->join('paxsuzen_pz-school.roles as rol', 'rol.id', '=', 'us.role_id')
+                // ->where([
+                //     ['us.branch_id', '=', $request->branch_id],
+                //     ['stf.is_active', '=', '0']
+                // ])
+                // ->whereRaw('FIND_IN_SET(?,us.role_id)', ['4'])
+                ->join('' . $main_db . '.users as us', function ($join) use ($branchID) {
+                    $join->on('stf.id', '=', 'us.user_id')
+                        // ->on('us.branch_id', '=', DB::raw("'$branchID'"));
+                        ->where('us.branch_id', $branchID);
+                })
                 ->join('' . $main_db . '.roles as rol', 'rol.id', '=', 'us.role_id')
-                // ->join('paxsuzen_pz-school.users as us', 'stf.id', '=', 'us.user_id')
-                // ->join('paxsuzen_pz-school.roles as rol', 'rol.id', '=', 'us.role_id')
-                ->where([
-                    ['us.branch_id', '=', $request->branch_id]
-                ])
-                ->whereRaw('FIND_IN_SET(?,us.role_id)', ['4'])
+                ->where(function ($query) use ($branchID) {
+                    // foreach ($search_terms as $item) {
+                    $query->whereRaw('FIND_IN_SET(?,us.role_id)', ['4'])
+                        ->orWhereRaw('FIND_IN_SET(?,us.role_id)', ['3']);
+                    // }
+                })
+                ->where('stf.is_active', '=', '0')
                 ->groupBy('stf.id')
                 ->get();
             // $allTeachers = User::select('name', 'user_id')->where([['role_id', '=', "4"], ['branch_id', '=', $request->branch_id]])->get();
@@ -14564,27 +14590,45 @@ class ApiController extends BaseController
             $main_db = config('constants.main_db');
             // create new connection
             $conn = $this->createNewConnection($request->branch_id);
+            $branchID = $request->branch_id;
             // get data
             $getAllAdmins = $conn->table('staffs as stf')
                 ->select(
+                    'us.id as uuid',
+                    'us.role_id',
+                    'us.branch_id',
                     'stf.id',
                     'stf.department_id',
                     'stf.photo',
+                    'stf.is_active',
                     'ala.staff_id',
                     'ala.assigner_staff_id',
                     DB::raw("GROUP_CONCAT(sdp.name) as department_name"),
                     DB::raw("CONCAT(stf.first_name, ' ', stf.last_name) as name")
                 )
-                ->join('' . $main_db . '.users as us', 'stf.id', '=', 'us.user_id')
+                // ->join('' . $main_db . '.users as us', 'stf.id', '=', 'us.user_id')
+                ->join('' . $main_db . '.users as us', function ($join) use ($branchID) {
+                    $join->on('stf.id', '=', 'us.user_id')
+                        // ->on('us.branch_id', '=', DB::raw("'$branchID'"));
+                        ->where('us.branch_id', $branchID);
+                })
                 // ->join('paxsuzen_pz-school.users as us', 'stf.id', '=', 'us.user_id')
                 ->leftJoin("staff_departments as sdp", DB::raw("FIND_IN_SET(sdp.id,stf.department_id)"), ">", DB::raw("'0'"))
                 ->leftJoin("assign_leave_approval as ala", 'ala.staff_id', '=', 'stf.id')
-                ->where([
-                    ['us.branch_id', '=', $request->branch_id]
-                ])
+                // ->where([
+                //     // ['us.branch_id', '=', $request->branch_id],
+                //     ['stf.is_active', '=', '0']
+                // ])
                 // ->whereIn('us.role_id', ['3', '4'])
-                ->whereRaw('FIND_IN_SET(?,us.role_id)', ['4'])
-                ->orWhereRaw('FIND_IN_SET(?,us.role_id)', ['3'])
+                // ->whereRaw('FIND_IN_SET(?,us.role_id)', ['4'])
+                // ->orWhereRaw('FIND_IN_SET(?,us.role_id)', ['3'])
+                ->where(function ($query) use ($branchID) {
+                    // foreach ($search_terms as $item) {
+                    $query->whereRaw('FIND_IN_SET(?,us.role_id)', ['4'])
+                        ->orWhereRaw('FIND_IN_SET(?,us.role_id)', ['3']);
+                    // }
+                })
+                ->where('stf.is_active', '=', '0')
                 ->groupBy("stf.id")
                 ->get();
             return $this->successResponse($getAllAdmins, 'Staffs admin record fetch successfully');
@@ -15190,7 +15234,7 @@ class ApiController extends BaseController
             ]);
             // get insert row
             $success = $createConnection->table('calendors')
-                ->select('id', 'title', 'start', 'end', 'description', 'task_color as className')
+                ->select('id as calendor_id', 'title', 'start', 'end', 'description', 'task_color as className', DB::raw('if(all_day=1,false,true) as allDay'))
                 ->where('id', $ids)->first();
             // dd($success);
 
@@ -15215,7 +15259,7 @@ class ApiController extends BaseController
             $secConn = $this->createNewConnection($request->branch_id);
             // get data
             $section = $secConn->table('calendors')
-                ->select('id', 'title', 'start', 'end', 'description', 'all_day')
+                ->select('id as calendor_id', 'title', 'start', 'end', 'description', 'task_color as className', DB::raw('if(all_day=1,false,true) as allDay'))
                 ->where('id', '=', $request->calendor_id)
                 ->first();
             return $this->successResponse($section, 'calendors tast row details fetch successfully');
@@ -15247,7 +15291,7 @@ class ApiController extends BaseController
             ]);
             // get insert row
             $success = $conn->table('calendors')
-                ->select('id', 'title', 'start', 'end', 'description', 'task_color as className')
+                ->select('id as calendor_id', 'title', 'start', 'end', 'description', 'task_color as className', DB::raw('if(all_day=1,false,true) as allDay'))
                 ->where('id', $request->calendor_id)->first();
 
             if ($query) {
@@ -15272,7 +15316,7 @@ class ApiController extends BaseController
             $start = date('Y-m-d 00:00:00', strtotime($request->start));
             $end = date('Y-m-d 00:00:00', strtotime($request->end));
             $section = $secConn->table('calendors')
-                ->select('id', 'title', 'start', 'end', 'description', 'task_color')
+                ->select('id as calendor_id', 'title', 'start', 'end', 'description', 'task_color as className', DB::raw('if(all_day=1,false,true) as allDay'))
                 ->where('login_id', '=', $request->login_id)
                 ->whereRaw('start between "' . $start . '" and "' . $end . '"')
                 ->whereRaw('end between "' . $start . '" and "' . $end . '"')
@@ -15455,7 +15499,10 @@ class ApiController extends BaseController
             // create new connection
             $staffConn = $this->createNewConnection($request->branch_id);
             // get data
-            $Staffs = $staffConn->table('staffs')->where('department_id', $request->department_id)->get();
+            $Staffs = $staffConn->table('staffs')
+                ->where('department_id', $request->department_id)
+                ->where('is_active', '=', '0')
+                ->get();
             return $this->successResponse($Staffs, 'Department Staffs record fetch successfully');
         }
     }
@@ -16922,6 +16969,9 @@ class ApiController extends BaseController
             if ($request->status == "excused") {
                 $table_name = 'teacher_excused_reasons';
             }
+            if ($request->status == "late") {
+                $table_name = 'late_reasons';
+            }
             if (isset($table_name)) {
                 $data = $secConn->table($table_name)
                     ->select('id', 'name')
@@ -18329,7 +18379,7 @@ class ApiController extends BaseController
             $createConnection = $this->createNewConnection($request->branch_id);
             // get data
 
-            $query = $createConnection->table('staffs')->where('is_active','=','0')->count();
+            $query = $createConnection->table('staffs')->where('is_active', '=', '0')->count();
             return $this->successResponse($query, 'Staff Count has been Fetched Successfully');
         }
     }
