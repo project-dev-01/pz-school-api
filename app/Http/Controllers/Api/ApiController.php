@@ -654,6 +654,7 @@ class ApiController extends BaseController
                 ->join('sections as s', 'sa.section_id', '=', 's.id')
                 ->join('classes as c', 'sa.class_id', '=', 'c.id')
                 ->orderBy('c.name', 'asc')
+                ->orderBy('s.name', 'asc')
                 ->get();
             return $this->successResponse($sectionAllocation, 'Section Allocation record fetch successfully');
         }
