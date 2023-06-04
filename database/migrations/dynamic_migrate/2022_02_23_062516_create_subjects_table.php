@@ -24,6 +24,7 @@ class CreateSubjectsTable extends Migration
             $table->string('subject_color_calendor')->nullable();
             $table->tinyInteger('exam_exclude');
             $table->string('subject_author')->nullable();
+            $table->integer('order_code')->nullable();
             $table->timestamps();
         });
     }

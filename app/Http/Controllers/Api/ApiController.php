@@ -993,6 +993,7 @@ class ApiController extends BaseController
                     'subject_type_2' => $request->subject_type_2,
                     'times_per_week' => isset($request->times_per_week) ? $request->times_per_week : null,
                     'exam_exclude' => $request->exam_exclude,
+                    'order_code' => isset($request->order_code) ? $request->order_code : null,
                     'created_at' => date("Y-m-d H:i:s")
                 ]);
                 $success = [];
@@ -1016,7 +1017,7 @@ class ApiController extends BaseController
             // create new connection
             $secConn = $this->createNewConnection($request->branch_id);
             // get data
-            $subjectDetails = $secConn->table('subjects')->orderBy('name', 'asc')->get();
+            $subjectDetails = $secConn->table('subjects')->orderBy('order_code', 'asc')->get();
             return $this->successResponse($subjectDetails, 'Subject record fetch successfully');
         }
     }
@@ -1066,6 +1067,7 @@ class ApiController extends BaseController
                     'subject_type_2' => $request->subject_type_2,
                     'times_per_week' => isset($request->times_per_week) ? $request->times_per_week : null,
                     'exam_exclude' => $request->exam_exclude,
+                    'order_code' => isset($request->order_code) ? $request->order_code : null,
                     'updated_at' => date("Y-m-d H:i:s")
                 ]);
                 $success = [];
