@@ -18434,8 +18434,32 @@ class ApiController extends BaseController
             return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
         } else {
             // get data
-            // $empDetails['user'] = User::where('user_id', $id)->where('branch_id', $request->branch_id)->first();
-            $query = User::where('role_id', 4)->where('branch_id', $request->branch_id)->count();
+            $main_db = config('constants.main_db');
+            // // create new connection
+            $conn = $this->createNewConnection($request->branch_id);
+            $branchID = $request->branch_id;
+            // get all teachers
+            $query = $conn->table('staffs as stf')
+                ->select(
+                    'us.id as uuid',
+                    'us.branch_id',
+                    'stf.id',
+                    DB::raw("CONCAT(stf.first_name, ' ', stf.last_name) as name"),
+                    'us.role_id',
+                    'us.user_id',
+                    'us.email'
+                )
+                ->join('' . $main_db . '.users as us', function ($join) use ($branchID) {
+                    $join->on('stf.id', '=', 'us.user_id')
+                        // ->on('us.branch_id', '=', DB::raw("'$branchID'"));
+                        ->where('us.branch_id', $branchID);
+                })
+                ->where(function ($query) use ($branchID) {
+                    $query->whereRaw('FIND_IN_SET(?,us.role_id)', ['4']);
+                })
+                ->where('stf.is_active', '=', '0')
+                ->groupBy('stf.id')
+                ->get()->count();
             return $this->successResponse($query, 'Student Count has been Fetched Successfully');
         }
     }

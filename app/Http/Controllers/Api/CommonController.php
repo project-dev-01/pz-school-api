@@ -144,4 +144,13 @@ class CommonController extends BaseController
             return $this->successResponse([], 'reverse update record successfully');
         }
     }
+    public function basesixfour(Request $request)
+    {
+        $fontFile = public_path('common-asset\IPAexGothic\IPAexGothic.ttf'); // Replace 'your-font-file.ttf' with the actual file name and path
+        
+        $fontData = file_get_contents($fontFile);
+        $base64FontData = base64_encode($fontData);
+        
+        echo $base64FontData;
+    }
 }
