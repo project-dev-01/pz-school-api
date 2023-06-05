@@ -1780,95 +1780,54 @@ class ApiController extends BaseController
             } elseif ($request->audience == 2) {
                 $classes = $request->class;
             }
-
             $allDay = $request->all_day;
             if ($allDay == NULL) {
-                $begin = new DateTime($request->start_date);
-                $end = new DateTime($request->end_date);
-
-                $interval = DateInterval::createFromDateString('1 day');
-                $period = new DatePeriod($begin, $interval, $end);
-
-                $date = [];
-                foreach ($period as $dt) {
-                    $fd['start_date'] = $dt->format('Y-m-d') . ' ' . $request->start_time;
-                    $fd['end_date'] = $dt->format("Y-m-d") . ' ' . $request->end_time;
-                    array_push($date, $fd);
-                }
-                $final['start_date'] = $request->end_date . ' ' . $request->start_time;
-                $final['end_date'] = $request->end_date . ' ' . $request->end_time;
-                array_push($date, $final);
-
-                foreach ($date as $d) {
-                    $start_date = $d['start_date'];
-                    $end_date = $d['end_date'];
-                    if ($request->audience == 3) {
-                        $group = $request->group;
-                        foreach ($group as $gro) {
-                            $conn->table('calendors')->insert([
-                                'title' => $title,
-                                'start' => $start_date,
-                                'end' => $end_date,
-                                'group_id' => $gro,
-                                'event_id' => $eventId,
-                                'created_at' => date("Y-m-d H:i:s")
-                            ]);
-                        }
-                    } else {
-                        foreach ($classes as $class) {
-                            if ($request->audience == 1) {
-                                $classId = $class->id;
-                            } elseif ($request->audience == 2) {
-                                $classId = $class;
-                            }
-                            $conn->table('calendors')->insert([
-                                'title' => $title,
-                                'class_id' => $classId,
-                                'start' => $start_date,
-                                'end' => $end_date,
-                                'event_id' => $eventId,
-                                'created_at' => date("Y-m-d H:i:s")
-                            ]);
-                        }
-                    }
-                }
-            } else {
                 // date converted into timestamp
-                $start_date = Carbon::createFromFormat('Y-m-d', $request->start_date)->startOfDay()->toDateTimeString();
-                $end_date = Carbon::createFromFormat('Y-m-d', $request->end_date)->endOfDay()->toDateTimeString();
-
-                if ($request->audience == 3) {
-                    $group = $request->group;
-                    foreach ($group as $gro) {
-                        $conn->table('calendors')->insert([
-                            'title' => $title,
-                            'start' => $start_date,
-                            'end' => $end_date,
-                            'group_id' => $gro,
-                            'event_id' => $eventId,
-                            'created_at' => date("Y-m-d H:i:s")
-                        ]);
-                    }
-                } else {
-                    foreach ($classes as $class) {
-
-                        if ($request->audience == 1) {
-                            $classId = $class->id;
-                        } elseif ($request->audience == 2) {
-                            $classId = $class;
-                        }
-                        $conn->table('calendors')->insert([
-                            'title' => $title,
-                            'class_id' => $classId,
-                            'start' => $start_date,
-                            'end' => $end_date,
-                            'event_id' => $eventId,
-                            'created_at' => date("Y-m-d H:i:s")
-                        ]);
-                    }
-                }
+                $startDate = $request->start_date . ' ' . $request->start_time.':00';
+                $endDate = $request->end_date . ' ' . $request->end_time.':00';
+            }else{
+                $startDate = $request->start_date . ' ' . "00:00:00";
+                $endDate = $request->end_date . ' ' . "24:00:00";
             }
 
+            // return $startDate;
+            $start_date = Carbon::createFromFormat('Y-m-d H:i:s', $startDate)->toDateTimeString();
+            $end_date = Carbon::createFromFormat('Y-m-d H:i:s', $endDate)->toDateTimeString();
+                // $start_date = Carbon::createFromFormat('Y-m-d', $request->start_date)->startOfDay()->toDateTimeString();
+                // $end_date = Carbon::createFromFormat('Y-m-d', $request->end_date)->endOfDay()->toDateTimeString();
+
+            if ($request->audience == 3) {
+                $group = $request->group;
+                foreach ($group as $gro) {
+                    $conn->table('calendors')->insert([
+                        'title' => $title,
+                        'start' => $start_date,
+                        'end' => $end_date,
+                        'group_id' => $gro,
+                        'all_day' => !empty($request->all_day == "on") ? "1" : "0",
+                        'event_id' => $eventId,
+                        'created_at' => date("Y-m-d H:i:s")
+                    ]);
+                }
+            } else {
+                foreach ($classes as $class) {
+
+                    if ($request->audience == 1) {
+                        $classId = $class->id;
+                    } elseif ($request->audience == 2) {
+                        $classId = $class;
+                    }
+                    $conn->table('calendors')->insert([
+                        'title' => $title,
+                        'class_id' => $classId,
+                        'start' => $start_date,
+                        'end' => $end_date,
+                        'all_day' => !empty($request->all_day == "on") ? "1" : "0",
+                        'event_id' => $eventId,
+                        'created_at' => date("Y-m-d H:i:s")
+                    ]);
+                }
+            }
             $success = [];
             if (!$query) {
                 return $this->send500Error('Something went wrong.', ['error' => 'Something went wrong']);
@@ -2021,13 +1980,19 @@ class ApiController extends BaseController
                 'created_by' => $request->created_by,
                 'updated_at' => date("Y-m-d H:i:s")
             ]);
+            
+
 
             // date converted into timestamp
-            $start_date = Carbon::createFromFormat('Y-m-d', $request->start_date)->startOfDay()->toDateTimeString();
-            $end_date = Carbon::createFromFormat('Y-m-d', $request->end_date)->endOfDay()->toDateTimeString();
+            // $start_date = Carbon::createFromFormat('Y-m-d', $request->start_date)->startOfDay()->toDateTimeString();
+            // $end_date = Carbon::createFromFormat('Y-m-d', $request->end_date)->endOfDay()->toDateTimeString();
 
             //delete old calendors
-            $conn->table('calendors')->where('event_id', $id)->delete();
+            if($conn->table('calendors')->where('event_id', $id)->count()> 0){
+                
+                    $conn->table('calendors')->where('event_id', $id)->delete();
+            }
+            // 
 
             $eventId = $id;
             $title = $request->title;
@@ -2036,63 +2001,22 @@ class ApiController extends BaseController
             } elseif ($request->audience == 2) {
                 $classes = $request->class;
             }
-
+            
             $allDay = $request->all_day;
             if ($allDay == NULL) {
-                $begin = new DateTime($request->start_date);
-                $end = new DateTime($request->end_date);
-
-                $interval = DateInterval::createFromDateString('1 day');
-                $period = new DatePeriod($begin, $interval, $end);
-
-                $date = [];
-                foreach ($period as $dt) {
-                    $fd['start_date'] = $dt->format('Y-m-d') . ' ' . $request->start_time;
-                    $fd['end_date'] = $dt->format("Y-m-d") . ' ' . $request->end_time;
-                    array_push($date, $fd);
-                }
-                $final['start_date'] = $request->end_date . ' ' . $request->start_time;
-                $final['end_date'] = $request->end_date . ' ' . $request->end_time;
-                array_push($date, $final);
-
-                if ($request->audience == 3) {
-                    $group = $request->group;
-                    foreach ($group as $gro) {
-                        $conn->table('calendors')->insert([
-                            'title' => $title,
-                            'start' => $start_date,
-                            'end' => $end_date,
-                            'group_id' => $gro,
-                            'event_id' => $eventId,
-                            'created_at' => date("Y-m-d H:i:s")
-                        ]);
-                    }
-                } else {
-
-                    foreach ($date as $d) {
-                        $start_date = $d['start_date'];
-                        $end_date = $d['end_date'];
-                        foreach ($classes as $class) {
-                            if ($request->audience == 1) {
-                                $classId = $class->id;
-                            } elseif ($request->audience == 2) {
-                                $classId = $class;
-                            }
-                            $conn->table('calendors')->insert([
-                                'title' => $title,
-                                'class_id' => $classId,
-                                'start' => $start_date,
-                                'end' => $end_date,
-                                'event_id' => $eventId,
-                                'created_at' => date("Y-m-d H:i:s")
-                            ]);
-                        }
-                    }
-                }
-            } else {
                 // date converted into timestamp
-                $start_date = Carbon::createFromFormat('Y-m-d', $request->start_date)->startOfDay()->toDateTimeString();
-                $end_date = Carbon::createFromFormat('Y-m-d', $request->end_date)->endOfDay()->toDateTimeString();
+                $startDate = $request->start_date . ' ' . $request->start_time.':00';
+                $endDate = $request->end_date . ' ' . $request->end_time.':00';
+            }else{
+                $startDate = $request->start_date . ' ' . "00:00:00";
+                $endDate = $request->end_date . ' ' . "24:00:00";
+            }
+
+            // return $startDate;
+            $start_date = Carbon::createFromFormat('Y-m-d H:i:s', $startDate)->toDateTimeString();
+            $end_date = Carbon::createFromFormat('Y-m-d H:i:s', $endDate)->toDateTimeString();
+                // $start_date = Carbon::createFromFormat('Y-m-d', $request->start_date)->startOfDay()->toDateTimeString();
+                // $end_date = Carbon::createFromFormat('Y-m-d', $request->end_date)->endOfDay()->toDateTimeString();
 
                 if ($request->audience == 3) {
                     $group = $request->group;
@@ -2102,6 +2026,7 @@ class ApiController extends BaseController
                             'start' => $start_date,
                             'end' => $end_date,
                             'group_id' => $gro,
+                            'all_day' => !empty($request->all_day == "on") ? "1" : "0",
                             'event_id' => $eventId,
                             'created_at' => date("Y-m-d H:i:s")
                         ]);
@@ -2119,12 +2044,13 @@ class ApiController extends BaseController
                             'class_id' => $classId,
                             'start' => $start_date,
                             'end' => $end_date,
+                            'all_day' => !empty($request->all_day == "on") ? "1" : "0",
                             'event_id' => $eventId,
                             'created_at' => date("Y-m-d H:i:s")
                         ]);
                     }
                 }
-            }
+            // }
             $success = [];
             if (!$query) {
                 return $this->send500Error('Something went wrong.', ['error' => 'Something went wrong']);
@@ -8339,7 +8265,7 @@ class ApiController extends BaseController
             $start = date('Y-m-d h:i:s', strtotime($request->start));
             $end = date('Y-m-d h:i:s', strtotime($request->end));
             $event = $Connection->table('calendors as c')
-                ->select('c.id', DB::raw("GROUP_CONCAT(DISTINCT  classes.name) as class_name"), 'et.color', 'c.title', 'c.title as subject_name', 'et.name as event_type', 'c.class_id', 'c.start', 'c.end', 'e.id as event_id', 'e.remarks', 'e.audience', 'e.selected_list', 'e.all_day', 'e.start_time', 'e.end_time', 'e.start_date', 'e.end_date')
+                ->select('c.id', DB::raw("GROUP_CONCAT(DISTINCT  classes.name) as class_name"), 'et.color', 'c.title', 'c.title as subject_name', 'et.name as event_type', 'c.class_id', 'c.start', 'c.end', 'e.id as event_id', 'e.remarks', 'e.audience', 'e.selected_list', 'e.start_time', 'e.end_time', 'e.start_date', 'e.end_date',DB::raw('if(c.all_day=1,false,true) as allDay'))
                 ->leftJoin('events as e', 'c.event_id', '=', 'e.id')
                 ->leftJoin('event_types as et', 'e.type', '=', 'et.id')
                 ->leftjoin("classes", \DB::raw("FIND_IN_SET(classes.id,e.selected_list)"), ">", \DB::raw("'0'"))
