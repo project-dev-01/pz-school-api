@@ -13951,6 +13951,7 @@ class ApiController extends BaseController
                 ->when($staff_id, function ($query, $staff_id) {
                     return $query->where('sla.staff_id', $staff_id);
                 })
+                ->where('st.is_active', '=', '0')
                 ->groupBy('sla.staff_id')
                 ->get();
             return $this->successResponse($StaffLeaveAssignDetails, 'Staff Leave Assign record fetch successfully');

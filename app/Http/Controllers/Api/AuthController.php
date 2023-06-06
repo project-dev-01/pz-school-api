@@ -194,9 +194,10 @@ class AuthController extends BaseController
     public function resetPassword(Request $request)
     {
 
-        $credentials = $request->only('email');
+        $credentials = $request->only('email','sent_link');
         $validator = Validator::make($credentials, [
             'email' => 'required|email',
+            'sent_link' => 'required'
         ]);
 
         //Send failed response if request is not valid
@@ -222,21 +223,21 @@ class AuthController extends BaseController
         // $user = DB::table('users')->where('email', $request->email)->first();
         $tokenData = DB::table('password_resets')->where('email', $request->email)->orderBy('created_at', 'DESC')->first();
         // return $tokenData->token;
-        if ($this->sendResetEmail($request->email, $tokenData->token)) {
+        if ($this->sendResetEmail($request->email,$request->sent_link ,$tokenData->token)) {
             return $this->successResponse($user, 'A reset link has been sent to your email address.');
         } else {
             return $this->send500Error('A Network Error occurred. Please try again.', ['error' => 'A Network Error occurred. Please try again.']);
         }
     }
 
-    private function sendResetEmail($email, $token)
+    private function sendResetEmail($email,$sent_link, $token)
     {
 
         //Retrieve the user from the database
         $user = DB::table('users')->select('name', 'email')->where('email', $email)->select('name', 'email')->first();
         //Generate, the password reset link. The token generated is embedded in the link
         // $link = url('/password/reset') . '/' . $token;
-        $link = config('constants.mail_link_front_web') . '/password/reset/' . $token;
+        $link = $sent_link . '/password/reset/' . $token;
         // config('constants.mail_link_front_web');
         // dd($link);
         // dd($link);
