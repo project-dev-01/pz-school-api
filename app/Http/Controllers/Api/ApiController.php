@@ -17371,12 +17371,13 @@ class ApiController extends BaseController
                 // ->whereRaw('(now() between start_date and end_date)')
                 ->whereRaw('"' . $currentDate . '" between `start_date` and `end_date`')
                 ->first();
-            $hour = Carbon::now()->format('H');
-            if ($hour < 13) {
-                $session = 1;
-            } else {
-                $session = 2;
-            }
+            // $hour = Carbon::now()->format('H');
+            // if ($hour < 13) {
+            //     $session = 1;
+            // } else {
+            //     $session = 2;
+            // }
+            $session = 1;
             $success['session'] = $session;
 
             return $this->successResponse($success, 'Semester and Session Fetched successfully');

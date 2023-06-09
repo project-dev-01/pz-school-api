@@ -14,12 +14,24 @@ class Authenticate extends Middleware
      */
     protected function redirectTo($request)
     {
-        $data = [
-            "status" => "error",
-            "code" => "Auth-004",
-            "message" => "User is not authenticated"
+        $response = [
+            'code' => 401,
+            'success' => false,
+            'message' => "User is not authenticated",
         ];
-        echo collect($data);
+
+        if (!empty($errorMessages)) {
+            $response['data'] = $errorMessages;
+        }
+
+        return response()->json($response, 401);
         die();
+        // $data = [
+        //     "status" => "error",
+        //     "code" => "Auth-004",
+        //     "message" => "User is not authenticated"
+        // ];
+        // echo collect($data);
+        // die();
     }
 }

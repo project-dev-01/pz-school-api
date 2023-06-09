@@ -2615,7 +2615,7 @@ class ApiControllerOne extends BaseController
             // create new connection
             $Connection = $this->createNewConnection($request->branch_id);
             // get data
-            $Department = $Connection->table('academic_year')->get();
+            $Department = $Connection->table('academic_year')->orderBy('id', 'desc')->get();
             return $this->successResponse($Department, 'Academic year record fetch successfully');
         }
     }
