@@ -8103,7 +8103,7 @@ class ApiController extends BaseController
                 ->select('s.id', 's.first_name as name', 's.birthday')
                 ->whereMonth("s.birthday", $month)
                 ->whereDay("s.birthday", $day)
-                ->whereRaw('s.birthday between "' . $start . '" and "' . $endDt . '"')
+                // ->whereRaw('s.birthday between "' . $start . '" and "' . $endDt . '"')
                 ->where('id', $request->teacher_id)
                 ->get();
             $success = [];
@@ -8114,6 +8114,7 @@ class ApiController extends BaseController
                 $data->title = $birth->name . " Happy Birthday";
                 $data->start = $date;
                 $data->end = $date;
+                $data->allDay = 1;
                 $data->className = "bg-success";
                 array_push($success, $data);
             }
@@ -8140,7 +8141,7 @@ class ApiController extends BaseController
                 ->select('s.id', 's.first_name as name', 's.birthday')
                 ->whereMonth("s.birthday", $month)
                 ->whereDay("s.birthday", $day)
-                ->whereRaw('s.birthday between "' . $start . '" and "' . $end . '"')
+                // ->whereRaw('s.birthday between "' . $start . '" and "' . $end . '"')
                 ->get();
             $success = [];
             foreach ($birthday as $birth) {
@@ -8151,6 +8152,7 @@ class ApiController extends BaseController
                 $data->title = $birth->name . " Happy Birthday";
                 $data->start = $date;
                 $data->end = $date;
+                $data->allDay = 1;
                 $data->className = "bg-success";
                 array_push($success, $data);
             }
@@ -8182,30 +8184,63 @@ class ApiController extends BaseController
             $teacherId = $request->teacher_id;
             $start = date('Y-m-d h:i:s', strtotime($request->start));
             $end = date('Y-m-d h:i:s', strtotime($request->end));
-            $event = $Connection->table('calendors as c')
-                ->select('c.id', DB::raw("GROUP_CONCAT(DISTINCT  classes.name) as class_name"), 'et.color', 'c.title', 'c.title as subject_name', 'c.class_id', 's.teacher_id', 'c.start', 'c.end', 'c.event_id', 'et.name as event_type', 'e.id as event_id', 'e.remarks', 'e.audience', 'e.selected_list', 'e.all_day', 'e.start_time', 'e.end_time', 'e.start_date', 'e.end_date')
-                ->leftJoin('subject_assigns as s', 'c.class_id', '=', 's.class_id')
+            // $event = $Connection->table('calendors as c')
+            //             ->select('c.id', 'et.color', 'c.title', 'c.title as subject_name', 'c.class_id', 'c.start', 's.teacher_id', 'c.end', 'c.event_id', 'et.name as event_type', 'e.id as event_id', 'e.remarks', 'e.audience', 'e.selected_list', 'e.all_day', 'e.start_time', 'e.end_time', 'e.start_date', 'e.end_date')
+            //             ->leftJoin('subject_assigns as s', 'c.class_id', '=', 's.class_id')
+            //             ->leftJoin('events as e', 'c.event_id', '=', 'e.id')
+            //             ->leftJoin('event_types as et', 'e.type', '=', 'et.id')
+            //             ->leftjoin("classes", \DB::raw("FIND_IN_SET(classes.id,e.selected_list)"), ">", \DB::raw("'0'"))
+            //             ->whereNotNull('c.event_id')
+            //             ->whereNull('c.group_id')
+            //             ->where('e.status', 1)
+            //             ->where('s.teacher_id', $teacherId)
+            //             ->whereRaw('c.start between "' . $start . '" and "' . $end . '"')
+            //             ->whereRaw('c.end between "' . $start . '" and "' . $end . '"')
+            //             ->groupBy('c.event_id')
+            //             ->groupBy('c.start')
+            //             ->get();
+
+
+            $all_event = $Connection->table('calendors as c')
+                ->select('c.id', DB::raw("GROUP_CONCAT(DISTINCT  cl.name) as class_name"),'et.color', 'c.title', 'c.title as subject_name', 'c.class_id', 'c.start',  'c.end', 'c.event_id', 'et.name as event_type', 'e.id as event_id', 'e.remarks', 'e.audience', 'e.selected_list', 'e.start_time', 'e.end_time', 'e.start_date', 'e.end_date',DB::raw('if(c.all_day=1,false,true) as allDay'))
                 ->leftJoin('events as e', 'c.event_id', '=', 'e.id')
                 ->leftJoin('event_types as et', 'e.type', '=', 'et.id')
-                ->leftjoin("classes", \DB::raw("FIND_IN_SET(classes.id,e.selected_list)"), ">", \DB::raw("'0'"))
+                ->leftjoin("classes as cl", \DB::raw("FIND_IN_SET(cl.id,e.selected_list)"), ">", \DB::raw("'0'"))
                 ->whereNotNull('c.event_id')
                 ->whereNull('c.group_id')
                 ->where('e.status', 1)
-                ->where('s.teacher_id', $teacherId)
                 ->whereRaw('c.start between "' . $start . '" and "' . $end . '"')
                 ->whereRaw('c.end between "' . $start . '" and "' . $end . '"')
                 ->groupBy('c.event_id')
                 ->groupBy('c.start')
                 ->get();
-            $success = [];
-            foreach ($event as $eve) {
-                $data = $eve;
-                if ($eve->audience == "1") {
-                    $data->class_name = "EveryOne";
+
+        //     // return $all;
+            $event =[];
+            foreach($all_event as $events){
+
+                if($events->audience=="1"){
+                    $events->class_name = "EveryOne";
+                    array_push($event,$events);
                 }
-                array_push($success, $data);
+                if($events->audience=="2"){
+                    $class_check = $Connection->table('events as e')
+                    ->select('e.id', 's.teacher_id')
+                    ->leftjoin("classes as c", \DB::raw("FIND_IN_SET(c.id,e.selected_list)"), ">", \DB::raw("'0'"))
+                    ->leftJoin('subject_assigns as s', 'c.id', '=', 's.class_id')
+                    ->leftJoin('event_types as et', 'e.type', '=', 'et.id')
+                    ->where('e.id', $events->event_id)
+                    ->where('s.teacher_id',$teacherId)
+                    ->get();
+                    // return $class_check;
+                    if (!$class_check->isEmpty()) {
+                        if($class_check[0]->teacher_id == $teacherId){
+                            array_push($event,$events);
+                        }
+                    }
+                }
             }
-            return $this->successResponse($success, 'Event data Fetched successfully');
+            return $this->successResponse($event, 'Event data Fetched successfully');
         }
     }
     // getEventCalendorStud
@@ -8223,32 +8258,71 @@ class ApiController extends BaseController
             $studentId = $request->student_id;
             $start = date('Y-m-d h:i:s', strtotime($request->start));
             $end = date('Y-m-d h:i:s', strtotime($request->end));
-            $event = $Connection->table('calendors as c')
-                ->select('c.id', DB::raw("GROUP_CONCAT(DISTINCT  classes.name) as class_name"), 'et.color', 'c.title', 'c.title as subject_name', 'c.class_id', 'en.student_id', 'c.start', 'c.end', 'et.name as event_type', 'e.id as event_id', 'e.remarks', 'e.audience', 'e.selected_list', 'e.all_day', 'e.start_time', 'e.end_time', 'e.start_date', 'e.end_date')
-                ->leftJoin('enrolls as en', 'c.class_id', '=', 'en.class_id')
+            // $event = $Connection->table('calendors as c')
+            //     ->select('c.id', DB::raw("GROUP_CONCAT(DISTINCT  classes.name) as class_name"), 'et.color', 'c.title', 'c.title as subject_name', 'c.class_id', 'en.student_id', 'c.start', 'c.end', 'et.name as event_type', 'e.id as event_id', 'e.remarks', 'e.audience', 'e.selected_list', 'e.start_time', 'e.end_time', 'e.start_date', 'e.end_date')
+            //     ->leftJoin('enrolls as en', 'c.class_id', '=', 'en.class_id')
+            //     ->leftJoin('events as e', 'c.event_id', '=', 'e.id')
+            //     ->leftJoin('event_types as et', 'e.type', '=', 'et.id')
+            //     ->leftjoin("classes", \DB::raw("FIND_IN_SET(classes.id,e.selected_list)"), ">", \DB::raw("'0'"))
+            //     ->whereNotNull('c.event_id')
+            //     ->whereNull('c.group_id')
+            //     ->where('en.student_id', $studentId)
+            //     ->where('e.status', 1)
+            //     // ->where('c.start', '>=', $start)
+            //     // ->where('c.end', '<=', $end)
+            //     ->whereRaw('c.start between "' . $start . '" and "' . $end . '"')
+            //     ->whereRaw('c.end between "' . $start . '" and "' . $end . '"')
+            //     ->groupBy('c.event_id')
+            //     ->groupBy('c.start')
+            //     ->get();
+            $all_event = $Connection->table('calendors as c')
+                ->select('c.id', DB::raw("GROUP_CONCAT(DISTINCT  cl.name) as class_name"),'et.color', 'c.title', 'c.title as subject_name', 'c.class_id', 'c.start',  'c.end', 'c.event_id', 'et.name as event_type', 'e.id as event_id', 'e.remarks', 'e.audience', 'e.selected_list', 'e.start_time', 'e.end_time', 'e.start_date', 'e.end_date',DB::raw('if(c.all_day=1,false,true) as allDay'))
                 ->leftJoin('events as e', 'c.event_id', '=', 'e.id')
                 ->leftJoin('event_types as et', 'e.type', '=', 'et.id')
-                ->leftjoin("classes", \DB::raw("FIND_IN_SET(classes.id,e.selected_list)"), ">", \DB::raw("'0'"))
+                ->leftjoin("classes as cl", \DB::raw("FIND_IN_SET(cl.id,e.selected_list)"), ">", \DB::raw("'0'"))
                 ->whereNotNull('c.event_id')
                 ->whereNull('c.group_id')
-                ->where('en.student_id', $studentId)
                 ->where('e.status', 1)
-                // ->where('c.start', '>=', $start)
-                // ->where('c.end', '<=', $end)
                 ->whereRaw('c.start between "' . $start . '" and "' . $end . '"')
                 ->whereRaw('c.end between "' . $start . '" and "' . $end . '"')
                 ->groupBy('c.event_id')
                 ->groupBy('c.start')
                 ->get();
-            $success = [];
-            foreach ($event as $eve) {
-                $data = $eve;
-                if ($eve->audience == "1") {
-                    $data->class_name = "EveryOne";
+
+        //     // return $all;
+            $event =[];
+            foreach($all_event as $events){
+
+                if($events->audience=="1"){
+                    $events->class_name = "EveryOne";
+                    array_push($event,$events);
                 }
-                array_push($success, $data);
+                if($events->audience=="2"){
+                    $class_check = $Connection->table('events as e')
+                    ->select('e.id', 'en.student_id')
+                    ->leftjoin("classes as c", \DB::raw("FIND_IN_SET(c.id,e.selected_list)"), ">", \DB::raw("'0'")) 
+                    ->leftJoin('enrolls as en', 'c.id', '=', 'en.class_id')
+                    ->leftJoin('event_types as et', 'e.type', '=', 'et.id')
+                    ->where('e.id', $events->event_id)
+                    ->where('en.student_id',$studentId)
+                    ->get();
+                    // return $class_check;
+                    if (!$class_check->isEmpty()) {
+                        if($class_check[0]->student_id == $studentId){
+                            array_push($event,$events);
+                        }
+                    }
+                }
             }
-            return $this->successResponse($success, 'Event data Fetched successfully');
+            // $success = [];
+            // foreach ($event as $eve) {
+            //     $data = $eve;
+            //     if ($eve->audience == "1") {
+            //         $data->class_name = "EveryOne";
+            //     }
+            //     array_push($success, $data);
+            // }
+            return $this->successResponse($event, 'Event data Fetched successfully');
         }
     }
     // getEventCalendorAdmin
@@ -8265,10 +8339,10 @@ class ApiController extends BaseController
             $start = date('Y-m-d h:i:s', strtotime($request->start));
             $end = date('Y-m-d h:i:s', strtotime($request->end));
             $event = $Connection->table('calendors as c')
-                ->select('c.id', DB::raw("GROUP_CONCAT(DISTINCT  classes.name) as class_name"), 'et.color', 'c.title', 'c.title as subject_name', 'et.name as event_type', 'c.class_id', 'c.start', 'c.end', 'e.id as event_id', 'e.remarks', 'e.audience', 'e.selected_list', 'e.start_time', 'e.end_time', 'e.start_date', 'e.end_date',DB::raw('if(c.all_day=1,false,true) as allDay'))
+                ->select('c.id', DB::raw("GROUP_CONCAT(DISTINCT  cl.name) as class_name"), 'et.color', 'c.title', 'c.title as subject_name', 'et.name as event_type', 'c.class_id', 'c.start', 'c.end', 'e.id as event_id', 'e.remarks', 'e.audience', 'e.selected_list', 'e.start_time', 'e.end_time', 'e.start_date', 'e.end_date',DB::raw('if(c.all_day=1,false,true) as allDay'))
                 ->leftJoin('events as e', 'c.event_id', '=', 'e.id')
                 ->leftJoin('event_types as et', 'e.type', '=', 'et.id')
-                ->leftjoin("classes", \DB::raw("FIND_IN_SET(classes.id,e.selected_list)"), ">", \DB::raw("'0'"))
+                ->leftjoin("classes as cl", \DB::raw("FIND_IN_SET(cl.id,e.selected_list)"), ">", \DB::raw("'0'"))
                 ->whereNotNull('c.event_id')
                 ->whereNull('c.group_id')
                 ->where('e.status', 1)
@@ -8278,14 +8352,16 @@ class ApiController extends BaseController
                 ->groupBy('c.start')
                 ->get();
 
-
             $success = [];
             foreach ($event as $eve) {
                 $data = $eve;
                 if ($eve->audience == "1") {
                     $data->class_name = "EveryOne";
+                    array_push($success, $data);
                 }
-                array_push($success, $data);
+                if($eve->audience=="2"){
+                    array_push($success,$data);
+                }
             }
             return $this->successResponse($success, 'Event data Fetched successfully');
         }
@@ -8314,31 +8390,62 @@ class ApiController extends BaseController
             $start = date('Y-m-d h:i:s', strtotime($request->start));
             $end = date('Y-m-d h:i:s', strtotime($request->end));
 
-            $event = $Connection->table('calendors as c')
-                ->select('c.id', DB::raw("GROUP_CONCAT(DISTINCT  g.name) as class_name"), 'et.color', 'c.title', 'c.title as subject_name', 'et.name as event_type', 'c.class_id', 'c.start', 'c.end', 'e.id as event_id', 'e.remarks', 'e.audience', 'e.selected_list', 'e.all_day', 'e.start_time', 'e.end_time', 'e.start_date', 'e.end_date')
-                // ->leftJoin('groups as g', 'c.group_id', '=', 'g.id')
+            $all_event = $Connection->table('calendors as c')
+                ->select('c.id',DB::raw("GROUP_CONCAT(DISTINCT  g.name) as class_name"), 'et.color', 'c.title', 'c.title as subject_name', 'c.class_id', 'c.start',  'c.end', 'c.event_id', 'et.name as event_type', 'e.id as event_id', 'e.remarks', 'e.audience', 'e.selected_list', 'e.start_time', 'e.end_time', 'e.start_date', 'e.end_date',DB::raw('if(c.all_day=1,false,true) as allDay'))
                 ->leftJoin('events as e', 'c.event_id', '=', 'e.id')
                 ->leftJoin('event_types as et', 'e.type', '=', 'et.id')
-                ->leftjoin("groups as g", \DB::raw("FIND_IN_SET( g.id,e.selected_list)"), ">", \DB::raw("'0'"))
-                ->leftjoin("staffs as s", \DB::raw("FIND_IN_SET(s.id,g.staff)"), ">", \DB::raw("'0'"))
+                ->leftjoin("groups as g", \DB::raw("FIND_IN_SET(g.id,e.selected_list)"), ">", \DB::raw("'0'"))
                 ->whereNotNull('c.group_id')
-                ->where('s.id', $teacherId)
                 ->where('e.status', 1)
                 ->whereRaw('c.start between "' . $start . '" and "' . $end . '"')
                 ->whereRaw('c.end between "' . $start . '" and "' . $end . '"')
                 ->groupBy('c.event_id')
                 ->groupBy('c.start')
                 ->get();
-
-
-            $success = [];
-            foreach ($event as $eve) {
-                $data = $eve;
-                if ($eve->audience == "1") {
-                    $data->class_name = "EveryOne";
+            $event =[];
+            foreach($all_event as $events){
+                if($events->audience=="3"){
+                    // return $events;
+                    $group_check = $Connection->table('events as e')
+                    ->select('e.id', 's.id as teacher_id')
+                    ->leftjoin("groups as g", \DB::raw("FIND_IN_SET(g.id,e.selected_list)"), ">", \DB::raw("'0'"))
+                    ->leftjoin("staffs as s", 's.id', '=', 'g.staff')
+                    ->leftJoin('event_types as et', 'e.type', '=', 'et.id')
+                    ->where('e.id', $events->event_id)
+                    ->where('s.id',$teacherId)
+                    ->get();
+                    if (!$group_check->isEmpty()) {
+                        if($group_check[0]->teacher_id == $teacherId){
+                            array_push($event,$events);
+                        }
+                    }
                 }
-                array_push($success, $data);
             }
+            // $event = $Connection->table('calendors as c')
+            //     ->select('c.id', DB::raw("GROUP_CONCAT(DISTINCT  g.name) as class_name"), 'et.color', 'c.title', 'c.title as subject_name', 'et.name as event_type', 'c.class_id', 'c.start', 'c.end', 'e.id as event_id', 'e.remarks', 'e.audience', 'e.selected_list', 'e.all_day', 'e.start_time', 'e.end_time', 'e.start_date', 'e.end_date')
+            //     // ->leftJoin('groups as g', 'c.group_id', '=', 'g.id')
+            //     ->leftJoin('events as e', 'c.event_id', '=', 'e.id')
+            //     ->leftJoin('event_types as et', 'e.type', '=', 'et.id')
+            //     ->leftjoin("groups as g", \DB::raw("FIND_IN_SET( g.id,e.selected_list)"), ">", \DB::raw("'0'"))
+            //     ->leftjoin("staffs as s", \DB::raw("FIND_IN_SET(s.id,g.staff)"), ">", \DB::raw("'0'"))
+            //     ->whereNotNull('c.group_id')
+            //     ->where('s.id', $teacherId)
+            //     ->where('e.status', 1)
+            //     ->whereRaw('c.start between "' . $start . '" and "' . $end . '"')
+            //     ->whereRaw('c.end between "' . $start . '" and "' . $end . '"')
+            //     ->groupBy('c.event_id')
+            //     ->groupBy('c.start')
+            //     ->get();
+
+
+            // $success = [];
+            // foreach ($event as $eve) {
+            //     $data = $eve;
+            //     if ($eve->audience == "1") {
+            //         $data->class_name = "EveryOne";
+            //     }
+            //     array_push($success, $data);
+            // }
             return $this->successResponse($event, 'Event data Fetched successfully');
         }
     }
@@ -8358,31 +8465,64 @@ class ApiController extends BaseController
             $studentId = $request->student_id;
             $start = date('Y-m-d h:i:s', strtotime($request->start));
             $end = date('Y-m-d h:i:s', strtotime($request->end));
-            $event = $Connection->table('calendors as c')
-                ->select('c.id', DB::raw("GROUP_CONCAT(DISTINCT g.name) as class_name"), DB::raw("GROUP_CONCAT(DISTINCT en.student_id) as stud_id"), 'et.color', 'c.title', 'c.title as subject_name', 'c.class_id', 'c.start', 'c.end', 'et.name as event_type', 'e.id as event_id', 'e.remarks', 'e.audience', 'e.selected_list', 'e.all_day', 'e.start_time', 'e.end_time', 'e.start_date', 'e.end_date')
-                // ->leftJoin('groups as g', 'c.group_id', '=', 'g.id')
+            // $event = $Connection->table('calendors as c')
+            //     ->select('c.id', DB::raw("GROUP_CONCAT(DISTINCT g.name) as class_name"), DB::raw("GROUP_CONCAT(DISTINCT en.student_id) as stud_id"), 'et.color', 'c.title', 'c.title as subject_name', 'c.class_id', 'c.start', 'c.end', 'et.name as event_type', 'e.id as event_id', 'e.remarks', 'e.audience', 'e.selected_list', 'e.all_day', 'e.start_time', 'e.end_time', 'e.start_date', 'e.end_date')
+            //     ->leftJoin('events as e', 'c.event_id', '=', 'e.id')
+            //     ->leftJoin('event_types as et', 'e.type', '=', 'et.id')
+            //     ->leftJoin('groups as g', DB::raw("FIND_IN_SET(g.id,e.selected_list)"), ">", \DB::raw("'0'"))
+            //     ->leftJoin('enrolls as en', \DB::raw("FIND_IN_SET(en.student_id,g.student)"), ">", \DB::raw("'0'"))
+            //     ->whereNotNull('c.group_id')
+            //     ->where('en.student_id', $studentId)
+            //     ->where('e.status', 1)
+            //     // ->where('c.start', '>=', $start)
+            //     // ->where('c.end', '<=', $end)
+            //     ->whereRaw('c.start between "' . $start . '" and "' . $end . '"')
+            //     ->whereRaw('c.end between "' . $start . '" and "' . $end . '"')
+            //     ->groupBy('c.event_id')
+            //     ->groupBy('c.start')
+            //     ->get();
+
+            $all_event = $Connection->table('calendors as c')
+                ->select('c.id',DB::raw("GROUP_CONCAT(DISTINCT  g.name) as class_name"), 'et.color', 'c.title', 'c.title as subject_name', 'c.class_id', 'c.start',  'c.end', 'c.event_id', 'et.name as event_type', 'e.id as event_id', 'e.remarks', 'e.audience', 'e.selected_list', 'e.start_time', 'e.end_time', 'e.start_date', 'e.end_date',DB::raw('if(c.all_day=1,false,true) as allDay'))
                 ->leftJoin('events as e', 'c.event_id', '=', 'e.id')
                 ->leftJoin('event_types as et', 'e.type', '=', 'et.id')
-                ->leftJoin('groups as g', DB::raw("FIND_IN_SET(g.id,e.selected_list)"), ">", \DB::raw("'0'"))
-                ->leftJoin('enrolls as en', \DB::raw("FIND_IN_SET(en.student_id,g.student)"), ">", \DB::raw("'0'"))
+                ->leftjoin("groups as g", \DB::raw("FIND_IN_SET(g.id,e.selected_list)"), ">", \DB::raw("'0'"))
                 ->whereNotNull('c.group_id')
-                ->where('en.student_id', $studentId)
                 ->where('e.status', 1)
-                // ->where('c.start', '>=', $start)
-                // ->where('c.end', '<=', $end)
                 ->whereRaw('c.start between "' . $start . '" and "' . $end . '"')
                 ->whereRaw('c.end between "' . $start . '" and "' . $end . '"')
                 ->groupBy('c.event_id')
                 ->groupBy('c.start')
                 ->get();
-            $success = [];
-            foreach ($event as $eve) {
-                $data = $eve;
-                if ($eve->audience == "1") {
-                    $data->class_name = "EveryOne";
+
+            $event =[];
+            foreach($all_event as $events){
+                if($events->audience=="3"){
+                    // return $events;
+                    $group_check = $Connection->table('events as e')
+                    ->select('e.id', 's.id as student_id')
+                    ->leftjoin("groups as g", \DB::raw("FIND_IN_SET(g.id,e.selected_list)"), ">", \DB::raw("'0'"))
+                    ->leftjoin("students as s", 's.id', '=', 'g.student')
+                    ->leftJoin('event_types as et', 'e.type', '=', 'et.id')
+                    ->where('e.id', $events->event_id)
+                    ->where('s.id',$studentId)
+                    ->get();
+                    if (!$group_check->isEmpty()) {
+                        if($group_check[0]->student_id == $studentId){
+                            array_push($event,$events);
+                        }
+                    }
                 }
-                array_push($success, $data);
             }
+                
+            // $success = [];
+            // foreach ($event as $eve) {
+            //     $data = $eve;
+            //     if ($eve->audience == "1") {
+            //         $data->class_name = "EveryOne";
+            //     }
+            //     array_push($success, $data);
+            // }
             return $this->successResponse($event, 'Event data Fetched successfully');
         }
     }
@@ -8400,11 +8540,24 @@ class ApiController extends BaseController
             $Connection = $this->createNewConnection($request->branch_id);
             $start = date('Y-m-d h:i:s', strtotime($request->start));
             $end = date('Y-m-d h:i:s', strtotime($request->end));
-            $event = $Connection->table('calendors as c')
-                ->select('c.id', DB::raw("GROUP_CONCAT(DISTINCT  groups.name) as class_name"), 'c.group_id', 'et.color', 'c.title', 'c.title as subject_name', 'et.name as event_type', 'c.class_id', 'c.start', 'c.end', 'e.id as event_id', 'e.remarks', 'e.audience', 'e.selected_list', 'e.all_day', 'e.start_time', 'e.end_time', 'e.start_date', 'e.end_date')
+            // $event = $Connection->table('calendors as c')
+            //     ->select('c.id', DB::raw("GROUP_CONCAT(DISTINCT  groups.name) as class_name"), 'c.group_id', 'et.color', 'c.title', 'c.title as subject_name', 'et.name as event_type', 'c.class_id', 'c.start', 'c.end', 'e.id as event_id', 'e.remarks', 'e.audience', 'e.selected_list', 'e.all_day', 'e.start_time', 'e.end_time', 'e.start_date', 'e.end_date')
+            //     ->leftJoin('events as e', 'c.event_id', '=', 'e.id')
+            //     ->leftJoin('event_types as et', 'e.type', '=', 'et.id')
+            //     ->leftjoin("groups", \DB::raw("FIND_IN_SET(groups.id,e.selected_list)"), ">", \DB::raw("'0'"))
+            //     ->whereNotNull('c.group_id')
+            //     ->where('e.status', 1)
+            //     ->whereRaw('c.start between "' . $start . '" and "' . $end . '"')
+            //     ->whereRaw('c.end between "' . $start . '" and "' . $end . '"')
+            //     ->groupBy('c.event_id')
+            //     ->groupBy('c.start')
+            //     ->get();
+
+            $all_event = $Connection->table('calendors as c')
+                ->select('c.id',DB::raw("GROUP_CONCAT(DISTINCT  g.name) as class_name"), 'et.color', 'c.title', 'c.title as subject_name', 'c.class_id', 'c.start',  'c.end', 'c.event_id', 'et.name as event_type', 'e.id as event_id', 'e.remarks', 'e.audience', 'e.selected_list', 'e.start_time', 'e.end_time', 'e.start_date', 'e.end_date',DB::raw('if(c.all_day=1,false,true) as allDay'))
                 ->leftJoin('events as e', 'c.event_id', '=', 'e.id')
                 ->leftJoin('event_types as et', 'e.type', '=', 'et.id')
-                ->leftjoin("groups", \DB::raw("FIND_IN_SET(groups.id,e.selected_list)"), ">", \DB::raw("'0'"))
+                ->leftjoin("groups as g", \DB::raw("FIND_IN_SET(g.id,e.selected_list)"), ">", \DB::raw("'0'"))
                 ->whereNotNull('c.group_id')
                 ->where('e.status', 1)
                 ->whereRaw('c.start between "' . $start . '" and "' . $end . '"')
@@ -8413,16 +8566,13 @@ class ApiController extends BaseController
                 ->groupBy('c.start')
                 ->get();
 
-
-            $success = [];
-            foreach ($event as $eve) {
-                $data = $eve;
-                if ($eve->audience == "1") {
-                    $data->class_name = "EveryOne";
+            $event =[];
+            foreach($all_event as $events){
+                if($events->audience=="3"){
+                    array_push($event,$events);
                 }
-                array_push($success, $data);
             }
-            return $this->successResponse($success, 'Event data Fetched successfully');
+            return $this->successResponse($event, 'Event data Fetched successfully');
         }
     }
 
@@ -16015,6 +16165,7 @@ class ApiController extends BaseController
             $Connection = $this->createNewConnection($request->branch_id);
             $start = date('Y-m-d', strtotime($request->start));
             $endDt = date('Y-m-d', strtotime($request->end));
+            // return $start.'/'.$endDt;
             $getTimeTableCalendor = $Connection->table('subject_assigns as sa')
                 ->select(
                     'tex.id as schedule_id',
@@ -16026,7 +16177,8 @@ class ApiController extends BaseController
                     DB::raw("CONCAT('Exam: ',ex.name, ' - ', sbj.name) as title"),
                     'sbj.name as subject_name',
                     'sbj.subject_color_calendor as color',
-                    'tex.exam_date as start'
+                    'tex.exam_date as start',
+                    'cl.id as clss_id'
                 )
                 ->join('timetable_exam as tex', function ($q) {
                     $q->on('tex.class_id', '=', 'sa.class_id')
@@ -16039,10 +16191,12 @@ class ApiController extends BaseController
                 ->join('exam as ex', 'tex.exam_id', '=', 'ex.id')
                 ->where([
                     ['sa.teacher_id', '=', $request->teacher_id],
-                    ['tex.exam_date', '=', $start],
-                    ['tex.exam_date', '=', $endDt]
+                    // ['tex.exam_date', '=', $start],
+                    // ['tex.exam_date', '=', $endDt]
                 ])
+                ->whereRaw('tex.exam_date between "' . $start . '" and "' . $endDt . '"')
                 ->get();
+                
             return $this->successResponse($getTimeTableCalendor, 'get schedule exam details record successfully');
         }
     }
