@@ -28,6 +28,8 @@ class ChatController extends BaseController
             'branch_id' => 'required',
             'token' => 'required',
         ]);
+		$toid=$request->to_id;
+		$to_role=$request->role;
 
         if (!$validator->passes()) {
             return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
@@ -40,6 +42,7 @@ class ChatController extends BaseController
                 ->select(
                     'stf.id as staff_id',
                     DB::raw("CONCAT(stf.first_name, ' ', stf.last_name) as name"),
+					DB::raw("(select COUNT('ch.*') from chats as ch where ch.chat_fromid=stf.id AND ch.chat_toid='".$request->to_id."' AND ch.chat_touser='".$request->role."' AND ch.chat_fromuser='Teacher' AND ch.chat_status='Unread' AND flag=1 ) as msgcount"), 
                     // 'us.role_id',
                     // 'us.user_id',
                     'us.email',
@@ -53,7 +56,9 @@ class ChatController extends BaseController
                 ])
                 ->whereIn('us.role_id', ['4'])
                 ->groupBy('stf.id')
-                ->limit(10)->get();
+              
+			   // ->limit(10)
+				->get();
             return $this->successResponse($allTeachers, 'get all teacher record fetch successfully');
         }
     }
@@ -75,6 +80,7 @@ class ChatController extends BaseController
                 ->select(
                     'prnt.id',
                     DB::raw("CONCAT(prnt.first_name, ' ', prnt.last_name) as name"),
+					DB::raw("(select COUNT('ch.*') from chats as ch where ch.chat_fromid=prnt.id AND ch.chat_toid='".$request->to_id."' AND ch.chat_touser='".$request->role."' AND ch.chat_fromuser='Parent' AND ch.chat_status='Unread' AND flag=1) as msgcount"), 
                     'prnt.photo'
                 )->limit(10)->get();
             return $this->successResponse($allTeachers, 'get all teacher record fetch successfully');
@@ -159,7 +165,267 @@ class ChatController extends BaseController
             }
         }
     }
+     public function storechat(Request $request)
+    {
+
+			//dd('123');
+            // create new connection
+            $conn = $this->createNewConnection($request->branch_id);
+            $branch_id = $request->branch_id;
+            
+                // insert data
+                if (isset($request->chat_document)) {
+                    $now = now();
+                    $name = strtotime($now);
+                    $extension = $request->chat_file_extension;
+                    $fileName = $name . "." . $extension;
+
+                    $base64 = base64_decode($request->chat_document);
+                    $file = base_path() . '/public/admin-documents/chats/' . $fileName;
+                    $suc = file_put_contents($file, $base64);
+                } else {
+                    $fileName = null;
+                }
+                $data = [
+                    'chat_fromid' => $request['chat_fromid'],
+                    'chat_fromname' => $request['chat_fromname'],
+                    'chat_fromuser' => $request['chat_fromuser'],
+                    'chat_toid' => $request['chat_toid'],
+                    'chat_toname' => $request['chat_toname'],
+                    'chat_touser' => $request['chat_touser'],
+                    'chat_content' => $request['chat_content'],
+                    'chat_status' => $request['chat_status'],
+                    'chat_document' => $fileName,
+                    'chat_file_extension' => $request['chat_file_extension'],					
+                    'flag' => '1',
+                    'created_at' => date("Y-m-d H:i:s")
+                ];
+                //$query = $staffConn->table('staff_leaves')->insert($data);
+                $query = $conn->table('chats')->insert($data);
+            $success = [];
+            if (!$query) {
+                return $this->send500Error('Something went wrong.', ['error' => 'Something went wrong']);
+            } else {
+                return $this->successResponse($success, 'Message sent successfully');
+            }
+            
+        
+    }
+	 public function deletechat(Request $request)
+    {
+
+			//dd('123');
+            // create new connection
+            $conn = $this->createNewConnection($request->branch_id);
+            $branch_id = $request->branch_id;
+            $chat_id = $request['chat_id'];
+              //  $query = $conn->table('chats')->insert($data);
+			  $query = $conn->table('chats as ch')->Where([
+					['ch.id',$chat_id]
+				])->update([
+                    'ch.flag' => "0",
+                    'ch.updated_at' => date("Y-m-d H:i:s")
+                ]);
+            $success = [];
+            if (!$query) {
+                return $this->send500Error('Something went wrong.', ['error' => 'Something went wrong']);
+            } else {
+                return $this->successResponse($success, 'Message Deleted successfully');
+            }
+            
+        
+    }
+	
+	public function chatlists(Request $request)
+    {
+
+			//dd('123');
+            // create new connection
+            $conn = $this->createNewConnection($request->branch_id);
+            $branch_id = $request->branch_id;
+			$chat_fromid = $request['chat_fromid'];
+			$chat_fromname= $request['chat_fromname'];
+			$chat_fromuser= $request['chat_fromuser'];
+			$chat_toid= $request['chat_toid'];
+			$chat_toname= $request['chat_toname'];
+			$chat_touser= $request['chat_touser'];
+			$query = $conn->table('chats as ch')->Where([
+					['ch.chat_fromid',$chat_toid],
+					['ch.chat_fromuser',$chat_touser],
+					['ch.chat_toid',$chat_fromid],
+					['ch.chat_touser',$chat_fromuser],
+					['ch.chat_status','Unread']
+				])->update([
+                    'ch.chat_status' => "Read",
+                    'ch.updated_at' => date("Y-m-d H:i:s")
+                ]);
+              if($chat_touser=='Group')
+				{
+				 $success = $conn->table('chats as ch')
+                ->select(
+                    'ch.id',
+					'ch.chat_fromid',
+					'ch.chat_fromname',
+					'ch.chat_fromuser',
+					'ch.chat_toid',
+					'ch.chat_toname',
+					'ch.chat_touser',
+					'ch.chat_content',
+					'ch.chat_status',
+					'ch.chat_document',
+					'ch.chat_file_extension',					
+					'ch.created_at',
+
+					DB::raw('DATE_FORMAT(ch.created_at, "%d-%M-%Y") as chatdate'),
+					DB::raw('DATE_FORMAT(ch.created_at, "%H:%i") as chattime'),					
+					'ch.flag'
+                )
+				->where([					
+					['ch.flag','1'],
+					['ch.chat_toid',$chat_toid],
+					['ch.chat_touser',$chat_touser]
+				])->latest()->take(20)->orderBy('id', 'ASC')->get(); 
+				}
+				else
+				{
+				$success = $conn->table('chats as ch')
+                ->select(
+                    'ch.id',
+					'ch.chat_fromid',
+					'ch.chat_fromname',
+					'ch.chat_fromuser',
+					'ch.chat_toid',
+					'ch.chat_toname',
+					'ch.chat_touser',
+					'ch.chat_content',
+					'ch.chat_status',
+					'ch.chat_document',
+					'ch.chat_file_extension',					
+					'ch.created_at',
     
+					DB::raw('DATE_FORMAT(ch.created_at, "%d-%M-%Y") as chatdate'),
+					DB::raw('DATE_FORMAT(ch.created_at, "%H:%i") as chattime'),					
+					'ch.flag'
+                )
+				->where([
+					['ch.flag','1'],
+					['ch.chat_fromid',$chat_fromid],
+					['ch.chat_fromuser',$chat_fromuser],
+					['ch.chat_toid',$chat_toid],
+					['ch.chat_touser',$chat_touser]
+				])->orWhere([
+					['ch.flag','1'],
+					['ch.chat_fromid',$chat_toid],
+					['ch.chat_fromuser',$chat_touser],
+					['ch.chat_toid',$chat_fromid],
+					['ch.chat_touser',$chat_fromuser]
+				])->latest()->take(20)->orderBy('id', 'ASC')->get(); 
+               
+           
+				}
+           
+           //dd($success);
+            if (!$success) {
+                return $this->send500Error('Something went wrong.', ['error' => 'Something went wrong']);
+            } else {
+                return $this->successResponse($success, 'get all chat record fetch successfully');
+            }
+            
+        
+    }
+	public function groupchatlists(Request $request)
+    {
+
+			//dd('123');
+            // create new connection
+            $conn = $this->createNewConnection($request->branch_id);
+            $branch_id = $request->branch_id;
+			$chat_fromid = $request['chat_fromid'];
+			$chat_fromname= $request['chat_fromname'];
+			$chat_fromuser= $request['chat_fromuser'];
+			$chat_toid= $request['chat_toid'];
+			$chat_toname= $request['chat_toname'];
+			$chat_touser= $request['chat_touser'];
+			$query = $conn->table('chats as ch')->Where([
+					['ch.chat_fromid',$chat_toid],
+					['ch.chat_fromuser',$chat_touser],
+					['ch.chat_toid',$chat_fromid],
+					['ch.chat_touser',$chat_fromuser],
+					['ch.chat_status','Unread']
+				])->update([
+                    'ch.chat_status' => "Read",
+                    'ch.updated_at' => date("Y-m-d H:i:s")
+                ]);
+				if($chat_touser=='Group')
+				{
+				 $success = $conn->table('chats as ch')
+                ->select(
+                    'ch.id',
+					'ch.chat_fromid',
+					'ch.chat_fromname',
+					'ch.chat_fromuser',
+					'ch.chat_toid',
+					'ch.chat_toname',
+					'ch.chat_touser',
+					'ch.chat_content',
+					'ch.chat_status',
+					'ch.chat_document',
+					'ch.chat_file_extension',					
+					'ch.created_at',
+
+					DB::raw('DATE_FORMAT(ch.created_at, "%d-%M-%Y") as chatdate'),
+					DB::raw('DATE_FORMAT(ch.created_at, "%H:%i") as chattime'),					
+					'ch.flag'
+                )
+				->where([					
+					['ch.chat_toid',$chat_toid],
+					['ch.chat_touser',$chat_touser]
+				])->latest()->take(20)->orderBy('id', 'ASC')->get(); 
+				}
+				else
+				{
+			 $success = $conn->table('chats as ch')
+                ->select(
+                    'ch.id',
+					'ch.chat_fromid',
+					'ch.chat_fromname',
+					'ch.chat_fromuser',
+					'ch.chat_toid',
+					'ch.chat_toname',
+					'ch.chat_touser',
+					'ch.chat_content',
+					'ch.chat_status',
+					'ch.chat_document',
+					'ch.chat_file_extension',					
+					'ch.created_at',
+
+					DB::raw('DATE_FORMAT(ch.created_at, "%d-%M-%Y") as chatdate'),
+					DB::raw('DATE_FORMAT(ch.created_at, "%H:%i") as chattime'),					
+					'ch.flag'
+                )
+				->where([
+					['ch.chat_fromid',$chat_fromid],
+					['ch.chat_fromuser',$chat_fromuser],
+					['ch.chat_toid',$chat_toid],
+					['ch.chat_touser',$chat_touser]
+				])->orWhere([
+					['ch.chat_fromid',$chat_toid],
+					['ch.chat_fromuser',$chat_touser],
+					['ch.chat_toid',$chat_fromid],
+					['ch.chat_touser',$chat_fromuser]
+				])->latest()->take(20)->orderBy('id', 'ASC')->get(); 
+               
+           
+				}
+           
+            if (!$success) {
+                return $this->send500Error('Something went wrong.', ['error' => 'Something went wrong']);
+            } else {
+                return $this->successResponse($success, 'get all chat record fetch successfully');
+            }
+            
+        
+    }
     // get all Groups
     public function chatGetGroupList(Request $request)
     {
@@ -183,6 +449,33 @@ class ChatController extends BaseController
                 );
                 if (isset($staff)) {
                     $allTeachers = $query->whereRaw("find_in_set($staff,gs.staff)")->get();
+                }
+            return $this->successResponse($allTeachers, 'get all Group record fetch successfully');
+        }
+    }
+	 // get all Groups
+    public function chatGetParentGroupList(Request $request)
+    {
+        $validator = \Validator::make($request->all(), [
+            'branch_id' => 'required',
+            'token' => 'required',
+        ]);
+
+        if (!$validator->passes()) {
+            return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
+        } else {
+            // create new connection
+            $conn = $this->createNewConnection($request->branch_id);
+            // get all teachers
+            $parent = $request->parent_id;
+            $allTeachers = [];
+            $query = $conn->table('groups as gs')
+                ->select(
+                    'gs.id',
+                    'gs.name'
+                );
+                if (isset($parent)) {
+                    $allTeachers = $query->whereRaw("find_in_set($parent,gs.parent)")->get();
                 }
             return $this->successResponse($allTeachers, 'get all Group record fetch successfully');
         }

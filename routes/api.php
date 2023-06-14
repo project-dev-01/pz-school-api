@@ -840,8 +840,15 @@ Route::group(['middleware' => ['auth:api', 'throttle:limit_per_user', 'logroute'
     Route::get('chat/get_teacher_list', [ChatController::class, 'chatGetTeacherList']);
     Route::get('chat/get_parent_list', [ChatController::class, 'chatGetParentList']);
     Route::get('chat/get_group_list', [ChatController::class, 'chatGetGroupList']);
+    Route::get('chat/get_parentgroup_list', [ChatController::class, 'chatGetParentGroupList']);
+	
     Route::get('chat/get_teacher_assign_parent_list', [ChatController::class, 'chatGetTeacherAssignParentList']);
     Route::get('chat/sent_messages', [ChatController::class, 'chatSentMessage']);
+    Route::post('chat/storechat', [ChatController::class, 'storechat']);	
+    Route::post('chat/deletechat', [ChatController::class, 'deletechat']);
+	Route::post('chat/chatlist', [ChatController::class, 'chatlists']);
+	
+	Route::post('chat/groupchatlists', [ChatController::class, 'groupchatlists']);
     // chat conversations end
     Route::post('class_teacher_classes', [ApiControllerOne::class, 'classTeacherClass']);
     Route::post('class_teacher_sections', [ApiControllerOne::class, 'classTeacherSections']);
