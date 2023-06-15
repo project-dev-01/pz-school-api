@@ -1018,7 +1018,7 @@ class ApiController extends BaseController
             // create new connection
             $secConn = $this->createNewConnection($request->branch_id);
             // get data
-            $subjectDetails = $secConn->table('subjects')->orderBy('order_code', 'asc')->get();
+            $subjectDetails = $secConn->table('subjects')->orderBy(DB::raw('ISNULL(order_code), order_code'), 'ASC')->get();
             return $this->successResponse($subjectDetails, 'Subject record fetch successfully');
         }
     }
@@ -1852,14 +1852,20 @@ class ApiController extends BaseController
             // create new connection
             $conn = $this->createNewConnection($request->branch_id);
             // get data
-            $eventDetails = $conn->table('events')
-                ->select("events.*", DB::raw("GROUP_CONCAT(DISTINCT  classes.name) as class_name"), 'event_types.name as type', DB::raw("GROUP_CONCAT(DISTINCT  groups.name) as group_name"))
-                ->leftjoin("classes", \DB::raw("FIND_IN_SET(classes.id,events.selected_list)"), ">", \DB::raw("'0'"))
-                ->leftjoin("groups", \DB::raw("FIND_IN_SET(groups.id,events.selected_list)"), ">", \DB::raw("'0'"))
-                ->leftjoin('event_types', 'event_types.id', '=', 'events.type')
-                ->groupBy("events.id")
-                ->orderBy('events.id', 'desc')
-                ->get()->toArray();
+            $eventDetails = $conn->table('events as e')
+            ->select("e.*", DB::raw("GROUP_CONCAT(DISTINCT  c.name) as class_name"), 'event_types.name as type', DB::raw("GROUP_CONCAT(DISTINCT  g.name) as group_name"))
+            ->leftJoin('classes as c', function ($join) {
+                $join->on(\DB::raw("FIND_IN_SET(c.id,e.selected_list)"), ">", \DB::raw("'0'"))
+                    ->where('e.audience', "2");
+            })
+            ->leftJoin('groups as g', function ($join) {
+                $join->on(\DB::raw("FIND_IN_SET(g.id,e.selected_list)"), ">", \DB::raw("'0'"))
+                    ->where('e.audience', "3");
+            })
+            ->leftjoin('event_types', 'event_types.id', '=', 'e.type')
+            ->groupBy("e.id")
+            ->orderBy('e.id', 'desc')
+            ->get()->toArray();
             return $this->successResponse($eventDetails, 'Event record fetch successfully');
         }
     }
@@ -1879,20 +1885,64 @@ class ApiController extends BaseController
             $conn = $this->createNewConnection($request->branch_id);
             // get data
             $studentId = $request->student_id;
-            $enroll = $conn->table('enrolls')->where('student_id', $studentId)->first();
-            $eventDetails = [];
-            if ($enroll) {
+            $all_event = $conn->table('events as e')
+                ->select("e.*", DB::raw("GROUP_CONCAT(DISTINCT  c.name) as class_name"), 'event_types.name as type', DB::raw("GROUP_CONCAT(DISTINCT  g.name) as group_name"))
+                ->leftJoin('classes as c', function ($join) use($studentId) {
+                    $join->on(\DB::raw("FIND_IN_SET(c.id,e.selected_list)"), ">", \DB::raw("'0'"))
+                    // ->leftJoin('enrolls as en', 'c.id', '=', 'en.class_id')
+                        // ->where('en.student_id',$studentId)
+                        ->where('e.audience', "2");
+                })
+                ->leftJoin('groups as g', function ($join) use($studentId) {
+                    $join->on(\DB::raw("FIND_IN_SET(g.id,e.selected_list)"), ">", \DB::raw("'0'"))
+                        ->where('e.audience', "3");
+                })
+                // ->leftjoin("classes", \DB::raw("FIND_IN_SET(classes.id,events.selected_list)"), ">", \DB::raw("'0'"))
+                // ->leftjoin("groups", \DB::raw("FIND_IN_SET(groups.id,events.selected_list)"), ">", \DB::raw("'0'"))
+                ->leftjoin('event_types', 'event_types.id', '=', 'e.type')
+                ->where('e.status',"=","1")
+                ->groupBy("e.id")
+                ->orderBy('e.id', 'desc')
+                ->get()->toArray();
 
-                $eventDetails = $conn->table('events')
-                    ->select("events.*", DB::raw("GROUP_CONCAT(DISTINCT  classes.name) as class_name"), 'event_types.name as type', DB::raw("GROUP_CONCAT(DISTINCT  groups.name) as group_name"))
-                    ->leftjoin("classes", \DB::raw("FIND_IN_SET(classes.id,events.selected_list)"), ">", \DB::raw("'0'"))
-                    ->leftjoin("groups", \DB::raw("FIND_IN_SET(groups.id,events.selected_list)"), ">", \DB::raw("'0'"))
-                    ->leftjoin('event_types', 'event_types.id', '=', 'events.type')
-                    ->where('classes.id', $enroll->class_id)
-                    ->orWhere('events.audience', "1")
-                    ->groupBy("events.id")
-                    ->orderBy('events.id', 'desc')
-                    ->get()->toArray();
+            $eventDetails =[];
+            foreach($all_event as $events){
+                // dd($events);
+                if($events->audience=="1"){
+                    array_push($eventDetails,$events);
+                }
+                if($events->audience=="2"){
+                    $class_check = $conn->table('events as e')
+                    ->select('e.id', 'en.student_id')
+                    ->leftjoin("classes as c", \DB::raw("FIND_IN_SET(c.id,e.selected_list)"), ">", \DB::raw("'0'")) 
+                    ->leftJoin('enrolls as en', 'c.id', '=', 'en.class_id')
+                    ->leftJoin('event_types as et', 'e.type', '=', 'et.id')
+                    ->where('e.id', $events->id)
+                    ->where('en.student_id',$studentId)
+                    ->get();
+                    // return $class_check;
+                    if (!$class_check->isEmpty()) {
+                        if($class_check[0]->student_id == $studentId){
+                            array_push($eventDetails,$events);
+                        }
+                    }
+                }
+                if($events->audience=="3"){
+                    // return $events;
+                    $group_check = $conn->table('events as e')
+                    ->select('e.id', 's.id as student_id')
+                    ->leftjoin("groups as g", \DB::raw("FIND_IN_SET(g.id,e.selected_list)"), ">", \DB::raw("'0'"))
+                    ->leftjoin("students as s", 's.id', '=', 'g.student')
+                    ->leftJoin('event_types as et', 'e.type', '=', 'et.id')
+                    ->where('e.id', $events->id)
+                    ->where('s.id',$studentId)
+                    ->get();
+                    if (!$group_check->isEmpty()) {
+                        if($group_check[0]->student_id == $studentId){
+                            array_push($eventDetails,$events);
+                        }
+                    }
+                }
             }
             // dd($eventDetails);
             return $this->successResponse($eventDetails, 'Event record fetch successfully');
@@ -1916,12 +1966,19 @@ class ApiController extends BaseController
             // get data
 
             $event_id = $request->id;
-            $eventDetails = $conn->table('events')
-                ->select("events.*", DB::raw("GROUP_CONCAT(DISTINCT  classes.name) as classname"), 'event_types.name as type_name')
-                ->leftjoin("classes", \DB::raw("FIND_IN_SET(classes.id,events.selected_list)"), ">", \DB::raw("'0'"))
-                ->leftjoin('event_types', 'event_types.id', '=', 'events.type')
-                ->groupBy("events.id")
-                ->where('events.id', $event_id)->first();
+            $eventDetails = $conn->table('events as e')
+            ->select("e.*", DB::raw("GROUP_CONCAT(DISTINCT  c.name) as class_name"), DB::raw("GROUP_CONCAT(DISTINCT  g.name) as group_name"))
+            ->leftJoin('classes as c', function ($join) {
+                $join->on(\DB::raw("FIND_IN_SET(c.id,e.selected_list)"), ">", \DB::raw("'0'"))
+                    ->where('e.audience', "2");
+            })
+            ->leftJoin('groups as g', function ($join) {
+                $join->on(\DB::raw("FIND_IN_SET(g.id,e.selected_list)"), ">", \DB::raw("'0'"))
+                    ->where('e.audience', "3");
+            })
+            ->leftjoin('event_types', 'event_types.id', '=', 'e.type')
+            ->groupBy("e.id")
+            ->where('e.id', $event_id)->first();
             return $this->successResponse($eventDetails, 'Event row fetch successfully');
         }
     }
