@@ -8641,4 +8641,20 @@ class ApiControllerOne extends BaseController
             return $this->successResponse($details, 'Student Attendance record fetch successfully');
         }
     }
+    // get Languages 
+    public function getLanguages(Request $request)
+    {
+        $validator = \Validator::make($request->all(), [
+            'branch_id' => 'required',
+        ]);
+        if (!$validator->passes()) {
+            return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
+        } else {
+            // create new connection
+            $Connection = $this->createNewConnection($request->branch_id);
+            // get data
+            $section = $Connection->table('language')->orderBy('name', 'asc')->get();
+            return $this->successResponse($section, 'Language record fetch successfully');
+        }
+    }
 }

@@ -867,4 +867,5 @@ Route::group(['middleware' => ['auth:api', 'throttle:limit_per_user', 'logroute'
 
     
     Route::post('forum_image_store', [ApiController::class, 'forumImageStore']);
+    Route::get('get_languages', [ApiControllerOne::class, 'getLanguages']);
 });

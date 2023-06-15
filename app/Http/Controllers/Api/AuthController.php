@@ -106,12 +106,14 @@ class AuthController extends BaseController
                 if (isset($user->subsDetails->id)) {
                     $branch_id = $user->subsDetails->id;
                     $Connection = $this->createNewConnection($branch_id);
-                    $academicSession = $Connection->table('global_settings')
+                    $academicSession = $Connection->table('global_settings as glo')
                         ->select(
-                            'year_id',
-                            'footer_text',
-                            'timezone'
+                            'glo.year_id',
+                            'lan.name as language_name',
+                            'glo.footer_text',
+                            'glo.timezone'
                         )
+                        ->leftJoin('language as lan', 'lan.id', '=', 'glo.language_id')
                         ->first();
                     $success['academicSession'] = $academicSession;
                 }
