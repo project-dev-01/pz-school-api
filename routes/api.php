@@ -305,6 +305,11 @@ Route::group(['middleware' => ['auth:api', 'throttle:limit_per_user', 'logroute'
     // parent settings
     Route::post('settings/parent_profile_info', [ApiController::class, 'getParentProfileInfo']);
     Route::post('update-parent-profile-info', [ApiController::class, 'updateParentProfileInfo']);
+    Route::post('change-parent-profile-picture', [ApiController::class, 'updateParentPicture']);
+    // student settings
+    Route::post('settings/student_profile_info', [ApiController::class, 'getStudentProfileInfo']);
+    Route::post('update-student-profile-info', [ApiController::class, 'updateStudentProfileInfo']);
+    Route::post('change-student-profile-picture', [ApiController::class, 'updateStudentPicture']);
 
     // create database_migrate
 

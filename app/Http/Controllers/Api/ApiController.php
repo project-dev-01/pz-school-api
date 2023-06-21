@@ -18836,4 +18836,178 @@ class ApiController extends BaseController
         $data['file_name'] = $fileName;
         return  $data;
     }
+    // student Profile
+    public function getStudentProfileInfo(Request $request)
+    {
+        $validator = \Validator::make($request->all(), [
+            'branch_id' => 'required',
+            'student_id' => 'required'
+        ]);
+
+        if (!$validator->passes()) {
+            return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
+        } else {
+            // create new connection
+            $Connection = $this->createNewConnection($request->branch_id);
+            // get data
+            $getstudentDetails = $Connection->table('students')
+                ->where('id', $request->student_id)
+                ->get();
+            $studentObj = new \stdClass();
+            if (!empty($getstudentDetails)) {
+                foreach ($getstudentDetails as $suc) {
+                    $studentObj = $suc;
+                    $studentObj->address = Helper::decryptStringData($suc->current_address);
+                    $studentObj->address_2 = Helper::decryptStringData($suc->permanent_address);
+                    $studentObj->mobile_no = Helper::decryptStringData($suc->mobile_no);
+                    $studentObj->nric = Helper::decryptStringData($suc->nric);
+                    $studentObj->passport = Helper::decryptStringData($suc->passport);
+                }
+            }
+            return $this->successResponse($studentObj, 'Student details fetch successfully');
+        }
+    }
+    // update Student profile info
+    public function updateStudentProfileInfo(Request $request)
+    {
+
+        $validator = \Validator::make($request->all(), [
+            'id' => "required",
+            'student_id' => "required",
+            'branch_id' => "required",
+            'first_name' => 'required',
+            'email' => 'required|email|unique:users,email,' . $request->id,
+            'mobile_no' => "required",
+            'address' => "required",
+        ]);
+        if (!$validator->passes()) {
+            return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
+        } else {
+            $first_name = $request->first_name;
+            $last_name = isset($request->last_name) ? $request->last_name : "";
+            $name = $first_name . ' ' . $last_name;
+            $mobile_no = isset($request->mobile_no) ? Crypt::encryptString($request->mobile_no) : "";
+            $address = isset($request->address) ? Crypt::encryptString($request->address) : "";
+            $data = [
+                'first_name' => $request->first_name,
+                'last_name' => $request->last_name,
+                'email' => $request->email,
+                'mobile_no' => $mobile_no,
+                'current_address' => $address,
+                'updated_at' => date("Y-m-d H:i:s")
+            ];
+            $query = User::find($request->id)->update([
+                'name' => $name,
+                'email' => $request->email
+            ]);
+            $Connection = $this->createNewConnection($request->branch_id);
+            // get data
+            $Connection->table('students')->where('id', $request->student_id)->update($data);
+
+            if (!$query) {
+                return $this->send500Error('Something went wrong.', ['error' => 'Something went wrong, Failed to update profile.']);
+            } else {
+                return $this->successResponse([], 'Your profile info has been update successfuly.');
+            }
+        }
+    }
+
+    // update Student Picture settings
+    public function updateStudentPicture(Request $request)
+    {
+        $validator = \Validator::make($request->all(), [
+            'id' => 'required',
+            'token' => 'required',
+            'branch_id' => 'required',
+            'student_id' => 'required',
+            'profile_image' => 'required|image|mimes:jpeg,png,jpg,gif|max:2048',
+        ]);
+
+        if (!$validator->passes()) {
+            return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
+        } else {
+
+            $path = $request->branch_id . '/users/images/';
+            $file = $request->file('profile_image');
+            $new_name = 'UIMG_' . date('Ymd') . uniqid() . '.jpg';
+            File::ensureDirectoryExists(public_path($path));
+            //Upload new image
+            $upload = $file->move(public_path($path), $new_name);
+
+            if (!$upload) {
+                return $this->send500Error('Something went wrong.', ['error' => 'Something went wrong, upload new picture failed.']);
+            } else {
+                //Get Old picture
+                $oldPicture = User::find($request->id)->getAttributes()['picture'];
+
+                if ($oldPicture != '') {
+                    if (\File::exists(public_path($path . $oldPicture))) {
+                        \File::delete(public_path($path . $oldPicture));
+                    }
+                }
+                //Update DB
+                $update = User::find($request->id)->update(['picture' => $new_name]);
+                $Connection = $this->createNewConnection($request->branch_id);
+                // get data
+                $Connection->table('students')->where('id', $request->student_id)->update(['photo' => $new_name]);
+                $data = [
+                    "file_name" => $new_name
+                ];
+                if (!$upload) {
+                    return $this->send500Error('Something went wrong.', ['error' => 'Something went wrong, updating picture is failed.']);
+                } else {
+                    return $this->successResponse($data, 'Your profile picture has been updated successfully');
+                }
+            }
+        }
+    }
+    // update parent Picture settings
+    public function updateParentPicture(Request $request)
+    {
+        $validator = \Validator::make($request->all(), [
+            'id' => 'required',
+            'token' => 'required',
+            'branch_id' => 'required',
+            'parent_id' => 'required',
+            'profile_image' => 'required|image|mimes:jpeg,png,jpg,gif|max:2048',
+        ]);
+
+        if (!$validator->passes()) {
+            return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
+        } else {
+
+            $path = $request->branch_id . '/users/images/';
+            $file = $request->file('profile_image');
+            $new_name = 'UIMG_' . date('Ymd') . uniqid() . '.jpg';
+            File::ensureDirectoryExists(public_path($path));
+            //Upload new image
+            $upload = $file->move(public_path($path), $new_name);
+
+            if (!$upload) {
+                return $this->send500Error('Something went wrong.', ['error' => 'Something went wrong, upload new picture failed.']);
+            } else {
+                //Get Old picture
+                $oldPicture = User::find($request->id)->getAttributes()['picture'];
+
+                if ($oldPicture != '') {
+                    if (\File::exists(public_path($path . $oldPicture))) {
+                        \File::delete(public_path($path . $oldPicture));
+                    }
+                }
+                //Update DB
+                $update = User::find($request->id)->update(['picture' => $new_name]);
+                $Connection = $this->createNewConnection($request->branch_id);
+                // get data
+                $Connection->table('parent')->where('id', $request->parent_id)->update(['photo' => $new_name]);
+                $data = [
+                    "file_name" => $new_name
+                ];
+                if (!$upload) {
+                    return $this->send500Error('Something went wrong.', ['error' => 'Something went wrong, updating picture is failed.']);
+                } else {
+                    return $this->successResponse($data, 'Your profile picture has been updated successfully');
+                }
+            }
+        }
+    }
 }
