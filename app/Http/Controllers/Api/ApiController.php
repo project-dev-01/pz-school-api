@@ -189,19 +189,32 @@ class ApiController extends BaseController
         if (!$validator->passes()) {
             return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
         } else {
-            $success['school_type'] = DB::table('branches as br')
-                ->select('br.school_type')
-                ->where('br.id', $branch_id)
-                ->first();
-            // create new connection
-            $Connection = $this->createNewConnection($request->branch_id);
-            $success['academicSession'] = $Connection->table('global_settings as glo')
-                ->select(
-                    'lan.name as language_name'
-                )
-                ->leftJoin('language as lan', 'lan.id', '=', 'glo.language_id')
-                ->first();
-            return $this->successResponse($success, 'School Type record fetch successfully');
+            try {
+                $success['school_type'] = DB::table('branches as br')
+                    ->select('br.school_type')
+                    ->where('br.id', $branch_id)
+                    ->first();
+                // create new connection
+                $Connection = $this->createNewConnection($request->branch_id);
+                if ($success['school_type'] != null) {
+                    $success['academicSession'] = $Connection->table('global_settings as glo')
+                        ->select(
+                            'lan.name as language_name'
+                        )
+                        ->leftJoin('language as lan', 'lan.id', '=', 'glo.language_id')
+                        ->first();
+
+                    if ($success['academicSession'] != null) {
+                        return $this->successResponse($success, 'School Type record fetch successfully');
+                    } else {
+                        return $this->sendCommonError('Academic Session Type Not Found.', ['error' => 'Academic Session Type Not Found']);
+                    }
+                } else {
+                    return $this->sendCommonError('School Type Not Found.', ['error' => 'School Type Not Found']);
+                }
+            } catch (Exception $e) {
+                return $this->sendCommonError('No Data Found.', ['error' => $e->getMessage()]);
+            }
         }
     }
 

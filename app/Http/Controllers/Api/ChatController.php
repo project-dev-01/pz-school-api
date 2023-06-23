@@ -38,23 +38,43 @@ class ChatController extends BaseController
             // create new connection
             $conn = $this->createNewConnection($request->branch_id);
             // get all teachers
+            
             $allTeachers = $conn->table('staffs as stf')
                 ->select(
                     'stf.id as staff_id',
                     DB::raw("CONCAT(stf.first_name, ' ', stf.last_name) as name"),
 					DB::raw("(select COUNT('ch.*') from chats as ch where ch.chat_fromid=stf.id AND ch.chat_toid='".$request->to_id."' AND ch.chat_touser='".$request->role."' AND ch.chat_fromuser='Teacher' AND ch.chat_status='Unread' AND flag=1 ) as msgcount"), 
-                    // 'us.role_id',
+                    'us.role_id',
+                    // 'rol.role_name',
                     // 'us.user_id',
                     'us.email',
-                    'rol.role_name',
+                    DB::raw("GROUP_CONCAT(rol.role_name) as role" ),
                     'stf.photo'
                 )
-                ->join('' . $main_db . '.users as us', 'stf.id', '=', 'us.user_id')
-                ->join('' . $main_db . '.roles as rol', 'rol.id', '=', 'us.role_id')
-                ->where([
-                    ['us.branch_id', '=', $request->branch_id]
-                ])
-                ->whereIn('us.role_id', ['4'])
+                ->join('' . $main_db . '.users as us', function ($join) use ($request) {
+                    $join->on('stf.id', '=', 'us.user_id')
+                        ->where('us.branch_id', $request->branch_id);
+                })
+                // ->join('' . $main_db . '.users as us', 'stf.id', '=', 'us.user_id')
+                
+                // ->join('' . $main_db . '.roles as rol', 'rol.id', '=', 'us.role_id')
+                // ->where(function ($query) {
+                //     // foreach ($search_terms as $item) {
+                //     $query->whereRaw('FIND_IN_SET(?,us.role_id)', ['4'])
+                //         ->orWhereRaw('FIND_IN_SET(?,us.role_id)', ['3']);
+                //     // }
+                // })
+                ->join('' . $main_db . '.roles as rol', function ($join) {
+                    $join->on(\DB::raw("FIND_IN_SET(rol.id,us.role_id)"), ">", \DB::raw("'0'"))
+                            ->whereRaw('FIND_IN_SET(?,us.role_id)', ['4'])
+                            ->orWhereRaw('FIND_IN_SET(?,us.role_id)', ['3']);
+                })
+                // ->join('' . $main_db . '.roles as rol', 'rol.id', '=', 'us.role_id')
+                // ->leftJoin("staff_departments as sdp", DB::raw("FIND_IN_SET(sdp.id,stf.department_id)"), ">", DB::raw("'0'"))
+                // ->where([
+                //     ['us.branch_id', '=', $request->branch_id]
+                // ])
+                // ->whereIn('us.role_id', ['4'])
                 ->groupBy('stf.id')
               
 			   // ->limit(10)

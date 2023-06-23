@@ -10,16 +10,20 @@ class DatabaseConnection
 {
     public static function setConnection($params)
     {
-        config(['database.connections.tenant' => [
-            'driver'    => 'mysql',
-            'host'      => $params->db_host,
-            'port'      => $params->db_port,
-            'database'  => $params->db_name,
-            'username'  => $params->db_username,
-            'password'  => $params->db_password,
-            'charset'   => 'utf8',
-        ]]);
-        return DB::connection('tenant');
+        try {
+            config(['database.connections.tenant' => [
+                'driver'    => 'mysql',
+                'host'      => $params->db_host,
+                'port'      => $params->db_port,
+                'database'  => $params->db_name,
+                'username'  => $params->db_username,
+                'password'  => $params->db_password,
+                'charset'   => 'utf8',
+            ]]);
+            return DB::connection('tenant');
+        } catch (Exception $e) {
+            return $this->sendCommonError('No Data Found.', ['error' => $e->getMessage()]);
+        }
     }
     public static function databaseMigrate($params)
     {
@@ -32,13 +36,15 @@ class DatabaseConnection
             'password'  => $params->db_password,
             'charset'   => 'utf8',
         ]]);
-        Artisan::call('migrate',
-        array(
-        '--path' => 'database/migrations/dynamic_migrate',
-        '--database' => 'mysql_new_connection',
-        '--force' => true));
+        Artisan::call(
+            'migrate',
+            array(
+                '--path' => 'database/migrations/dynamic_migrate',
+                '--database' => 'mysql_new_connection',
+                '--force' => true
+            )
+        );
         return true;
-
     }
     public static function indexingMigrate($params)
     {
@@ -51,13 +57,28 @@ class DatabaseConnection
             'password'  => $params->db_password,
             'charset'   => 'utf8',
         ]]);
-        Artisan::call('migrate',
-        array(
-        '--path' => 'database/migrations/indexing_migrate',
-        '--database' => 'mysql_new_connection',
-        '--force' => true));
+        Artisan::call(
+            'migrate',
+            array(
+                '--path' => 'database/migrations/indexing_migrate',
+                '--database' => 'mysql_new_connection',
+                '--force' => true
+            )
+        );
         return true;
-
     }
-    
+    public function sendCommonError($error, $errorMessages = [], $code = 503)
+    {
+        $response = [
+            'code' => 503,
+            'success' => false,
+            'message' => $error,
+        ];
+
+        if (!empty($errorMessages)) {
+            $response['data'] = $errorMessages;
+        }
+
+        return response()->json($response, $code);
+    }
 }

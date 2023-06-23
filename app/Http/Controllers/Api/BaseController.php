@@ -122,7 +122,7 @@ class BaseController extends Controller
                 'charset'   => 'utf8',
                 // 'collation' => 'utf8_unicode_ci'
             ]]);
-    
+
             Artisan::call(
                 'migrate',
                 array(
@@ -131,7 +131,8 @@ class BaseController extends Controller
                     '--force' => true
                 )
             );
-            Artisan::call('db:seed',
+            Artisan::call(
+                'db:seed',
                 [
                     '--class' => 'DatabaseSeederDynamic',
                     '--database' => 'mysql_new_connection'
@@ -139,7 +140,7 @@ class BaseController extends Controller
             );
             return true;
         } catch (\Exception $e) {
-             return false;
+            return false;
         }
     }
     // create users
@@ -180,9 +181,18 @@ class BaseController extends Controller
     // create new connection
     function createNewConnection($branch_id)
     {
-        $params = Branches::select('id','db_name','db_username','db_password','db_port','db_host')->where('id',$branch_id)->first();
-        $staffConn = DatabaseConnection::setConnection($params);
-        return $staffConn;
+        try {
+            $params = Branches::select('id', 'db_name', 'db_username', 'db_password', 'db_port', 'db_host')->where('id', $branch_id)->first();
+            if ($params != null) {
+                // dd($params);
+                $staffConn = DatabaseConnection::setConnection($params);
+                return $staffConn;
+            } else {
+                return $this->send404Error('Error While Connecting DB.', ['error' => 'Error While Connecting DB']);
+            }
+        } catch (Exception $e) {
+            return $this->send404Error('No Data Found.', ['error' => $e->getMessage()]);
+        }
     }
     // upload user profile
     function uploadUserProfile(Request $request)
@@ -203,5 +213,19 @@ class BaseController extends Controller
                 return $new_name;
             }
         }
+    }
+    public function sendCommonError($error, $errorMessages = [], $code = 503)
+    {
+        $response = [
+            'code' => 503,
+            'success' => false,
+            'message' => $error,
+        ];
+
+        if (!empty($errorMessages)) {
+            $response['data'] = $errorMessages;
+        }
+
+        return response()->json($response, $code);
     }
 }
