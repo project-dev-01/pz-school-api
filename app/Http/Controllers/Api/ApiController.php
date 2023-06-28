@@ -12509,8 +12509,6 @@ class ApiController extends BaseController
     // update Parent
     public function updateParent(Request $request)
     {
-
-
         $id = $request->id;
         $validator = \Validator::make($request->all(), [
             'id' => 'required',
@@ -18445,7 +18443,7 @@ class ApiController extends BaseController
             // update data
             $query = $conn->table('global_settings')->where('id', $id)->update([
                 'year_id' => $request->year_id,
-                'footer_text' => $request->footer_text,
+                'footer_text' => trim(preg_replace('/\s\s+/', ' ', str_replace("\n", " ", $request->footer_text))),
                 'timezone' => $request->timezone,
                 'language_id' => $request->language_id,
                 'facebook_url' => $request->facebook_url,
