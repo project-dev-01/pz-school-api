@@ -36,7 +36,7 @@ use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Contracts\Encryption\DecryptException;
 use File;
-
+use Exception;
 
 class ApiController extends BaseController
 {

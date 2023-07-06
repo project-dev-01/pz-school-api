@@ -20,6 +20,7 @@ use Stevebauman\Location\Facades\Location;
 use App\Http\Controllers\Api\BaseController as BaseController;
 use Illuminate\Support\Facades\Session;
 use Laravel\Passport\Token;
+use Exception;
 
 class AuthController extends BaseController
 {
@@ -608,16 +609,20 @@ class AuthController extends BaseController
         if ($validator->fails()) {
             return $this->send422Error('Validation error.', ['error' => $validator->messages()]);
         }
-        if (Auth::check()) {
-            $user = Auth::user();
-            if ($user->session_id != $request->session_id) {
-                Auth::user()->token()->revoke();
-                return $this->successResponse([], 'User has been logged out successfully');
+        try {
+            if (Auth::check()) {
+                $user = Auth::user();
+                if ($user->session_id != $request->session_id) {
+                    Auth::user()->token()->revoke();
+                    return $this->send401Error('Token Invalid.', ['error' => 'Token Invalid']);
+                } else {
+                    return $this->successResponse([], 'Token Valid');
+                }
             } else {
-                return $this->send500Error('Token Valid', ['error' => 'Token Valid']);
+                return $this->send500Error('Sorry, user cannot be logged out', ['error' => 'Sorry, user cannot be logged out']);
             }
-        } else {
-            return $this->send500Error('Sorry, user cannot be logged out', ['error' => 'Sorry, user cannot be logged out']);
+        } catch (Exception $e) {
+            return $this->sendCommonError('No Data Found.', ['error' => $e->getMessage()]);
         }
     }
 }
