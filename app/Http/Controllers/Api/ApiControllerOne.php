@@ -6078,6 +6078,7 @@ class ApiControllerOne extends BaseController
                 // paid fees details
                 // print_r($val);
                 // amount paid
+                // dd($val);
                 if ((isset($due_date)) && (isset($paid_date))) {
                     // paid status id 1 mean paid
                     if ($payment_status_id == 1 && isset($paid_date)) {
@@ -6099,10 +6100,12 @@ class ApiControllerOne extends BaseController
                 if ((isset($due_date)) && ($paid_date === null || trim($paid_date) === '')) {
                     // yearly payment
                     if ($payment_mode_id == 1) {
+                        
                         $year_start_date = isset($year_details['0']->year_start_date) ? $year_details['0']->year_start_date : null;
                         $start_date = date('Y-m-d', strtotime($year_start_date));
                         $year_end_date = isset($year_details['0']->year_end_date) ? $year_details['0']->year_end_date : null;
                         $end_date = date('Y-m-d', strtotime($year_end_date));
+                        
                         if ($start_date <= $now && $now <= $end_date) {
                             // if ($start_date <= $now && $now <= $end_date) {
                             // match between semester date
@@ -6118,6 +6121,8 @@ class ApiControllerOne extends BaseController
                             $paidSts = 'unpaid';
                             $labelmode = 'badge-danger';
                         }
+                        
+                    // dd($paidSts);
                     }
                     // semester payment
                     if ($payment_mode_id == 2) {
@@ -6182,9 +6187,10 @@ class ApiControllerOne extends BaseController
                 array_push($paymentArr, $object);
             }
             // default payment status
-            $defpaidID = "";
+            $defpaidID = 2;
             $defpaidSts = "unpaid";
             $deflabelmode = "badge-danger";
+            
             if (!empty($paymentArr)) {
                 $arr = array();
                 $group_name = "";
@@ -6221,6 +6227,7 @@ class ApiControllerOne extends BaseController
                         }
                     }
                 }
+                
                 $totalCount = count($arr);
                 $delayCount = 0;
                 $unpaidCount = 0;
@@ -6240,19 +6247,21 @@ class ApiControllerOne extends BaseController
                     }
                 }
                 // here only one statys either paid,delay,unpaid
-                if ($totalCount == $paidCount) {
-                    $defpaidID = 1;
-                    $defpaidSts = "paid";
-                    $deflabelmode = "badge-success";
-                } else if ($delayCount > 0) {
-                    $defpaidID = 3;
-                    $defpaidSts = "delay";
-                    $deflabelmode = "badge-secondary";
-                } else {
-                    // otherwise all conside unpaid
-                    $defpaidID = 2;
-                    $defpaidSts = "unpaid";
-                    $deflabelmode = "badge-danger";
+                if($totalCount != 0) {
+                    if ($totalCount == $paidCount) {
+                        $defpaidID = 1;
+                        $defpaidSts = "paid";
+                        $deflabelmode = "badge-success";
+                    } else if ($delayCount > 0) {
+                        $defpaidID = 3;
+                        $defpaidSts = "delay";
+                        $deflabelmode = "badge-secondary";
+                    } else {
+                        // otherwise all conside unpaid
+                        $defpaidID = 2;
+                        $defpaidSts = "unpaid";
+                        $deflabelmode = "badge-danger";
+                    }
                 }
             }
             $ret_res = [

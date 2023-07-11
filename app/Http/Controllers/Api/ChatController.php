@@ -43,7 +43,7 @@ class ChatController extends BaseController
                 ->select(
                     'stf.id as staff_id',
                     DB::raw("CONCAT(stf.first_name, ' ', stf.last_name) as name"),
-					DB::raw("(select COUNT('ch.*') from chats as ch where ch.chat_fromid=stf.id AND ch.chat_toid='".$request->to_id."' AND ch.chat_touser='".$request->role."' AND ch.chat_fromuser='Teacher' AND ch.chat_status='Unread' AND flag=1 ) as msgcount"), 
+					// DB::raw("(select COUNT('ch.*') from chats as ch where ch.chat_fromid=stf.id AND ch.chat_toid='".$request->to_id."' AND ch.chat_touser='".$request->role."' AND ch.chat_fromuser='Teacher' AND ch.chat_status='Unread' AND flag=1 ) as msgcount"), 
                     'us.role_id',
                     // 'rol.role_name',
                     // 'us.user_id',
@@ -75,10 +75,53 @@ class ChatController extends BaseController
                 //     ['us.branch_id', '=', $request->branch_id]
                 // ])
                 // ->whereIn('us.role_id', ['4'])
+                // ->whereNotIn('stf.id', [$request->staff_id])
+                
+                ->when($request->role == "Teacher", function ($q)  use ($request) {
+                    $q->whereNotIn('stf.id', [$request->id]);
+                })
                 ->groupBy('stf.id')
               
 			   // ->limit(10)
-				->get();
+				->get()->toArray();
+                foreach($allTeachers as $teacher) {
+                    // return $teacher;
+                    $created = $conn->table('chats as ch')
+                        ->select('ch.id as chat_id','ch.created_at')
+                        ->where(function ($query) use($request,$teacher) {
+                            $query->where('chat_fromid', '=',$request->id)
+                                ->where('chat_toid',  '=',$teacher->staff_id)
+                                ->where('chat_fromuser',$request->role)
+                                ->where('chat_touser','Teacher');
+                        })
+                        ->orWhere(function ($query2) use($request,$teacher) {
+                            $query2->where('chat_fromid', '=',$teacher->staff_id)
+                                ->where('chat_toid',  '=',$request->id)
+                                ->where('chat_fromuser','Teacher')
+                                ->where('chat_touser',$request->role);
+                        })
+                        ->where('ch.flag','1')
+                        ->latest()->first();
+                    // ->get();
+                    // return $request->staff_id;
+                    $count = count($conn->table('chats as ch')->select('ch.id as chat_id','ch.created_at')
+                    ->where('ch.chat_fromid', '=',$teacher->staff_id)
+                    ->where('ch.chat_toid',  '=',$request->id)
+                    ->where('ch.chat_status','Unread')
+                    ->where('ch.chat_fromuser','Teacher')
+                    ->where('ch.chat_touser',$request->role)
+                    ->where('ch.flag','1')
+                    ->get());
+                    $teacher->msgcount = $count;
+                    $teacher->created_at = isset($created->created_at) ? $created->created_at : "";
+                }
+                $col = array_column( $allTeachers, "created_at" );
+                array_multisort( $col, SORT_DESC, $allTeachers );
+                
+                // return $allTeachers;
+                // $new = [];
+                
+                // return usort($allTeachers, "created_at");
             return $this->successResponse($allTeachers, 'get all teacher record fetch successfully');
         }
     }
@@ -95,15 +138,49 @@ class ChatController extends BaseController
         } else {
             // create new connection
             $conn = $this->createNewConnection($request->branch_id);
-            // get all teachers
-            $allTeachers = $conn->table('parent as prnt')
+            // get all parents
+            $allParents = $conn->table('parent as prnt')
                 ->select(
                     'prnt.id',
                     DB::raw("CONCAT(prnt.first_name, ' ', prnt.last_name) as name"),
-					DB::raw("(select COUNT('ch.*') from chats as ch where ch.chat_fromid=prnt.id AND ch.chat_toid='".$request->to_id."' AND ch.chat_touser='".$request->role."' AND ch.chat_fromuser='Parent' AND ch.chat_status='Unread' AND flag=1) as msgcount"), 
+					// DB::raw("(select COUNT('ch.*') from chats as ch where ch.chat_fromid=prnt.id AND ch.chat_toid='".$request->to_id."' AND ch.chat_touser='".$request->role."' AND ch.chat_fromuser='Parent' AND ch.chat_status='Unread' AND flag=1) as msgcount"), 
                     'prnt.photo'
-                )->limit(10)->get();
-            return $this->successResponse($allTeachers, 'get all teacher record fetch successfully');
+                )->limit(10)->get()->toArray();
+
+                foreach($allParents as $parent) {
+                    // return $parent;
+                    $created = $conn->table('chats as ch')
+                        ->select('ch.id as chat_id','ch.created_at')
+                        ->where(function ($query) use($request,$parent) {
+                            $query->where('chat_fromid', '=',$request->id)
+                                ->where('chat_toid',  '=',$parent->id)
+                                ->where('chat_fromuser',$request->role)
+                                ->where('chat_touser','Parent');
+                        })
+                        ->orWhere(function ($query2) use($request,$parent) {
+                            $query2->where('chat_fromid', '=',$parent->id)
+                                ->where('chat_toid',  '=',$request->id)
+                                ->where('chat_fromuser','Parent')
+                                ->where('chat_touser',$request->role);
+                        })
+                        ->where('ch.flag','1')
+                        ->latest()->first();
+                    // ->get();
+                    // return $request->staff_id;
+                    $count = count($conn->table('chats as ch')->select('ch.id as chat_id','ch.created_at')
+                    ->where('ch.chat_fromid', '=',$parent->id)
+                    ->where('ch.chat_toid',  '=',$request->id)
+                    ->where('ch.chat_status','Unread')
+                    ->where('ch.chat_fromuser','Parent')
+                    ->where('ch.chat_touser',$request->role)
+                    ->where('ch.flag','1')
+                    ->get());
+                    $parent->msgcount = $count;
+                    $parent->created_at = isset($created->created_at) ? $created->created_at : "";
+                }
+                $col = array_column( $allParents, "created_at" );
+                array_multisort( $col, SORT_DESC, $allParents );
+            return $this->successResponse($allParents, 'get all Parent record fetch successfully');
         }
     }
     // get teacher assign parents
@@ -145,7 +222,6 @@ class ChatController extends BaseController
                 ])
                 ->groupBy("en.student_id")
                 ->get();
-            dd($allTeachers);
             return $this->successResponse($allTeachers, 'get assign teacher record fetch successfully');
         }
     }
