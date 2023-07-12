@@ -183,45 +183,94 @@ class ChatController extends BaseController
             return $this->successResponse($allParents, 'get all Parent record fetch successfully');
         }
     }
-    // get teacher assign parents
-    public function chatGetTeacherAssignParentList(Request $request)
+    // get parent chat teacher list
+    public function getParentChatTeacherList(Request $request)
     {
         $validator = \Validator::make($request->all(), [
             'branch_id' => 'required',
             'token' => 'required',
-            'teacher_id' => 'required'
+            'id' => 'required'
         ]);
 
         if (!$validator->passes()) {
             return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
         } else {
             // create new connection
+            $main_db = config('constants.main_db');
             $conn = $this->createNewConnection($request->branch_id);
             // get teacher allocations parents
-            $allTeachers = $conn->table('teacher_allocations as ta')
+
+            $allTeachers = $conn->table('staffs as stf')
                 ->select(
-                    // 'ta.id',
-                    'en.student_id',
-                    'p.id as parent_id',
-                    DB::raw("CONCAT(p.first_name, ' ', p.last_name) as name")
+                    'us.id as uuid',
+                    'stf.id as staff_id',
+                    DB::raw("CONCAT(stf.first_name, ' ', stf.last_name) as name"),
+					// DB::raw("(select COUNT('ch.*') from chats as ch where ch.chat_fromid=stf.id AND ch.chat_toid='".$request->to_id."' AND ch.chat_touser='".$request->role."' AND ch.chat_fromuser='Teacher' AND ch.chat_status='Unread' AND flag=1 ) as msgcount"), 
+                    'us.role_id',
+                    // 'rol.role_name',
+                    // 'us.user_id',
+                    'us.email',
+                    // DB::raw("GROUP_CONCAT(rol.role_name) as role" ),
+                    'stf.photo'
                 )
-                ->join('enrolls as en', function ($join) {
-                    $join->on('en.class_id', '=', 'ta.class_id')
-                        ->on('en.section_id', '=', 'ta.section_id')
-                        ->on('en.active_status', '=', DB::raw("'0'"));
+                ->join('' . $main_db . '.users as us', function ($join) use ($request) {
+                    $join->on('stf.id', '=', 'us.user_id')
+                        ->where('us.branch_id', $request->branch_id);
+                })
+                ->join('' . $main_db . '.roles as rol', function ($join) {
+                    $join->on(\DB::raw("FIND_IN_SET(rol.id,us.role_id)"), ">", \DB::raw("'0'"))
+                            ->whereRaw('FIND_IN_SET(?,us.role_id)', ['4'])
+                            ->orWhereRaw('FIND_IN_SET(?,us.role_id)', ['3']);
+                })
+                ->join('subject_assigns as sa', function ($join) use ($request) {
+                    $join->on('sa.teacher_id', '=', 'stf.id')
+                        ->where('sa.academic_session_id',$request->academic_session_id);
+                })
+                ->join('enrolls as en', function ($join) use ($request) {
+                    $join->on('en.class_id', '=', 'sa.class_id')
+                        ->on('en.section_id', '=', 'sa.section_id')
+                        ->on('en.active_status', '=', DB::raw("'0'"))
+                        ->where('en.academic_session_id',$request->academic_session_id)
+                        ->where('en.student_id',$request->student_id);
                     // $join->on('st.mother_id', '=', 'p.id');
                     // $join->orOn('st.guardian_id', '=', 'p.id');
                 })
-                ->join('parent as p', function ($join) {
-                    $join->on('p.ref_guardian_id', '=', 'en.student_id');
-                    $join->orOn('p.ref_mother_id', '=', 'en.student_id');
-                    $join->orOn('p.ref_father_id', '=', 'en.student_id');
-                })
-                ->where([
-                    ['ta.teacher_id', '=', $request->teacher_id]
-                ])
-                ->groupBy("en.student_id")
-                ->get();
+                ->groupBy("stf.id")
+                ->get()->toArray();
+                foreach($allTeachers as $teacher) {
+                    // return $teacher;
+                    // dd($teacher);
+                    $created = $conn->table('chats as ch')
+                        ->select('ch.id as chat_id','ch.created_at')
+                        ->where(function ($query) use($request,$teacher) {
+                            $query->where('chat_fromid', '=',$request->id)
+                                ->where('chat_toid',  '=',$teacher->staff_id)
+                                ->where('chat_fromuser',$request->role)
+                                ->where('chat_touser','Teacher');
+                        })
+                        ->orWhere(function ($query2) use($request,$teacher) {
+                            $query2->where('chat_fromid', '=',$teacher->staff_id)
+                                ->where('chat_toid',  '=',$request->id)
+                                ->where('chat_fromuser','Teacher')
+                                ->where('chat_touser',$request->role);
+                        })
+                        ->where('ch.flag','1')
+                        ->latest()->first();
+                    // ->get();
+                    // return $request->staff_id;
+                    $count = count($conn->table('chats as ch')->select('ch.id as chat_id','ch.created_at')
+                    ->where('ch.chat_fromid', '=',$teacher->staff_id)
+                    ->where('ch.chat_toid',  '=',$request->id)
+                    ->where('ch.chat_status','Unread')
+                    ->where('ch.chat_fromuser','Teacher')
+                    ->where('ch.chat_touser',$request->role)
+                    ->where('ch.flag','1')
+                    ->get());
+                    $teacher->msgcount = $count;
+                    $teacher->created_at = isset($created->created_at) ? $created->created_at : "";
+                }
+                $col = array_column( $allTeachers, "created_at" );
+                array_multisort( $col, SORT_DESC, $allTeachers );
             return $this->successResponse($allTeachers, 'get assign teacher record fetch successfully');
         }
     }
