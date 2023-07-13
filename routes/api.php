@@ -26,7 +26,6 @@ use App\Http\Controllers\Api\TwoFactorAuth;
 //     return $request->user();
 // });
 Route::post('register', [RegisterController::class, 'register']);
-// Route::post('login', [RegisterController::class, 'login']);
 Route::post('indexing_migrate', [CommonController::class, 'indexingMigrate']);
 
 Route::post('login', [AuthController::class, 'authenticate']);
@@ -776,7 +775,7 @@ Route::group(['middleware' => ['auth:api', 'throttle:limit_per_user', 'logroute'
     Route::post('exam_timetable/list/download', [ApiControllerOne::class, 'getExamTimetableDown']);
     Route::post('staff_attendance/export', [ApiControllerOne::class, 'staffAttendanceReport']);
     Route::post('student_attendance/export', [ApiControllerOne::class, 'studentAttendanceReport']);
-    
+
 
 
     Route::get('student_soap_list', [ApiControllerOne::class, 'studentSoapList']);
@@ -846,15 +845,16 @@ Route::group(['middleware' => ['auth:api', 'throttle:limit_per_user', 'logroute'
     Route::get('chat/get_parent_list', [ChatController::class, 'chatGetParentList']);
     Route::get('chat/get_group_list', [ChatController::class, 'chatGetGroupList']);
     Route::get('chat/get_parentgroup_list', [ChatController::class, 'chatGetParentGroupList']);
-	
+
     Route::get('chat/parent_chat_teacher_list', [ChatController::class, 'getParentChatTeacherList']);
+    Route::get('chat/get_teacher_assign_parent_list', [ChatController::class, 'chatGetTeacherAssignParentList']);
     Route::get('chat/sent_messages', [ChatController::class, 'chatSentMessage']);
-    Route::post('chat/storechat', [ChatController::class, 'storechat']);	
+    Route::post('chat/storechat', [ChatController::class, 'storechat']);
     Route::post('chat/deletechat', [ChatController::class, 'deletechat']);
-	Route::post('chat/chatlist', [ChatController::class, 'chatlists']);
+    Route::post('chat/chatlist', [ChatController::class, 'chatlists']);
     Route::post('chat/chatlist', [ChatController::class, 'pchatlists']);
-	
-	Route::post('chat/groupchatlists', [ChatController::class, 'groupchatlists']);
+
+    Route::post('chat/groupchatlists', [ChatController::class, 'groupchatlists']);
     // chat conversations end
     Route::post('class_teacher_classes', [ApiControllerOne::class, 'classTeacherClass']);
     Route::post('class_teacher_sections', [ApiControllerOne::class, 'classTeacherSections']);
@@ -865,13 +865,13 @@ Route::group(['middleware' => ['auth:api', 'throttle:limit_per_user', 'logroute'
     Route::post('get_like_column_name', [ImportController::class, 'getLikeColumnName']);
     Route::post('faq/email', [ApiControllerOne::class, 'faqEmail']);
     Route::post('first/name', [ApiControllerOne::class, 'firstName']);
-    
-    
+
+
     Route::post('application_add', [ApiController::class, 'addApplication']);
     Route::get('student_application_list', [ApiController::class, 'studentApplicationList']);
     Route::post('student_application', [ApiController::class, 'studentApplication']);
 
-    
+
     Route::post('forum_image_store', [ApiController::class, 'forumImageStore']);
     Route::get('get_languages', [ApiControllerOne::class, 'getLanguages']);
 });

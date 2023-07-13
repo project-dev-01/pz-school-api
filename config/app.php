@@ -71,8 +71,9 @@ return [
     */
 
     // 'timezone' => 'UTC',
-    'timezone' => 'Asia/Kuala_Lumpur',
+    // 'timezone' => 'Asia/Kuala_Lumpur',
     // 'timezone' => 'Asia/Kolkata',
+    'timezone' => 'Asia/Tokyo',
     /*
     |--------------------------------------------------------------------------
     | Application Locale Configuration

@@ -19,7 +19,6 @@ class GlobalSettingSeeder extends Seeder
             [
                 'year_id' => '1',
                 'footer_text' => '© 2020 Paxsuzen School Management - Developed by Aibots',
-                'timezone' => 'Pacific/Midway',
                 'facebook_url' => 'https://www.facebook.com/username',
                 'twitter_url' => 'https://www.twitter.com/username',
                 'linkedin_url' => 'https://www.linkedin.com/usernames',

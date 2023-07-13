@@ -30,6 +30,7 @@ class CreateUsersTable extends Migration
             $table->text('session_id')->nullable();
             $table->text('google2fa_secret')->nullable();
             $table->enum('google2fa_secret_enable', ['0', '1'])->comment('0 for disable,1 for enable');
+            $table->timestamp('last_seen')->nullable();
             $table->timestamps();
         });
     }

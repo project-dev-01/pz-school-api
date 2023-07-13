@@ -137,8 +137,7 @@ class TwoFactorAuth extends BaseController
                                 ->select(
                                     'glo.year_id',
                                     'lan.name as language_name',
-                                    'glo.footer_text',
-                                    'glo.timezone'
+                                    'glo.footer_text'
                                 )
                                 ->leftJoin('language as lan', 'lan.id', '=', 'glo.language_id')
                                 ->first();

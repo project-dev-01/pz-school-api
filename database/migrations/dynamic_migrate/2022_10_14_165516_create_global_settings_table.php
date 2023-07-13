@@ -17,7 +17,6 @@ class CreateGlobalSettingsTable extends Migration
             $table->id();
             $table->integer('year_id');
             $table->string('footer_text');
-            $table->string('timezone');
             $table->string('facebook_url');
             $table->string('twitter_url');
             $table->string('linkedin_url');

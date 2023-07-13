@@ -37,6 +37,7 @@ use Illuminate\Support\Facades\Crypt;
 use Illuminate\Contracts\Encryption\DecryptException;
 use File;
 use Exception;
+use Illuminate\Support\Facades\Config;
 
 class ApiController extends BaseController
 {
@@ -8100,6 +8101,17 @@ class ApiController extends BaseController
     // getTimetableCalendor
     public function getTimetableCalendor(Request $request)
     {
+        // // Set the timezone in the Laravel configuration
+        // Config::set('app.timezone', "Asia/Kolkata");
+        // // // Optionally, you can also update the timezone for the current request
+        // date_default_timezone_set('Asia/Kolkata');
+
+        // // // Continue with your controller logic...
+        // // echo $value;
+        // // echo "<br>";
+        // // echo $values;
+        // // echo "<br>";
+
         $validator = \Validator::make($request->all(), [
             'branch_id' => 'required',
             'teacher_id' => 'required'
@@ -18368,8 +18380,7 @@ class ApiController extends BaseController
             // insert data
             $query = $conn->table('global_settings')->insert([
                 'year_id' => $request->year_id,
-                'footer_text' => $request->footer_text,
-                'timezone' => $request->timezone,
+                'footer_text' => trim(preg_replace('/\s\s+/', ' ', str_replace("\n", " ", $request->footer_text))),
                 'facebook_url' => $request->facebook_url,
                 'twitter_url' => $request->twitter_url,
                 'linkedin_url' => $request->linkedin_url,
@@ -18444,7 +18455,6 @@ class ApiController extends BaseController
             $query = $conn->table('global_settings')->where('id', $id)->update([
                 'year_id' => $request->year_id,
                 'footer_text' => trim(preg_replace('/\s\s+/', ' ', str_replace("\n", " ", $request->footer_text))),
-                'timezone' => $request->timezone,
                 'language_id' => $request->language_id,
                 'facebook_url' => $request->facebook_url,
                 'twitter_url' => $request->twitter_url,

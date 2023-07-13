@@ -32,7 +32,8 @@ class User extends Authenticatable
         'email_verified_at',
         'password_changed_at',
         'google2fa_secret',
-        'google2fa_secret_enable'
+        'google2fa_secret_enable',
+        'last_seen'
     ];
 
     /**

@@ -111,8 +111,7 @@ class AuthController extends BaseController
                         ->select(
                             'glo.year_id',
                             'lan.name as language_name',
-                            'glo.footer_text',
-                            'glo.timezone'
+                            'glo.footer_text'
                         )
                         ->leftJoin('language as lan', 'lan.id', '=', 'glo.language_id')
                         ->first();
@@ -139,9 +138,9 @@ class AuthController extends BaseController
                     $user->save();
                     $left = (3 - $login_attempt);
                     if ($left == 0) {
-                        return $this->send400Error("Your account has been locked because your password is incorrect. Please contact the admin", ["error" => "Your account has been locked because your password is incorrect. Please contact the admin"]);
+                        return $this->send401Error("Your account has been locked because your password is incorrect. Please contact the admin", ["error" => "Your account has been locked because your password is incorrect. Please contact the admin"]);
                     } else {
-                        return $this->send400Error("The password is incorrect and you only have $left attempts left", ["error" => "The password is incorrect and you only have $left attempts left"]);
+                        return $this->send401Error("The password is incorrect and you only have $left attempts left", ["error" => "The password is incorrect and you only have $left attempts left"]);
                     }
                 } else {
                     return $this->send500Error('Your account has been locked after more than 3 attempts. Please contact the admin', ['error' => 'Your account has been locked after more than 3 attempts. Please contact the admin']);
@@ -197,7 +196,7 @@ class AuthController extends BaseController
     public function resetPassword(Request $request)
     {
 
-        $credentials = $request->only('email','sent_link');
+        $credentials = $request->only('email', 'sent_link');
         $validator = Validator::make($credentials, [
             'email' => 'required|email',
             'sent_link' => 'required'
@@ -226,14 +225,14 @@ class AuthController extends BaseController
         // $user = DB::table('users')->where('email', $request->email)->first();
         $tokenData = DB::table('password_resets')->where('email', $request->email)->orderBy('created_at', 'DESC')->first();
         // return $tokenData->token;
-        if ($this->sendResetEmail($request->email,$request->sent_link ,$tokenData->token)) {
+        if ($this->sendResetEmail($request->email, $request->sent_link, $tokenData->token)) {
             return $this->successResponse($user, 'A reset link has been sent to your email address.');
         } else {
             return $this->send500Error('A Network Error occurred. Please try again.', ['error' => 'A Network Error occurred. Please try again.']);
         }
     }
 
-    private function sendResetEmail($email,$sent_link, $token)
+    private function sendResetEmail($email, $sent_link, $token)
     {
 
         //Retrieve the user from the database
@@ -614,12 +613,32 @@ class AuthController extends BaseController
                 $user = Auth::user();
                 if ($user->session_id != $request->session_id) {
                     Auth::user()->token()->revoke();
-                    return $this->send401Error('Token Invalid.', ['error' => 'Token Invalid']);
+                    // return $this->send401Error('Token Invalid.', ['error' => 'Token Invalid']);
+                    // return $this->successResponse([], 'Token Valid');
+                    $response = [
+                        'code' => 200,
+                        'success' => true,
+                        'message' => 'Token Invalid'
+                    ];
+                    return response()->json($response, 200);
                 } else {
-                    return $this->successResponse([], 'Token Valid');
+                    // return $this->successResponse([], 'Token Valid');
+                    $response = [
+                        'code' => 200,
+                        'success' => false,
+                        'message' => 'Token Valid'
+                    ];
+                    return response()->json($response, 200);
                 }
             } else {
-                return $this->send500Error('Sorry, user cannot be logged out', ['error' => 'Sorry, user cannot be logged out']);
+                $response = [
+                    'code' => 200,
+                    'success' => false,
+                    'message' => 'Sorry, user cannot be logged out'
+                ];
+                return response()->json($response, 200);
+                // return $this->send500Error('Sorry, user cannot be logged out', ['error' => 'Sorry, user cannot be logged out']);
+                // return $this->successResponse([], 'Token Valid');
             }
         } catch (Exception $e) {
             return $this->sendCommonError('No Data Found.', ['error' => $e->getMessage()]);

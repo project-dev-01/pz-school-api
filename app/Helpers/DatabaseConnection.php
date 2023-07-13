@@ -5,6 +5,7 @@ namespace App\Helpers;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Artisan;
+use Exception;
 
 class DatabaseConnection
 {
@@ -20,6 +21,9 @@ class DatabaseConnection
                 'password'  => $params->db_password,
                 'charset'   => 'utf8',
             ]]);
+            // Config::set('app.timezone', "Asia/Kolkata");
+            // // // Optionally, you can also update the timezone for the current request
+            // date_default_timezone_set('Asia/Kolkata');
             return DB::connection('tenant');
         } catch (Exception $e) {
             return $this->sendCommonError('No Data Found.', ['error' => $e->getMessage()]);
