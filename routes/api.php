@@ -852,6 +852,7 @@ Route::group(['middleware' => ['auth:api', 'throttle:limit_per_user', 'logroute'
     Route::post('chat/storechat', [ChatController::class, 'storechat']);	
     Route::post('chat/deletechat', [ChatController::class, 'deletechat']);
 	Route::post('chat/chatlist', [ChatController::class, 'chatlists']);
+    Route::post('chat/chatlist', [ChatController::class, 'pchatlists']);
 	
 	Route::post('chat/groupchatlists', [ChatController::class, 'groupchatlists']);
     // chat conversations end

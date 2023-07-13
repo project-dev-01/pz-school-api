@@ -317,7 +317,15 @@ class ChatController extends BaseController
             // create new connection
             $conn = $this->createNewConnection($request->branch_id);
             $branch_id = $request->branch_id;
-            
+            $file_path=base_path() . '/public/'.$branch_id.'/chats/';
+			
+  
+			// Checking whether file exists or not
+			if (!file_exists($file_path)) {
+
+			// Create a new file or direcotry
+			mkdir($file_path, 0777, true);
+			}
                 // insert data
                 if (isset($request->chat_document)) {
                     $now = now();
@@ -326,7 +334,7 @@ class ChatController extends BaseController
                     $fileName = $name . "." . $extension;
 
                     $base64 = base64_decode($request->chat_document);
-                    $file = base_path() . '/public/admin-documents/chats/' . $fileName;
+                    $file = $file_path.$fileName;
                     $suc = file_put_contents($file, $base64);
                 } else {
                     $fileName = null;
@@ -430,7 +438,8 @@ class ChatController extends BaseController
 					['ch.chat_toid',$chat_toid],
 					['ch.chat_touser',$chat_touser]
 				])->latest()->take(20)->orderBy('id', 'ASC')->get(); 
-				}
+				$success['logstatus']='Online';
+                }
 				else
 				{
 				$success = $conn->table('chats as ch')
@@ -464,9 +473,124 @@ class ChatController extends BaseController
 					['ch.chat_fromuser',$chat_touser],
 					['ch.chat_toid',$chat_fromid],
 					['ch.chat_touser',$chat_fromuser]
-				])->latest()->take(20)->orderBy('id', 'ASC')->get(); 
-               
-           
+                    ])->latest()->take(20)->orderBy('ch.id', 'DESC')->get();
+                
+                    $main_db = config('constants.main_db');
+					/*$success['last_seen']= $conn->table( 'staffs as stf') ->join('' . $main_db . '.users as us', function ($join) use ($request) {
+                        $join->on('stf.id', '=', 'us.user_id')
+                        ->where(['us.user_id',$chat_toid],['us.role_id',$isrole1],['us.branch_id',$branch_id]);
+                    })->select('us.last_seen');*/
+					$last_seen='2023-07-12 17:19:00';
+					$current_time='2023-07-12 17:25:00';
+					$success['logstatus']=(((strtotime($current_time)-strtotime($last_seen))/60)>5)?'Offline':'Online';
+				}
+				//$csrf="123";
+				//$success=DB::raw("SELECT `chat_toid`,`chat_touser`, COUNT(`chat_toid`) AS msg_count FROM `chats` WHERE chat_status ='Unread' AND chat_toid= '".$chat_fromid."' AND chat_touser= '".$chat_fromuser."' GROUP BY `chat_toid` ");
+				
+           //dd($success);
+            if (!$success) {
+                return $this->send500Error('Something went wrong.', ['error' => 'Something went wrong']);
+            } else {
+                return $this->successResponse($success, 'get all chat record fetch successfully');
+            }
+            
+        
+    }
+    public function pchatlists(Request $request)
+    {
+
+			//dd('123');
+            // create new connection
+            $conn = $this->createNewConnection($request->branch_id);
+            $branch_id = $request->branch_id;
+			$chat_fromid = $request['chat_fromid'];
+			$chat_fromname= $request['chat_fromname'];
+			$chat_fromuser= $request['chat_fromuser'];
+			$chat_toid= $request['chat_toid'];
+			$chat_toname= $request['chat_toname'];
+			$chat_touser= $request['chat_touser'];
+			$query = $conn->table('chats as ch')->Where([
+					['ch.chat_fromid',$chat_toid],
+					['ch.chat_fromuser',$chat_touser],
+					['ch.chat_toid',$chat_fromid],
+					['ch.chat_touser',$chat_fromuser],
+					['ch.chat_status','Unread']
+				])->update([
+                    'ch.chat_status' => "Read",
+                    'ch.updated_at' => date("Y-m-d H:i:s")
+                ]);
+				if($chat_touser=="Parent")
+					$isrole1=5;
+				elseif($chat_touser=="Teacher")
+					$isrole1=4;
+              if($chat_touser=='Group')
+				{
+				 $success['list'] = $conn->table('chats as ch')
+                ->select(
+                    'ch.id',
+					'ch.chat_fromid',
+					'ch.chat_fromname',
+					'ch.chat_fromuser',
+					'ch.chat_toid',
+					'ch.chat_toname',
+					'ch.chat_touser',
+					'ch.chat_content',
+					'ch.chat_status',
+					'ch.chat_document',
+					'ch.chat_file_extension',					
+					'ch.created_at',
+
+					DB::raw('DATE_FORMAT(ch.created_at, "%d-%M-%Y") as chatdate'),
+					DB::raw('DATE_FORMAT(ch.created_at, "%H:%i") as chattime'),					
+					'ch.flag'
+                )
+				->where([					
+					['ch.flag','1'],
+					['ch.chat_toid',$chat_toid],
+					['ch.chat_touser',$chat_touser]
+				])->latest()->take(20)->orderBy('ch.id', 'DESC')->get();
+					
+					$success['logstatus']='Online';
+				}
+				else
+				{
+				$success['list']= $conn->table('chats as ch')
+                ->select(
+                    'ch.id',
+					'ch.chat_fromid',
+					'ch.chat_fromname',
+					'ch.chat_fromuser',
+					'ch.chat_toid',
+					'ch.chat_toname',
+					'ch.chat_touser',
+					'ch.chat_content',
+					'ch.chat_status',
+					'ch.chat_document',
+					'ch.chat_file_extension',					
+					'ch.created_at',
+    
+					DB::raw('DATE_FORMAT(ch.created_at, "%d-%M-%Y") as chatdate'),
+					DB::raw('DATE_FORMAT(ch.created_at, "%H:%i") as chattime'),					
+					'ch.flag'
+                )
+				->where([
+					['ch.flag','1'],
+					['ch.chat_fromid',$chat_fromid],
+					['ch.chat_fromuser',$chat_fromuser],
+					['ch.chat_toid',$chat_toid],
+					['ch.chat_touser',$chat_touser]
+				])->orWhere([
+					['ch.flag','1'],
+					['ch.chat_fromid',$chat_toid],
+					['ch.chat_fromuser',$chat_touser],
+					['ch.chat_toid',$chat_fromid],
+					['ch.chat_touser',$chat_fromuser]
+				])->latest()->take(20)->orderBy('ch.id', 'DESC')->get(); 
+				$main_db = config('constants.main_db');
+				//$success['last_seen']= $conn->table( $main_db . 'users as us')->select('us.last_seen')->where(['us.user_id',$chat_toid],['us.role_id',$isrole1],['us.branch_id',$branch_id]);
+				$last_seen='2023-07-12 17:19:00';
+				$current_time='2023-07-12 17:25:00';
+				$success['logstatus']=(((strtotime($current_time)-strtotime($last_seen))/60)>5)?'Offline':'Online';
 				}
            
            //dd($success);
