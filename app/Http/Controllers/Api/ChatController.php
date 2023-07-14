@@ -81,6 +81,7 @@ class ChatController extends BaseController
                 ->when($request->role == "Teacher", function ($q)  use ($request) {
                     $q->whereNotIn('stf.id', [$request->id]);
                 })
+                // ->where('stf.is_active', '=', '0')
                 ->groupBy('stf.id')
 
                 // ->limit(10)
@@ -521,13 +522,13 @@ class ChatController extends BaseController
             'ch.chat_status' => "Read",
             'ch.updated_at' => date("Y-m-d H:i:s")
         ]);
-        // if (isset($request['chat_user_id'])) {
-        //     try {
-        //         User::where('id', $request['chat_user_id'])->update(['last_seen' => date("Y-m-d H:i:s")]);
-        //     } catch (Exception $e) {
-        //         // return $this->sendCommonError('No Data Found.', ['error' => $e->getMessage()]);
-        //     }
-        // }
+        if (isset($request['chat_user_id'])) {
+            try {
+                User::where('id', $request['chat_user_id'])->update(['last_seen' => date("Y-m-d H:i:s")]);
+            } catch (Exception $e) {
+                // return $this->sendCommonError('No Data Found.', ['error' => $e->getMessage()]);
+            }
+        }
         if ($chat_touser == 'Group') {
             $success = $conn->table('chats as ch')
                 ->select(
