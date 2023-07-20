@@ -11,6 +11,7 @@ use Symfony\Component\HttpFoundation\Response;
 use Tymon\JWTAuth\Exceptions\JWTException;
 use Illuminate\Support\Facades\DB;
 use App\Models\User;
+use App\Models\Log_history;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
@@ -86,7 +87,22 @@ class AuthController extends BaseController
                 $user->session_id = $token;
                 $user->save();
                 // dd($user->id);
-                // User::where('id', $user->id)->update(['session_id', \Session::getId()]);
+                //User::where('id', $user->id)->update(['session_id', \Session::getId()]);
+                $data = [
+                    'login_id' => $user->id,
+                    'user_id' => $user->user_id,
+                    'role_id' => $user->role_id,
+                    'branch_id' => $user->branch_id,
+                    'ip_address' => \Request::getClientIp(true),
+                    'device' => '',
+                    'browser' => '',
+                    'os' => '',
+                    'login_time' => date("Y-m-d H:i:s"),
+                    'created_at' => date("Y-m-d H:i:s")
+                ];
+                //$query = $staffConn->table('staff_leaves')->insert($data);
+                $query =Log_history::insert($data);
+
                 $success['token'] = $token;
                 $success['user'] = $user;
                 $success['role_name'] = $user->role->role_name;
@@ -189,6 +205,18 @@ class AuthController extends BaseController
         if (Auth::check()) {
             Auth::user()->token()->revoke();
             return $this->successResponse([], 'User has been logged out successfully');
+        } else {
+            return $this->send500Error('Sorry, user cannot be logged out', ['error' => 'Sorry, user cannot be logged out']);
+        }
+    }
+    public function lastlogout(Request $request)
+    {
+        $u = Log_history::where('login_id', $request->userID)->latest()->first();
+      // $ip[]=get_browser($request->header('User-Agent'), true);
+        $logqry=Log_history::where('id',$u->id)->update(['logout_time' => date("Y-m-d H:i:s")]);
+        if ($logqry) {
+            
+            return $this->successResponse([], 'User last logout added successfully');
         } else {
             return $this->send500Error('Sorry, user cannot be logged out', ['error' => 'Sorry, user cannot be logged out']);
         }

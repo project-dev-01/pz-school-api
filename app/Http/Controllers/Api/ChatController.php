@@ -81,7 +81,7 @@ class ChatController extends BaseController
                 ->when($request->role == "Teacher", function ($q)  use ($request) {
                     $q->whereNotIn('stf.id', [$request->id]);
                 })
-                // ->where('stf.is_active', '=', '0')
+                ->where('stf.is_active', '=', '0')
                 ->groupBy('stf.id')
 
                 // ->limit(10)
@@ -502,8 +502,6 @@ class ChatController extends BaseController
     public function chatlists(Request $request)
     {
 
-        //dd('123');
-        // create new connection
         $conn = $this->createNewConnection($request->branch_id);
         $branch_id = $request->branch_id;
         $chat_fromid = $request['chat_fromid'];
@@ -511,7 +509,8 @@ class ChatController extends BaseController
         $chat_fromuser = $request['chat_fromuser'];
         $chat_toid = $request['chat_toid'];
         $chat_toname = $request['chat_toname'];
-        $chat_touser = $request['chat_touser'];
+        $chat_touser = $request['chat_touser'];        
+        $limit = $request['limit'];
         $query = $conn->table('chats as ch')->Where([
             ['ch.chat_fromid', $chat_toid],
             ['ch.chat_fromuser', $chat_touser],
@@ -522,7 +521,11 @@ class ChatController extends BaseController
             'ch.chat_status' => "Read",
             'ch.updated_at' => date("Y-m-d H:i:s")
         ]);
-        if (isset($request['chat_user_id'])) {
+        if ($chat_touser == "Parent")
+            $isrole1 = 5;
+        elseif ($chat_touser == "Teacher")
+            $isrole1 = 4;
+			if (isset($request['chat_user_id'])) {
             try {
                 User::where('id', $request['chat_user_id'])->update(['last_seen' => date("Y-m-d H:i:s")]);
             } catch (Exception $e) {
@@ -530,7 +533,7 @@ class ChatController extends BaseController
             }
         }
         if ($chat_touser == 'Group') {
-            $success = $conn->table('chats as ch')
+            $success['list'] = $conn->table('chats as ch')
                 ->select(
                     'ch.id',
                     'ch.chat_fromid',
@@ -553,10 +556,40 @@ class ChatController extends BaseController
                     ['ch.flag', '1'],
                     ['ch.chat_toid', $chat_toid],
                     ['ch.chat_touser', $chat_touser]
-                ])->latest()->take(20)->orderBy('id', 'ASC')->get();
-            $success['logstatus'] = 'Online';
+                ])->latest()->take($limit)->orderBy('ch.id', 'DESC')->get();
+
+                $groupqry = $conn->table('groups')->select('staff','student','parent')->where('id', $chat_toid)->first();
+                $staffs = explode(',' , $groupqry->staff);  
+                $students = explode(',' , $groupqry->student);
+                $parents = explode(',' , $groupqry->parent);   
+                $groupcount=count($staffs)+count($students)+count($parents);     
+                $success['logstatus'] = 'Online';
+                $success['groupcount'] =$groupcount;
+                $gorupli=[];
+                foreach($staffs as $s1)
+                {
+                    $sfqry = $conn->table('staffs')->select('first_name','last_name')->where('id', $s1)->first();
+                    $li['username']=$sfqry->first_name.' '.$sfqry->last_name;
+                    $li['usertype']="Staff";
+                    array_push($gorupli, $li);
+                }
+                foreach($students as $s2)
+                {
+                    $stqry = $conn->table('students')->select('first_name','last_name')->where('id', $s2)->first();
+                    $li['username']=$stqry->first_name.' '.$stqry->last_name;
+                    $li['usertype']="Student";
+                    array_push($gorupli, $li);
+                }
+                foreach($parents as $p1)
+                {
+                    $prqry = $conn->table('parent')->select('first_name','last_name')->where('id', $p1)->first();
+                    $li['username']=$prqry->first_name.' '.$prqry->last_name;;
+                    $li['usertype']="Parent";
+                    array_push($gorupli, $li);
+                }
+                $success['groupnamelist'] =$gorupli;
         } else {
-            $success = $conn->table('chats as ch')
+            $success['list'] = $conn->table('chats as ch')
                 ->select(
                     'ch.id',
                     'ch.chat_fromid',
@@ -587,21 +620,27 @@ class ChatController extends BaseController
                     ['ch.chat_fromuser', $chat_touser],
                     ['ch.chat_toid', $chat_fromid],
                     ['ch.chat_touser', $chat_fromuser]
-                ])->latest()->take(20)->orderBy('ch.id', 'DESC')->get();
+                ])->latest()->take($limit)->orderBy('ch.id', 'DESC')->get();
+            if($chat_touser=='Parent')
+			{
+				$isrole1=5;
+			}
+			elseif($chat_touser=='Teacher')
+			{
+				$isrole1=4;
+			}
+            $getRow = User::where('user_id', $chat_toid)
 
-            $main_db = config('constants.main_db');
-            /*$success['last_seen']= $conn->table( 'staffs as stf') ->join('' . $main_db . '.users as us', function ($join) use ($request) {
-                        $join->on('stf.id', '=', 'us.user_id')
-                        ->where(['us.user_id',$chat_toid],['us.role_id',$isrole1],['us.branch_id',$branch_id]);
-                    })->select('us.last_seen');*/
-            $last_seen = '2023-07-12 17:19:00';
-            $current_time = '2023-07-12 17:25:00';
+            ->where('branch_id', $request->branch_id)
+
+            ->whereRaw("find_in_set('$isrole1',role_id)")
+
+            ->first();
+            $last_seen = date("Y-m-d H:i:s",strtotime($getRow->last_seen));
+            $current_time =date("Y-m-d H:i:s");
             $success['logstatus'] = (((strtotime($current_time) - strtotime($last_seen)) / 60) > 5) ? 'Offline' : 'Online';
         }
-        //$csrf="123";
-        //$success=DB::raw("SELECT `chat_toid`,`chat_touser`, COUNT(`chat_toid`) AS msg_count FROM `chats` WHERE chat_status ='Unread' AND chat_toid= '".$chat_fromid."' AND chat_touser= '".$chat_fromuser."' GROUP BY `chat_toid` ");
 
-        //dd($success);
         if (!$success) {
             return $this->send500Error('Something went wrong.', ['error' => 'Something went wrong']);
         } else {
@@ -620,7 +659,8 @@ class ChatController extends BaseController
         $chat_fromuser = $request['chat_fromuser'];
         $chat_toid = $request['chat_toid'];
         $chat_toname = $request['chat_toname'];
-        $chat_touser = $request['chat_touser'];
+        $chat_touser = $request['chat_touser'];              
+        $limit = $request['limit'];
         $query = $conn->table('chats as ch')->Where([
             ['ch.chat_fromid', $chat_toid],
             ['ch.chat_fromuser', $chat_touser],
@@ -635,6 +675,13 @@ class ChatController extends BaseController
             $isrole1 = 5;
         elseif ($chat_touser == "Teacher")
             $isrole1 = 4;
+			if (isset($request['chat_user_id'])) {
+            try {
+                User::where('id', $request['chat_user_id'])->update(['last_seen' => date("Y-m-d H:i:s")]);
+            } catch (Exception $e) {
+                // return $this->sendCommonError('No Data Found.', ['error' => $e->getMessage()]);
+            }
+        }
         if ($chat_touser == 'Group') {
             $success['list'] = $conn->table('chats as ch')
                 ->select(
@@ -659,9 +706,37 @@ class ChatController extends BaseController
                     ['ch.flag', '1'],
                     ['ch.chat_toid', $chat_toid],
                     ['ch.chat_touser', $chat_touser]
-                ])->latest()->take(20)->orderBy('ch.id', 'DESC')->get();
-
-            $success['logstatus'] = 'Online';
+                ])->latest()->take($limit)->orderBy('ch.id', 'DESC')->get();
+                $groupqry = $conn->table('groups')->select('staff','student','parent')->where('id', $chat_toid)->first();
+                $staffs = explode(',' , $groupqry->staff);  
+                $students = explode(',' , $groupqry->student);
+                $parents = explode(',' , $groupqry->parent);   
+                $groupcount=count($staffs)+count($students)+count($parents);     
+                $success['logstatus'] = 'Online';
+                $success['groupcount'] =$groupcount;
+                $gorupli=[];
+                foreach($staffs as $s1)
+                {
+                    $sfqry = $conn->table('staffs')->select('first_name','last_name')->where('id', $s1)->first();
+                    $li['username']=$sfqry->first_name.' '.$sfqry->last_name;
+                    $li['usertype']="Staff";
+                    array_push($gorupli, $li);
+                }
+                foreach($students as $s2)
+                {
+                    $stqry = $conn->table('students')->select('first_name','last_name')->where('id', $s2)->first();
+                    $li['username']=$stqry->first_name.' '.$stqry->last_name;
+                    $li['usertype']="Student";
+                    array_push($gorupli, $li);
+                }
+                foreach($parents as $p1)
+                {
+                    $prqry = $conn->table('parent')->select('first_name','last_name')->where('id', $p1)->first();
+                    $li['username']=$prqry->first_name.' '.$prqry->last_name;;
+                    $li['usertype']="Parent";
+                    array_push($gorupli, $li);
+                }
+                $success['groupnamelist'] =$gorupli;
         } else {
             $success['list'] = $conn->table('chats as ch')
                 ->select(
@@ -694,11 +769,24 @@ class ChatController extends BaseController
                     ['ch.chat_fromuser', $chat_touser],
                     ['ch.chat_toid', $chat_fromid],
                     ['ch.chat_touser', $chat_fromuser]
-                ])->latest()->take(20)->orderBy('ch.id', 'DESC')->get();
-            $main_db = config('constants.main_db');
-            //$success['last_seen']= $conn->table( $main_db . 'users as us')->select('us.last_seen')->where(['us.user_id',$chat_toid],['us.role_id',$isrole1],['us.branch_id',$branch_id]);
-            $last_seen = '2023-07-12 17:19:00';
-            $current_time = '2023-07-12 17:25:00';
+                ])->latest()->take($limit)->orderBy('ch.id', 'DESC')->get();
+				if($chat_touser=='Parent')
+                {
+                    $isrole1=5;
+                }
+                elseif($chat_touser=='Teacher')
+                {
+                    $isrole1=4;
+                }
+                $getRow = User::where('user_id', $chat_toid)
+    
+                ->where('branch_id', $request->branch_id)
+    
+                ->whereRaw("find_in_set('$isrole1',role_id)")
+    
+                ->first();
+            $last_seen = date("Y-m-d H:i:s",strtotime($getRow->last_seen));
+            $current_time =date("Y-m-d H:i:s");
             $success['logstatus'] = (((strtotime($current_time) - strtotime($last_seen)) / 60) > 5) ? 'Offline' : 'Online';
         }
 

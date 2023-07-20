@@ -724,6 +724,7 @@ Route::group(['middleware' => ['auth:api', 'throttle:limit_per_user', 'logroute'
 
 
     Route::post('all_logout', [AuthController::class, 'allLogout']);
+    Route::post('lastlogout', [AuthController::class, 'lastlogout']);
     // soap
     Route::post('soap/category/list', [ApiControllerOne::class, 'soapCategoryList']);
     Route::post('soap/sub_category/list', [ApiControllerOne::class, 'soapSubCategoryList']);
@@ -852,7 +853,7 @@ Route::group(['middleware' => ['auth:api', 'throttle:limit_per_user', 'logroute'
     Route::post('chat/storechat', [ChatController::class, 'storechat']);
     Route::post('chat/deletechat', [ChatController::class, 'deletechat']);
     Route::post('chat/chatlist', [ChatController::class, 'chatlists']);
-    Route::post('chat/chatlist', [ChatController::class, 'pchatlists']);
+    Route::post('chat/pchatlist', [ChatController::class, 'pchatlists']);
 
     Route::post('chat/groupchatlists', [ChatController::class, 'groupchatlists']);
     // chat conversations end
@@ -874,4 +875,6 @@ Route::group(['middleware' => ['auth:api', 'throttle:limit_per_user', 'logroute'
 
     Route::post('forum_image_store', [ApiController::class, 'forumImageStore']);
     Route::get('get_languages', [ApiControllerOne::class, 'getLanguages']);
+	
+    
 });
