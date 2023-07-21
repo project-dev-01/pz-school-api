@@ -38,6 +38,7 @@ use Illuminate\Contracts\Encryption\DecryptException;
 use File;
 use Exception;
 use Illuminate\Support\Facades\Config;
+use Illuminate\Support\Facades\Hash;
 
 class ApiController extends BaseController
 {
@@ -5060,12 +5061,11 @@ class ApiController extends BaseController
     // change password
     public function changePassword(Request $request)
     {
-        $dbPass = User::find($request->id)->getAttributes()['password'];
-        //Validate form
+        $user = User::find($request->id);
         $validator = \Validator::make($request->all(), [
             'old' => [
-                'required', function ($attribute, $value, $fail) use ($dbPass) {
-                    if (!\Hash::check($value, $dbPass)) {
+                'required', function ($attribute, $value, $fail) use ($user) {
+                    if (!Hash::check($value, $user->password)) {
                         return $fail(__('The current password is incorrect'));
                     }
                 },
@@ -11033,12 +11033,15 @@ class ApiController extends BaseController
                     $user->google2fa_secret_enable = isset($request->google2fa_secret_enable) ? '1' : '0';
                     $user->password = bcrypt($request->password);
                     $query = $user->save();
-
                     // return $user->id;
+
                     $success = [];
                     if (!$query) {
                         return $this->send500Error('Something went wrong.', ['error' => 'Something went wrong']);
                     } else {
+                        if ($request->sudent_application_id) {
+                            $student_application = $conn->table('student_applications')->where('id', '=', $request->sudent_application_id)->update(['status' => "Enrolled"]);
+                        }
                         return $this->successResponse($success, 'Student has been successfully saved');
                     }
                 }
@@ -18646,6 +18649,8 @@ class ApiController extends BaseController
             'city' => 'required',
             'state' => 'required',
             'postal_code' => 'required',
+            'academic_grade' => 'required',
+            'academic_year' => 'required',
             'grade' => 'required',
             'school_year' => 'required',
             'school_last_attended' => 'required',
@@ -18654,24 +18659,9 @@ class ApiController extends BaseController
             'school_city' => 'required',
             'school_state' => 'required',
             'school_postal_code' => 'required',
-            'father_first_name' => 'required',
-            'father_phone_number' => 'required',
-            'father_occupation' => 'required',
-            'father_email' => 'required',
-            'mother_first_name' => 'required',
-            'mother_phone_number' => 'required',
-            'mother_occupation' => 'required',
-            'mother_email' => 'required',
-            'guardian_first_name' => 'required',
-            'guardian_phone_number' => 'required',
-            'guardian_occupation' => 'required',
-            'guardian_email' => 'required',
-            'guardian_relation' => 'required',
 
             'branch_id' => 'required',
-            'token' => 'required',
         ]);
-
 
 
         if (!$validator->passes()) {
@@ -18687,8 +18677,8 @@ class ApiController extends BaseController
 
                 // return $request;
                 $query = $conn->table('student_applications')->insert([
-                    'first_name' => $request->first_name,
-                    'last_name' => $request->last_name,
+                    'first_name' => isset($request->first_name) ? $request->first_name : "",
+                    'last_name' => isset($request->last_name) ? $request->last_name : "",
                     'gender' => $request->gender,
                     'date_of_birth' => $request->date_of_birth,
                     'mobile_no' => $request->mobile_no,
@@ -18699,6 +18689,8 @@ class ApiController extends BaseController
                     'city' => $request->city,
                     'state' => $request->state,
                     'postal_code' => $request->postal_code,
+                    'academic_grade' => $request->academic_grade,
+                    'academic_year' => $request->academic_year,
                     'grade' => $request->grade,
                     'school_year' => $request->school_year,
                     'school_last_attended' => $request->school_last_attended,
@@ -18708,22 +18700,23 @@ class ApiController extends BaseController
                     'school_city' => $request->school_city,
                     'school_state' => $request->school_state,
                     'school_postal_code' => $request->school_postal_code,
-                    'father_first_name' => $request->father_first_name,
-                    'father_last_name' => $request->father_last_name,
+                    'father_first_name' => isset($request->father_first_name) ? $request->father_first_name : "",
+                    'father_last_name' => isset($request->father_last_name) ? $request->father_last_name : "",
                     'father_phone_number' => $request->father_phone_number,
                     'father_occupation' => $request->father_occupation,
                     'father_email' => $request->father_email,
-                    'mother_first_name' => $request->mother_first_name,
-                    'mother_last_name' => $request->mother_last_name,
+                    'mother_first_name' => isset($request->mother_first_name) ? $request->mother_first_name : "",
+                    'mother_last_name' => isset($request->mother_last_name) ? $request->mother_last_name : "",
                     'mother_phone_number' => $request->mother_phone_number,
                     'mother_occupation' => $request->mother_occupation,
                     'mother_email' => $request->mother_email,
-                    'guardian_first_name' => $request->guardian_first_name,
-                    'guardian_last_name' => $request->guardian_last_name,
+                    'guardian_first_name' => isset($request->guardian_first_name) ? $request->guardian_first_name : "",
+                    'guardian_last_name' => isset($request->guardian_last_name) ? $request->guardian_last_name : "",
                     'guardian_relation' => $request->guardian_relation,
                     'guardian_phone_number' => $request->guardian_phone_number,
                     'guardian_occupation' => $request->guardian_occupation,
                     'guardian_email' => $request->guardian_email,
+                    'status' => "Applied",
                     'created_at' => date("Y-m-d H:i:s")
                 ]);
 
@@ -18739,8 +18732,9 @@ class ApiController extends BaseController
         }
     }
 
-    // get studentApplication
-    public function studentApplicationList(Request $request)
+
+    // get application list
+    public function getApplicationList(Request $request)
     {
 
         $validator = \Validator::make($request->all(), [
@@ -18753,33 +18747,35 @@ class ApiController extends BaseController
             // create new connection
             $conn = $this->createNewConnection($request->branch_id);
             // get data
-            $data = $conn->table('student_applications')
-                ->select("id", 'email', 'first_name', 'last_name')
-                ->where("first_name", "LIKE", "%{$request->name}%")
-                ->orWhere("last_name", "LIKE", "%{$request->name}%")
+
+
+            $data = $conn->table('student_applications as s')
+                ->select(
+                    's.*',
+                    DB::raw("CONCAT(s.first_name, ' ', s.last_name) as name"),
+                    'academic_cl.name as academic_grade',
+                    'ay.name as academic_year',
+                )
+
+                ->leftJoin('academic_year as ay', 's.academic_year', '=', 'ay.id')
+                ->leftJoin('classes as academic_cl', 's.academic_grade', '=', 'academic_cl.id')
+                ->when($request->admission == 1, function ($query) {
+                    return $query->where('s.status', '=', 'Approved');
+                })
+                ->when($request->academic_year, function ($query) use ($request) {
+                    return $query->where('s.academic_year', '=', $request->academic_year);
+                })
+                ->when($request->academic_grade, function ($query)  use ($request) {
+                    return $query->where('s.academic_grade', '=', $request->academic_grade);
+                })
                 ->get();
 
-            $output = '';
-            if ($request->name) {
-                if (!$data->isEmpty()) {
-                    $output = '<ul class="list-group" style="display: block; position: relative; z-index: 1">';
-                    foreach ($data as $row) {
-
-                        $output .= '<li class="list-group-item" value="' . $row->id . '">' . $row->first_name . ' ' . $row->last_name . ' ( ' . $row->email . ' ) </li>';
-                    }
-                    $output .= '</ul>';
-                } else {
-                    $output .= '<li class="list-group-item">' . 'No results Found' . '</li>';
-                }
-            } else {
-                $output .= '<li class="list-group-item">' . 'No results Found' . '</li>';
-            }
-            return $output;
+            return $this->successResponse($data, 'Application record fetch successfully');
         }
     }
 
     // student Application
-    public function studentApplication(Request $request)
+    public function getApplicationDetails(Request $request)
     {
 
         $validator = \Validator::make($request->all(), [
@@ -18798,13 +18794,177 @@ class ApiController extends BaseController
             $getstudentDetails = $conn->table('student_applications as s')
                 ->select(
                     's.*',
+                    'academic_cl.name as academic_grade',
+                    'school_cl.name as grade',
+                    'r.name as guardian_relation',
+                    'ay.name as academic_year',
+                    'sy.name as school_year',
                     DB::raw("CONCAT(s.first_name, ' ', s.last_name) as name")
                 )
+                ->leftJoin('classes as academic_cl', 's.academic_grade', '=', 'academic_cl.id')
+                ->leftJoin('classes as school_cl', 's.grade', '=', 'school_cl.id')
+                ->leftJoin('academic_year as ay', 's.academic_year', '=', 'ay.id')
+                ->leftJoin('academic_year as sy', 's.school_year', '=', 'sy.id')
+                ->leftJoin('relations as r', 's.guardian_relation', '=', 'r.id')
                 ->where('s.id', $id)
                 ->first();
             return $this->successResponse($getstudentDetails, 'Student row fetch successfully');
         }
     }
+
+    // update Application
+    public function updateApplication(Request $request)
+    {
+        // return $request;
+        $validator = \Validator::make($request->all(), [
+            'first_name' => 'required',
+            'mobile_no' => 'required',
+            'mobile_no' => 'required',
+            'address_1' => 'required',
+            'country' => 'required',
+            'city' => 'required',
+            'state' => 'required',
+            'postal_code' => 'required',
+            'academic_grade' => 'required',
+            'academic_year' => 'required',
+            'grade' => 'required',
+            'school_year' => 'required',
+            'school_last_attended' => 'required',
+            'school_address_1' => 'required',
+            'school_country' => 'required',
+            'school_city' => 'required',
+            'school_state' => 'required',
+            'school_postal_code' => 'required',
+
+            'branch_id' => 'required',
+            'token' => 'required',
+        ]);
+
+
+        //  return $request;
+        if (!$validator->passes()) {
+            return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
+        } else {
+            // create new connection
+            $conn = $this->createNewConnection($request->branch_id);
+            // update data
+            $query = $conn->table('student_applications')->where('id', $request->id)->update([
+                'first_name' => isset($request->first_name) ? $request->first_name : "",
+                'last_name' => isset($request->last_name) ? $request->last_name : "",
+                'gender' => $request->gender,
+                'date_of_birth' => $request->date_of_birth,
+                'mobile_no' => $request->mobile_no,
+                'email' => $request->email,
+                'address_1' => $request->address_1,
+                'address_2' => $request->address_2,
+                'country' => $request->country,
+                'city' => $request->city,
+                'state' => $request->state,
+                'postal_code' => $request->postal_code,
+                'academic_grade' => $request->academic_grade,
+                'academic_year' => $request->academic_year,
+                'grade' => $request->grade,
+                'school_year' => $request->school_year,
+                'school_last_attended' => $request->school_last_attended,
+                'school_address_1' => $request->school_address_1,
+                'school_address_2' => $request->school_address_2,
+                'school_country' => $request->school_country,
+                'school_city' => $request->school_city,
+                'school_state' => $request->school_state,
+                'school_postal_code' => $request->school_postal_code,
+                'father_first_name' => $request->father_first_name,
+                'father_last_name' => $request->father_last_name,
+                'father_phone_number' => $request->father_phone_number,
+                'father_occupation' => $request->father_occupation,
+                'father_email' => $request->father_email,
+                'mother_first_name' => $request->mother_first_name,
+                'mother_last_name' => $request->mother_last_name,
+                'mother_phone_number' => $request->mother_phone_number,
+                'mother_occupation' => $request->mother_occupation,
+                'mother_email' => $request->mother_email,
+                'guardian_first_name' => $request->guardian_first_name,
+                'guardian_last_name' => $request->guardian_last_name,
+                'guardian_relation' => $request->guardian_relation,
+                'guardian_phone_number' => $request->guardian_phone_number,
+                'guardian_occupation' => $request->guardian_occupation,
+                'guardian_email' => $request->guardian_email,
+                'updated_at' => date("Y-m-d H:i:s")
+            ]);
+
+            $success = [];
+            if (!$query) {
+                return $this->send500Error('Something went wrong.', ['error' => 'Something went wrong']);
+            } else {
+                return $this->successResponse($success, 'Application has been successfully updated');
+            }
+
+            // return $request;
+        }
+    }
+
+    // approve Application
+    public function approveApplication(Request $request)
+    {
+        $validator = \Validator::make($request->all(), [
+            'token' => 'required',
+            'id' => 'required',
+            'status' => 'required',
+            'branch_id' => 'required',
+        ]);
+        $id = $request->id;
+        if (!$validator->passes()) {
+            return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
+        } else {
+            // create new connection
+            $conn = $this->createNewConnection($request->branch_id);
+
+            $status = "Applied";
+            if ($request->status == "1") {
+                $status = "Approved";
+            }
+            $query = $conn->table('student_applications')->where('id', $id)->update([
+                'status' => $status,
+                'updated_at' => date("Y-m-d H:i:s")
+            ]);
+            if ($request->status == "1") {
+                $status = "Approved";
+            } else {
+                $status = "Unapproved";
+            }
+            $success = [];
+            if ($query) {
+                return $this->successResponse($success, 'Application have been ' . $status . ' successfully');
+            } else {
+                return $this->send500Error('Something went wrong.', ['error' => 'Something went wrong']);
+            }
+        }
+    }
+    // delete Application
+    public function deleteApplication(Request $request)
+    {
+        $id = $request->id;
+        $validator = \Validator::make($request->all(), [
+            'token' => 'required',
+            'branch_id' => 'required',
+            'id' => 'required',
+        ]);
+
+        if (!$validator->passes()) {
+            return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
+        } else {
+            // create new connection
+            $conn = $this->createNewConnection($request->branch_id);
+            // get data
+            $query = $conn->table('student_applications')->where('id', $id)->delete();
+            $success = [];
+            if ($query) {
+                return $this->successResponse($success, 'Application have been deleted successfully');
+            } else {
+                return $this->send500Error('Something went wrong.', ['error' => 'Something went wrong']);
+            }
+        }
+    }
+
 
     // getRelationList
     public function getApplicationRelationList(Request $request)
@@ -18840,6 +19000,24 @@ class ApiController extends BaseController
             // get data
             $Department = $Connection->table('academic_year')->get();
             return $this->successResponse($Department, 'Academic year record fetch successfully');
+        }
+    }
+
+    // get Application GradeList
+    public function getApplicationGradeList(Request $request)
+    {
+        $validator = \Validator::make($request->all(), [
+            'branch_id' => 'required',
+        ]);
+
+        if (!$validator->passes()) {
+            return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
+        } else {
+            // create new connection
+            $conn = $this->createNewConnection($request->branch_id);
+            // get data
+            $gradeDetails = $conn->table('classes')->get();
+            return $this->successResponse($gradeDetails, 'Grade record fetch successfully');
         }
     }
 

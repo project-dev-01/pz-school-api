@@ -27,6 +27,8 @@ class CreateStudentApplicationsTable extends Migration
             $table->string('state');
             $table->string('city');
             $table->string('postal_code');
+            $table->string('academic_grade');
+            $table->string('academic_year');
             $table->string('grade');
             $table->string('school_year');
             $table->string('school_last_attended');
@@ -52,6 +54,7 @@ class CreateStudentApplicationsTable extends Migration
             $table->string('guardian_phone_number');
             $table->string('guardian_occupation');
             $table->string('guardian_email');
+            $table->integer('staus');
             $table->timestamps();
         });
     }

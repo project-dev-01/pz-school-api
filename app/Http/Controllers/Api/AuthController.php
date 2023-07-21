@@ -117,6 +117,7 @@ class AuthController extends BaseController
                         )
                         ->where('father_id', '=', $user->user_id)
                         ->orWhere('mother_id', '=', $user->user_id)
+                        ->orWhere('guardian_id', '=', $user->user_id)
                         ->get();
                     $success['StudentID'] = $StudentID;
                 }

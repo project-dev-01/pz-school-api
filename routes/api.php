@@ -56,6 +56,8 @@ Route::post('basesixfour', [CommonController::class, 'basesixfour']);
 
 Route::post('application/relation/list', [ApiController::class, 'getApplicationRelationList']);
 Route::post('application/academic_year/list', [ApiController::class, 'applicationAcademicYearList']);
+Route::post('application/grade/list', [ApiController::class, 'getApplicationGradeList']);
+Route::post('application/add', [ApiController::class, 'addApplication']);
 // 2fa end
 // Route::group(['middleware' => ['auth:api', 'logroute']], function () {
 // Route::group(['middleware' => ['auth:api','check-single-session-api', 'logroute']], function () {
@@ -870,13 +872,12 @@ Route::group(['middleware' => ['auth:api', 'throttle:limit_per_user', 'logroute'
     Route::post('first/name', [ApiControllerOne::class, 'firstName']);
 
 
-    Route::post('application_add', [ApiController::class, 'addApplication']);
-    Route::get('student_application_list', [ApiController::class, 'studentApplicationList']);
-    Route::post('student_application', [ApiController::class, 'studentApplication']);
-
+    Route::get('application/list', [ApiController::class, 'getApplicationList']);
+    Route::post('application/application-details', [ApiController::class, 'getApplicationDetails']);
+    Route::post('application/approve', [ApiController::class, 'approveApplication']);  
+    Route::post('application/update', [ApiController::class, 'updateApplication']);
+    Route::post('application/delete', [ApiController::class, 'deleteApplication']);
 
     Route::post('forum_image_store', [ApiController::class, 'forumImageStore']);
     Route::get('get_languages', [ApiControllerOne::class, 'getLanguages']);
-	
-    
 });
