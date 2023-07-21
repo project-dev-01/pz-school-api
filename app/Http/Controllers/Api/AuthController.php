@@ -211,12 +211,13 @@ class AuthController extends BaseController
     }
     public function lastlogout(Request $request)
     {
-        $u = Log_history::where('login_id', $request->userID)->latest()->first();
+        $u = Log_history::where('login_id', $request->userID)->where('role_id', $request->role_id)->latest()->first();
       // $ip[]=get_browser($request->header('User-Agent'), true);
+        $ip[]=$_SERVER['REMOTE_ADDR'];
         $logqry=Log_history::where('id',$u->id)->update(['logout_time' => date("Y-m-d H:i:s")]);
         if ($logqry) {
             
-            return $this->successResponse([], 'User last logout added successfully');
+            return $this->successResponse($ip, 'User last logout added successfully');
         } else {
             return $this->send500Error('Sorry, user cannot be logged out', ['error' => 'Sorry, user cannot be logged out']);
         }

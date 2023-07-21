@@ -856,6 +856,8 @@ Route::group(['middleware' => ['auth:api', 'throttle:limit_per_user', 'logroute'
     Route::post('chat/pchatlist', [ChatController::class, 'pchatlists']);
 
     Route::post('chat/groupchatlists', [ChatController::class, 'groupchatlists']);
+	
+    Route::post('chatnotification', [ChatController::class, 'chatnotification']);
     // chat conversations end
     Route::post('class_teacher_classes', [ApiControllerOne::class, 'classTeacherClass']);
     Route::post('class_teacher_sections', [ApiControllerOne::class, 'classTeacherSections']);

@@ -797,6 +797,33 @@ class ChatController extends BaseController
             return $this->successResponse($success, 'get all chat record fetch successfully');
         }
     }
+	public function chatnotification(Request $request)
+    {	
+		$conn = $this->createNewConnection($request->branch_id);
+		$branch_id = $request->branch_id;
+		 if($request->role_id=='4')
+		{
+			$roll="Teacher";
+		}
+		elseif($request->role_id=='5')
+		{
+			$roll="Parent";
+		}
+		/*$success[]="select COUNT('ch.*') from chats as ch where  ch.chat_toid='".$request->userID."' AND ch.chat_touser='".$roll."' AND ch.chat_status='Unread' AND ch.flag=1";*/
+       $success=$conn->table('chats as ch')->select(DB::raw("COUNT(*) as count_row"))
+                            ->where('chat_toid', $request->userID)							
+							->where('chat_touser', $roll)
+							->where('chat_status', 'Unread')
+							->where('flag', '1')
+							->get(); 
+        
+	   if($success) {
+            
+            return $this->successResponse($success, 'Get Chat Count successfully');
+        } else {
+            return $this->send500Error('Sorry, Not Get Chat Count ', ['error' => 'Sorry,Not Get Chat Count ']);
+        }
+    }
     public function groupchatlists(Request $request)
     {
 
