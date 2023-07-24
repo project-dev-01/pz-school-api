@@ -61,6 +61,9 @@ Route::post('application/add', [ApiController::class, 'addApplication']);
 // 2fa end
 // Route::group(['middleware' => ['auth:api', 'logroute']], function () {
 // Route::group(['middleware' => ['auth:api','check-single-session-api', 'logroute']], function () {
+// except log route start
+Route::post('all_logout', [AuthController::class, 'allLogout'])->middleware('auth:api', 'throttle:limit_per_user');
+// except log route end
 Route::group(['middleware' => ['auth:api', 'throttle:limit_per_user', 'logroute']], function () {
     Route::get('logout', [AuthController::class, 'logout']);
     Route::get('get_user', [AuthController::class, 'get_user']);
@@ -725,7 +728,6 @@ Route::group(['middleware' => ['auth:api', 'throttle:limit_per_user', 'logroute'
     Route::get('teacher_count', [ApiController::class, 'teacherCount']);
 
 
-    Route::post('all_logout', [AuthController::class, 'allLogout']);
     Route::post('lastlogout', [AuthController::class, 'lastlogout']);
     // soap
     Route::post('soap/category/list', [ApiControllerOne::class, 'soapCategoryList']);
@@ -858,7 +860,7 @@ Route::group(['middleware' => ['auth:api', 'throttle:limit_per_user', 'logroute'
     Route::post('chat/pchatlist', [ChatController::class, 'pchatlists']);
 
     Route::post('chat/groupchatlists', [ChatController::class, 'groupchatlists']);
-	
+
     Route::post('chatnotification', [ChatController::class, 'chatnotification']);
     // chat conversations end
     Route::post('class_teacher_classes', [ApiControllerOne::class, 'classTeacherClass']);
@@ -874,7 +876,7 @@ Route::group(['middleware' => ['auth:api', 'throttle:limit_per_user', 'logroute'
 
     Route::get('application/list', [ApiController::class, 'getApplicationList']);
     Route::post('application/application-details', [ApiController::class, 'getApplicationDetails']);
-    Route::post('application/approve', [ApiController::class, 'approveApplication']);  
+    Route::post('application/approve', [ApiController::class, 'approveApplication']);
     Route::post('application/update', [ApiController::class, 'updateApplication']);
     Route::post('application/delete', [ApiController::class, 'deleteApplication']);
 
