@@ -7422,10 +7422,9 @@ class ApiController extends BaseController
     {
         $validator = \Validator::make($request->all(), [
             'branch_id' => 'required',
-            'token' => 'required',
-            'class_id' => 'required',
-            'section_id' => 'required',
-            'subject_id' => 'required',
+            // 'class_id' => 'required',
+            // 'section_id' => 'required',
+            // 'subject_id' => 'required',
             'academic_session_id' => 'required'
         ]);
 
@@ -7435,31 +7434,161 @@ class ApiController extends BaseController
         } else {
             // create new connection
             $con = $this->createNewConnection($request->branch_id);
+            $subject_id = $request->subject_id;
+            $class_id = $request->class_id;
+            $section_id = $request->section_id;
+            $semester_id = $request->semester_id;
+            $session_id = $request->session_id;
+            $teacher_id = isset($request->teacher_id) ? $request->teacher_id : null;
+
             // get data
-            $homework['homework'] = $con->table('homeworks')->select('homeworks.*', 'sections.name as section_name', 'classes.name as class_name', 'subjects.name as subject_name', DB::raw('SUM(homework_evaluation.status = 1) as students_completed'))
+            // $homework['homework'] = $con->table('homeworks')->select('homeworks.*', 'sections.name as section_name', 'classes.name as class_name', 'subjects.name as subject_name', DB::raw('SUM(homework_evaluation.status = 1) as students_completed'))
+            //     ->leftJoin('subjects', 'homeworks.subject_id', '=', 'subjects.id')
+            //     ->leftJoin('sections', 'homeworks.section_id', '=', 'sections.id')
+            //     ->leftJoin('classes', 'homeworks.class_id', '=', 'classes.id')
+            //     ->leftJoin('homework_evaluation', 'homeworks.id', '=', 'homework_evaluation.homework_id')
+            //     ->where('homeworks.class_id', $request->class_id)
+            //     ->where('homeworks.section_id', $request->section_id)
+            //     // ->where('homeworks.subject_id', $request->subject_id)
+            //     ->when($subject != "All", function ($ins)  use ($subject) {
+            //         $ins->where('homeworks.subject_id', $subject);
+            //     })
+            //     ->where('homeworks.semester_id', $request->semester_id)
+            //     ->where('homeworks.session_id', $request->session_id)
+            //     ->where('homeworks.academic_session_id', $request->academic_session_id)
+            //     ->groupBy('homeworks.id')
+            //     ->orderBy('homeworks.created_at', 'desc')
+            //     ->get();
+            // $homework['total_students'] =  $con->table('enrolls')
+            //     ->where([
+            //         ['class_id', '=', $request->class_id],
+            //         ['section_id', '=', $request->section_id],
+            //         ['semester_id', '=', $request->semester_id],
+            //         ['session_id', '=', $request->session_id],
+            //         ['academic_session_id', '=', $request->academic_session_id],
+            //         ['active_status', '=', '0'],
+            //     ])->count();
+            $homework = $con->table('homeworks')
+                ->select(
+                    'homeworks.*',
+                    'sections.name as section_name',
+                    'classes.name as class_name',
+                    'subjects.name as subject_name',
+                    // DB::raw('SUM(hwev.status = 1) as students_completed'),
+                    DB::raw('SUM(CASE WHEN hwev.status = "1" then 1 ELSE 0 END) as "students_completed"'),
+                    DB::raw('COUNT(en.id) as "studentCount"')
+                )
                 ->leftJoin('subjects', 'homeworks.subject_id', '=', 'subjects.id')
                 ->leftJoin('sections', 'homeworks.section_id', '=', 'sections.id')
                 ->leftJoin('classes', 'homeworks.class_id', '=', 'classes.id')
-                ->leftJoin('homework_evaluation', 'homeworks.id', '=', 'homework_evaluation.homework_id')
-                ->where('homeworks.class_id', $request->class_id)
-                ->where('homeworks.section_id', $request->section_id)
-                ->where('homeworks.subject_id', $request->subject_id)
-                ->where('homeworks.semester_id', $request->semester_id)
-                ->where('homeworks.session_id', $request->session_id)
+                // ->leftJoin('homework_evaluation', 'homeworks.id', '=', 'homework_evaluation.homework_id')
+
+                // get student count informations
+                ->leftJoin('enrolls as en', function ($join) {
+                    $join->on('homeworks.class_id', '=', 'en.class_id')
+                        ->on('homeworks.section_id', '=', 'en.section_id')
+                        ->on('homeworks.semester_id', '=', 'en.semester_id')
+                        ->on('homeworks.session_id', '=', 'en.session_id')
+                        ->on('homeworks.academic_session_id', '=', 'en.academic_session_id')
+                        ->on('en.active_status', '=', DB::raw("'0'"));
+                })
+                ->leftJoin('homework_evaluation as hwev', function ($join) {
+                    $join->on('hwev.homework_id', '=', 'homeworks.id')
+                        ->on('hwev.student_id', '=', 'en.student_id');
+                })
+                ->when($class_id, function ($ins)  use ($class_id) {
+                    $ins->where('homeworks.class_id', $class_id);
+                })
+                ->when($section_id, function ($ins)  use ($section_id) {
+                    $ins->where('homeworks.section_id', $section_id);
+                })
+                ->when($subject_id != "All", function ($ins)  use ($subject_id) {
+                    $ins->where('homeworks.subject_id', $subject_id);
+                })
+                ->when($semester_id, function ($ins)  use ($semester_id) {
+                    $ins->where('homeworks.semester_id', $semester_id);
+                })
+                ->when($session_id, function ($ins)  use ($session_id) {
+                    $ins->where('homeworks.session_id', $session_id);
+                })
+                ->when($teacher_id, function ($ins)  use ($teacher_id) {
+                    $ins->where('homeworks.created_by', $teacher_id);
+                })
                 ->where('homeworks.academic_session_id', $request->academic_session_id)
                 ->groupBy('homeworks.id')
                 ->orderBy('homeworks.created_at', 'desc')
                 ->get();
-            $homework['total_students'] =  $con->table('enrolls')
-                ->where([
-                    ['class_id', '=', $request->class_id],
-                    ['section_id', '=', $request->section_id],
-                    ['semester_id', '=', $request->semester_id],
-                    ['session_id', '=', $request->session_id],
-                    ['academic_session_id', '=', $request->academic_session_id],
-                    ['active_status', '=', '0'],
-                ])->count();
             return $this->successResponse($homework, 'Homework record fetch successfully');
+        }
+    }
+    // get Homework All List
+    public function getHomeworkAllList(Request $request)
+    {
+        $validator = \Validator::make($request->all(), [
+            'branch_id' => 'required',
+            // 'class_id' => 'required',
+            // 'section_id' => 'required',
+            // 'subject_id' => 'required',
+            // 'academic_session_id' => 'required'
+        ]);
+
+        // return 1;
+        if (!$validator->passes()) {
+            return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
+        } else {
+            // create new connection
+            $con = $this->createNewConnection($request->branch_id);
+            $teacher_id = isset($request->teacher_id) ? $request->teacher_id : null;
+            // get data
+            $homework = $con->table('homeworks')
+                ->select(
+                    'homeworks.*',
+                    'sections.name as section_name',
+                    'classes.name as class_name',
+                    'subjects.name as subject_name',
+                    // DB::raw('SUM(homework_evaluation.status = 1) as students_completed'),
+                    DB::raw('SUM(CASE WHEN hwev.status = "1" then 1 ELSE 0 END) as "students_completed"'),
+                    DB::raw('COUNT(en.id) as "studentCount"')
+                )
+                ->leftJoin('subjects', 'homeworks.subject_id', '=', 'subjects.id')
+                ->leftJoin('sections', 'homeworks.section_id', '=', 'sections.id')
+                ->leftJoin('classes', 'homeworks.class_id', '=', 'classes.id')
+                // ->leftJoin('homework_evaluation', 'homeworks.id', '=', 'homework_evaluation.homework_id')
+                // get student count informations
+                ->leftJoin('enrolls as en', function ($join) {
+                    $join->on('homeworks.class_id', '=', 'en.class_id')
+                        ->on('homeworks.section_id', '=', 'en.section_id')
+                        ->on('homeworks.semester_id', '=', 'en.semester_id')
+                        ->on('homeworks.session_id', '=', 'en.session_id')
+                        ->on('homeworks.academic_session_id', '=', 'en.academic_session_id');
+                    // ->on('en.active_status', '=', DB::raw("'0'"));
+                })
+                ->leftJoin('homework_evaluation as hwev', function ($join) {
+                    $join->on('hwev.homework_id', '=', 'homeworks.id')
+                        ->on('hwev.student_id', '=', 'en.student_id');
+                })
+                ->when($teacher_id, function ($ins)  use ($teacher_id) {
+                    $ins->where('homeworks.created_by', $teacher_id);
+                })
+                // ->where('homeworks.class_id', $request->class_id)
+                // ->where('homeworks.section_id', $request->section_id)
+                // ->where('homeworks.subject_id', $request->subject_id)
+                // ->where('homeworks.semester_id', $request->semester_id)
+                // ->where('homeworks.session_id', $request->session_id)
+                // ->where('homeworks.academic_session_id', $request->academic_session_id)
+                ->groupBy('homeworks.id')
+                ->orderBy('homeworks.created_at', 'desc')
+                ->get();
+            // $homework['total_students'] =  $con->table('enrolls')
+            //     ->where([
+            //         ['class_id', '=', $request->class_id],
+            //         ['section_id', '=', $request->section_id],
+            //         ['semester_id', '=', $request->semester_id],
+            //         ['session_id', '=', $request->session_id],
+            //         ['academic_session_id', '=', $request->academic_session_id],
+            //         ['active_status', '=', '0'],
+            //     ])->count();
+            return $this->successResponse($homework, 'All homework record fetch successfully');
         }
     }
     // getAttendanceList
@@ -7831,9 +7960,9 @@ class ApiController extends BaseController
     // view Homework 
     public function viewHomework(Request $request)
     {
+        // dd($request);
         $validator = \Validator::make($request->all(), [
             'branch_id' => 'required',
-            'token' => 'required',
             'homework_id' => 'required',
         ]);
         if (!$validator->passes()) {
@@ -7847,23 +7976,44 @@ class ApiController extends BaseController
             $homework_id = $request->homework_id;
             $status = $request->status;
             $evaluation = $request->evaluation;
-            $query = $con->table('homeworks as h')->select('s.first_name', 's.last_name', 's.register_no', 'h.document', 'he.id as evaluation_id', 'he.file', 'he.remarks', 'he.status', 'he.rank', 'he.score_name', 'he.correction', 'he.teacher_remarks', 'he.score_value')
+            $query = $con->table('homeworks as h')
+                ->select(
+                    's.first_name',
+                    's.last_name',
+                    's.register_no',
+                    'h.id as homework_id',
+                    'e.student_id',
+                    'h.document',
+                    'he.id as evaluation_id',
+                    'he.file',
+                    'he.remarks',
+                    'he.status',
+                    'he.rank',
+                    'he.score_name',
+                    'he.correction',
+                    'he.homework_status',
+                    'he.teacher_remarks',
+                    'he.score_value'
+                )
                 ->join('enrolls as e', function ($q) use ($homework_id) {
                     $q->on('h.section_id', '=', 'e.section_id')
-                        ->on('h.class_id', '=', 'e.class_id');
+                        ->on('h.class_id', '=', 'e.class_id')
+                        ->on('h.semester_id', '=', 'e.semester_id')
+                        ->on('h.session_id', '=', 'e.session_id')
+                        ->on('h.academic_session_id', '=', 'e.academic_session_id');
                 })
                 ->leftJoin('students as s', 'e.student_id', '=', 's.id')
                 ->leftJoin('homework_evaluation as he', function ($q) use ($evaluation) {
                     $q->on('h.id', '=', 'he.homework_id')
                         ->on('s.id', '=', 'he.student_id');
                 })
-                ->where('e.semester_id', '=', $request->semester_id)
-                ->where('e.session_id', '=', $request->session_id)
-                ->where('e.active_status', '=', '0')
-                ->where('e.academic_session_id', '=', $request->academic_session_id)
+                // ->where('e.semester_id', '=', $request->semester_id)
+                // ->where('e.session_id', '=', $request->session_id)
+                // ->where('e.active_status', '=', '0')
+                // ->where('e.academic_session_id', '=', $request->academic_session_id)
                 ->where('h.id', $request['homework_id']);
             $homework = $query->get();
-
+            // dd($homework);
 
             return $this->successResponse($homework, 'Homework record fetch successfully');
         }
@@ -7892,6 +8042,10 @@ class ApiController extends BaseController
                 if (isset($home['correction'])) {
                     $correction = 1;
                 }
+                $homework_status = "0";
+                if (isset($home['student_check'])) {
+                    $homework_status = "1";
+                }
                 if ($home['homework_evaluation_id']) {
                     $query = $conn->table('homework_evaluation')->where('id', $home['homework_evaluation_id'])->update([
                         'score_name' => $home['score_name'],
@@ -7899,9 +8053,47 @@ class ApiController extends BaseController
                         'teacher_remarks' => $home['teacher_remarks'],
                         'correction' => $correction,
                         'evaluated_by' => $request->evaluated_by,
+                        'homework_status' => $homework_status,
                         'evaluation_date' => date("Y-m-d"),
                         'updated_at' => date("Y-m-d H:i:s")
                     ]);
+                } else {
+                    // if not submitted
+                    if (isset($home['student_check'])) {
+                        $checkExist = $conn->table('homework_evaluation')->where([
+                            ['homework_id', '=', $home['homework_id']],
+                            ['student_id', '=', $home['student_id']]
+                        ])->first();
+
+                        if (isset($checkExist->id)) {
+                            $query = $conn->table('homework_evaluation')->where('id', $checkExist->id)->update([
+                                'score_name' => $home['score_name'],
+                                'score_value' => $home['score_value'],
+                                'teacher_remarks' => $home['teacher_remarks'],
+                                'correction' => $correction,
+                                'evaluated_by' => $request->evaluated_by,
+                                'homework_status' => $homework_status,
+                                'evaluation_date' => date("Y-m-d"),
+                                'updated_at' => date("Y-m-d H:i:s")
+                            ]);
+                        } else {
+                            $query = $conn->table('homework_evaluation')->insert([
+                                'homework_id' => $home['homework_id'],
+                                'student_id' => $home['student_id'],
+                                'status' => 1,
+                                'file' => "",
+                                'date' => date("Y-m-d"),
+                                'score_name' => $home['score_name'],
+                                'score_value' => $home['score_value'],
+                                'teacher_remarks' => $home['teacher_remarks'],
+                                'correction' => $correction,
+                                'evaluated_by' => $request->evaluated_by,
+                                'homework_status' => $homework_status,
+                                'evaluation_date' => date("Y-m-d"),
+                                'created_at' => date("Y-m-d H:i:s")
+                            ]);
+                        }
+                    }
                 }
             }
 
@@ -8080,15 +8272,44 @@ class ApiController extends BaseController
             $file = base_path() . $path . $fileName;
             $suc = file_put_contents($file, $base64);
 
-            $query = $con->table('homework_evaluation')->insert([
-                'homework_id' => $request['homework_id'],
-                'student_id' => $request['student_id'],
-                'remarks' => $request['remarks'],
-                'status' => 1,
-                'file' => $fileName,
-                'date' => date("Y-m-d"),
-                'created_at' => date("Y-m-d H:i:s")
-            ]);
+            // $query = $con->table('homework_evaluation')->insert([
+            //     'homework_id' => $request['homework_id'],
+            //     'student_id' => $request['student_id'],
+            //     'remarks' => $request['remarks'],
+            //     'status' => 1,
+            //     'file' => $fileName,
+            //     'date' => date("Y-m-d"),
+            //     'created_at' => date("Y-m-d H:i:s")
+            // ]);
+
+            $checkExist = $con->table('homework_evaluation')->where([
+                ['homework_id', '=', $request['homework_id']],
+                ['student_id', '=', $request['student_id']]
+            ])->first();
+
+            if (isset($checkExist->id)) {
+                $query = $con->table('homework_evaluation')->where('id', $checkExist->id)->update([
+                    'homework_id' => $request['homework_id'],
+                    'student_id' => $request['student_id'],
+                    'remarks' => $request['remarks'],
+                    'status' => 1,
+                    'file' => $fileName,
+                    'homework_status' => "0",
+                    'date' => date("Y-m-d"),
+                    'updated_at' => date("Y-m-d H:i:s")
+                ]);
+            } else {
+                $query = $con->table('homework_evaluation')->insert([
+                    'homework_id' => $request['homework_id'],
+                    'student_id' => $request['student_id'],
+                    'remarks' => $request['remarks'],
+                    'status' => 1,
+                    'file' => $fileName,
+                    'homework_status' => "0",
+                    'date' => date("Y-m-d"),
+                    'created_at' => date("Y-m-d H:i:s")
+                ]);
+            }
 
             $success = [];
             if (!$query) {

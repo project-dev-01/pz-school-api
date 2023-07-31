@@ -28,6 +28,7 @@ class CreateHomeworkEvaluationTable extends Migration
             $table->string('correction')->default('0');
             $table->date('evaluation_date')->nullable();
             $table->string('evaluated_by')->nullable();
+            $table->enum('homework_status', ['0', '1'])->comment('0-submitted,1-not submitted')->default('0');
             $table->timestamps();
         });
     }

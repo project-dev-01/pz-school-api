@@ -9,7 +9,6 @@ use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\CommonController;
 use App\Http\Controllers\Api\ChatController;
 
-use App\Http\Controllers\Api\RegisterController;
 use App\Http\Controllers\Api\TwoFactorAuth;
 /*
 |--------------------------------------------------------------------------
@@ -25,7 +24,6 @@ use App\Http\Controllers\Api\TwoFactorAuth;
 // Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 //     return $request->user();
 // });
-Route::post('register', [RegisterController::class, 'register']);
 Route::post('indexing_migrate', [CommonController::class, 'indexingMigrate']);
 
 Route::post('login', [AuthController::class, 'authenticate']);
@@ -380,6 +378,7 @@ Route::group(['middleware' => ['auth:api', 'throttle:limit_per_user', 'logroute'
     Route::post('homework/list', [ApiController::class, 'getHomeworkList']);
     Route::post('homework/view', [ApiController::class, 'viewHomework']);
     Route::post('homework/homework-details', [ApiController::class, 'getHomeworkDetails']);
+    Route::get('homework/all_list', [ApiController::class, 'getHomeworkAllList']);
 
     Route::post('homework/evaluate', [ApiController::class, 'evaluateHomework']);
     Route::post('homework/submit', [ApiController::class, 'submitHomework']);
