@@ -15300,6 +15300,15 @@ class ApiController extends BaseController
                     })
                     ->where('s.id', $employee)
                     ->first();
+                $holiday =  $Connection->table("holidays")
+                    ->select('id', 'name','date')
+                    ->where('date', '=', DB::raw("'$date'"))
+                    ->whereNull('deleted_at')
+                    ->first();
+                $attendance['holiday'] = 0;
+                if($holiday){
+                    $attendance['holiday'] = 1;
+                }
                 $attendance['absent_reason'] = $Connection->table("teacher_absent_reasons")
                     ->select('id', 'name')
                     ->get();
@@ -19430,4 +19439,75 @@ class ApiController extends BaseController
             }
         }
     }
+    // getCheckInOutTimeList
+    public function getCheckInOutTimeList(Request $request)
+    {
+        $validator = \Validator::make($request->all(), [
+            'branch_id' => 'required',
+            'token' => 'required',
+        ]);
+
+        if (!$validator->passes()) {
+            return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
+        } else {
+            // create new connection
+            $conn = $this->createNewConnection($request->branch_id);
+            // get data
+            $leaveTypeDetails = $conn->table('check_in_out_time as c')->select('c.*')->get();
+            return $this->successResponse($leaveTypeDetails, 'Check In/Out Time record fetch successfully');
+        }
+    }
+    // get CheckInOutTime row details
+    public function getCheckInOutTimeDetails(Request $request)
+    {
+
+        $validator = \Validator::make($request->all(), [
+            'id' => 'required',
+            'branch_id' => 'required',
+            'token' => 'required'
+        ]);
+
+        if (!$validator->passes()) {
+            return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
+        } else {
+            $id = $request->id;
+            // create new connection
+            $conn = $this->createNewConnection($request->branch_id);
+            // get data
+            $leaveTypeDetails = $conn->table('check_in_out_time')->where('id', $id)->first();
+            return $this->successResponse($leaveTypeDetails, 'Check In/Out Time row fetch successfully');
+        }
+    }
+    // update CheckInOutTime
+    public function updateCheckInOutTime(Request $request)
+    {
+        $id = $request->id;
+        $validator = \Validator::make($request->all(), [
+            'branch_id' => 'required',
+            'token' => 'required',
+        ]);
+
+        if (!$validator->passes()) {
+            return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
+        } else {
+
+            // create new connection
+            $conn = $this->createNewConnection($request->branch_id);
+
+            // update data
+            $query = $conn->table('check_in_out_time')->where('id', $id)->update([
+                'check_in' => $request->check_in,
+                'check_out' => $request->check_out,
+                'updated_by' => $request->updated_by,
+                'updated_at' => date("Y-m-d H:i:s")
+            ]);
+            $success = [];
+            if ($query) {
+                return $this->successResponse($success, 'Check In/Out Time Details have Been updated');
+            } else {
+                return $this->send500Error('Something went wrong.', ['error' => 'Something went wrong']);
+            }
+        }
+    }
+
 }

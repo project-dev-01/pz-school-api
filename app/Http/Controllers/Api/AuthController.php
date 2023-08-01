@@ -132,7 +132,13 @@ class AuthController extends BaseController
                         )
                         ->leftJoin('language as lan', 'lan.id', '=', 'glo.language_id')
                         ->first();
+                    $checkInOutTime = $Connection->table('check_in_out_time as ct')
+                        ->select(
+                            'ct.check_in',
+                            'ct.check_out',
+                        )->first();
                     $success['academicSession'] = $academicSession;
+                    $success['checkInOutTime'] = $checkInOutTime;
                 }
                 return $this->successResponse($success, 'User signed in successfully');
             } else {

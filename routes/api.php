@@ -881,4 +881,11 @@ Route::group(['middleware' => ['auth:api', 'throttle:limit_per_user', 'logroute'
 
     Route::post('forum_image_store', [ApiController::class, 'forumImageStore']);
     Route::get('get_languages', [ApiControllerOne::class, 'getLanguages']);
+
+    // CheckIn Out Time routes
+    Route::post('check_in_out_time/add', [ApiController::class, 'addCheckInOutTime']);
+    Route::get('check_in_out_time/list', [ApiController::class, 'getCheckInOutTimeList']);
+    Route::post('check_in_out_time/check_in_out_time-details', [ApiController::class, 'getCheckInOutTimeDetails']);
+    Route::post('check_in_out_time/update', [ApiController::class, 'updateCheckInOutTime']);
+    Route::post('check_in_out_time/delete', [ApiController::class, 'deleteCheckInOutTime']);
 });
