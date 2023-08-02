@@ -94,14 +94,14 @@ class AuthController extends BaseController
                     'role_id' => $user->role_id,
                     'branch_id' => $user->branch_id,
                     'ip_address' => \Request::getClientIp(true),
-                    'device' => $request->user_device,
-                    'browser' => $request->user_browser,
-                    'os' => $request->user_os,
+                    'device' => isset($request->user_device) ? $request->user_device : "other",
+                    'browser' => isset($request->user_browser) ? $request->user_browser : "other",
+                    'os' => isset($request->user_os) ? $request->user_os : "other",
                     'login_time' => date("Y-m-d H:i:s"),
                     'created_at' => date("Y-m-d H:i:s")
                 ];
                 //$query = $staffConn->table('staff_leaves')->insert($data);
-                $query =Log_history::insert($data);
+                $query = Log_history::insert($data);
 
                 $success['token'] = $token;
                 $success['user'] = $user;
@@ -219,8 +219,8 @@ class AuthController extends BaseController
     public function lastlogout(Request $request)
     {
         $u = Log_history::where('login_id', $request->userID)->where('role_id', $request->role_id)->latest()->first();
-        $ip[]=$u->id;
-        $logqry=Log_history::where('id',$u->id)->update(['logout_time' => date("Y-m-d H:i:s")]);
+        $ip[] = $u->id;
+        $logqry = Log_history::where('id', $u->id)->update(['logout_time' => date("Y-m-d H:i:s")]);
         if ($logqry) {
             return $this->successResponse($ip, 'User last logout added successfully');
         } else {

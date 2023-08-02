@@ -888,4 +888,14 @@ Route::group(['middleware' => ['auth:api', 'throttle:limit_per_user', 'logroute'
     Route::post('check_in_out_time/check_in_out_time-details', [ApiController::class, 'getCheckInOutTimeDetails']);
     Route::post('check_in_out_time/update', [ApiController::class, 'updateCheckInOutTime']);
     Route::post('check_in_out_time/delete', [ApiController::class, 'deleteCheckInOutTime']);
+
+    // holidays routes
+    Route::post('holidays/add', [ApiControllerOne::class, 'addHolidays']);
+    Route::get('holidays/list', [ApiControllerOne::class, 'getHolidaysList']);
+    Route::post('holidays/holidays-details', [ApiControllerOne::class, 'getHolidaysDetails']);
+    Route::post('holidays/update', [ApiControllerOne::class, 'updateHolidaysDetails']);
+    Route::post('holidays/delete', [ApiControllerOne::class, 'deleteHolidays']);
+
+    Route::post('all_student/ranking', [ApiControllerOne::class, 'allStudentRanking']);
+
 });

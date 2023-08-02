@@ -187,8 +187,8 @@ class ApiControllerOne extends BaseController
             return $this->successResponse($classByAllSubjects, 'class by all subjects record fetch successfully');
         }
     }
-    
-    
+
+
     // get all paper types
     public function getPaperTypeList(Request $request)
     {
@@ -241,7 +241,7 @@ class ApiControllerOne extends BaseController
                 if ($fileSize <= $maxFileSize) {
                     // File upload location
                     // $location = 'uploads';
-                    $location = base_path().'/public/' . $request->branch_id . '/uploads/';
+                    $location = base_path() . '/public/' . $request->branch_id . '/uploads/';
                     // Upload file
                     $file->move($location, $filename);
                     // Import CSV to Database
@@ -3957,7 +3957,7 @@ class ApiControllerOne extends BaseController
             $conn = $this->createNewConnection($request->branch_id);
             // insert data
             if ($request->photo) {
-                $path = '/public/'. $request->branch_id .'/soap/images/';
+                $path = '/public/' . $request->branch_id . '/soap/images/';
 
                 $fileName = 'SCIMG_' . date('Ymd') . uniqid() . '.' . $request->file_extension;
                 $base64 = base64_decode($request->photo);
@@ -4041,7 +4041,7 @@ class ApiControllerOne extends BaseController
             // create new connection
             $conn = $this->createNewConnection($request->branch_id);
             if ($request->photo) {
-                $path = '/public/'. $request->branch_id .'/soap/images/';
+                $path = '/public/' . $request->branch_id . '/soap/images/';
                 $oldPicture = $conn->table('soap_sub_category')->where('id', $id)->first();
 
                 // return $oldPicture->photo;
@@ -6100,12 +6100,12 @@ class ApiControllerOne extends BaseController
                 if ((isset($due_date)) && ($paid_date === null || trim($paid_date) === '')) {
                     // yearly payment
                     if ($payment_mode_id == 1) {
-                        
+
                         $year_start_date = isset($year_details['0']->year_start_date) ? $year_details['0']->year_start_date : null;
                         $start_date = date('Y-m-d', strtotime($year_start_date));
                         $year_end_date = isset($year_details['0']->year_end_date) ? $year_details['0']->year_end_date : null;
                         $end_date = date('Y-m-d', strtotime($year_end_date));
-                        
+
                         if ($start_date <= $now && $now <= $end_date) {
                             // if ($start_date <= $now && $now <= $end_date) {
                             // match between semester date
@@ -6121,8 +6121,8 @@ class ApiControllerOne extends BaseController
                             $paidSts = 'unpaid';
                             $labelmode = 'badge-danger';
                         }
-                        
-                    // dd($paidSts);
+
+                        // dd($paidSts);
                     }
                     // semester payment
                     if ($payment_mode_id == 2) {
@@ -6190,7 +6190,7 @@ class ApiControllerOne extends BaseController
             $defpaidID = 2;
             $defpaidSts = "unpaid";
             $deflabelmode = "badge-danger";
-            
+
             if (!empty($paymentArr)) {
                 $arr = array();
                 $group_name = "";
@@ -6227,7 +6227,7 @@ class ApiControllerOne extends BaseController
                         }
                     }
                 }
-                
+
                 $totalCount = count($arr);
                 $delayCount = 0;
                 $unpaidCount = 0;
@@ -6247,7 +6247,7 @@ class ApiControllerOne extends BaseController
                     }
                 }
                 // here only one statys either paid,delay,unpaid
-                if($totalCount != 0) {
+                if ($totalCount != 0) {
                     if ($totalCount == $paidCount) {
                         $defpaidID = 1;
                         $defpaidSts = "paid";
@@ -8664,6 +8664,361 @@ class ApiControllerOne extends BaseController
             // get data
             $section = $Connection->table('language')->orderBy('name', 'asc')->get();
             return $this->successResponse($section, 'Language record fetch successfully');
+        }
+    }
+    // add holidays
+    public function addHolidays(Request $request)
+    {
+        $validator = \Validator::make($request->all(), [
+            'branch_id' => 'required',
+            'name' => 'required',
+            'date' => 'required'
+        ]);
+
+        if (!$validator->passes()) {
+            return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
+        } else {
+            // create new connection
+            $createConnection = $this->createNewConnection($request->branch_id);
+            // insert data
+            $query = $createConnection->table('holidays')->insert([
+                'name' => $request->name,
+                'date' => date('Y-m-d', strtotime($request->date)),
+                'created_at' => date("Y-m-d H:i:s"),
+                'created_by' => isset($request->created_by) ? $request->created_by : null
+            ]);
+            $success = [];
+            if (!$query) {
+                return $this->send500Error('Something went wrong.', ['error' => 'Something went wrong']);
+            } else {
+                return $this->successResponse($success, 'New holidays has been successfully saved');
+            }
+        }
+    }
+    // get holidays 
+    public function getHolidaysList(Request $request)
+    {
+        $validator = \Validator::make($request->all(), [
+            'branch_id' => 'required'
+        ]);
+        if (!$validator->passes()) {
+            return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
+        } else {
+            // create new connection
+            $secConn = $this->createNewConnection($request->branch_id);
+            // get data
+            $section = $secConn->table('holidays')->select('id', 'name', 'date')->orderBy('date', 'DESC')->whereNull('deleted_at')->get();
+            return $this->successResponse($section, 'Holidays record fetch successfully');
+        }
+    }
+    // get holidays row details
+    public function getHolidaysDetails(Request $request)
+    {
+
+        $validator = \Validator::make($request->all(), [
+            'id' => 'required',
+            'branch_id' => 'required',
+        ]);
+
+        if (!$validator->passes()) {
+            return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
+        } else {
+            // create new connection
+            $createConnection = $this->createNewConnection($request->branch_id);
+            // insert data
+            $sectionDetails = $createConnection->table('holidays')->where('id', $request->id)->first();
+            return $this->successResponse($sectionDetails, 'Holidays row fetch successfully');
+        }
+    }
+    // update holidays
+    public function updateHolidaysDetails(Request $request)
+    {
+
+        $validator = \Validator::make($request->all(), [
+            'id' => 'required',
+            'name' => 'required',
+            'date' => 'required',
+            'branch_id' => 'required'
+        ]);
+
+        if (!$validator->passes()) {
+            return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
+        } else {
+            // create new connection
+            $staffConn = $this->createNewConnection($request->branch_id);
+            // update data
+            $query = $staffConn->table('holidays')->where('id', $request->id)->update([
+                'name' => $request->name,
+                'date' => date('Y-m-d', strtotime($request->date)),
+                'updated_at' => date("Y-m-d H:i:s"),
+                'updated_by' => isset($request->updated_by) ? $request->updated_by : null
+            ]);
+            $success = [];
+            if ($query) {
+                return $this->successResponse($success, 'holidays details have been updated');
+            } else {
+                return $this->send500Error('Something went wrong.', ['error' => 'Something went wrong']);
+            }
+        }
+    }
+    // delete holidays
+    public function deleteHolidays(Request $request)
+    {
+
+        $validator = \Validator::make($request->all(), [
+            'id' => 'required',
+            'branch_id' => 'required'
+        ]);
+
+        if (!$validator->passes()) {
+            return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
+        } else {
+            // create new connection
+            $createConnection = $this->createNewConnection($request->branch_id);
+            // get data
+            $query = $createConnection->table('holidays')->where('id', $request->id)->update([
+                'deleted_at' => date("Y-m-d H:i:s"),
+                'deleted_by' => isset($request->deleted_by) ? $request->deleted_by : null
+            ]);
+
+            $success = [];
+            if ($query) {
+                return $this->successResponse($success, 'Holidays have been deleted successfully');
+            } else {
+                return $this->send500Error('Something went wrong.', ['error' => 'Something went wrong']);
+            }
+        }
+    }
+    // all student marks
+    public function allStudentRanking(Request $request)
+    {
+        $validator = \Validator::make($request->all(), [
+            'branch_id' => 'required',
+            'academic_session_id' => 'required',
+            'exam_id' => 'required',
+        ]);
+        if (!$validator->passes()) {
+            return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
+        } else {
+            // create new connection
+            $Connection = $this->createNewConnection($request->branch_id);
+            // get data     
+            $academic_session_id = $request->academic_session_id;
+            $exam_id = $request->exam_id;
+            $class_id = $request->class_id;
+            $student_section_id = isset($request->section_id) ? $request->section_id : null;
+            $subject_id = isset($request->subject_id) ? $request->subject_id : null;
+            $student_semester_id = isset($request->semester_id) ? $request->semester_id : 0;
+            $student_session_id = isset($request->session_id) ? $request->session_id : 0;
+
+            // get total recent subject teacher
+            $total_sujects_teacher = $Connection->table('subject_assigns as sa')
+                ->select(
+                    DB::raw("group_concat(sa.section_id) as all_section_id"),
+                    'sbj.id as subject_id',
+                    'sbj.name as subject_name'
+                )
+                ->join('subjects as sbj', 'sa.subject_id', '=', 'sbj.id')
+                ->where([
+                    ['sa.class_id', $class_id],
+                    ['sa.academic_session_id', $academic_session_id],
+                    ['sa.type', '=', '0'],
+                    ['sbj.exam_exclude', '=', '0']
+                ])
+                ->when($student_section_id != "All", function ($q)  use ($student_section_id) {
+                    $q->where('sa.section_id', $student_section_id);
+                })
+                ->when($subject_id != "All", function ($q)  use ($subject_id) {
+                    $q->where('sa.subject_id', $subject_id);
+                })
+                ->groupBy('sa.subject_id')
+                ->get();
+            // dd(count($total_sujects_teacher));
+            // dd($total_sujects_teacher);
+            $allSections = isset($total_sujects_teacher[0]->all_section_id) ? explode(',', $total_sujects_teacher[0]->all_section_id) : [];
+            // dd($total_sujects_teacher);
+            $total_marks = [];
+            $studentArr = [];
+
+            $rank = '';
+            if (!empty($total_sujects_teacher)) {
+                foreach ($total_sujects_teacher as $skey => $val) {
+                    $onetimeAllStudent = [];
+                    $object = new \stdClass();
+                    // $all_section_id = explode(',', $val->all_section_id);
+                    $subject_id = $val->subject_id;
+                    $subject_name = $val->subject_name;
+
+                    // $object->class_id = $class_id;
+                    $object->subject_id = $subject_id;
+                    $object->subject_name = $subject_name;
+                    // all section list
+                    // get subject total weightage
+                    $getExamPaperWeightage = $Connection->table('exam_papers as expp')
+                        ->select(
+                            DB::raw('SUM(expp.subject_weightage) as total_subject_weightage'),
+                            'expp.grade_category'
+                        )
+                        ->where([
+                            ['expp.class_id', '=', $class_id],
+                            ['expp.subject_id', '=', $subject_id],
+                            ['expp.academic_session_id', $academic_session_id]
+                        ])
+                        ->get();
+                    // dd($class_id);
+                    $total_subject_weightage = isset($getExamPaperWeightage[0]->total_subject_weightage) ? (int)$getExamPaperWeightage[0]->total_subject_weightage : 0;
+                    // dd($total_subject_weightage);
+                    $getLastExam = new \stdClass();
+                    $getLastExam->exam_id = $exam_id;
+                    foreach ($allSections as $key => $section) {
+                        $studentDetails = $Connection->table('enrolls as en')
+                            ->select(
+                                'en.student_id',
+                                'en.semester_id',
+                                'en.session_id',
+                                DB::raw('CONCAT(stu.first_name, " ", stu.last_name) as student_name'),
+                            )
+                            ->join('students as stu', 'en.student_id', '=', 'stu.id')
+                            ->where([
+                                ['en.class_id', $class_id],
+                                ['en.section_id', $section],
+                                ['en.academic_session_id', '=', $academic_session_id],
+                                ['en.semester_id', '=', $student_semester_id],
+                                ['en.session_id', '=', $student_session_id]
+                            ])
+                            ->get();
+                        $semester_id = isset($studentDetails[0]->semester_id) ? $studentDetails[0]->semester_id : 0;
+                        $session_id = isset($studentDetails[0]->session_id) ? $studentDetails[0]->session_id : 0;
+                        if (!empty($studentDetails)) {
+                            foreach ($studentDetails as $student) {
+                                $sbj_obj = new \stdClass();
+                                $studentID = $student->student_id;
+                                $studentName = $student->student_name;
+                                $sbj_obj->student_id = $studentID;
+                                $sbj_obj->class_id = $class_id;
+                                $sbj_obj->section_id = $section;
+                                $sbj_obj->student_name = $studentName;
+                                $getStudMarksDetails = $Connection->table('student_marks as sm')
+                                    ->select(
+                                        'expp.subject_weightage',
+                                        'sb.name as subject_name',
+                                        'sb.id as subject_id',
+                                        'sm.score',
+                                        'sm.paper_id',
+                                        'sm.grade_category',
+                                    )
+                                    ->join('subjects as sb', 'sm.subject_id', '=', 'sb.id')
+                                    ->join('exam_papers as expp', 'sm.paper_id', '=', 'expp.id')
+                                    ->where([
+                                        ['sm.class_id', '=', $class_id],
+                                        ['sm.section_id', '=', $section],
+                                        ['sm.subject_id', '=', $subject_id],
+                                        ['sm.exam_id', '=', $exam_id],
+                                        ['sm.semester_id', '=', $semester_id],
+                                        ['sm.session_id', '=', $session_id],
+                                        ['sm.student_id', '=', $studentID],
+                                        ['sm.academic_session_id', '=', $academic_session_id]
+                                    ])
+                                    ->groupBy('sm.paper_id')
+                                    ->get();
+                                $marks = 0;
+                                $fail = 0;
+                                $grade_category = 0;
+                                $total_marks[$studentID]['student_id'] = $studentID;
+                                $total_marks[$studentID]['student_name'] = $studentName;
+                                $total_marks[$studentID]['class_id'] = $class_id;
+                                $total_marks[$studentID]['section_id'] = $section;
+                                // // here you get calculation based on student marks and subject weightage
+                                if (!empty($getStudMarksDetails)) {
+                                    // grade calculations
+                                    foreach ($getStudMarksDetails as $Studmarks) {
+                                        $sub_weightage = (int) $Studmarks->subject_weightage;
+                                        $score = (int) $Studmarks->score;
+                                        $grade_category = $Studmarks->grade_category;
+                                        // foreach for total no of students
+                                        $weightage = ($sub_weightage / $total_subject_weightage);
+                                        $marks += ($weightage * $score);
+                                    }
+                                    $mark = (int) $marks;
+
+                                    $sbj_obj->mark = $mark != 0 ? number_format($mark) : $mark;
+                                    if ($skey == 0) {
+                                        $total_marks[$studentID]['subjects'] = $subject_id;
+                                        $total_marks[$studentID]['sub_marks'] = $mark;
+                                        $total_marks[$studentID]['mark'] = $mark;
+                                        // grade marks fail count
+                                        $grdMarks = $Connection->table('grade_marks')
+                                            ->select('status')
+                                            ->where([
+                                                ['min_mark', '<=', $mark],
+                                                ['max_mark', '>=', $mark],
+                                                ['grade_category', '=', $grade_category],
+                                                ['status', '=', 'Fail'],
+                                            ])
+                                            ->first();
+                                        // get maximum marks
+                                        $maxMarks = $Connection->table('grade_marks')
+                                            ->select('max_mark')
+                                            ->select(DB::raw('MAX(max_mark) as total_marks'))
+                                            ->where([
+                                                ['grade_category', '=', $grade_category]
+                                            ])
+                                            ->get();
+                                        $total_marks[$studentID]['total_mark'] = isset($maxMarks[0]->total_marks) ? $maxMarks[0]->total_marks : 0;
+
+                                        if (isset($grdMarks->status)) {
+                                            $fail++;
+                                        }
+                                        $total_marks[$studentID]['fail'] = $fail;
+                                    } else {
+                                        $total_marks[$studentID]['subjects'] .= "-".$subject_id;
+                                        $total_marks[$studentID]['sub_marks'] .= "-".$mark;
+                                        $total_marks[$studentID]['mark'] += $mark;
+                                        // grade marks fail count
+                                        $grdMarks = $Connection->table('grade_marks')
+                                            ->select('status')
+                                            ->where([
+                                                ['min_mark', '<=', $mark],
+                                                ['max_mark', '>=', $mark],
+                                                ['grade_category', '=', $grade_category],
+                                                ['status', '=', 'Fail'],
+                                            ])
+                                            ->first();
+                                        // get maximum marks
+                                        $maxMarks = $Connection->table('grade_marks')
+                                            ->select('max_mark')
+                                            ->select(DB::raw('MAX(max_mark) as total_marks'))
+                                            ->where([
+                                                ['grade_category', '=', $grade_category]
+                                            ])
+                                            ->get();
+                                        $total_marks[$studentID]['total_mark'] += isset($maxMarks[0]->total_marks) ? $maxMarks[0]->total_marks : 0;
+
+                                        if (isset($grdMarks->status)) {
+                                            $fail++;
+                                        }
+                                        $total_marks[$studentID]['fail'] += $fail;
+                                    }
+                                } else {
+                                    $sbj_obj->mark = "Nill";
+                                }
+                                // echo "<pre>";
+                                // print_r($sbj_obj);
+                                array_push($onetimeAllStudent, $sbj_obj);
+                                array_push($studentArr, $sbj_obj);
+                            }
+                        }
+                    }
+                }
+            }
+            // dd($onetimeAllStudent);
+            // dd($studentArr);
+            dd($total_marks);
+
+            $data = [
+                'details' => $studentArr,
+            ];
+            return $this->successResponse($data, 'All student grade and classes row fetch successfully');
         }
     }
 }
