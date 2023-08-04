@@ -8838,20 +8838,9 @@ class ApiControllerOne extends BaseController
             $allSections = isset($total_sujects_teacher[0]->all_section_id) ? explode(',', $total_sujects_teacher[0]->all_section_id) : [];
             // dd($total_sujects_teacher);
             $total_marks = [];
-            $studentArr = [];
-
-            $rank = '';
             if (!empty($total_sujects_teacher)) {
                 foreach ($total_sujects_teacher as $skey => $val) {
-                    $onetimeAllStudent = [];
-                    $object = new \stdClass();
-                    // $all_section_id = explode(',', $val->all_section_id);
                     $subject_id = $val->subject_id;
-                    $subject_name = $val->subject_name;
-
-                    // $object->class_id = $class_id;
-                    $object->subject_id = $subject_id;
-                    $object->subject_name = $subject_name;
                     // all section list
                     // get subject total weightage
                     $getExamPaperWeightage = $Connection->table('exam_papers as expp')
@@ -8891,13 +8880,8 @@ class ApiControllerOne extends BaseController
                         $session_id = isset($studentDetails[0]->session_id) ? $studentDetails[0]->session_id : 0;
                         if (!empty($studentDetails)) {
                             foreach ($studentDetails as $student) {
-                                $sbj_obj = new \stdClass();
                                 $studentID = $student->student_id;
                                 $studentName = $student->student_name;
-                                $sbj_obj->student_id = $studentID;
-                                $sbj_obj->class_id = $class_id;
-                                $sbj_obj->section_id = $section;
-                                $sbj_obj->student_name = $studentName;
                                 $getStudMarksDetails = $Connection->table('student_marks as sm')
                                     ->select(
                                         'expp.subject_weightage',
@@ -8923,6 +8907,7 @@ class ApiControllerOne extends BaseController
                                     ->get();
                                 $marks = 0;
                                 $fail = 0;
+                                $pass = 0;
                                 $grade_category = 0;
                                 $total_marks[$studentID]['student_id'] = $studentID;
                                 $total_marks[$studentID]['student_name'] = $studentName;
@@ -8940,8 +8925,7 @@ class ApiControllerOne extends BaseController
                                         $marks += ($weightage * $score);
                                     }
                                     $mark = (int) $marks;
-
-                                    $sbj_obj->mark = $mark != 0 ? number_format($mark) : $mark;
+                                    // echo gettype($mark);
                                     if ($skey == 0) {
                                         $total_marks[$studentID]['subjects'] = $subject_id;
                                         $total_marks[$studentID]['sub_marks'] = $mark;
@@ -8953,9 +8937,10 @@ class ApiControllerOne extends BaseController
                                                 ['min_mark', '<=', $mark],
                                                 ['max_mark', '>=', $mark],
                                                 ['grade_category', '=', $grade_category],
-                                                ['status', '=', 'Fail'],
+                                                ['status', '=', 'Pass']
                                             ])
                                             ->first();
+
                                         // get maximum marks
                                         $maxMarks = $Connection->table('grade_marks')
                                             ->select('max_mark')
@@ -8967,12 +8952,15 @@ class ApiControllerOne extends BaseController
                                         $total_marks[$studentID]['total_mark'] = isset($maxMarks[0]->total_marks) ? $maxMarks[0]->total_marks : 0;
 
                                         if (isset($grdMarks->status)) {
+                                            $pass++;
+                                        } else {
                                             $fail++;
                                         }
                                         $total_marks[$studentID]['fail'] = $fail;
+                                        $total_marks[$studentID]['pass'] = $pass;
                                     } else {
-                                        $total_marks[$studentID]['subjects'] .= "-".$subject_id;
-                                        $total_marks[$studentID]['sub_marks'] .= "-".$mark;
+                                        $total_marks[$studentID]['subjects'] .= "-" . $subject_id;
+                                        $total_marks[$studentID]['sub_marks'] .= "-" . $mark;
                                         $total_marks[$studentID]['mark'] += $mark;
                                         // grade marks fail count
                                         $grdMarks = $Connection->table('grade_marks')
@@ -8981,7 +8969,7 @@ class ApiControllerOne extends BaseController
                                                 ['min_mark', '<=', $mark],
                                                 ['max_mark', '>=', $mark],
                                                 ['grade_category', '=', $grade_category],
-                                                ['status', '=', 'Fail'],
+                                                ['status', '=', 'Pass']
                                             ])
                                             ->first();
                                         // get maximum marks
@@ -8995,30 +8983,39 @@ class ApiControllerOne extends BaseController
                                         $total_marks[$studentID]['total_mark'] += isset($maxMarks[0]->total_marks) ? $maxMarks[0]->total_marks : 0;
 
                                         if (isset($grdMarks->status)) {
+                                            $pass++;
+                                        } else {
                                             $fail++;
                                         }
                                         $total_marks[$studentID]['fail'] += $fail;
+                                        $total_marks[$studentID]['pass'] += $pass;
                                     }
-                                } else {
-                                    $sbj_obj->mark = "Nill";
                                 }
-                                // echo "<pre>";
-                                // print_r($sbj_obj);
-                                array_push($onetimeAllStudent, $sbj_obj);
-                                array_push($studentArr, $sbj_obj);
                             }
                         }
                     }
                 }
             }
-            // dd($onetimeAllStudent);
-            // dd($studentArr);
-            dd($total_marks);
-
-            $data = [
-                'details' => $studentArr,
-            ];
-            return $this->successResponse($data, 'All student grade and classes row fetch successfully');
+            $student_rank = [];
+            $class_rank = collect($total_marks)->sortByDesc('mark')->all();
+            if ($class_rank) {
+                $student_rank = $this->calculate_overall_rank($class_rank);
+            }
+            if ($request->type == "top") {
+                array_multisort(
+                    array_column($student_rank, 'rank'),
+                    SORT_ASC,
+                    $student_rank
+                );
+            }
+            if ($request->type == "bottom") {
+                array_multisort(
+                    array_column($student_rank, 'rank'),
+                    SORT_DESC,
+                    $student_rank
+                );
+            }
+            return $this->successResponse($student_rank, 'All student top and bottom ranking fetch successfully');
         }
     }
 }
