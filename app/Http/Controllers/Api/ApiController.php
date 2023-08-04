@@ -14099,11 +14099,27 @@ class ApiController extends BaseController
             return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
         } else {
 
+            // return $request;
             // create new connection
             $conn = $this->createNewConnection($request->branch_id);
-            $class_id = $request->class_id;
-            $section_id = $request->section_id;
-            // get data
+            $class_id = isset($request->class_id) ? $request->class_id : null;
+            $section_id = isset($request->section_id) ? $request->section_id : null;
+            $student_name = isset($request->student_name) ? $request->student_name : null;
+            $status = isset($request->status) ? $request->status : null;
+            $date = null;
+            if($request->date){
+
+                $date_range = explode(' to ', $request->date);
+                $count = count($date_range);
+                if($count==1){
+                    $date['from'] = $date_range[0];
+                    $date['to'] = $date_range[0];
+                }else if($count==2){
+                    $date['from'] = $date_range[0];
+                    $date['to'] = $date_range[1];
+                }
+            }
+            // return $status;
             $studentDetails = $conn->table('student_leaves as lev')
                 ->select(
                     'lev.id',
@@ -14131,6 +14147,22 @@ class ApiController extends BaseController
                 })
                 ->when($section_id, function ($query, $section_id) {
                     return $query->where('lev.section_id', $section_id);
+                })
+                ->when($status, function ($query, $status) {
+                    return $query->where('lev.status', $status);
+                })
+                ->when($student_name, function ($query, $student_name) {
+                    return $query->where("std.first_name", "LIKE", "%{$student_name}%")
+                    ->orWhere("std.last_name", "LIKE", "%{$student_name}%");
+                })
+                // two date range filter
+                ->when($date, function ($query, $date) {
+                    return $query->where(function ($query1) use ($date) { 
+                        $query1->whereBetween('lev.from_leave', [$date['from'], $date['to']]) 
+                        ->orWhere(function ($subQuery) use ($date) { 
+                            $subQuery->whereRaw('lev.to_leave BETWEEN ? AND ?', [$date['from'], $date['to']]); 
+                        }); 
+                    });
                 })
                 ->orderBy('lev.from_leave', 'desc')
                 ->get();
@@ -18768,7 +18800,74 @@ class ApiController extends BaseController
             return $this->successResponse($getClassName, 'Class Name record fetch successfully');
         }
     }
+    
+    // studentLeaveCount
+    public function studentLeaveCount(Request $request)
+    {
+        $validator = \Validator::make($request->all(), [
+            'token' => 'required',
+            'branch_id' => 'required'
+        ]);
 
+        if (!$validator->passes()) {
+            return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
+        } else {
+            // create new connection
+            $createConnection = $this->createNewConnection($request->branch_id);
+            // get data
+
+            $teacher_id = 8;
+            // DB::raw('COUNT(sa.date) as "total_no_of_days_date_count"'),
+            // // DB::raw('DATE_FORMAT(sa.date, "%b %d") as date'),
+            // DB::raw('COUNT(CASE WHEN sa.student_behaviour = "Engaging" then 1 ELSE NULL END) as "EngagingCount"'),
+            // DB::raw('COUNT(CASE WHEN sa.student_behaviour = "Hyperactive" then 1 ELSE NULL END) as "HyperactiveCount"'),
+            // DB::raw('COUNT(CASE WHEN sa.student_behaviour = "Quiet" then 1 ELSE NULL END) as "QuietCount"'),
+            $query = $createConnection->table('student_leaves as lev')->select('en.student_id','lev.id','lev.status'
+                    // DB::raw('COUNT(lev.status) as "TotalCount"'),
+                    // DB::raw('COUNT(CASE WHEN lev.status = "Approve" then 1 ELSE NULL END) as "ApproveCount"'),
+                    // DB::raw('COUNT(CASE WHEN lev.status = "Reject" then 1 ELSE NULL END) as "RejectCount"'),
+                    // DB::raw('COUNT(CASE WHEN lev.status = "Pending" then 1 ELSE NULL END) as "PendingCount"'),
+            )
+                    ->join('subject_assigns as sa', function ($join) use($teacher_id) {
+                        $join->on('lev.class_id', '=', 'sa.class_id')
+                            ->on('lev.section_id', '=', 'sa.section_id')
+                            ->on('sa.teacher_id', '=', DB::raw("'$teacher_id'"));
+                    })
+                    ->join('enrolls as en', function ($join) {
+                        $join->on('lev.class_id', '=', 'en.class_id')
+                            ->on('lev.section_id', '=', 'en.section_id')
+                            ->on('lev.student_id', '=', 'en.student_id')
+                            ->on('en.active_status', '=', DB::raw("'0'"));
+                    })
+                    // ->join('students as std', 'lev.student_id', '=', 'std.id')
+                    // ->join('classes as cl', 'lev.class_id', '=', 'cl.id')
+                    // ->join('sections as sc', 'lev.section_id', '=', 'sc.id')
+                    ->groupBy('lev.id')
+                    ->groupBy('lev.student_id')
+                    ->get();
+
+                    $approve = 0;
+                    $pending = 0;
+                    $reject = 0;
+                    foreach($query as $que){
+                        if($que->status == "Approve"){
+                            $approve++;
+                        }
+                        if($que->status == "Pending"){
+                            $pending++;
+                        }
+                        if($que->status == "Reject"){
+                            $reject++;
+                        }
+
+                    }
+                    $count['total'] = count($query);
+                    $count['approve'] = $approve;
+                    $count['pending'] = $pending;
+                    $count['reject'] = $reject;
+            return $this->successResponse($count, 'Student Leave Count has been Fetched Successfully');
+        }
+    }
     // employeeCount
     public function employeeCount(Request $request)
     {

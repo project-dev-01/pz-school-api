@@ -725,6 +725,7 @@ Route::group(['middleware' => ['auth:api', 'throttle:limit_per_user', 'logroute'
     Route::get('student_count', [ApiController::class, 'studentCount']);
     Route::get('parent_count', [ApiController::class, 'parentCount']);
     Route::get('teacher_count', [ApiController::class, 'teacherCount']);
+    Route::get('student_leave_count', [ApiController::class, 'studentLeaveCount']);
 
 
     Route::post('lastlogout', [AuthController::class, 'lastlogout']);

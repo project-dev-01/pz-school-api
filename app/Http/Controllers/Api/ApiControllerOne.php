@@ -8865,9 +8865,13 @@ class ApiControllerOne extends BaseController
                                 'en.student_id',
                                 'en.semester_id',
                                 'en.session_id',
+                                'cl.name as class_name',
+                                'sec.name as section_name',
                                 DB::raw('CONCAT(stu.first_name, " ", stu.last_name) as student_name'),
                             )
                             ->join('students as stu', 'en.student_id', '=', 'stu.id')
+                            ->join('classes as cl', 'en.class_id', '=', 'cl.id')
+                            ->join('sections as sec', 'en.section_id', '=', 'sec.id')
                             ->where([
                                 ['en.class_id', $class_id],
                                 ['en.section_id', $section],
@@ -8911,6 +8915,8 @@ class ApiControllerOne extends BaseController
                                 $grade_category = 0;
                                 $total_marks[$studentID]['student_id'] = $studentID;
                                 $total_marks[$studentID]['student_name'] = $studentName;
+                                $total_marks[$studentID]['class_name'] = $student->class_name;
+                                $total_marks[$studentID]['section_name'] = $student->section_name;
                                 $total_marks[$studentID]['class_id'] = $class_id;
                                 $total_marks[$studentID]['section_id'] = $section;
                                 // // here you get calculation based on student marks and subject weightage
