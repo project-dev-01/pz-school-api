@@ -8130,7 +8130,7 @@ class ApiController extends BaseController
             $homework['homeworks'] = Null;
             $homework['count'] = NULL;
             if ($student_id) {
-                $homework['homeworks'] = $con->table('homeworks')->select('homeworks.*', 'sections.name as section_name', 'classes.name as class_name', 'subjects.name as subject_name', 'homeworks.document', 'homework_evaluation.file', 'homework_evaluation.evaluation_date', 'homework_evaluation.remarks', 'homework_evaluation.status', 'homework_evaluation.rank')
+                $homework['homeworks'] = $con->table('homeworks')->select('homeworks.*','homework_evaluation.homework_status', 'sections.name as section_name', 'classes.name as class_name', 'subjects.name as subject_name', 'homeworks.document', 'homework_evaluation.file', 'homework_evaluation.evaluation_date', 'homework_evaluation.remarks', 'homework_evaluation.status', 'homework_evaluation.rank')
                     ->leftJoin('subjects', 'homeworks.subject_id', '=', 'subjects.id')
                     ->leftJoin('sections', 'homeworks.section_id', '=', 'sections.id')
                     ->leftJoin('classes', 'homeworks.class_id', '=', 'classes.id')
@@ -8198,7 +8198,7 @@ class ApiController extends BaseController
             $subject = $request->subject;
 
 
-            $query = $con->table('homeworks')->select('homeworks.*', 'homework_evaluation.evaluation_date', 'sections.name as section_name', 'classes.name as class_name', 'subjects.name as subject_name', 'homeworks.document', 'homework_evaluation.file', 'homework_evaluation.remarks', 'homework_evaluation.status', 'homework_evaluation.rank')
+            $query = $con->table('homeworks')->select('homeworks.*', 'homework_evaluation.evaluation_date','homework_evaluation.homework_status', 'sections.name as section_name', 'classes.name as class_name', 'subjects.name as subject_name', 'homeworks.document', 'homework_evaluation.file', 'homework_evaluation.remarks', 'homework_evaluation.status', 'homework_evaluation.rank')
                 ->leftJoin('subjects', 'homeworks.subject_id', '=', 'subjects.id')
                 ->leftJoin('sections', 'homeworks.section_id', '=', 'sections.id')
                 ->leftJoin('classes', 'homeworks.class_id', '=', 'classes.id')
