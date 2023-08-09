@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 // base controller add
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Api\BaseController as BaseController;
+use App\Models\BranchRolesPermission;
 // encrypt and decrypt
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Contracts\Encryption\DecryptException;
@@ -19,6 +20,7 @@ use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Mail;
 use Carbon\Carbon;
 use File;
+use Exception;
 
 class ApiControllerOne extends BaseController
 {
@@ -3777,7 +3779,6 @@ class ApiControllerOne extends BaseController
             ->where('branch_id', $request->branch_id)
             ->whereNotNull('password_changed_at')
             ->get()->toArray();
-        // dd($users);
         if (!empty($users)) {
             foreach ($users as $details) {
                 $email = $details->email;
@@ -8343,17 +8344,36 @@ class ApiControllerOne extends BaseController
             return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
         } else {
 
-            // return $request;
+            // // return $request;
             $email = $request->email;
-            // dd($link);
-            if ($email) {
-                $data = array('subject' => $request->subject, 'remarks' => $request->remarks, 'email' => $email, 'name' => $request->name, 'role_name' => $request->role_name);
-                Mail::send('auth.faq_mail', $data, function ($message) use ($request) {
-                    $message->to('rajesh@aibots.my', 'members')->subject('FAQ');
-                    $message->from('askyourquery@paxsuzen.com', 'Password Reset');
-                });
-                // return $mail;
-                return $this->successResponse([], 'Mail Sended Successfully');
+            //Retrieve the user from the database
+            $user = DB::table('users')->where('email', $email)->select('name', 'email')->first();
+            //Generate, the password reset link. The token generated is embedded in the link
+            // $link = $url . '/password/expired/reset' . '/' . $token;
+            if ($user) {
+                try {
+                    $data = array(
+                        'subject' => isset($request->subject) ? $request->subject : "",
+                        'remarks' => isset($request->remarks) ? $request->remarks : "",
+                        'email' => $email,
+                        'name' => isset($request->name) ? $request->name : "",
+                        'school_name' => isset($request->school_name) ? $request->school_name : "",
+                        'role_name' => isset($request->role_name) ? $request->role_name : ""
+                    );
+                    Mail::send('auth.faq_mail', $data, function ($message) use ($email) {
+                        $message->to(env('MAIL_FROM_ADDRESS'), 'staffs')->subject('FAQ');
+                        $message->from($email, 'FAQ');
+                        // $message->to('karthik@aibots.my', 'staffs')->subject('FAQ');
+                        // $message->from(env('MAIL_FROM_ADDRESS'), 'FAQ');
+                    });
+                    // return $user;
+                    return $this->successResponse([], 'Mail Sended Successfully');
+                } catch (Exception $e) {
+                    return $this->sendCommonError('An error occurred while sending the email.', ['error' => $e->getMessage()]);
+                }
+            } else {
+                // return false;
+                return $this->sendCommonError('Email user not match.', ['error' => 'Email user not match']);
             }
         }
     }
@@ -9022,6 +9042,21 @@ class ApiControllerOne extends BaseController
                 );
             }
             return $this->successResponse($student_rank, 'All student top and bottom ranking fetch successfully');
+        }
+        
+    }
+    // get Branch Id Permission
+    public function getBranchIdPermission(Request $request)
+    {
+        $validator = \Validator::make($request->all(), [
+            'branch_id' => 'required',
+        ]);
+
+        if (!$validator->passes()) {
+            return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
+        } else {
+            $data = BranchRolesPermission::select('branch_id','role_id','permission_status')->where('branch_id', $request->branch_id)->get();
+            return $this->successResponse($data, 'Branch permission fetch successfully');
         }
     }
 }

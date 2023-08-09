@@ -196,6 +196,12 @@ class ApiController extends BaseController
                     ->select('br.school_type')
                     ->where('br.id', $branch_id)
                     ->first();
+                $success['branch_roles_permissions'] = DB::table('branch_roles_permissions as brnroleper')
+                    // ->select('brnroleper.role_id')
+                    ->select(DB::raw("GROUP_CONCAT(DISTINCT  brnroleper.role_id) as access_role_ids"))
+                    ->where('brnroleper.branch_id', $branch_id)
+                    ->where('brnroleper.permission_status', '=', '0')
+                    ->get();
                 // create new connection
                 $Connection = $this->createNewConnection($request->branch_id);
                 if ($success['school_type'] != null) {
@@ -8130,7 +8136,7 @@ class ApiController extends BaseController
             $homework['homeworks'] = Null;
             $homework['count'] = NULL;
             if ($student_id) {
-                $homework['homeworks'] = $con->table('homeworks')->select('homeworks.*','homework_evaluation.homework_status', 'sections.name as section_name', 'classes.name as class_name', 'subjects.name as subject_name', 'homeworks.document', 'homework_evaluation.file', 'homework_evaluation.evaluation_date', 'homework_evaluation.remarks', 'homework_evaluation.status', 'homework_evaluation.rank')
+                $homework['homeworks'] = $con->table('homeworks')->select('homeworks.*', 'homework_evaluation.homework_status', 'sections.name as section_name', 'classes.name as class_name', 'subjects.name as subject_name', 'homeworks.document', 'homework_evaluation.file', 'homework_evaluation.evaluation_date', 'homework_evaluation.remarks', 'homework_evaluation.status', 'homework_evaluation.rank')
                     ->leftJoin('subjects', 'homeworks.subject_id', '=', 'subjects.id')
                     ->leftJoin('sections', 'homeworks.section_id', '=', 'sections.id')
                     ->leftJoin('classes', 'homeworks.class_id', '=', 'classes.id')
@@ -8198,7 +8204,7 @@ class ApiController extends BaseController
             $subject = $request->subject;
 
 
-            $query = $con->table('homeworks')->select('homeworks.*', 'homework_evaluation.evaluation_date','homework_evaluation.homework_status', 'sections.name as section_name', 'classes.name as class_name', 'subjects.name as subject_name', 'homeworks.document', 'homework_evaluation.file', 'homework_evaluation.remarks', 'homework_evaluation.status', 'homework_evaluation.rank')
+            $query = $con->table('homeworks')->select('homeworks.*', 'homework_evaluation.evaluation_date', 'homework_evaluation.homework_status', 'sections.name as section_name', 'classes.name as class_name', 'subjects.name as subject_name', 'homeworks.document', 'homework_evaluation.file', 'homework_evaluation.remarks', 'homework_evaluation.status', 'homework_evaluation.rank')
                 ->leftJoin('subjects', 'homeworks.subject_id', '=', 'subjects.id')
                 ->leftJoin('sections', 'homeworks.section_id', '=', 'sections.id')
                 ->leftJoin('classes', 'homeworks.class_id', '=', 'classes.id')
@@ -14107,14 +14113,14 @@ class ApiController extends BaseController
             $student_name = isset($request->student_name) ? $request->student_name : null;
             $status = isset($request->status) ? $request->status : null;
             $date = null;
-            if($request->date){
+            if ($request->date) {
 
                 $date_range = explode(' to ', $request->date);
                 $count = count($date_range);
-                if($count==1){
+                if ($count == 1) {
                     $date['from'] = $date_range[0];
                     $date['to'] = $date_range[0];
-                }else if($count==2){
+                } else if ($count == 2) {
                     $date['from'] = $date_range[0];
                     $date['to'] = $date_range[1];
                 }
@@ -14153,15 +14159,15 @@ class ApiController extends BaseController
                 })
                 ->when($student_name, function ($query, $student_name) {
                     return $query->where("std.first_name", "LIKE", "%{$student_name}%")
-                    ->orWhere("std.last_name", "LIKE", "%{$student_name}%");
+                        ->orWhere("std.last_name", "LIKE", "%{$student_name}%");
                 })
                 // two date range filter
                 ->when($date, function ($query, $date) {
-                    return $query->where(function ($query1) use ($date) { 
-                        $query1->whereBetween('lev.from_leave', [$date['from'], $date['to']]) 
-                        ->orWhere(function ($subQuery) use ($date) { 
-                            $subQuery->whereRaw('lev.to_leave BETWEEN ? AND ?', [$date['from'], $date['to']]); 
-                        }); 
+                    return $query->where(function ($query1) use ($date) {
+                        $query1->whereBetween('lev.from_leave', [$date['from'], $date['to']])
+                            ->orWhere(function ($subQuery) use ($date) {
+                                $subQuery->whereRaw('lev.to_leave BETWEEN ? AND ?', [$date['from'], $date['to']]);
+                            });
                     });
                 })
                 ->orderBy('lev.from_leave', 'desc')
@@ -15333,12 +15339,12 @@ class ApiController extends BaseController
                     ->where('s.id', $employee)
                     ->first();
                 $holiday =  $Connection->table("holidays")
-                    ->select('id', 'name','date')
+                    ->select('id', 'name', 'date')
                     ->where('date', '=', DB::raw("'$date'"))
                     ->whereNull('deleted_at')
                     ->first();
                 $attendance['holiday'] = 0;
-                if($holiday){
+                if ($holiday) {
                     $attendance['holiday'] = 1;
                 }
                 $attendance['absent_reason'] = $Connection->table("teacher_absent_reasons")
@@ -18800,7 +18806,7 @@ class ApiController extends BaseController
             return $this->successResponse($getClassName, 'Class Name record fetch successfully');
         }
     }
-    
+
     // studentLeaveCount
     public function studentLeaveCount(Request $request)
     {
@@ -18822,49 +18828,51 @@ class ApiController extends BaseController
             // DB::raw('COUNT(CASE WHEN sa.student_behaviour = "Engaging" then 1 ELSE NULL END) as "EngagingCount"'),
             // DB::raw('COUNT(CASE WHEN sa.student_behaviour = "Hyperactive" then 1 ELSE NULL END) as "HyperactiveCount"'),
             // DB::raw('COUNT(CASE WHEN sa.student_behaviour = "Quiet" then 1 ELSE NULL END) as "QuietCount"'),
-            $query = $createConnection->table('student_leaves as lev')->select('en.student_id','lev.id','lev.status'
-                    // DB::raw('COUNT(lev.status) as "TotalCount"'),
-                    // DB::raw('COUNT(CASE WHEN lev.status = "Approve" then 1 ELSE NULL END) as "ApproveCount"'),
-                    // DB::raw('COUNT(CASE WHEN lev.status = "Reject" then 1 ELSE NULL END) as "RejectCount"'),
-                    // DB::raw('COUNT(CASE WHEN lev.status = "Pending" then 1 ELSE NULL END) as "PendingCount"'),
+            $query = $createConnection->table('student_leaves as lev')->select(
+                'en.student_id',
+                'lev.id',
+                'lev.status'
+                // DB::raw('COUNT(lev.status) as "TotalCount"'),
+                // DB::raw('COUNT(CASE WHEN lev.status = "Approve" then 1 ELSE NULL END) as "ApproveCount"'),
+                // DB::raw('COUNT(CASE WHEN lev.status = "Reject" then 1 ELSE NULL END) as "RejectCount"'),
+                // DB::raw('COUNT(CASE WHEN lev.status = "Pending" then 1 ELSE NULL END) as "PendingCount"'),
             )
-                    ->join('subject_assigns as sa', function ($join) use($teacher_id) {
-                        $join->on('lev.class_id', '=', 'sa.class_id')
-                            ->on('lev.section_id', '=', 'sa.section_id')
-                            ->on('sa.teacher_id', '=', DB::raw("'$teacher_id'"));
-                    })
-                    ->join('enrolls as en', function ($join) {
-                        $join->on('lev.class_id', '=', 'en.class_id')
-                            ->on('lev.section_id', '=', 'en.section_id')
-                            ->on('lev.student_id', '=', 'en.student_id')
-                            ->on('en.active_status', '=', DB::raw("'0'"));
-                    })
-                    // ->join('students as std', 'lev.student_id', '=', 'std.id')
-                    // ->join('classes as cl', 'lev.class_id', '=', 'cl.id')
-                    // ->join('sections as sc', 'lev.section_id', '=', 'sc.id')
-                    ->groupBy('lev.id')
-                    ->groupBy('lev.student_id')
-                    ->get();
+                ->join('subject_assigns as sa', function ($join) use ($teacher_id) {
+                    $join->on('lev.class_id', '=', 'sa.class_id')
+                        ->on('lev.section_id', '=', 'sa.section_id')
+                        ->on('sa.teacher_id', '=', DB::raw("'$teacher_id'"));
+                })
+                ->join('enrolls as en', function ($join) {
+                    $join->on('lev.class_id', '=', 'en.class_id')
+                        ->on('lev.section_id', '=', 'en.section_id')
+                        ->on('lev.student_id', '=', 'en.student_id')
+                        ->on('en.active_status', '=', DB::raw("'0'"));
+                })
+                // ->join('students as std', 'lev.student_id', '=', 'std.id')
+                // ->join('classes as cl', 'lev.class_id', '=', 'cl.id')
+                // ->join('sections as sc', 'lev.section_id', '=', 'sc.id')
+                ->groupBy('lev.id')
+                ->groupBy('lev.student_id')
+                ->get();
 
-                    $approve = 0;
-                    $pending = 0;
-                    $reject = 0;
-                    foreach($query as $que){
-                        if($que->status == "Approve"){
-                            $approve++;
-                        }
-                        if($que->status == "Pending"){
-                            $pending++;
-                        }
-                        if($que->status == "Reject"){
-                            $reject++;
-                        }
-
-                    }
-                    $count['total'] = count($query);
-                    $count['approve'] = $approve;
-                    $count['pending'] = $pending;
-                    $count['reject'] = $reject;
+            $approve = 0;
+            $pending = 0;
+            $reject = 0;
+            foreach ($query as $que) {
+                if ($que->status == "Approve") {
+                    $approve++;
+                }
+                if ($que->status == "Pending") {
+                    $pending++;
+                }
+                if ($que->status == "Reject") {
+                    $reject++;
+                }
+            }
+            $count['total'] = count($query);
+            $count['approve'] = $approve;
+            $count['pending'] = $pending;
+            $count['reject'] = $reject;
             return $this->successResponse($count, 'Student Leave Count has been Fetched Successfully');
         }
     }
@@ -19608,5 +19616,4 @@ class ApiController extends BaseController
             }
         }
     }
-
 }
