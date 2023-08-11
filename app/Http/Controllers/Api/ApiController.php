@@ -45,7 +45,10 @@ class ApiController extends BaseController
     //
     public function getRoles(Request $request)
     {
-        $data = Role::where('status', $request->status)->get();
+        if($request->status=='All')			
+		{$data = Role::get();}
+		else
+		{$data = Role::where('status', $request->status)->get();}
         return $this->successResponse($data, 'Section record fetch successfully');
     }
     // add section

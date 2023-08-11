@@ -898,6 +898,8 @@ Route::group(['middleware' => ['auth:api', 'throttle:limit_per_user', 'logroute'
     Route::post('holidays/delete', [ApiControllerOne::class, 'deleteHolidays']);
 
     Route::post('all_student/ranking', [ApiControllerOne::class, 'allStudentRanking']);
-    // branch permission
-    Route::post('get_branch_id_permission', [ApiControllerOne::class, 'getBranchIdPermission']);
+	
+	// Activity Monitoring
+	Route::post('lastlogout', [AuthController::class, 'lastlogout']);
+	Route::get('login_list', [AuthController::class, 'login_historylist']);	
 });

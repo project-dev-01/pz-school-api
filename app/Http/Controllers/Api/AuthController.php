@@ -1,9 +1,10 @@
 <?php
 
 namespace App\Http\Controllers\Api;
-
 // use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Http;
+use GuzzleHttp\Client;
 //
 use JWTAuth;
 use Illuminate\Support\Facades\Validator;
@@ -11,6 +12,7 @@ use Symfony\Component\HttpFoundation\Response;
 use Tymon\JWTAuth\Exceptions\JWTException;
 use Illuminate\Support\Facades\DB;
 use App\Models\User;
+use App\Models\Role;
 use App\Models\Log_history;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Mail;
@@ -88,6 +90,24 @@ class AuthController extends BaseController
                 $user->save();
                 // dd($user->id);
                 //User::where('id', $user->id)->update(['session_id', \Session::getId()]);
+				$country="";$country_code="";$ip_info="";
+				//$ipAddress = \Request::getClientIp(true);
+				$ipAddress = "162.216.140.3";
+				// Get the client's IP address
+				if($ipAddress!='::1'|| $ipAddress!='127.0.0.1')
+				{
+			$url="http://ip-api.com/json/{$ipAddress}";
+			
+			$response = Http::get($url);
+			
+			$ip_info= $response->json();
+			
+			$country = $ip_info['country'] ?? 'Unknown';
+			$country_code = $ip_info['countryCode'] ?? 'Unknown';
+			
+			
+				}
+			//dd($ip_info);
                 $data = [
                     'login_id' => $user->id,
                     'user_id' => $user->user_id,
@@ -97,6 +117,9 @@ class AuthController extends BaseController
                     'device' => isset($request->user_device) ? $request->user_device : "other",
                     'browser' => isset($request->user_browser) ? $request->user_browser : "other",
                     'os' => isset($request->user_os) ? $request->user_os : "other",
+					'country' => $country,
+					'countrycode' => $country_code,
+					'ip_info' => json_encode($ip_info),
                     'login_time' => date("Y-m-d H:i:s"),
                     'created_at' => date("Y-m-d H:i:s")
                 ];
@@ -226,6 +249,53 @@ class AuthController extends BaseController
         } else {
             return $this->send500Error('Sorry, user cannot be logged out', ['error' => 'Sorry, user cannot be logged out']);
         }
+    }	
+	public function login_historylist(Request $request)
+    {
+        $fromDate = $request->frm_ldate.' 00:00:00';
+        $toDate = $request->to_ldate.' 23:59:59';
+        if($request->role_id=='All')
+        {
+            $data = Log_history::where('branch_id', $request->branch_id)->whereBetween('login_time', [$fromDate, $toDate])->get();		
+		}
+        else
+        {
+            $data = Log_history::where('branch_id', $request->branch_id)->where('role_id', $request->role_id)->whereBetween('login_time', [$fromDate, $toDate])->get();		
+		}
+        $history = array();		
+		foreach($data as $item)
+		{	
+			$user = User::where('user_id', $item->user_id)->where('role_id', $item->role_id)->select('name')->first();
+			$role = Role::where('id', $item->role_id)->select('role_name')->first();
+			$city =""; $state =""; $country ="";
+			
+			
+			$workingHours="0";$workingMinutes ="0";
+			if(!empty($item->logout_time))
+			{
+			$checkin =strtotime($item->login_time);
+			$checkout =strtotime($item->logout_time);
+			$timediff=$checkout-$checkin;
+			$workingHours = floor($timediff / 3600);
+			$workingMinutes = ($timediff % 3600) / 60;
+			}
+			$items=array();
+			$items['id'] =$item->id;
+			$items['ip_address'] =$item->ip_address;
+			$items['user_id'] =$item->user_id;
+			$items['user_name'] =$user->name;
+			$items['role_name'] =$role->role_name;
+		    $items['role_id'] =$item->role_id;
+			$items['device'] =$item->device;
+			$items['browser'] =$item->browser;
+			$items['os'] =$item->os;
+			$items['country'] =$item->country;
+			$items['login_time'] =date('d-m-Y h:i:a',strtotime($item->login_time));
+			$items['logout_time'] =date('d-m-Y h:i:a',strtotime($item->logout_time));
+			$items['spend_time'] =$workingHours." Hour : ".intval($workingMinutes)." Min";
+			array_push($history,$items);
+		}
+        return $this->successResponse($history, 'Log History record fetch successfully');		
     }
     public function resetPassword(Request $request)
     {
