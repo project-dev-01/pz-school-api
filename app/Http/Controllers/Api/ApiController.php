@@ -19619,4 +19619,338 @@ class ApiController extends BaseController
             }
         }
     }
+
+    // add BankAccount
+    public function addBankAccount(Request $request)
+    {
+
+        $validator = \Validator::make($request->all(), [
+            'token' => 'required',
+            'branch_id' => 'required',
+            'bank_name' => 'required',
+            'holder_name' => 'required',
+            'email' => 'required',
+            'account_no' => 'required',
+        ]);
+
+        // return $request;
+        if (!$validator->passes()) {
+            return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
+        } else {
+
+            // create new connection
+            $conn = $this->createNewConnection($request->branch_id);
+
+            $query = $conn->table('bank_account')->insert([
+                'bank_name' => $request->bank_name,
+                'holder_name' => $request->holder_name,
+                'bank_branch' => $request->bank_branch,
+                'bank_address' => $request->bank_address,
+                'bank_address_2' => $request->bank_address_2,
+                'ifsc_code' => $request->ifsc_code,
+                'city' => $request->city,
+                'state' => $request->state,
+                'post_code' => $request->post_code,
+                'country' => $request->country,
+                'routing_number' => $request->routing_number,
+                'swift_code' => $request->swift_code,
+                'email' => $request->email,
+                'account_no' => $request->account_no,
+                'status' => isset($request->status) ? "1" : "0",
+                'created_by' => $request->created_by,
+                'created_at' => date("Y-m-d H:i:s")
+            ]);
+            $success = [];
+            if (!$query) {
+                return $this->send500Error('Something went wrong.', ['error' => 'Something went wrong']);
+            } else {
+                return $this->successResponse($success, 'Bank Account has been successfully saved');
+            }
+        }
+    }
+    // get BankAccounts 
+    public function getBankAccountList(Request $request)
+    {
+
+        $validator = \Validator::make($request->all(), [
+            'token' => 'required',
+            'branch_id' => 'required',
+        ]);
+
+        if (!$validator->passes()) {
+            return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
+        } else {
+
+            // create new connection
+            $conn = $this->createNewConnection($request->branch_id);
+            // get data
+            $bankAccountDetails = $conn->table('bank_account as ba')->select('ba.*','b.name as bank_name')
+            ->leftJoin('banks as b', 'ba.bank_name', '=', 'b.id')->whereNull('ba.deleted_at')->get()->toArray();
+            return $this->successResponse($bankAccountDetails, 'Bank Account record fetch successfully');
+        }
+    }
+    // get Bank Account row details
+    public function getBankAccountDetails(Request $request)
+    {
+
+        $validator = \Validator::make($request->all(), [
+            'id' => 'required',
+            'branch_id' => 'required',
+            'token' => 'required',
+        ]);
+
+        if (!$validator->passes()) {
+            return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
+        } else {
+            // create new connection
+            $conn = $this->createNewConnection($request->branch_id);
+            // get data
+            $bank_account_id = $request->id;
+            $bankAccountDetails = $conn->table('bank_account')->where('id', $bank_account_id)->first();
+            return $this->successResponse($bankAccountDetails, 'Bank Account row fetch successfully');
+        }
+    }
+    // update BankAccount
+    public function updateBankAccount(Request $request)
+    {
+        $id = $request->id;
+        $validator = \Validator::make($request->all(), [
+            'token' => 'required',
+            'branch_id' => 'required',
+            'id' => 'required',
+            'bank_name' => 'required',
+            'holder_name' => 'required',
+            'email' => 'required',
+            'account_no' => 'required',
+        ]);
+
+        if (!$validator->passes()) {
+            return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
+        } else {
+
+            // create new connection
+            $conn = $this->createNewConnection($request->branch_id);
+
+            $query = $conn->table('bank_account')->where('id', $id)->update([
+                'bank_name' => $request->bank_name,
+                'holder_name' => $request->holder_name,
+                'bank_branch' => $request->bank_branch,
+                'bank_address' => $request->bank_address,
+                'bank_address_2' => $request->bank_address_2,
+                'ifsc_code' => $request->ifsc_code,
+                'city' => $request->city,
+                'state' => $request->state,
+                'post_code' => $request->post_code,
+                'country' => $request->country,
+                'routing_number' => $request->routing_number,
+                'swift_code' => $request->swift_code,
+                'email' => $request->email,
+                'account_no' => $request->account_no,
+                'status' => isset($request->status) ? "1" : "0",
+                'updated_by' => $request->updated_by,
+                'updated_at' => date("Y-m-d H:i:s")
+            ]);
+
+            $success = [];
+            if (!$query) {
+                return $this->send500Error('Something went wrong.', ['error' => 'Something went wrong']);
+            } else {
+                return $this->successResponse($success, 'Bank Account has been successfully Updated');
+            }
+        }
+    }
+    // delete BankAccount
+    public function deleteBankAccount(Request $request)
+    {
+        $validator = \Validator::make($request->all(), [
+            'token' => 'required',
+            'id' => 'required',
+            'branch_id' => 'required',
+        ]);
+        $bank_account_id = $request->id;
+        if (!$validator->passes()) {
+            return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
+        } else {
+            // create new connection
+            $conn = $this->createNewConnection($request->branch_id);
+            // get data
+            $query = $conn->table('bank_account')->where('id', $bank_account_id)->update([
+                'deleted_at' => date("Y-m-d H:i:s"),
+                'deleted_by' => isset($request->deleted_by) ? $request->deleted_by : null
+            ]);
+            $success = [];
+            if ($query) {
+                return $this->successResponse($success, 'Bank Account have been deleted successfully');
+            } else {
+                return $this->send500Error('Something went wrong.', ['error' => 'Something went wrong']);
+            }
+        }
+    }
+    // bank Account Status
+    public function bankAccountStatus(Request $request)
+    {
+        $validator = \Validator::make($request->all(), [
+            'token' => 'required',
+            'id' => 'required',
+            'status' => 'required',
+            'branch_id' => 'required',
+        ]);
+        $bank_account_id = $request->id;
+        if (!$validator->passes()) {
+            return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
+        } else {
+            // create new connection
+            $conn = $this->createNewConnection($request->branch_id);
+
+            $query = $conn->table('bank_account')->where('id', $bank_account_id)->update([
+                'status' => $request->status,
+                'updated_at' => date("Y-m-d H:i:s")
+            ]);
+            if ($request->status == "1") {
+                $status = "Activated";
+            } else {
+                $status = "Inactivated";
+            }
+            $success = [];
+            if ($query) {
+                return $this->successResponse($success, 'Bank Account have been ' . $status . ' successfully');
+            } else {
+                return $this->send500Error('Something went wrong.', ['error' => 'Something went wrong']);
+            }
+        }
+    }
+
+
+    // addBank
+    public function addBank(Request $request)
+    {
+
+        $validator = \Validator::make($request->all(), [
+            'name' => 'required',
+            'country' => 'required',
+            'branch_id' => 'required',
+            'token' => 'required',
+        ]);
+
+        if (!$validator->passes()) {
+            return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
+        } else {
+            // create new connection
+            $conn = $this->createNewConnection($request->branch_id);
+
+            // insert data
+            $query = $conn->table('banks')->insert([
+                'name' => $request->name,
+                'country' => $request->country,
+                'created_at' => date("Y-m-d H:i:s")
+            ]);
+            $success = [];
+            if (!$query) {
+                return $this->send500Error('Something went wrong.', ['error' => 'Something went wrong']);
+            } else {
+                return $this->successResponse($success, 'Bank has been successfully saved');
+            }
+        }
+    }
+    // getBankList
+    public function getBankList(Request $request)
+    {
+        $validator = \Validator::make($request->all(), [
+            'branch_id' => 'required',
+            'token' => 'required',
+        ]);
+
+        if (!$validator->passes()) {
+            return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
+        } else {
+            // create new connection
+            $conn = $this->createNewConnection($request->branch_id);
+            // get data
+            $country = $request->country;
+            $bankDetails = $conn->table('banks')
+                                ->when($country, function ($query, $country) {
+                                    return $query->where('country', $country);
+                                })->get();
+            return $this->successResponse($bankDetails, 'Bank record fetch successfully');
+        }
+    }
+    // get Bank row details
+    public function getBankDetails(Request $request)
+    {
+
+        $validator = \Validator::make($request->all(), [
+            'id' => 'required',
+            'branch_id' => 'required',
+            'token' => 'required'
+        ]);
+
+        if (!$validator->passes()) {
+            return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
+        } else {
+            $id = $request->id;
+            // create new connection
+            $conn = $this->createNewConnection($request->branch_id);
+            // get data
+            $bankDetails = $conn->table('banks')->where('id', $id)->first();
+            return $this->successResponse($bankDetails, 'Bank row fetch successfully');
+        }
+    }
+    // update Bank
+    public function updateBank(Request $request)
+    {
+        $id = $request->id;
+        $validator = \Validator::make($request->all(), [
+            'name' => 'required',
+            'country' => 'required',
+            'branch_id' => 'required',
+            'token' => 'required',
+        ]);
+
+        if (!$validator->passes()) {
+            return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
+        } else {
+
+            // create new connection
+            $conn = $this->createNewConnection($request->branch_id);
+
+            $query = $conn->table('banks')->where('id', $id)->update([
+                'name' => $request->name,
+                'country' => $request->country,
+                'updated_at' => date("Y-m-d H:i:s")
+            ]);
+            $success = [];
+            if ($query) {
+                return $this->successResponse($success, 'Bank Details have Been updated');
+            } else {
+                return $this->send500Error('Something went wrong.', ['error' => 'Something went wrong']);
+            }
+        }
+    }
+    // delete Bank
+    public function deleteBank(Request $request)
+    {
+
+        $id = $request->id;
+        $validator = \Validator::make($request->all(), [
+            'token' => 'required',
+            'branch_id' => 'required',
+            'id' => 'required',
+        ]);
+
+        if (!$validator->passes()) {
+            return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
+        } else {
+            // create new connection
+            $conn = $this->createNewConnection($request->branch_id);
+            // get data
+            $query = $conn->table('banks')->where('id', $id)->delete();
+
+            $success = [];
+            if ($query) {
+                return $this->successResponse($success, 'Bank have been deleted successfully');
+            } else {
+                return $this->send500Error('Something went wrong.', ['error' => 'Something went wrong']);
+            }
+        }
+    }
 }

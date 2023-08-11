@@ -901,5 +901,20 @@ Route::group(['middleware' => ['auth:api', 'throttle:limit_per_user', 'logroute'
 	
 	// Activity Monitoring
 	Route::post('lastlogout', [AuthController::class, 'lastlogout']);
-	Route::get('login_list', [AuthController::class, 'login_historylist']);	
+	Route::get('login_list', [AuthController::class, 'login_historylist']);
+    // BankAccount routes
+    Route::post('bank_account/add', [ApiController::class, 'addBankAccount']);
+    Route::get('bank_account/list', [ApiController::class, 'getBankAccountList']);
+    Route::post('bank_account/bank_account-details', [ApiController::class, 'getBankAccountDetails']);
+    Route::post('bank_account/update', [ApiController::class, 'updateBankAccount']);
+    Route::post('bank_account/delete', [ApiController::class, 'deleteBankAccount']);
+    Route::post('bank_account/status', [ApiController::class, 'bankAccountStatus']);
+
+    
+    // bank routes
+    Route::post('bank/add', [ApiController::class, 'addBank']);
+    Route::get('bank/list', [ApiController::class, 'getBankList']);
+    Route::post('bank/bank-details', [ApiController::class, 'getBankDetails']);
+    Route::post('bank/update', [ApiController::class, 'updateBank']);
+    Route::post('bank/delete', [ApiController::class, 'deleteBank']);
 });
