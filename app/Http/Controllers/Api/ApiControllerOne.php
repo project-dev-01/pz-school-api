@@ -7997,7 +7997,6 @@ class ApiControllerOne extends BaseController
 
                     $student_rank = $this->calculate_overall_rank($class_rank);
                 }
-                // dd($student_rank);
                 if (isset($student_rank[$student_id])) {
 
                     $rank = $student_rank[$student_id];
@@ -8016,19 +8015,20 @@ class ApiControllerOne extends BaseController
     {
         $last_mark = 0;
         $rank = 0;
-        // dd($marks);
+        $same_rank = 1;
         foreach ($marks as $key => $mark) {
-            // if($mark['fail']>0){
-
-            //     $marks[$key]['rank'] = "";
-            // }else{
-            if ($mark['mark'] != $last_mark) {
-                $rank++;
+            if($mark['fail']>0){
+                $marks[$key]['rank'] = "N/A";
+            }else{
+                if ($mark['mark'] != $last_mark) {
+                    $rank = $same_rank;
+                }
+                $last_mark = $mark['mark'];
+                $marks[$key]['rank'] = $rank;
+                $same_rank++;
             }
-            $last_mark = $mark['mark'];
-            $marks[$key]['rank'] = $rank;
             // dd($last_mark);
-            // }
+            
         }
         return $marks;
     }
@@ -9027,21 +9027,31 @@ class ApiControllerOne extends BaseController
             if ($class_rank) {
                 $student_rank = $this->calculate_overall_rank($class_rank);
             }
+            
             if ($request->type == "top") {
-                array_multisort(
-                    array_column($student_rank, 'rank'),
-                    SORT_ASC,
-                    $student_rank
-                );
+                $student_rank = collect($student_rank)->sortByDesc('mark')->sortBy('rank')->all();
+    
+                // array_multisort(
+                //     array_column($student_rank, 'rank'),
+                //     SORT_ASC,
+                //     $student_rank
+                // );
             }
             if ($request->type == "bottom") {
-                array_multisort(
-                    array_column($student_rank, 'rank'),
-                    SORT_DESC,
-                    $student_rank
-                );
+                $student_rank = collect($student_rank)->sortBy('mark')->sortByDesc('rank')->all();
+                // array_multisort(
+                //     array_column($student_rank, 'rank'),
+                //     SORT_DESC,
+                //     $student_rank
+                // );
             }
-            return $this->successResponse($student_rank, 'All student top and bottom ranking fetch successfully');
+            $rank = [];
+            $no = 1;
+            foreach($student_rank as $sr){
+                $rank[$no] = $sr;
+                $no++;
+            }
+            return $this->successResponse($rank, 'All student top and bottom ranking fetch successfully');
         }
         
     }
