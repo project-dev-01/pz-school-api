@@ -91,22 +91,26 @@ class AuthController extends BaseController
                 // dd($user->id);
                 //User::where('id', $user->id)->update(['session_id', \Session::getId()]);
 				$country="";$country_code="";$ip_info="";
-				//$ipAddress = \Request::getClientIp(true);
-				$ipAddress = "162.216.140.3";
+				$ipAddress = \Request::getClientIp(true);
+				// $ipAddress = "162.216.140.3";
 				// Get the client's IP address
 				if($ipAddress!='::1'|| $ipAddress!='127.0.0.1')
 				{
-			$url="http://ip-api.com/json/{$ipAddress}";
-			
-			$response = Http::get($url);
-			
-			$ip_info= $response->json();
-			
-			$country = $ip_info['country'] ?? 'Unknown';
-			$country_code = $ip_info['countryCode'] ?? 'Unknown';
-			
-			
-				}
+                    try {
+                        $url="http://ip-api.com/json/{$ipAddress}";
+                    
+                        $response = Http::get($url);
+                        
+                        $ip_info= $response->json();
+                        
+                        $country = $ip_info['country'] ?? 'Unknown';
+                        $country_code = $ip_info['countryCode'] ?? 'Unknown';
+                    } catch (Exception $e) {
+                        
+                        $country = 'Unknown';
+                        $country_code = 'Unknown';
+                    }
+                }
 			//dd($ip_info);
                 $data = [
                     'login_id' => $user->id,
@@ -117,8 +121,8 @@ class AuthController extends BaseController
                     'device' => isset($request->user_device) ? $request->user_device : "other",
                     'browser' => isset($request->user_browser) ? $request->user_browser : "other",
                     'os' => isset($request->user_os) ? $request->user_os : "other",
-					'country' => $country,
-					'countrycode' => $country_code,
+					'country' => isset($country) ? $country : 'Unknown',
+					'countrycode' => isset($country_code) ? $country_code : 'Unknown',
 					'ip_info' => json_encode($ip_info),
                     'login_time' => date("Y-m-d H:i:s"),
                     'created_at' => date("Y-m-d H:i:s")
