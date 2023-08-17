@@ -45,10 +45,12 @@ class ApiController extends BaseController
     //
     public function getRoles(Request $request)
     {
-        if($request->status=='All')			
-		{$data = Role::get();}
-		else
-		{$data = Role::where('status', $request->status)->get();}
+        // if ($request->status == 'All') {
+        //     $data = Role::where('status','!=', $request->status)->get();
+        // } else {
+        //     $data = Role::where('status','!=', $request->status)->get();
+        // }
+        $data = Role::where('status','!=', '1')->get();
         return $this->successResponse($data, 'Section record fetch successfully');
     }
     // add section
@@ -19684,8 +19686,8 @@ class ApiController extends BaseController
             // create new connection
             $conn = $this->createNewConnection($request->branch_id);
             // get data
-            $bankAccountDetails = $conn->table('bank_account as ba')->select('ba.*','b.name as bank_name')
-            ->leftJoin('banks as b', 'ba.bank_name', '=', 'b.id')->whereNull('ba.deleted_at')->get()->toArray();
+            $bankAccountDetails = $conn->table('bank_account as ba')->select('ba.*', 'b.name as bank_name')
+                ->leftJoin('banks as b', 'ba.bank_name', '=', 'b.id')->whereNull('ba.deleted_at')->get()->toArray();
             return $this->successResponse($bankAccountDetails, 'Bank Account record fetch successfully');
         }
     }
@@ -19868,9 +19870,9 @@ class ApiController extends BaseController
             // get data
             $country = $request->country;
             $bankDetails = $conn->table('banks')
-                                ->when($country, function ($query, $country) {
-                                    return $query->where('country', $country);
-                                })->get();
+                ->when($country, function ($query, $country) {
+                    return $query->where('country', $country);
+                })->get();
             return $this->successResponse($bankDetails, 'Bank record fetch successfully');
         }
     }

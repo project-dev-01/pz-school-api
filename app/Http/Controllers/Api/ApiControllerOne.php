@@ -9069,4 +9069,70 @@ class ApiControllerOne extends BaseController
             return $this->successResponse($data, 'Branch permission fetch successfully');
         }
     }
+    // work week
+    public function workWeek(Request $request)
+    {
+        $validator = \Validator::make($request->all(), [
+            'branch_id' => 'required'
+        ]);
+
+        if (!$validator->passes()) {
+            return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
+        } else {
+            // create new connection
+            $conn = $this->createNewConnection($request->branch_id);
+            $hiddenWeekends = $conn->table('work_weeks')
+                ->where('status', '=', '1')
+                ->select('day_value')
+                ->pluck('day_value')
+                ->toArray();
+            return $this->successResponse($hiddenWeekends, 'work weeks fetch successfully');
+        }
+    }
+    public function workWeekGet(Request $request)
+    {
+        $validator = \Validator::make($request->all(), [
+            'branch_id' => 'required'
+        ]);
+
+        if (!$validator->passes()) {
+            return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
+        } else {
+            // create new connection
+            $conn = $this->createNewConnection($request->branch_id);
+            $hiddenWeekends = $conn->table('work_weeks')
+                ->get();
+            return $this->successResponse($hiddenWeekends, 'work weeks fetch successfully');
+        }
+    }
+    public function workWeekUpdate(Request $request)
+    {
+        $validator = \Validator::make($request->all(), [
+            'branch_id' => 'required',
+            'work_weeks' => 'required'
+        ]);
+        if (!$validator->passes()) {
+            return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
+        } else {
+            $work_weeks = $request->work_weeks;
+
+            // create new connection
+            $conn = $this->createNewConnection($request->branch_id);
+            foreach ($work_weeks as $row) {
+
+                if (isset($row['id'])) {
+                    if (isset($row['status'])) {
+                        $status = '0';
+                    } else {
+                        $status = '1';
+                    }
+                    $query = $conn->table('work_weeks')->where('id', $row['id'])->update([
+                        'status' => $status,
+                        'updated_at' => date("Y-m-d H:i:s")
+                    ]);
+                }
+            }
+            return $this->successResponse([], 'work weeks updated successfully');
+        }
+    }
 }

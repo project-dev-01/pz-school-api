@@ -917,4 +917,8 @@ Route::group(['middleware' => ['auth:api', 'throttle:limit_per_user', 'logroute'
     Route::post('bank/bank-details', [ApiController::class, 'getBankDetails']);
     Route::post('bank/update', [ApiController::class, 'updateBank']);
     Route::post('bank/delete', [ApiController::class, 'deleteBank']);
+    // work weeks
+    Route::get('work/week', [ApiControllerOne::class, 'workWeek']);
+    Route::get('work/week/get', [ApiControllerOne::class, 'workWeekGet']);
+    Route::post('work/week/update', [ApiControllerOne::class, 'workWeekUpdate']);
 });
