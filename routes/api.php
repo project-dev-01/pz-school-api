@@ -921,4 +921,5 @@ Route::group(['middleware' => ['auth:api', 'throttle:limit_per_user', 'logroute'
     Route::get('work/week', [ApiControllerOne::class, 'workWeek']);
     Route::get('work/week/get', [ApiControllerOne::class, 'workWeekGet']);
     Route::post('work/week/update', [ApiControllerOne::class, 'workWeekUpdate']);
+    Route::get('get_public_holidays', [ApiController::class, 'getPublicHolidays']);
 });

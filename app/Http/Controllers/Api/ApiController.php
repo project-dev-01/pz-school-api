@@ -50,7 +50,7 @@ class ApiController extends BaseController
         // } else {
         //     $data = Role::where('status','!=', $request->status)->get();
         // }
-        $data = Role::where('status','!=', '1')->get();
+        $data = Role::where('status', '!=', '1')->get();
         return $this->successResponse($data, 'Section record fetch successfully');
     }
     // add section
@@ -8563,6 +8563,42 @@ class ApiController extends BaseController
                 }
             }
             return $this->successResponse($event, 'Event data Fetched successfully');
+        }
+    }
+    public function getPublicHolidays(Request $request)
+    {
+        $validator = \Validator::make($request->all(), [
+            'branch_id' => 'required'
+        ]);
+        if (!$validator->passes()) {
+            return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
+        } else {
+            // create new connection
+            $Connection = $this->createNewConnection($request->branch_id);
+            $start = date('Y-m-d', strtotime($request->start));
+            $end = date('Y-m-d', strtotime($request->end));
+            // echo $start;
+            // echo "-----";
+            // echo $end;
+            // exit;
+            $all_event = $Connection->table('holidays as hl')
+                ->select('hl.id', 'hl.name as title', 'hl.date as start')
+                ->whereRaw('hl.date between "' . $start . '" and "' . $end . '"')
+                ->get();
+            $showArr = array();
+            if (!empty($all_event)) {
+                foreach ($all_event as $value) {
+                    $object = new \stdClass();
+                    // dd($value);
+                    $object->id = $value->id;
+                    $object->title = "Holiday: ".$value->title;
+                    $object->start = $value->start;
+                    $object->backgroundColor = 'red';
+                    $object->borderColor = 'blue';
+                    array_push($showArr, $object);
+                }
+            }
+            return $this->successResponse($showArr, 'Get Holidays Fetched successfully');
         }
     }
     // getEventCalendorStud
