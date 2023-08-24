@@ -8321,7 +8321,24 @@ class ApiController extends BaseController
                     'created_at' => date("Y-m-d H:i:s")
                 ]);
             }
-
+            $teacher =  $con->table('homeworks as h')->select('sa.teacher_id')
+                        ->leftJoin('subject_assigns as sa', function ($join) {
+                            $join->on('sa.class_id', '=', 'h.class_id')
+                                ->on('sa.section_id', '=', 'h.section_id')
+                                ->on('sa.subject_id', '=', 'h.subject_id')
+                                ->on('sa.academic_session_id', '=', 'h.academic_session_id');
+                        })->where([
+                            ['h.id', '=', $request['homework_id']],
+                            ['h.student_id', '=', $request['student_id']]
+                        ])->get();
+                    $user = User::where('user_id', $request->relief_assignment_teacher_id)->where([
+                        ['branch_id', '=', $request->branch_id]
+                    ])->where(function ($q) {
+                        $q->where('role_id', 2)
+                            ->orWhere('role_id', 3)
+                            ->orWhere('role_id', 4);
+                    })->get();
+            //chess
             $success = [];
             if (!$query) {
                 return $this->send500Error('Something went wrong.', ['error' => 'Something went wrong']);

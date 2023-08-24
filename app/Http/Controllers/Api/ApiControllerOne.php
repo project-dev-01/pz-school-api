@@ -9135,4 +9135,173 @@ class ApiControllerOne extends BaseController
             return $this->successResponse([], 'work weeks updated successfully');
         }
     }
+    // get fees
+    public function getParentFeesList(Request $request)
+    {
+
+        $validator = \Validator::make($request->all(), [
+            'branch_id' => 'required',
+            'academic_session_id' => 'required'
+        ]);
+
+        if (!$validator->passes()) {
+            return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
+        } else {
+            // create new connection
+            $branchID = $request->branch_id;
+            $academic_session_id = $request->academic_session_id;
+            // $feesGroupId = null;
+            // if ($request->fees_type) {
+            //     $feesDet = explode('|', $request->fees_type);
+            //     $feesGroupId = $feesDet[0];
+            // }
+            $feesGroupId = isset($request->group_id) ? $request->group_id : null;
+            $conn = $this->createNewConnection($request->branch_id);
+            $student_id = $request->student_id;
+            // get data
+            $studentData = $conn->table('fees_allocation as fa')
+                ->select(
+                    'fa.student_id',
+                    'fa.class_id',
+                    'fa.section_id',
+                    // 'en.roll',
+                    'st.gender',
+                    'st.register_no',
+                    'st.email',
+                    'cl.name as class_name',
+                    'sc.name as section_name',
+                    'st.photo',
+                    'fa.group_id as all_group_id',
+                    // 'fa.id as allocation_id',
+                    DB::raw('CONCAT(st.first_name, " ", st.last_name) as name'),
+                )
+                // ->join('enrolls as en', 'en.student_id', '=', 'fa.student_id')
+                ->leftJoin('students as st', 'fa.student_id', '=', 'st.id')
+                ->leftJoin('classes as cl', 'fa.class_id', '=', 'cl.id')
+                ->leftJoin('sections as sc', 'fa.section_id', '=', 'sc.id')
+                ->where([
+                    // ['fa.class_id', '=', $request->class_id],
+                    // ['fa.section_id', '=', $request->section_id],
+                    ['fa.academic_session_id', '=', $request->academic_session_id]
+                ])
+                ->when($student_id, function ($q)  use ($student_id) {
+                    $q->where('fa.student_id', $student_id);
+                })
+                ->when($feesGroupId, function ($q)  use ($feesGroupId) {
+                    $q->where('fa.group_id', $feesGroupId);
+                })
+                ->groupBy('fa.student_id')
+                ->groupBy('fa.group_id')
+                ->orderBy('st.id', 'ASC')
+                ->get()->toArray();
+                // dd($studentData);
+            $arrData = [];
+            if (!empty($studentData)) {
+                foreach ($studentData as $key => $value) {
+                    $object = new \stdClass();
+                    $object->student_id = $value->student_id;
+                    $object->email = $value->email;
+                    $object->class_name = $value->class_name;
+                    $object->section_name = $value->section_name;
+                    $object->name = $value->name;
+                    $object->photo = $value->photo;
+                    $object->all_group_id = $value->all_group_id;
+                    $all_group_id = explode(",", $value->all_group_id);
+                    $group_arr = [];
+                    if (!empty($all_group_id)) {
+                        foreach ($all_group_id as $grp_id) {
+                            $newGrp = new \stdClass();
+                            $return_group = $this->getfeeGroup($value, $branchID, $academic_session_id, $grp_id);
+                            $newGrp->grp_id = $grp_id;
+                            $newGrp->paid_id = $return_group['paid_id'];
+                            $newGrp->group_name = $return_group['group_name'];
+                            $newGrp->paidSts = $return_group['paidSts'];
+                            $newGrp->labelmode = $return_group['labelmode'];
+                            // group_arr
+                            if (isset($request->payment_status)) {
+                                // dd($return_group['paid_id']);
+                                if ($request->payment_status == $return_group['paid_id']) {
+                                    array_push($group_arr, $newGrp);
+                                }
+                            } else {
+                                array_push($group_arr, $newGrp);
+                            }
+                        }
+                    }
+                    $object->feegroup = $group_arr;
+                    // filter by payment status
+                    if (isset($request->payment_status)) {
+                        if (!empty($group_arr)) {
+                            array_push($arrData, $object);
+                        }
+                    } else {
+                        array_push($arrData, $object);
+                    }
+                }
+            }
+            return $this->successResponse($arrData, 'get Parent Fees details fetched successfully');
+        }
+    }
+
+    
+    // fees view page
+    public function parentFeesHistory(Request $request)
+    {
+
+        $validator = \Validator::make($request->all(), [
+            'student_id' => 'required',
+            'group_id' => 'required',
+            'academic_session_id' => 'required',
+            'branch_id' => 'required'
+        ]);
+
+        if (!$validator->passes()) {
+            return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
+        } else {
+            // create new connection
+            $conn = $this->createNewConnection($request->branch_id);
+            $studentID = $request->student_id;
+            $groupId = $request->group_id;
+            $branchID = $request->branch_id;
+            $academic_session_id = $request->academic_session_id;
+            $allocations = $conn->table('fees_allocation as fa')
+                ->select(
+                    'fa.id as allocation_id',
+                    'fa.payment_mode_id',
+                    'fa.student_id',
+                    't.name',
+                    'f.name as fees_group_name',
+                    'fg.amount',
+                    'fg.due_date',
+                    'fg.fees_type_id',
+                    "fph.fees_group_details_id",
+                    'fph.date as paid_date',
+                    "fph.payment_status_id",
+                    "fph.student_id",
+                    "fph.amount as paid_amount",
+                    "pm.name as payment_mode_name"
+                )
+                ->leftJoin('fees_group as f', 'f.id', '=', 'fa.group_id')
+                ->leftJoin('payment_mode as pm', 'fa.payment_mode_id', '=', 'pm.id')
+                ->leftjoin('fees_group_details as fg', function ($join) {
+                    $join->on('fg.fees_group_id', '=', 'fa.group_id');
+                    $join->on('fg.payment_mode_id', '=', 'fa.payment_mode_id');
+                })
+                ->leftjoin('fees_payment_history as fph', function ($join) use ($studentID, $groupId, $academic_session_id) {
+                    $join->on('fph.fees_group_details_id', '=', 'fg.id');
+                    $join->on('fph.student_id', '=', DB::raw("'$studentID'"));
+                    $join->on('fph.academic_session_id', '=', DB::raw("'$academic_session_id'"));
+                })
+                ->leftJoin('fees_type as t', 't.id', '=', 'fg.fees_type_id')
+                ->where([
+                    ['fa.student_id', '=', $studentID],
+                    ['fa.group_id', '=', $groupId],
+                    ['fa.academic_session_id', '=', $academic_session_id]
+                ])
+                ->orderBy('f.id', 'asc')
+                ->orderBy('fg.id', 'asc')
+                ->get()->toArray();
+            return $this->successResponse($allocations, 'Get fees row fetch successfully');
+        }
+    }
 }
