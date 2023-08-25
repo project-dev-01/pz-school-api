@@ -31,6 +31,8 @@ use App\Models\Forum_post_replie_counts;
 use Illuminate\Support\Arr;
 // notifications
 use App\Notifications\LeaveApply;
+use App\Notifications\StudentHomeworkSubmit;
+use App\Notifications\TeacherHomework;
 use Illuminate\Support\Facades\Notification;
 // encrypt and decrypt
 use Illuminate\Support\Facades\Crypt;
@@ -7362,7 +7364,6 @@ class ApiController extends BaseController
     // addHomework
     public function addHomework(Request $request)
     {
-
         $validator = \Validator::make($request->all(), [
             'title' => 'required',
             'class_id' => 'required',
@@ -7401,7 +7402,7 @@ class ApiController extends BaseController
             $suc = file_put_contents($file, $base64);
 
 
-            $query = $staffConn->table('homeworks')->insert([
+            $query = $staffConn->table('homeworks')->insertGetId([
                 'title' => $request['title'],
                 'class_id' => $request['class_id'],
                 'section_id' => $request['section_id'],
@@ -7419,6 +7420,73 @@ class ApiController extends BaseController
                 'created_at' => date("Y-m-d H:i:s")
             ]);
 
+            $homework_id = $query;
+            $getAssignStudent =  $staffConn->table('homeworks as h')->select('e.student_id','st.father_id','st.mother_id','st.guardian_id')
+            ->leftJoin('enrolls as e', function ($join) {
+                $join->on('e.class_id', '=', 'h.class_id')
+                    ->on('e.section_id', '=', 'h.section_id')
+                    ->on('e.academic_session_id', '=', 'h.academic_session_id');
+            })
+            ->leftJoin('students as st', 'e.student_id', '=', 'st.id')
+            ->where([
+                ['h.id', '=', $homework_id],
+            ])->get();
+
+            // return $getAssignStudent;
+            $assignerID = [];
+            $fatherID = [];
+            $motherID = [];
+            $guardianID = [];
+            if (isset($getAssignStudent)) {
+                foreach ($getAssignStudent as $key => $value) {
+                    array_push($assignerID, $value->student_id);
+                    if(isset($value->father_id) && $value->father_id != ""){
+
+                        array_push($fatherID, $value->father_id);
+                    }
+                    if(isset($value->mother_id) && $value->mother_id != ""){
+
+                        array_push($motherID, $value->mother_id);
+                    }
+                    if(isset($value->guardian_id) && $value->guardian_id != ""){
+                        array_push($guardianID, $value->guardian_id);
+                    }
+                }
+            }
+            $collection = collect($fatherID);
+            $collection2 = $collection->merge($motherID);
+            $collection3 = $collection2->merge($guardianID);
+            // send Homework notifications
+            $student = User::whereIn('user_id', $assignerID)->where([
+                ['branch_id', '=', $request->branch_id]
+            ])->where(function ($q) {
+                $q->where('role_id', 6);
+            })->get();
+            $parent = User::whereIn('user_id', $collection3)->where([
+                ['branch_id', '=', $request->branch_id]
+            ])->where(function ($q) {
+                $q->where('role_id', 5);
+            })->get();
+            
+            $user = $student->merge($parent);
+            // return $user;
+            
+            $homework = $staffConn->table('homeworks as h')->select('h.title as homework_name','c.name as class_name','sc.name as section_name','sbj.name as subject_name')
+            ->join('classes as c', 'h.class_id', '=', 'c.id')
+            ->join('sections as sc', 'h.section_id', '=', 'sc.id')
+            ->join('subjects as sbj', 'h.subject_id', '=', 'sbj.id')
+            ->where('h.id',$homework_id)->first();
+            $homework->due_date = $request['date_of_submission'];
+
+            $details = [
+                'branch_id' => $request->branch_id,
+                'teacher_id' => $request->created_by,
+                'homework_id' => $homework_id,
+                'homework' => $homework
+            ];
+            // return $details;
+            // notifications sent
+            Notification::send($user, new TeacherHomework($details));
             $success = [];
             if (!$query) {
                 return $this->send500Error('Something went wrong.', ['error' => 'Something went wrong']);
@@ -8272,7 +8340,6 @@ class ApiController extends BaseController
         } else {
             // create new connection
             $con = $this->createNewConnection($request->branch_id);
-
             $now = now();
             $name = strtotime($now);
             $extension = $request->file_extension;
@@ -8321,23 +8388,42 @@ class ApiController extends BaseController
                     'created_at' => date("Y-m-d H:i:s")
                 ]);
             }
+            
+
             $teacher =  $con->table('homeworks as h')->select('sa.teacher_id')
-                        ->leftJoin('subject_assigns as sa', function ($join) {
-                            $join->on('sa.class_id', '=', 'h.class_id')
-                                ->on('sa.section_id', '=', 'h.section_id')
-                                ->on('sa.subject_id', '=', 'h.subject_id')
-                                ->on('sa.academic_session_id', '=', 'h.academic_session_id');
-                        })->where([
-                            ['h.id', '=', $request['homework_id']],
-                            ['h.student_id', '=', $request['student_id']]
-                        ])->get();
-                    $user = User::where('user_id', $request->relief_assignment_teacher_id)->where([
-                        ['branch_id', '=', $request->branch_id]
-                    ])->where(function ($q) {
-                        $q->where('role_id', 2)
-                            ->orWhere('role_id', 3)
-                            ->orWhere('role_id', 4);
-                    })->get();
+            ->leftJoin('subject_assigns as sa', function ($join) {
+                $join->on('sa.class_id', '=', 'h.class_id')
+                    ->on('sa.section_id', '=', 'h.section_id')
+                    ->on('sa.subject_id', '=', 'h.subject_id')
+                    ->on('sa.academic_session_id', '=', 'h.academic_session_id');
+            })->where([
+                ['h.id', '=', $request['homework_id']],
+            ])->first();
+            
+            $homework = $con->table('homeworks as h')->select('h.title as homework_name','c.name as class_name','sc.name as section_name','sbj.name as subject_name')
+            ->join('classes as c', 'h.class_id', '=', 'c.id')
+            ->join('sections as sc', 'h.section_id', '=', 'sc.id')
+            ->join('subjects as sbj', 'h.subject_id', '=', 'sbj.id')
+            ->where('h.id',$request->homework_id)->first();
+            $homework->student_name = $request->student_name;
+            $homework->date = date('Y-m-d');
+            
+            $user = User::where('user_id', $teacher->teacher_id)->where([
+            ['branch_id', '=', $request->branch_id]
+            ])->where(function ($q) {
+            $q->where('role_id', 2)
+                ->orWhere('role_id', 3)
+                ->orWhere('role_id', 4);
+            })->get();
+            $details = [
+            'branch_id' => $request->branch_id,
+            'student_id' => $request->student_id,
+            'homework_id' => $request->homework_id,
+            'homework' => $homework
+            ];
+            // return $details;
+            // notifications sent
+            Notification::send($user, new StudentHomeworkSubmit($details));
             //chess
             $success = [];
             if (!$query) {

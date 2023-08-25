@@ -7,7 +7,7 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
-class StudentHomeworkSubmit extends Notification
+class TeacherHomework extends Notification
 {
     use Queueable;
 
@@ -17,7 +17,7 @@ class StudentHomeworkSubmit extends Notification
      * @return void
      */
     protected $branch_id;
-    protected $student_id;
+    protected $teacher_id;
     protected $homework_id;
     protected $homework;
 
@@ -25,7 +25,7 @@ class StudentHomeworkSubmit extends Notification
     {
         //
         $this->branch_id = $data['branch_id'];
-        $this->student_id = $data['student_id'];
+        $this->teacher_id = $data['teacher_id'];
         $this->homework_id = $data['homework_id'];
         $this->homework = $data['homework'];
     }
@@ -66,7 +66,7 @@ class StudentHomeworkSubmit extends Notification
         return [
             //
             'branch_id' => $this->branch_id,
-            'student_id' => $this->student_id,
+            'teacher_id' => $this->teacher_id,
             'homework_id' => $this->homework_id,
             'homework' => $this->homework
         ];

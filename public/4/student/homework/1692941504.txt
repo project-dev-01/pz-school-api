@@ -1,0 +1,192 @@
+<div class="row" id="homeworks">
+        <div class="col-xl-12">
+            <div class="card">
+                <ul class="nav nav-tabs">
+                    <li class="nav-item">
+                        <h4 class="nav-link" id="title">
+                        Homework List (All Subjects)
+                        </h4><h4>
+                    </h4></li>
+                </ul><br>
+                <div class="card-body" id="homework_list">
+                                                            <form class="submitHomeworkForm" id="form0" method="post" enctype="multipart/form-data" autocomplete="off">
+                        <input type="hidden" name="_token" value="jpBIQ2KEpMzTume2wbriwYIKKfMyV8nu6FUGm1Pz">                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="form-group">
+                                    <p>
+                                    </p><div>
+                                        <a class="list-group-item list-group-item-info btn-block btn-lg" data-toggle="collapse" href="#hw-0" role="button" aria-expanded="true" aria-controls="collapseExample">
+                                            <i class="fas fa-caret-square-down"></i> 国語 - 30 July 2023   if($work['homework_status'] == 0) (Submitted)                                          </a>
+                                    </div>
+                                    <p></p>
+                                    <div class="collapse show" id="hw-0" style="">
+                                        <div class="card card-body">
+                                            <div class="row">
+                                                <div class="col-md-6">
+                                                    <div class="row">
+                                                        <p class="col-md-12"><span class="font-weight-semibold homework-list">Title</span>test</p>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <div class="row">
+                                                        <p class="col-md-12"><span class="font-weight-semibold homework-list">Status</span> Incomplete </p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="row">
+                                                <div class="col-md-6">
+                                                    <div class="row">
+                                                        <p class="col-md-12"><span class="font-weight-semibold homework-list">Date Of Homework</span>July 30 , 2023</p>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <div class="row">
+                                                        <p class="col-md-12"><span class="font-weight-semibold homework-list">Date Of Submission</span>July 30 , 2023</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="row">
+                                                <div class="col-md-6">
+                                                    <div class="row">
+                                                        <p class="col-md-12"><span class="font-weight-semibold homework-list">Evalution Date</span></p>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <div class="row">
+                                                        <p class="col-md-12"><span class="font-weight-semibold homework-list">Remarks</span>test</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="row">
+                                                <div class="col-md-6">
+                                                    <div class="row">
+                                                        <p class="col-md-12"><span class="font-weight-semibold homework-list">Rank Out Of 5 </span></p>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <div class="row">
+                                                        <p class="col-md-12"><span class="font-weight-semibold homework-list">Document</span><a href="https://api.suzen.school/public/4/teacher/homework/1690667923.txt" download="">
+                                                                <i class="fas fa-cloud-download-alt" data-toggle="tooltip" title="" data-original-title="Click to download..!"></i>
+                                                            </a></p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <hr>
+                                            <div class="row">
+                                                <div class="col-md-12">
+                                                    <div class="row">
+                                                        <div class="col-md-12 font-weight-bold">Submission Process Here :- </div>
+                                                    </div>
+                                                </div>
+                                            </div><br>
+                                            <div class="row">
+                                                <input type="hidden" name="homework_id" value="4">
+                                                <div class="col-md-6">
+                                                    <p class="col-md-12"><span class="font-weight-semibold">Note </span><textarea maxlength="255" id="txtarea_prev_remarks" class="form-control alloptions" placeholder="Enter the text..." name="remarks" data-parsley-trigger="keyup" data-parsley-minlength="20" data-parsley-maxlength="100" data-parsley-minlength-message="Come on! You need to enter at least a 20 character comment.." data-parsley-validation-threshold="10">                                                   </textarea></p>
+
+                                                </div>
+
+                                                                                            </div><br>
+                                        </div>
+                                    </div>
+
+                                </div>
+                            </div>
+                        </div>
+
+                    </form>
+                                        <form class="submitHomeworkForm" id="form1" method="post" enctype="multipart/form-data" autocomplete="off">
+                        <input type="hidden" name="_token" value="jpBIQ2KEpMzTume2wbriwYIKKfMyV8nu6FUGm1Pz">                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="form-group">
+                                    <p>
+                                    </p><div>
+                                        <a class="list-group-item list-group-item-info btn-block btn-lg collapsed" data-toggle="collapse" href="#hw-1" role="button" aria-expanded="false" aria-controls="collapseExample">
+                                            <i class="fas fa-caret-square-down"></i> 国語 - 6 June 2023   if($work['homework_status'] == 0) (Submitted)                                          </a>
+                                    </div>
+                                    <p></p>
+                                    <div class="collapse" id="hw-1" style="">
+                                        <div class="card card-body">
+                                            <div class="row">
+                                                <div class="col-md-6">
+                                                    <div class="row">
+                                                        <p class="col-md-12"><span class="font-weight-semibold homework-list">Title</span>国语</p>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <div class="row">
+                                                        <p class="col-md-12"><span class="font-weight-semibold homework-list">Status</span> Incomplete </p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="row">
+                                                <div class="col-md-6">
+                                                    <div class="row">
+                                                        <p class="col-md-12"><span class="font-weight-semibold homework-list">Date Of Homework</span>June 6 , 2023</p>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <div class="row">
+                                                        <p class="col-md-12"><span class="font-weight-semibold homework-list">Date Of Submission</span>June 8 , 2023</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="row">
+                                                <div class="col-md-6">
+                                                    <div class="row">
+                                                        <p class="col-md-12"><span class="font-weight-semibold homework-list">Evalution Date</span></p>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <div class="row">
+                                                        <p class="col-md-12"><span class="font-weight-semibold homework-list">Remarks</span>Testing</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="row">
+                                                <div class="col-md-6">
+                                                    <div class="row">
+                                                        <p class="col-md-12"><span class="font-weight-semibold homework-list">Rank Out Of 5 </span></p>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <div class="row">
+                                                        <p class="col-md-12"><span class="font-weight-semibold homework-list">Document</span><a href="https://api.suzen.school/public/4/teacher/homework/1686038985.pdf" download="">
+                                                                <i class="fas fa-cloud-download-alt" data-toggle="tooltip" title="" data-original-title="Click to download..!"></i>
+                                                            </a></p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <hr>
+                                            <div class="row">
+                                                <div class="col-md-12">
+                                                    <div class="row">
+                                                        <div class="col-md-12 font-weight-bold">Submission Process Here :- </div>
+                                                    </div>
+                                                </div>
+                                            </div><br>
+                                            <div class="row">
+                                                <input type="hidden" name="homework_id" value="2">
+                                                <div class="col-md-6">
+                                                    <p class="col-md-12"><span class="font-weight-semibold">Note </span><textarea maxlength="255" id="txtarea_prev_remarks" class="form-control alloptions" placeholder="Enter the text..." name="remarks" data-parsley-trigger="keyup" data-parsley-minlength="20" data-parsley-maxlength="100" data-parsley-minlength-message="Come on! You need to enter at least a 20 character comment.." data-parsley-validation-threshold="10">                                                   </textarea></p>
+
+                                                </div>
+
+                                                                                            </div><br>
+                                        </div>
+                                    </div>
+
+                                </div>
+                            </div>
+                        </div>
+
+                    </form>
+                                                            <div class="form-group text-right m-b-0">
+
+                    </div>
+
+                </div> <!-- end card-body -->
+            </div> <!-- end card-->
+        </div> <!-- end col -->
+
+    </div>

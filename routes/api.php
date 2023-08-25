@@ -601,6 +601,7 @@ Route::group(['middleware' => ['auth:api', 'throttle:limit_per_user', 'logroute'
     Route::get('get_schedule_exam_details_by_student', [ApiController::class, 'getScheduleExamDetailsBYStudent']);
     // get unread notifications
     Route::get('unread_notifications', [ApiController::class, 'unreadNotifications']);
+    Route::get('parent_notification', [ApiController::class, 'parentUnreadNotifications']);
     Route::post('mark_as_read', [ApiController::class, 'markAsRead']);
     // get absent late excuse classroom
     Route::post('get_absent_late_excuse', [ApiController::class, 'getAbsentLateExcuse']);
