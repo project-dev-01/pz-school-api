@@ -266,9 +266,29 @@ class AuthController extends BaseController
         $fromDate = $request->frm_ldate . ' 00:00:00';
         $toDate = $request->to_ldate . ' 23:59:59';
         if ($request->role_id == 'All') {
-            $data = Log_history::where('branch_id', $request->branch_id)->whereBetween('login_time', [$fromDate, $toDate])->get();
+            // $data = Log_history::where('branch_id', $request->branch_id)
+            //     ->where('is_active', '0')
+            //     ->whereBetween('login_time', [$fromDate, $toDate])
+            //     ->get();
+            $data = DB::table('log_history')
+                ->join('users', 'log_history.login_id', '=', 'users.id')
+                ->select('log_history.*', 'users.is_active')
+                ->where('users.is_active', '0')
+                ->where('users.branch_id', $request->branch_id)
+                ->whereBetween('log_history.login_time', [$fromDate, $toDate])
+                ->get();
         } else {
-            $data = Log_history::where('branch_id', $request->branch_id)->where('role_id', $request->role_id)->whereBetween('login_time', [$fromDate, $toDate])->get();
+            // $data = Log_history::where('branch_id', $request->branch_id)
+            //     ->where('is_active', '0')
+            //     ->where('role_id', $request->role_id)
+            //     ->whereBetween('login_time', [$fromDate, $toDate])->get();
+            $data = DB::table('log_history')
+                ->join('users', 'log_history.login_id', '=', 'users.id')
+                ->select('log_history.*', 'users.is_active')
+                ->where('users.is_active', '0')
+                ->where('users.branch_id', $request->branch_id)
+                ->whereBetween('log_history.login_time', [$fromDate, $toDate])
+                ->get();
         }
         $history = array();
         foreach ($data as $item) {

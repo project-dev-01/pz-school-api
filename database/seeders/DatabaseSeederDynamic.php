@@ -23,6 +23,7 @@ class DatabaseSeederDynamic extends Seeder
             TeacherAbsentReasonSeeder::class,
             TeacherExcusedReasonSeeder::class,
             PaperTypeSeeder::class,
+            WorkWeekSeeder::class
             
         ]);
         // User::factory(10)->create();

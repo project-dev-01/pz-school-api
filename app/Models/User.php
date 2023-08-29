@@ -34,6 +34,7 @@ class User extends Authenticatable
         'password_changed_at',
         'google2fa_secret',
         'google2fa_secret_enable',
+        'is_active',
         'last_seen'
     ];
 

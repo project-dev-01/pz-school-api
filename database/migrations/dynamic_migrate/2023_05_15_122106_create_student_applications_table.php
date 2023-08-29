@@ -54,7 +54,7 @@ class CreateStudentApplicationsTable extends Migration
             $table->string('guardian_phone_number');
             $table->string('guardian_occupation');
             $table->string('guardian_email');
-            $table->integer('staus');
+            $table->enum('status', ['Applied', 'Approved','Enrolled']);
             $table->timestamps();
         });
     }

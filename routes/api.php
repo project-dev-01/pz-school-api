@@ -899,10 +899,10 @@ Route::group(['middleware' => ['auth:api', 'throttle:limit_per_user', 'logroute'
     Route::post('holidays/delete', [ApiControllerOne::class, 'deleteHolidays']);
 
     Route::post('all_student/ranking', [ApiControllerOne::class, 'allStudentRanking']);
-	
-	// Activity Monitoring
-	Route::post('lastlogout', [AuthController::class, 'lastlogout']);
-	Route::get('login_list', [AuthController::class, 'login_historylist']);
+
+    // Activity Monitoring
+    Route::post('lastlogout', [AuthController::class, 'lastlogout']);
+    Route::get('login_list', [AuthController::class, 'login_historylist']);
     // BankAccount routes
     Route::post('bank_account/add', [ApiController::class, 'addBankAccount']);
     Route::get('bank_account/list', [ApiController::class, 'getBankAccountList']);
@@ -911,7 +911,7 @@ Route::group(['middleware' => ['auth:api', 'throttle:limit_per_user', 'logroute'
     Route::post('bank_account/delete', [ApiController::class, 'deleteBankAccount']);
     Route::post('bank_account/status', [ApiController::class, 'bankAccountStatus']);
 
-    
+
     // bank routes
     Route::post('bank/add', [ApiController::class, 'addBank']);
     Route::get('bank/list', [ApiController::class, 'getBankList']);
@@ -923,7 +923,9 @@ Route::group(['middleware' => ['auth:api', 'throttle:limit_per_user', 'logroute'
     Route::get('work/week/get', [ApiControllerOne::class, 'workWeekGet']);
     Route::post('work/week/update', [ApiControllerOne::class, 'workWeekUpdate']);
     Route::get('get_public_holidays', [ApiController::class, 'getPublicHolidays']);
-    
+
     Route::post('fees/get_parent_fees_list', [ApiControllerOne::class, 'getParentFeesList']);
     Route::post('fees/parent_fees_history', [ApiControllerOne::class, 'parentFeesHistory']);
+    // get today schedules
+    Route::get('get_today_schedules_admin', [ApiControllerOne::class, 'getTodaySchedulesAdmin']);
 });

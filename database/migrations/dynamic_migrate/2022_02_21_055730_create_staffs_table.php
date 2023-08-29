@@ -51,7 +51,7 @@ class CreateStaffsTable extends Migration
             $table->string('nric_number')->nullable();
             $table->string('passport')->nullable();
             $table->enum('status', ['0', '1']);
-            $table->enum('is_active', ['0', '1'])->comment('0 => Active, 1 => Not active');
+            $table->enum('is_active', ['0', '1'])->comment('0 => Active, 1 => Not active')->default('0');
             $table->timestamps();
         });
     }

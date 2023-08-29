@@ -8017,9 +8017,9 @@ class ApiControllerOne extends BaseController
         $rank = 0;
         $same_rank = 1;
         foreach ($marks as $key => $mark) {
-            if($mark['fail']>0){
+            if ($mark['fail'] > 0) {
                 $marks[$key]['rank'] = "N/A";
-            }else{
+            } else {
                 if ($mark['mark'] != $last_mark) {
                     $rank = $same_rank;
                 }
@@ -8028,7 +8028,7 @@ class ApiControllerOne extends BaseController
                 $same_rank++;
             }
             // dd($last_mark);
-            
+
         }
         return $marks;
     }
@@ -9027,10 +9027,10 @@ class ApiControllerOne extends BaseController
             if ($class_rank) {
                 $student_rank = $this->calculate_overall_rank($class_rank);
             }
-            
+
             if ($request->type == "top") {
                 $student_rank = collect($student_rank)->sortByDesc('mark')->sortBy('rank')->all();
-    
+
                 // array_multisort(
                 //     array_column($student_rank, 'rank'),
                 //     SORT_ASC,
@@ -9047,13 +9047,12 @@ class ApiControllerOne extends BaseController
             }
             $rank = [];
             $no = 1;
-            foreach($student_rank as $sr){
+            foreach ($student_rank as $sr) {
                 $rank[$no] = $sr;
                 $no++;
             }
             return $this->successResponse($rank, 'All student top and bottom ranking fetch successfully');
         }
-        
     }
     // get Branch Id Permission
     public function getBranchIdPermission(Request $request)
@@ -9065,7 +9064,7 @@ class ApiControllerOne extends BaseController
         if (!$validator->passes()) {
             return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
         } else {
-            $data = BranchRolesPermission::select('branch_id','role_id','permission_status')->where('branch_id', $request->branch_id)->get();
+            $data = BranchRolesPermission::select('branch_id', 'role_id', 'permission_status')->where('branch_id', $request->branch_id)->get();
             return $this->successResponse($data, 'Branch permission fetch successfully');
         }
     }
@@ -9194,7 +9193,7 @@ class ApiControllerOne extends BaseController
                 ->groupBy('fa.group_id')
                 ->orderBy('st.id', 'ASC')
                 ->get()->toArray();
-                // dd($studentData);
+            // dd($studentData);
             $arrData = [];
             if (!empty($studentData)) {
                 foreach ($studentData as $key => $value) {
@@ -9243,7 +9242,7 @@ class ApiControllerOne extends BaseController
         }
     }
 
-    
+
     // fees view page
     public function parentFeesHistory(Request $request)
     {
@@ -9302,6 +9301,122 @@ class ApiControllerOne extends BaseController
                 ->orderBy('fg.id', 'asc')
                 ->get()->toArray();
             return $this->successResponse($allocations, 'Get fees row fetch successfully');
+        }
+    }
+    public function getTodaySchedulesAdmin(Request $request)
+    {
+        $validator = \Validator::make($request->all(), [
+            'branch_id' => 'required',
+            'login_id' => 'required'
+        ]);
+        if (!$validator->passes()) {
+            return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
+        } else {
+            // create new connection
+            $Connection = $this->createNewConnection($request->branch_id);
+            $today = now()->format('Y-m-d'); // Get today's date in 'YYYY-MM-DD' format
+            $todayWithHours = now()->format('Y-m-d H:i:s'); // Get today's date in 'YYYY-MM-DD' format
+            // all tasks in calendar
+            $tasks = $Connection->table('calendors as cl')
+                ->select('cl.id', 'cl.start', 'cl.end', 'cl.title')
+                ->where('cl.start', '<=', $todayWithHours)
+                ->where('cl.end', '>=', $todayWithHours)
+                ->where('cl.login_id', '=', $request->login_id)
+                ->get()->toArray();
+            //get all events
+            $event = $Connection->table('calendors as c')
+                ->select('c.id', 'c.start', 'c.end', 'e.title', 'e.audience')
+                ->leftJoin('events as e', 'c.event_id', '=', 'e.id')
+                ->leftJoin('event_types as et', 'e.type', '=', 'et.id')
+                ->leftjoin("classes as cl", \DB::raw("FIND_IN_SET(cl.id,e.selected_list)"), ">", \DB::raw("'0'"))
+                ->whereNotNull('c.event_id')
+                ->whereNull('c.group_id')
+                ->where('e.status', 1)
+                ->where('c.start', '<=', $todayWithHours)
+                ->where('c.end', '>=', $todayWithHours)
+                ->groupBy('c.event_id')
+                // ->groupBy('c.start')
+                ->get();
+
+            $all_events = [];
+            foreach ($event as $eve) {
+                $data = $eve;
+                if ($eve->audience == "1") {
+                    $data->class_name = "EveryOne";
+                    array_push($all_events, $data);
+                }
+                if ($eve->audience == "2") {
+                    array_push($all_events, $data);
+                }
+            }
+            $all_event_group = $Connection->table('calendors as c')
+                ->select('c.id', 'c.start', 'c.end', 'e.title', 'e.audience')
+                ->leftJoin('events as e', 'c.event_id', '=', 'e.id')
+                ->leftJoin('event_types as et', 'e.type', '=', 'et.id')
+                ->leftjoin("groups as g", \DB::raw("FIND_IN_SET(g.id,e.selected_list)"), ">", \DB::raw("'0'"))
+                ->whereNotNull('c.group_id')
+                ->where('e.status', 1)
+                ->where('c.start', '<=', $todayWithHours)
+                ->where('c.end', '>=', $todayWithHours)
+                ->groupBy('c.event_id')
+                // ->groupBy('c.start')
+                ->get();
+            $events_group = [];
+            foreach ($all_event_group as $events) {
+                if ($events->audience == "3") {
+                    array_push($events_group, $events);
+                }
+            }
+            //  bulk details
+            $bluk_calendar_admin = $Connection->table('calendors as cl')
+                ->select('cl.id', 'cl.start', 'cl.end', 'cl.title')
+                ->where("cl.teacher_id", "0")
+                ->where('cl.start', '<=', $todayWithHours)
+                ->where('cl.end', '>=', $todayWithHours)
+                ->whereNotNull('cl.bulk_id')
+                ->groupBy('cl.bulk_id')
+                ->get()->toArray();
+            // get exam timetable
+            $getTimeTableCalendor = $Connection->table('timetable_exam as tex')
+                ->select(
+                    'tex.id',
+                    'tex.time_start',
+                    'tex.time_end',
+                    'ex.name as exam_name',
+                    DB::raw("CONCAT('Exam: ',ex.name, ' - ', sbj.name) as title"),
+                    'tex.exam_date as start',
+                    'tex.exam_date as end'
+                )
+                ->join('subjects as sbj', 'tex.subject_id', '=', 'sbj.id')
+                ->join('exam as ex', 'tex.exam_id', '=', 'ex.id')
+                ->where('tex.exam_date', '<=', $today)
+                ->where('tex.exam_date', '>=', $today)
+                ->get();
+            $timetableCalendar = [];
+            if (!empty($getTimeTableCalendor)) {
+                foreach ($getTimeTableCalendor as $key => $value) {
+                    $object = new \stdClass();
+                    $start = $value->start . " " . $value->time_start;
+                    $end = $value->end . " " . $value->time_end;
+                    $start = date('Y-m-d H:i:s', strtotime($start));
+                    $end = date('Y-m-d H:i:s', strtotime($end));
+                    $object->id = $value->id;
+                    $object->title = $value->title;
+                    $object->start = $value->start;
+                    $object->end = $value->end;
+                    array_push($timetableCalendar, $object);
+                }
+            }
+
+            // dd($tasks);
+            // dd($all_events);
+            // dd($events_group);
+            // dd($bluk_calendar_admin);
+            // dd($timetableCalendar);
+            $combinedArray = array_merge($tasks, $all_events, $events_group,$bluk_calendar_admin,$timetableCalendar);
+            // print_r($combinedArray);
+            // exit;
+            return $this->successResponse($combinedArray, 'Today Schedule Events Fetched successfully');
         }
     }
 }
