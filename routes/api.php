@@ -928,4 +928,5 @@ Route::group(['middleware' => ['auth:api', 'throttle:limit_per_user', 'logroute'
     Route::post('fees/parent_fees_history', [ApiControllerOne::class, 'parentFeesHistory']);
     // get today schedules
     Route::get('get_today_schedules_admin', [ApiControllerOne::class, 'getTodaySchedulesAdmin']);
+    Route::get('get_today_schedules_teacher', [ApiControllerOne::class, 'getTodaySchedulesTeacher']);
 });

@@ -7421,16 +7421,16 @@ class ApiController extends BaseController
             ]);
 
             $homework_id = $query;
-            $getAssignStudent =  $staffConn->table('homeworks as h')->select('e.student_id','st.father_id','st.mother_id','st.guardian_id')
-            ->leftJoin('enrolls as e', function ($join) {
-                $join->on('e.class_id', '=', 'h.class_id')
-                    ->on('e.section_id', '=', 'h.section_id')
-                    ->on('e.academic_session_id', '=', 'h.academic_session_id');
-            })
-            ->leftJoin('students as st', 'e.student_id', '=', 'st.id')
-            ->where([
-                ['h.id', '=', $homework_id],
-            ])->get();
+            $getAssignStudent =  $staffConn->table('homeworks as h')->select('e.student_id', 'st.father_id', 'st.mother_id', 'st.guardian_id')
+                ->leftJoin('enrolls as e', function ($join) {
+                    $join->on('e.class_id', '=', 'h.class_id')
+                        ->on('e.section_id', '=', 'h.section_id')
+                        ->on('e.academic_session_id', '=', 'h.academic_session_id');
+                })
+                ->leftJoin('students as st', 'e.student_id', '=', 'st.id')
+                ->where([
+                    ['h.id', '=', $homework_id],
+                ])->get();
 
             // return $getAssignStudent;
             $assignerID = [];
@@ -7440,15 +7440,15 @@ class ApiController extends BaseController
             if (isset($getAssignStudent)) {
                 foreach ($getAssignStudent as $key => $value) {
                     array_push($assignerID, $value->student_id);
-                    if(isset($value->father_id) && $value->father_id != ""){
+                    if (isset($value->father_id) && $value->father_id != "") {
 
                         array_push($fatherID, $value->father_id);
                     }
-                    if(isset($value->mother_id) && $value->mother_id != ""){
+                    if (isset($value->mother_id) && $value->mother_id != "") {
 
                         array_push($motherID, $value->mother_id);
                     }
-                    if(isset($value->guardian_id) && $value->guardian_id != ""){
+                    if (isset($value->guardian_id) && $value->guardian_id != "") {
                         array_push($guardianID, $value->guardian_id);
                     }
                 }
@@ -7467,15 +7467,15 @@ class ApiController extends BaseController
             ])->where(function ($q) {
                 $q->where('role_id', 5);
             })->get();
-            
+
             $user = $student->merge($parent);
             // return $user;
-            
-            $homework = $staffConn->table('homeworks as h')->select('h.title as homework_name','c.name as class_name','sc.name as section_name','sbj.name as subject_name')
-            ->join('classes as c', 'h.class_id', '=', 'c.id')
-            ->join('sections as sc', 'h.section_id', '=', 'sc.id')
-            ->join('subjects as sbj', 'h.subject_id', '=', 'sbj.id')
-            ->where('h.id',$homework_id)->first();
+
+            $homework = $staffConn->table('homeworks as h')->select('h.title as homework_name', 'c.name as class_name', 'sc.name as section_name', 'sbj.name as subject_name')
+                ->join('classes as c', 'h.class_id', '=', 'c.id')
+                ->join('sections as sc', 'h.section_id', '=', 'sc.id')
+                ->join('subjects as sbj', 'h.subject_id', '=', 'sbj.id')
+                ->where('h.id', $homework_id)->first();
             $homework->due_date = $request['date_of_submission'];
 
             $details = [
@@ -8388,38 +8388,38 @@ class ApiController extends BaseController
                     'created_at' => date("Y-m-d H:i:s")
                 ]);
             }
-            
+
 
             $teacher =  $con->table('homeworks as h')->select('sa.teacher_id')
-            ->leftJoin('subject_assigns as sa', function ($join) {
-                $join->on('sa.class_id', '=', 'h.class_id')
-                    ->on('sa.section_id', '=', 'h.section_id')
-                    ->on('sa.subject_id', '=', 'h.subject_id')
-                    ->on('sa.academic_session_id', '=', 'h.academic_session_id');
-            })->where([
-                ['h.id', '=', $request['homework_id']],
-            ])->first();
-            
-            $homework = $con->table('homeworks as h')->select('h.title as homework_name','c.name as class_name','sc.name as section_name','sbj.name as subject_name')
-            ->join('classes as c', 'h.class_id', '=', 'c.id')
-            ->join('sections as sc', 'h.section_id', '=', 'sc.id')
-            ->join('subjects as sbj', 'h.subject_id', '=', 'sbj.id')
-            ->where('h.id',$request->homework_id)->first();
+                ->leftJoin('subject_assigns as sa', function ($join) {
+                    $join->on('sa.class_id', '=', 'h.class_id')
+                        ->on('sa.section_id', '=', 'h.section_id')
+                        ->on('sa.subject_id', '=', 'h.subject_id')
+                        ->on('sa.academic_session_id', '=', 'h.academic_session_id');
+                })->where([
+                    ['h.id', '=', $request['homework_id']],
+                ])->first();
+
+            $homework = $con->table('homeworks as h')->select('h.title as homework_name', 'c.name as class_name', 'sc.name as section_name', 'sbj.name as subject_name')
+                ->join('classes as c', 'h.class_id', '=', 'c.id')
+                ->join('sections as sc', 'h.section_id', '=', 'sc.id')
+                ->join('subjects as sbj', 'h.subject_id', '=', 'sbj.id')
+                ->where('h.id', $request->homework_id)->first();
             $homework->student_name = $request->student_name;
             $homework->date = date('Y-m-d');
-            
+
             $user = User::where('user_id', $teacher->teacher_id)->where([
-            ['branch_id', '=', $request->branch_id]
+                ['branch_id', '=', $request->branch_id]
             ])->where(function ($q) {
-            $q->where('role_id', 2)
-                ->orWhere('role_id', 3)
-                ->orWhere('role_id', 4);
+                $q->where('role_id', 2)
+                    ->orWhere('role_id', 3)
+                    ->orWhere('role_id', 4);
             })->get();
             $details = [
-            'branch_id' => $request->branch_id,
-            'student_id' => $request->student_id,
-            'homework_id' => $request->homework_id,
-            'homework' => $homework
+                'branch_id' => $request->branch_id,
+                'student_id' => $request->student_id,
+                'homework_id' => $request->homework_id,
+                'homework' => $homework
             ];
             // return $details;
             // notifications sent
@@ -8694,7 +8694,7 @@ class ApiController extends BaseController
                     $object = new \stdClass();
                     // dd($value);
                     $object->id = $value->id;
-                    $object->title = "Holiday: ".$value->title;
+                    $object->title = "Holiday: " . $value->title;
                     $object->start = $value->start;
                     $object->backgroundColor = 'red';
                     $object->borderColor = 'blue';
@@ -15117,6 +15117,7 @@ class ApiController extends BaseController
                     $ins->where('lev.status', $leave_status);
                 })
                 ->where('lev.academic_session_id', '=', $request->academic_session_id)
+                ->where('stf.is_active', '=', '0')
                 ->orderBy('lev.from_leave', 'desc')
                 ->get();
             return $this->successResponse($leaveDetails, 'Staff leave details fetch successfully');
@@ -15176,7 +15177,9 @@ class ApiController extends BaseController
                     'stf.photo',
                     'stf.is_active',
                     'ala.staff_id',
-                    'ala.assigner_staff_id',
+                    'ala.level_one_staff_id',
+                    'ala.level_two_staff_id',
+                    'ala.level_three_staff_id',
                     DB::raw("GROUP_CONCAT(sdp.name) as department_name"),
                     DB::raw("CONCAT(stf.first_name, ' ', stf.last_name) as name")
                 )
@@ -15200,11 +15203,13 @@ class ApiController extends BaseController
                     // foreach ($search_terms as $item) {
                     $query->whereRaw('FIND_IN_SET(?,us.role_id)', ['4'])
                         ->orWhereRaw('FIND_IN_SET(?,us.role_id)', ['3']);
+                        // ->orWhereRaw('FIND_IN_SET(?,us.role_id)', ['2']);
                     // }
                 })
                 ->where('stf.is_active', '=', '0')
                 ->groupBy("stf.id")
                 ->get();
+            // dd($getAllAdmins);
             return $this->successResponse($getAllAdmins, 'Staffs admin record fetch successfully');
         }
     }
@@ -15215,7 +15220,7 @@ class ApiController extends BaseController
         $validator = \Validator::make($request->all(), [
             'branch_id' => 'required',
             'staff_id' => 'required',
-            'assigner_staff_id' => 'required'
+            // 'assigner_staff_id' => 'required'
         ]);
 
         if (!$validator->passes()) {
@@ -15233,7 +15238,10 @@ class ApiController extends BaseController
 
             $arrDetails = array(
                 'staff_id' =>  $request->staff_id,
-                'assigner_staff_id' => $request->assigner_staff_id,
+                // 'assigner_staff_id' => $request->assigner_staff_id,
+                'level_one_staff_id' => $request->level_one_staff_id,
+                'level_two_staff_id' => $request->level_two_staff_id,
+                'level_three_staff_id' => $request->level_three_staff_id,
                 'created_by' => isset($request->created_by) ? $request->created_by : 0,
             );
             if (isset($old->id)) {

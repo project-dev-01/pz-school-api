@@ -11,8 +11,9 @@ class Helper
 {
 
     // code generaaator
-    public static function CodeGenerator($model, $trow, $length = 4, $prefix)
+    public static function CodeGenerator($model, $trow, $length = null, $prefix)
     {
+        $length = 4;
         $data = $model::orderBy('id', 'desc')->first();
         if (!$data) {
             $og_length = $length;
@@ -107,12 +108,12 @@ class Helper
     }
 
     // get like column
-    public static function getLikeColumn($url, $data) {
+    public static function getLikeColumn($url, $data)
+    {
         $data["token"] = session()->get('token');
         $data["branch_id"] = session()->get('branch_id');
         return $data;
         $response = Http::post($url, $data);
         return $response->json();
-
-     }
+    }
 }

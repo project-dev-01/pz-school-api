@@ -9318,22 +9318,23 @@ class ApiControllerOne extends BaseController
             $todayWithHours = now()->format('Y-m-d H:i:s'); // Get today's date in 'YYYY-MM-DD' format
             // all tasks in calendar
             $tasks = $Connection->table('calendors as cl')
-                ->select('cl.id', 'cl.start', 'cl.end', 'cl.title')
-                ->where('cl.start', '<=', $todayWithHours)
-                ->where('cl.end', '>=', $todayWithHours)
+                ->select('cl.id', 'cl.start', 'cl.end', 'cl.title', DB::raw('if(cl.all_day=1,false,true) as allDay'))
+                ->whereDate('cl.start', '<=', $today)
+                ->whereDate('cl.end', '>=', $today)
                 ->where('cl.login_id', '=', $request->login_id)
                 ->get()->toArray();
+            // dd($tasks);
             //get all events
             $event = $Connection->table('calendors as c')
-                ->select('c.id', 'c.start', 'c.end', 'e.title', 'e.audience')
+                ->select('c.id', 'c.start', 'c.end', 'e.title', 'e.audience', DB::raw('if(c.all_day=1,false,true) as allDay'))
                 ->leftJoin('events as e', 'c.event_id', '=', 'e.id')
                 ->leftJoin('event_types as et', 'e.type', '=', 'et.id')
                 ->leftjoin("classes as cl", \DB::raw("FIND_IN_SET(cl.id,e.selected_list)"), ">", \DB::raw("'0'"))
                 ->whereNotNull('c.event_id')
                 ->whereNull('c.group_id')
                 ->where('e.status', 1)
-                ->where('c.start', '<=', $todayWithHours)
-                ->where('c.end', '>=', $todayWithHours)
+                ->whereDate('c.start', '<=', $today)
+                ->whereDate('c.end', '>=', $today)
                 ->groupBy('c.event_id')
                 // ->groupBy('c.start')
                 ->get();
@@ -9350,14 +9351,14 @@ class ApiControllerOne extends BaseController
                 }
             }
             $all_event_group = $Connection->table('calendors as c')
-                ->select('c.id', 'c.start', 'c.end', 'e.title', 'e.audience')
+                ->select('c.id', 'c.start', 'c.end', 'e.title', 'e.audience', DB::raw('if(c.all_day=1,false,true) as allDay'))
                 ->leftJoin('events as e', 'c.event_id', '=', 'e.id')
                 ->leftJoin('event_types as et', 'e.type', '=', 'et.id')
                 ->leftjoin("groups as g", \DB::raw("FIND_IN_SET(g.id,e.selected_list)"), ">", \DB::raw("'0'"))
                 ->whereNotNull('c.group_id')
                 ->where('e.status', 1)
-                ->where('c.start', '<=', $todayWithHours)
-                ->where('c.end', '>=', $todayWithHours)
+                ->whereDate('c.start', '<=', $today)
+                ->whereDate('c.end', '>=', $today)
                 ->groupBy('c.event_id')
                 // ->groupBy('c.start')
                 ->get();
@@ -9369,10 +9370,10 @@ class ApiControllerOne extends BaseController
             }
             //  bulk details
             $bluk_calendar_admin = $Connection->table('calendors as cl')
-                ->select('cl.id', 'cl.start', 'cl.end', 'cl.title')
+                ->select('cl.id', 'cl.start', 'cl.end', 'cl.title', DB::raw('if(cl.all_day=1,false,true) as allDay'))
                 ->where("cl.teacher_id", "0")
-                ->where('cl.start', '<=', $todayWithHours)
-                ->where('cl.end', '>=', $todayWithHours)
+                ->whereDate('cl.start', '<=', $today)
+                ->whereDate('cl.end', '>=', $today)
                 ->whereNotNull('cl.bulk_id')
                 ->groupBy('cl.bulk_id')
                 ->get()->toArray();
@@ -9392,6 +9393,7 @@ class ApiControllerOne extends BaseController
                 ->where('tex.exam_date', '<=', $today)
                 ->where('tex.exam_date', '>=', $today)
                 ->get();
+
             $timetableCalendar = [];
             if (!empty($getTimeTableCalendor)) {
                 foreach ($getTimeTableCalendor as $key => $value) {
@@ -9402,20 +9404,208 @@ class ApiControllerOne extends BaseController
                     $end = date('Y-m-d H:i:s', strtotime($end));
                     $object->id = $value->id;
                     $object->title = $value->title;
-                    $object->start = $value->start;
-                    $object->end = $value->end;
+                    $object->start = $start;
+                    $object->end = $end;
                     array_push($timetableCalendar, $object);
                 }
             }
+            $combinedArray = array_merge($tasks, $all_events, $events_group, $bluk_calendar_admin, $timetableCalendar);
+            // Sort the combined array by datetime values
+            usort($combinedArray, function ($a, $b) {
+                return strtotime($a->start) - strtotime($b->start);
+            });
+            return $this->successResponse($combinedArray, 'Today Schedule Events Fetched successfully');
+        }
+    }
+    public function getTodaySchedulesTeacher(Request $request)
+    {
+        $validator = \Validator::make($request->all(), [
+            'branch_id' => 'required',
+            'login_id' => 'required',
+            'teacher_id' => 'required'
+        ]);
+        if (!$validator->passes()) {
+            return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
+        } else {
+            // create new connection
+            $Connection = $this->createNewConnection($request->branch_id);
+            // $meetingDatetimeString = '2023-07-12'; // Replace w
+            // $particularDate = '2023-07-12'; // Replace with the date you want to format
 
-            // dd($tasks);
-            // dd($all_events);
-            // dd($events_group);
-            // dd($bluk_calendar_admin);
-            // dd($timetableCalendar);
-            $combinedArray = array_merge($tasks, $all_events, $events_group,$bluk_calendar_admin,$timetableCalendar);
-            // print_r($combinedArray);
-            // exit;
+            // $dateTime = new DateTime($particularDate);
+            $teacherId = $request->teacher_id;
+            // $formattedDate = $dateTime->format('Y-m-d'); // Format as year-month-dayith your datetime string
+            // dd($formattedDate);
+            $today = now()->format('Y-m-d'); // Get today's date in 'YYYY-MM-DD' format
+            $todayWithHours = now()->format('Y-m-d H:i:s'); // Get today's date in 'YYYY-MM-DD' format
+            // all tasks in calendar
+            $tasks = $Connection->table('calendors as cl')
+                ->select('cl.id', 'cl.start', 'cl.end', 'cl.title', DB::raw('if(cl.all_day=1,false,true) as allDay'))
+                ->whereDate('cl.start', '<=', $today)
+                ->whereDate('cl.end', '>=', $today)
+                ->where('cl.login_id', '=', $request->login_id)
+                ->get()->toArray();
+            $timetable = $Connection->table('calendors as cl')
+                ->select('cl.id', 'cl.start', 'cl.end', DB::raw('CONCAT(c.short_name," (",s.name,") " " - ", sb.short_name) as title'), DB::raw('if(cl.all_day=1,false,true) as allDay'))
+                ->join('classes as c', 'cl.class_id', '=', 'c.id')
+                ->join('sections as s', 'cl.section_id', '=', 's.id')
+                ->join('staffs as st', 'cl.teacher_id', '=', 'st.id')
+                ->leftJoin('daily_reports as dr', function ($join) {
+                    $join->on('cl.class_id', '=', 'dr.class_id')
+                        ->on('cl.section_id', '=', 'dr.section_id')
+                        ->on('cl.subject_id', '=', 'dr.subject_id')
+                        ->on(DB::raw('date(cl.end)'), '=', 'dr.date');
+                })
+                ->leftJoin('events as ev', function ($join) {
+                    $join->where([
+                        [DB::raw('date(ev.start_date)'), '<=', DB::raw('date(cl.end)')],
+                        [DB::raw('date(ev.end_date)'), '>=', DB::raw('date(cl.end)')],
+                        ['ev.holiday', '=', '0']
+                    ]);
+                })
+                ->join('subjects as sb', 'cl.subject_id', '=', 'sb.id')
+                ->whereRaw("find_in_set($request->teacher_id,cl.teacher_id)")
+                ->whereDate('cl.start', '<=', $today)
+                ->whereDate('cl.end', '>=', $today)
+                // where null mean holidays can not show
+                ->whereNull('ev.id')
+                ->get()->toArray();
+            // all events
+            $all_event = $Connection->table('calendors as c')
+                ->select('c.id', 'c.start', 'c.end', 'e.title', 'e.audience', 'c.event_id', DB::raw('if(c.all_day=1,false,true) as allDay'))
+                ->leftJoin('events as e', 'c.event_id', '=', 'e.id')
+                ->leftJoin('event_types as et', 'e.type', '=', 'et.id')
+                ->leftjoin("classes as cl", \DB::raw("FIND_IN_SET(cl.id,e.selected_list)"), ">", \DB::raw("'0'"))
+                ->whereNotNull('c.event_id')
+                ->whereNull('c.group_id')
+                ->where('e.status', 1)
+                ->whereDate('c.start', '<=', $today)
+                ->whereDate('c.end', '>=', $today)
+                ->groupBy('c.event_id')
+                // ->groupBy('c.start')
+                ->get();
+
+            //     // return $all;
+            $event = [];
+            foreach ($all_event as $events) {
+
+                if ($events->audience == "1") {
+                    $events->class_name = "EveryOne";
+                    array_push($event, $events);
+                }
+                if ($events->audience == "2") {
+                    $class_check = $Connection->table('events as e')
+                        ->select('e.id', 's.teacher_id')
+                        ->leftjoin("classes as c", \DB::raw("FIND_IN_SET(c.id,e.selected_list)"), ">", \DB::raw("'0'"))
+                        ->leftJoin('subject_assigns as s', 'c.id', '=', 's.class_id')
+                        ->leftJoin('event_types as et', 'e.type', '=', 'et.id')
+                        ->where('e.id', $events->event_id)
+                        ->where('s.teacher_id', $teacherId)
+                        ->get();
+                    // return $class_check;
+                    if (!$class_check->isEmpty()) {
+                        if ($class_check[0]->teacher_id == $teacherId) {
+                            array_push($event, $events);
+                        }
+                    }
+                }
+            }
+
+            // group event
+            $all_event_group = $Connection->table('calendors as c')
+                ->select('c.id', 'c.start', 'c.end', 'e.title', 'e.audience', 'c.event_id', DB::raw('if(c.all_day=1,false,true) as allDay'))
+                ->leftJoin('events as e', 'c.event_id', '=', 'e.id')
+                ->leftJoin('event_types as et', 'e.type', '=', 'et.id')
+                ->leftjoin("groups as g", \DB::raw("FIND_IN_SET(g.id,e.selected_list)"), ">", \DB::raw("'0'"))
+                ->whereNotNull('c.group_id')
+                ->where('e.status', 1)
+                ->whereDate('c.start', '<=', $today)
+                ->whereDate('c.end', '>=', $today)
+                ->groupBy('c.event_id')
+                ->groupBy('c.start')
+                ->get();
+            $events_group = [];
+            foreach ($all_event_group as $events) {
+                if ($events->audience == "3") {
+                    // return $events;
+                    $group_check = $Connection->table('events as e')
+                        ->select('e.id', 's.id as teacher_id')
+                        ->leftjoin("groups as g", \DB::raw("FIND_IN_SET(g.id,e.selected_list)"), ">", \DB::raw("'0'"))
+                        ->leftjoin("staffs as s", 's.id', '=', 'g.staff')
+                        ->leftJoin('event_types as et', 'e.type', '=', 'et.id')
+                        ->where('e.id', $events->event_id)
+                        ->where('s.id', $teacherId)
+                        ->get();
+                    if (!$group_check->isEmpty()) {
+                        if ($group_check[0]->teacher_id == $teacherId) {
+                            array_push($events_group, $events);
+                        }
+                    }
+                }
+            }
+
+            // get_bulk_calendor_teacher
+            $get_bulk_calendor_teacher = $Connection->table('calendors as cl')
+                ->select('cl.id', 'cl.start', 'cl.end', 'cl.title', DB::raw('if(cl.all_day=1,false,true) as allDay'))
+                ->join('subject_assigns as sa', function ($q) {
+                    $q->on('cl.class_id', '=', 'sa.class_id')
+                        ->on('cl.section_id', '=', 'sa.section_id');
+                })
+                ->where('sa.teacher_id', $request->teacher_id)
+                ->where("cl.teacher_id", "0")
+                ->whereDate('cl.start', '<=', $today)
+                ->whereDate('cl.end', '>=', $today)
+                ->orWhere("cl.teacher_id", $request->teacher_id)
+                ->whereNotNull('cl.bulk_id')
+                // ->groupBy('cl.start')
+                ->groupBy('cl.bulk_id')
+                ->get()->toArray();
+            // get exam timetable
+            $getTimeTableCalendor = $Connection->table('subject_assigns as sa')
+                ->select(
+                    'tex.id',
+                    'tex.time_start',
+                    'tex.time_end',
+                    'ex.name as exam_name',
+                    DB::raw("CONCAT('Exam: ',ex.name, ' - ', sbj.name) as title"),
+                    'tex.exam_date as start',
+                    'tex.exam_date as end'
+                )
+                ->join('timetable_exam as tex', function ($q) {
+                    $q->on('tex.class_id', '=', 'sa.class_id')
+                        ->on('tex.section_id', '=', 'sa.section_id') //second join condition                           
+                        ->on('tex.subject_id', '=', 'sa.subject_id'); //need to add subject id also later                           
+                })
+                ->join('classes as cl', 'tex.class_id', '=', 'cl.id')
+                ->join('sections as sc', 'tex.section_id', '=', 'sc.id')
+                ->join('subjects as sbj', 'tex.subject_id', '=', 'sbj.id')
+                ->join('exam as ex', 'tex.exam_id', '=', 'ex.id')
+                ->where([
+                    ['sa.teacher_id', '=', $request->teacher_id]
+                ])
+                ->where('tex.exam_date', '<=', $today)
+                ->where('tex.exam_date', '>=', $today)
+                ->get();
+            $timetableCalendar = [];
+            if (!empty($getTimeTableCalendor)) {
+                foreach ($getTimeTableCalendor as $key => $value) {
+                    $object = new \stdClass();
+                    $start = $value->start . " " . $value->time_start;
+                    $end = $value->end . " " . $value->time_end;
+                    $start = date('Y-m-d H:i:s', strtotime($start));
+                    $end = date('Y-m-d H:i:s', strtotime($end));
+                    $object->id = $value->id;
+                    $object->title = $value->title;
+                    $object->start = $start;
+                    $object->end = $end;
+                    array_push($timetableCalendar, $object);
+                }
+            }
+            $combinedArray = array_merge($tasks, $timetable, $event, $events_group, $get_bulk_calendor_teacher, $timetableCalendar);
+            // Sort the combined array by datetime values
+            usort($combinedArray, function ($a, $b) {
+                return strtotime($a->start) - strtotime($b->start);
+            });
             return $this->successResponse($combinedArray, 'Today Schedule Events Fetched successfully');
         }
     }
