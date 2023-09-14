@@ -14971,7 +14971,7 @@ class ApiController extends BaseController
             'total_leave' => 'required',
             'leave_type' => 'required',
             'reason' => 'required',
-            'status' => 'required'
+            // 'status' => 'required'
         ]);
         if (!$validator->passes()) {
             return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
@@ -15019,7 +15019,10 @@ class ApiController extends BaseController
                     'to_leave' => $to_leave,
                     'leave_type' => $request['leave_type'],
                     'reason_id' => $request['reason'],
-                    'status' => $request['status'],
+                    // 'status' => $request['status'],
+                    'level_one_status' => $request['level_one_status'],
+                    'level_two_status' => $request['level_two_status'],
+                    'level_three_status' => $request['level_three_status'],
                     'total_leave' => $request['total_leave'],
                     'academic_session_id' => $request['academic_session_id'],
                     'document' => $fileName,
@@ -15129,7 +15132,9 @@ class ApiController extends BaseController
         $validator = \Validator::make($request->all(), [
             'branch_id' => 'required',
             'leave_id' => 'required',
-            'status' => 'required'
+            'status' => 'required',
+            'staff_id' => 'required',
+            'approver_level' => 'required'
         ]);
 
         if (!$validator->passes()) {
@@ -15138,13 +15143,31 @@ class ApiController extends BaseController
             $leave_id = $request->leave_id;
             // create new connection
             $Conn = $this->createNewConnection($request->branch_id);
-            // update data
-            $query = $Conn->table('staff_leaves')->where('id', $leave_id)->update([
+            // dd($request->approver_level);
+            if ($request->status == "Reject") {
+                $reject = "1";
+            }
+            $arrDetails = array(
                 'status' => $request->status,
-                'assiner_remarks' => (isset($request->assiner_remarks) ? $request->assiner_remarks : ""),
-                'assiner_id' => $request->staff_id,
-                'updated_at' => date("Y-m-d H:i:s")
-            ]);
+                'leave_reject' => (isset($reject) ? $reject : "0"),
+                'updated_at' => date("Y-m-d H:i:s"),
+            );
+            $arrDetails['level_one_status'] = $request->status;
+
+            if ($request->approver_level == "1") {
+                $arrDetails['level_one_status'] = $request->status;
+                $arrDetails['level_one_staff_remarks'] = (isset($request->assiner_remarks) ? $request->assiner_remarks : "");
+            }
+            if ($request->approver_level == "2") {
+                $arrDetails['level_two_status'] = $request->status;
+                $arrDetails['level_two_staff_remarks'] = (isset($request->assiner_remarks) ? $request->assiner_remarks : "");
+            }
+            if ($request->approver_level == "3") {
+                $arrDetails['level_three_status'] = $request->status;
+                $arrDetails['level_three_staff_remarks'] = (isset($request->assiner_remarks) ? $request->assiner_remarks : "");
+            }
+            // update data
+            $query = $Conn->table('staff_leaves')->where('id', $leave_id)->update($arrDetails);
             $success = [];
             if ($query) {
                 return $this->successResponse($success, 'Leave Request have Been updated');
@@ -15203,7 +15226,7 @@ class ApiController extends BaseController
                     // foreach ($search_terms as $item) {
                     $query->whereRaw('FIND_IN_SET(?,us.role_id)', ['4'])
                         ->orWhereRaw('FIND_IN_SET(?,us.role_id)', ['3']);
-                        // ->orWhereRaw('FIND_IN_SET(?,us.role_id)', ['2']);
+                    // ->orWhereRaw('FIND_IN_SET(?,us.role_id)', ['2']);
                     // }
                 })
                 ->where('stf.is_active', '=', '0')
@@ -15271,14 +15294,30 @@ class ApiController extends BaseController
             // create new connection
             $conn = $this->createNewConnection($request->branch_id);
             // get data
-            $leave_status = "All";
-            if (isset($request->leave_status)) {
-                $leave_status = $request->leave_status;
+            // level one status
+            $level_one_status = "All";
+            if (isset($request->level_one_status)) {
+                $level_one_status = $request->level_one_status;
+            }
+            // level two status
+            $level_two_status = "All";
+            if (isset($request->level_two_status)) {
+                $level_two_status = $request->level_two_status;
+            }
+            // level three status
+            $level_three_status = "All";
+            if (isset($request->level_three_status)) {
+                $level_three_status = $request->level_three_status;
             }
             $staff_id = $request->staff_id;
             $leaveDetails = $conn->table('assign_leave_approval as alp')
                 ->select(
-                    'lev.id',
+                    'lev.id as leave_id',
+                    'alp.id',
+                    'alp.level_one_staff_id',
+                    'alp.level_one_staff_id',
+                    'alp.level_two_staff_id',
+                    'alp.level_three_staff_id',
                     'lev.staff_id',
                     DB::raw('CONCAT(stf.first_name, " ", stf.last_name) as name'),
                     DB::raw('DATE_FORMAT(lev.from_leave, "%d-%m-%Y") as from_leave'),
@@ -15292,21 +15331,87 @@ class ApiController extends BaseController
                     'lev.document',
                     'lev.status',
                     'lev.remarks',
-                    'lev.assiner_remarks'
+                    'lev.assiner_remarks',
+                    'lev.level_one_status',
+                    'lev.level_two_status',
+                    'lev.level_three_status',
+                    'lev.level_one_staff_remarks',
+                    'lev.level_two_staff_remarks',
+                    'lev.level_three_staff_remarks'
                 )
                 ->join('staffs as stf', 'alp.staff_id', '=', 'stf.id')
                 ->join('staff_leaves as lev', 'alp.staff_id', '=', 'lev.staff_id')
                 ->join('leave_types as lt', 'lev.leave_type', '=', 'lt.id')
-                // ->join('reasons as rs', 'lev.reason_id', '=', 'rs.id')
                 ->leftJoin('teacher_absent_reasons as rs', 'lev.reason_id', '=', 'rs.id')
-                ->where('alp.assigner_staff_id', '=', $staff_id)
-                ->when($leave_status != "All", function ($ins)  use ($leave_status) {
-                    $ins->where('lev.status', $leave_status);
+                ->when($level_one_status != "All", function ($insone)  use ($level_one_status) {
+                    $insone->whereNotNull('alp.level_one_staff_id')->where('lev.level_one_status', $level_one_status);
                 })
+                ->when($level_two_status != "All", function ($insone)  use ($level_two_status) {
+                    $insone->whereNotNull('alp.level_two_staff_id')->where('lev.level_two_status', $level_two_status);
+                })
+                ->when($level_three_status != "All", function ($insone)  use ($level_three_status) {
+                    $insone->whereNotNull('alp.level_three_staff_id')->where('lev.level_three_status', $level_three_status);
+                })
+                ->where('alp.level_one_staff_id', $staff_id)
+                ->orWhere('alp.level_two_staff_id', $staff_id)
+                ->orWhere('alp.level_three_staff_id', $staff_id)
                 ->where('lev.academic_session_id', '=', $request->academic_session_id)
-                ->orderBy('lev.from_leave', 'desc')
+                // ->orderBy('lev.from_leave', 'desc')
                 ->get();
-            return $this->successResponse($leaveDetails, 'Leave Approval History By Staff details fetch successfully');
+            $levelToShowArray = [];
+            if (!empty($leaveDetails)) {
+                foreach ($leaveDetails as $val) {
+                    $checkYourAllocatedLevel = 0;
+                    // check which level your staff id
+                    if ($val->level_one_staff_id == $staff_id) {
+                        $checkYourAllocatedLevel = 1;
+                    }
+                    if ($val->level_two_staff_id == $staff_id) {
+                        $checkYourAllocatedLevel = 2;
+                    }
+                    if ($val->level_three_staff_id == $staff_id) {
+                        $checkYourAllocatedLevel = 3;
+                    }
+                    $approveOldStatusLevel = 0;
+                    for ($i = 1; $i <= $checkYourAllocatedLevel; $i++) {
+                        if ($i == 1) {
+                            // check 1st level
+                            if ($val->level_one_status == "Approve") {
+                                $approveOldStatusLevel = 1;
+                            }
+                        }
+                        if ($i == 2) {
+                            // check 2nd level
+                            if ($val->level_two_status == "Approve") {
+                                $approveOldStatusLevel = 2;
+                            }
+                        }
+                        if ($i == 3) {
+                            // check 3rd level
+                            if ($val->level_three_status == "Approve") {
+                                $approveOldStatusLevel = 3;
+                            }
+                        }
+                    }
+                    // check greater than zero because zero can not push
+                    if ($checkYourAllocatedLevel > 0) {
+                        // if he approved
+                        if ($checkYourAllocatedLevel == $approveOldStatusLevel) {
+                            // yes ready to show next level
+                            // $val->show = 'yes'; // Add a new column with a value
+                            // dd($val);
+                            $levelToShowArray[] = $val; // Push the modified item to the new array
+                        }
+                        // reduce one level
+                        $oneLevelReduce = $checkYourAllocatedLevel - 1;
+                        // $checkYourAllocatedLevel 
+                        if ($oneLevelReduce == $approveOldStatusLevel) {
+                            $levelToShowArray[] = $val; // Push the modified item to the new array
+                        }
+                    }
+                }
+            }
+            return $this->successResponse($levelToShowArray, 'Leave Approval History By Staff details fetch successfully');
         }
     }
     // leave details
@@ -15315,7 +15420,8 @@ class ApiController extends BaseController
         $validator = \Validator::make($request->all(), [
             'branch_id' => 'required',
             'leave_id' => 'required',
-            'staff_id' => 'required'
+            'staff_id' => 'required',
+            'assign_leave_approval_id' => 'required'
         ]);
         if (!$validator->passes()) {
             return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
@@ -15330,6 +15436,13 @@ class ApiController extends BaseController
                 ->select(
                     'lev.id',
                     'lev.staff_id',
+                    'lev.level_one_status',
+                    'lev.level_two_status',
+                    'lev.level_three_status',
+                    'lev.level_one_staff_remarks',
+                    'lev.level_two_staff_remarks',
+                    'lev.level_three_staff_remarks',
+                    'lev.leave_reject',
                     DB::raw('CONCAT(stf.first_name, " ", stf.last_name) as name'),
                     DB::raw('DATE_FORMAT(lev.from_leave, "%d-%m-%Y") as from_leave'),
                     DB::raw('DATE_FORMAT(lev.to_leave, "%d-%m-%Y") as to_leave'),
@@ -15349,6 +15462,21 @@ class ApiController extends BaseController
                 ->leftJoin('teacher_absent_reasons as rs', 'lev.reason_id', '=', 'rs.id')
                 ->where('lev.id', '=', $leave_id)
                 ->first();
+            // get assign leave approval
+            $leaveDetails['assign_leave_approval_details'] = $conn->table('assign_leave_approval as alp')
+                ->select(
+                    // 'alp.id',
+                    'alp.level_one_staff_id',
+                    'alp.level_two_staff_id',
+                    'alp.level_three_staff_id'
+                )
+                // ->where('alp.level_one_staff_id', $staff_id)
+                // ->orWhere('alp.level_two_staff_id', $staff_id)
+                // ->orWhere('alp.level_three_staff_id', $staff_id)
+                ->where('alp.id', '=', $request->assign_leave_approval_id)
+                ->first();
+            // dd($leaveDetails['assign_leave_approval_details']);
+            // dd($leaveDetails['leave_details']);
             // $leaveDetails['leave_type_details'] = $conn->table('staff_leaves as lev')
             // ->select(
             //     'lev.staff_id',
@@ -15378,15 +15506,15 @@ class ApiController extends BaseController
                 ->leftJoin('staff_leaves as lev', function ($q) use ($staff_id, $academic_session_id) {
                     $q->on('sla.leave_type', '=', 'lev.leave_type')
                         ->on('sla.staff_id', '=',  'lev.staff_id')
-                        ->where('lev.academic_session_id', '=', $academic_session_id)
-                        ->where('lev.status', '=', 'Approve');
+                        ->where('lev.academic_session_id', '=', $academic_session_id);
+                    // ->where('lev.status', '=', 'Approve');
                 })
                 ->leftJoin('leave_types as lt', 'sla.leave_type', '=', 'lt.id')
                 ->where('sla.staff_id', '=', $staff_id)
                 // ->where('sla.academic_session_id', '=', $academic_session_id)
                 ->groupBy('sla.leave_type')
                 ->get();
-
+            // dd($leaveDetails['leave_type_details']);
             return $this->successResponse($leaveDetails, 'Staff leave row details fetch successfully');
         }
     }
