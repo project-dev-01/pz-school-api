@@ -15057,23 +15057,50 @@ class ApiController extends BaseController
                     $assignerID = [];
                     if (isset($getAssignStaff)) {
                         foreach ($getAssignStaff as $key => $value) {
-                            array_push($assignerID, $value->assigner_staff_id);
+                            if ($value->level_one_staff_id) {
+                                array_push($assignerID, $value->level_one_staff_id);
+                            }
+                            if ($value->level_two_staff_id) {
+                                array_push($assignerID, $value->level_two_staff_id);
+                            }
+                            if ($value->level_three_staff_id) {
+                                array_push($assignerID, $value->level_three_staff_id);
+                            }
                         }
                     }
+                    // dd($assignerID);
+
                     // send leave notifications
-                    $getAssiger = User::whereIn('user_id', $assignerID)->where([
+                    // $notificationsUsers = [];
+                    // if (count($assignerID) > 0) {
+                    //     foreach ($assignerID as $val) {
+                    //         // dd($val);
+                    //         echo $val;
+                    //         // $getAssiger = User::whereIn('user_id', 7)->where([
+                    //         //     ['branch_id', '=', $request->branch_id]
+                    //         // ])->first();
+
+                    //         // array_push($notificationsUsers, $getAssiger);
+                    //     }
+                    // }
+                    // dd($assignerID);
+
+                    // exit;
+                    $user = User::whereIn('user_id', $assignerID)->where([
                         ['branch_id', '=', $request->branch_id]
                     ])->where(function ($q) {
                         $q->where('role_id', 2)
                             ->orWhere('role_id', 3)
                             ->orWhere('role_id', 4);
                     })->get();
-                    $allAdmin = User::where([
-                        ['branch_id', '=', $request->branch_id],
-                        ['role_id', '=', 2]
-                    ])->get();
-                    $merged = $allAdmin->merge($getAssiger);
-                    $user = $merged->all();
+                    // dd($getAssiger);
+                    // $allAdmin = User::where([
+                    //     ['branch_id', '=', $request->branch_id],
+                    //     ['role_id', '=', 2]
+                    // ])->get();
+                    // $merged = $allAdmin->merge($getAssiger);
+                    // $user = $merged->all();
+
                     // get staff name
                     $staff_name = $staffConn->table('staffs')
                         ->select(
@@ -15106,10 +15133,6 @@ class ApiController extends BaseController
             // create new connection
             $conn = $this->createNewConnection($request->branch_id);
             // get data
-            // $leave_status = "All";
-            // if (isset($request->leave_status)) {
-            //     $leave_status = $request->leave_status;
-            // }
             $staff_id = $request->staff_id;
             $leaveDetails = $conn->table('staff_leaves as lev')
                 ->select(
@@ -15136,14 +15159,10 @@ class ApiController extends BaseController
                 ->join('leave_types as lt', 'lev.leave_type', '=', 'lt.id')
                 ->leftJoin('staffs as stf', 'lev.staff_id', '=', 'stf.id')
                 ->leftJoin('staffs as appr', 'lev.assiner_id', '=', 'appr.id')
-                // ->leftJoin('reasons as rs', 'lev.reason_id', '=', 'rs.id')
                 ->leftJoin('teacher_absent_reasons as rs', 'lev.reason_id', '=', 'rs.id')
                 ->when($staff_id, function ($query, $staff_id) {
                     return $query->where('lev.staff_id', '=', $staff_id);
                 })
-                // ->when($leave_status != "All", function ($ins)  use ($leave_status) {
-                //     $ins->where('lev.status', $leave_status);
-                // })
                 ->where('lev.academic_session_id', '=', $request->academic_session_id)
                 ->where('stf.is_active', '=', '0')
                 ->orderBy('lev.from_leave', 'desc')
@@ -15205,6 +15224,8 @@ class ApiController extends BaseController
                 ->where('sl.id', $leave_id)
                 ->get();
             $approveCount = 0;
+            $rejectCount = 0;
+            $pendingCount = 0;
             $countLevel = 0;
             if (!empty($staff_leaves)) {
                 foreach ($staff_leaves as $key => $val) {
@@ -15228,6 +15249,26 @@ class ApiController extends BaseController
                     if ($val->level_three_status == "Approve") {
                         $approveCount++;
                     }
+                    // pending count
+                    if ($val->level_one_status == "Pending") {
+                        $pendingCount++;
+                    }
+                    if ($val->level_two_status == "Pending") {
+                        $pendingCount++;
+                    }
+                    if ($val->level_three_status == "Pending") {
+                        $pendingCount++;
+                    }
+                    // reject count
+                    if ($val->level_one_status == "Reject") {
+                        $rejectCount++;
+                    }
+                    if ($val->level_two_status == "Reject") {
+                        $rejectCount++;
+                    }
+                    if ($val->level_three_status == "Reject") {
+                        $rejectCount++;
+                    }
                 }
             }
             // approver count and
@@ -15237,10 +15278,21 @@ class ApiController extends BaseController
                     'leave_reject' => "0",
                     'updated_at' => date("Y-m-d H:i:s")
                 );
-                // dd($overallStatus);
-                // yes all are approved
-                $Conn->table('staff_leaves')->where('id', $leave_id)->update($overallStatus);
+            } else if ($rejectCount > 0) {
+                $overallStatus = array(
+                    'status' => 'Reject',
+                    'leave_reject' => (isset($reject) ? $reject : "0"),
+                    'updated_at' => date("Y-m-d H:i:s")
+                );
+            } else {
+                $overallStatus = array(
+                    'status' => 'Pending',
+                    'leave_reject' => "0",
+                    'updated_at' => date("Y-m-d H:i:s")
+                );
             }
+            $Conn->table('staff_leaves')->where('id', $leave_id)->update($overallStatus);
+
             $success = [];
             if ($query) {
                 return $this->successResponse($success, 'Leave Request have Been updated');
@@ -15263,7 +15315,7 @@ class ApiController extends BaseController
             $conn = $this->createNewConnection($request->branch_id);
             $branchID = $request->branch_id;
             // get data
-            $getAllAdmins = $conn->table('staffs as stf')
+            $staffDetails['staff_details'] = $conn->table('staffs as stf')
                 ->select(
                     'us.id as uuid',
                     'us.role_id',
@@ -15305,8 +15357,27 @@ class ApiController extends BaseController
                 ->where('stf.is_active', '=', '0')
                 ->groupBy("stf.id")
                 ->get();
-            // dd($getAllAdmins);
-            return $this->successResponse($getAllAdmins, 'Staffs admin record fetch successfully');
+            //above same query but get count
+            $staffDetails['widget_details'] = $conn->table('staffs as stf')
+                ->select(
+                    DB::raw('count(stf.id) as total_staff'),
+                    DB::raw('COUNT(CASE WHEN ala.level_one_staff_id IS NOT NULL THEN 1 END) as level_one_count'),
+                    DB::raw('COUNT(CASE WHEN ala.level_two_staff_id IS NOT NULL THEN 1 END) as level_two_count'),
+                    DB::raw('COUNT(CASE WHEN ala.level_three_staff_id IS NOT NULL THEN 1 END) as level_three_count'),
+                )
+                ->join('' . $main_db . '.users as us', function ($join) use ($branchID) {
+                    $join->on('stf.id', '=', 'us.user_id')
+                        ->where('us.branch_id', $branchID);
+                })
+                ->leftJoin("assign_leave_approval as ala", 'ala.staff_id', '=', 'stf.id')
+                ->where(function ($query) use ($branchID) {
+                    $query->whereRaw('FIND_IN_SET(?,us.role_id)', ['4'])
+                        ->orWhereRaw('FIND_IN_SET(?,us.role_id)', ['3']);
+                    // ->orWhereRaw('FIND_IN_SET(?,us.role_id)', ['2']);
+                })
+                ->where('stf.is_active', '=', '0')
+                ->get();
+            return $this->successResponse($staffDetails, 'Staffs admin record fetch successfully');
         }
     }
     // assignLeaveApproval
