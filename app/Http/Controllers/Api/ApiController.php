@@ -15134,6 +15134,7 @@ class ApiController extends BaseController
             $conn = $this->createNewConnection($request->branch_id);
             // get data
             $staff_id = $request->staff_id;
+            // dd($staff_id);
             $leaveDetails = $conn->table('staff_leaves as lev')
                 ->select(
                     'lev.id',
@@ -15149,8 +15150,12 @@ class ApiController extends BaseController
                     'lev.document',
                     'lev.status',
                     'lev.level_one_status',
+                    'lev.level_two_status',
+                    'lev.level_three_status',
                     'lev.leave_reject',
                     'lev.level_one_staff_remarks',
+                    'lev.level_two_staff_remarks',
+                    'lev.level_three_staff_remarks',
                     'lev.remarks',
                     'lev.assiner_remarks',
                     DB::raw('CONCAT(appr.first_name, " ", appr.last_name) as approval_name')
