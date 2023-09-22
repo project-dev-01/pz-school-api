@@ -25,8 +25,15 @@ class CreateStaffLeavesTable extends Migration
             $table->integer('assiner_id')->nullable();
             $table->text('remarks')->nullable();
             $table->string('document')->nullable();
+            $table->string('level_one_status')->nullable();
+            $table->string('level_two_status')->nullable();
+            $table->string('level_three_status')->nullable();
             $table->string('status')->nullable();
             $table->integer('academic_session_id')->default('0');
+            $table->enum('leave_reject', ['0', '1'])->comment('0 => default, 1 => reject')->default('0');
+            $table->text('level_one_staff_remarks')->nullable();
+            $table->text('level_two_staff_remarks')->nullable();
+            $table->text('level_three_staff_remarks')->nullable();
             $table->timestamps();
         });
     }

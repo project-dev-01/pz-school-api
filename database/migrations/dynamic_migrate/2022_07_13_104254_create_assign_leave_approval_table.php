@@ -16,7 +16,10 @@ class CreateAssignLeaveApprovalTable extends Migration
         Schema::create('assign_leave_approval', function (Blueprint $table) {
             $table->id();
             $table->integer('staff_id');
-            $table->integer('assigner_staff_id');
+            $table->integer('level_one_staff_id')->nullable();
+            $table->integer('level_two_staff_id')->nullable();
+            $table->integer('level_three_staff_id')->nullable();
+            // $table->integer('assigner_staff_id')->nullable();
             $table->string('created_by')->nullable();
             $table->timestamps();
         });
