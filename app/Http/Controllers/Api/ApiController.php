@@ -41,6 +41,9 @@ use File;
 use Exception;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Hash;
+use App\Models\Menus;
+use App\Models\Menuaccess;
+
 
 class ApiController extends BaseController
 {
@@ -20400,4 +20403,197 @@ class ApiController extends BaseController
             }
         }
     }
+    
+    // Menu API Start
+    public function addMenu(Request $request)
+    {
+
+        $validator = \Validator::make($request->all(), [
+            
+            'menu_name' => 'required',
+            'menu_type' => 'required',
+            'menu_url' => 'required'
+        ]);
+        //dd('success');
+        if (!$validator->passes()) {
+            return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
+        } 
+        else {
+                // insert data
+                $query = Menus::insert([
+                    'role_id' => $request->role_id,
+                    'menu_name' => $request->menu_name,
+                    'menu_type' => $request->menu_type,
+                    'menu_icon' => $request->menu_icon,
+                    'menu_refid' => $request->menu_refid,
+                    'menu_url' => $request->menu_url,
+                    'menu_routename' => $request->menu_routename,
+                    'menu_status' => $request->menu_status,
+                    'menu_dropdown' => $request->menu_dropdown,
+                    'created_at' => date("Y-m-d H:i:s")
+                ]);               
+                $success = [];
+                if (!$query) {
+                    return $this->send500Error('Something went wrong.', ['error' => 'Something went wrong']);
+                } else {
+                    return $this->successResponse($success, 'New Menu has been successfully saved');
+                }
+            
+        }
+    }
+    public function updateMenuDetails(Request $request)
+    {
+
+        $validator = \Validator::make($request->all(), [
+            
+            'menu_name' => 'required',
+            'menu_type' => 'required',
+            'menu_url' => 'required'
+        ]);
+        //dd('success');
+        if (!$validator->passes()) {
+            return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
+        } 
+        else {
+                // Update data
+                $query =  Menus::where('menu_id', $request->menu_id)
+            ->update([
+                    'role_id' => $request->role_id,
+                    'menu_name' => $request->menu_name,
+                    'menu_type' => $request->menu_type,
+                    'menu_icon' => $request->menu_icon,
+                    'menu_refid' => $request->menu_refid,
+                    'menu_url' => $request->menu_url,
+                    'menu_routename' => $request->menu_routename,
+                    'menu_status' => $request->menu_status,
+                    'menu_dropdown' => $request->menu_dropdown,
+                    'updated_at' => date("Y-m-d H:i:s")
+                ]); 
+            
+                 
+                $success = [];
+                if (!$query) {
+                    return $this->send500Error('Something went wrong.', ['error' => 'Something went wrong']);
+                } else {
+                    return $this->successResponse($success, 'New Menu has been successfully Updated');
+                }
+            
+        }
+    }
+
+    public function getMenuList(Request $request)
+    {
+        if(isset($request->type))			
+		{$data = Menus::where('menu_type', $request->type)->orderBy("role_id", "asc")->get();}
+		else
+		{$data = Menus::All();}
+	
+	
+		//dd($data);
+        return $this->successResponse($data, 'Menus fetch successfully');
+    }
+    public function getMenuAccessList(Request $request)
+    {
+        $br_id =$request->br_id;
+        /* $data = DB::table('menus AS t1')
+        ->select('t1.*', 't2.menu_permission','t2.id as menuaccess_id')
+        ->leftJoin('menuaccess AS t2', 't1.menu_id', '=', 't2.menu_id')
+        ->where('t1.menu_type', $request->type)->where('t1.role_id', $request->role_id)->orderBy("t1.role_id", "asc")->get();
+        */
+        $br_id = $request->br_id;
+        $data = Menus::select('menus.*')
+            ->selectSub(function ($query) use ($br_id) {
+                $query->select('menu_permission')
+                    ->from('menuaccess')
+                    ->where('branch_id', $br_id)
+                    ->whereColumn('menus.menu_id', 'menuaccess.menu_id')
+                    ->limit(1);
+            }, 'menu_permission')
+            ->selectSub(function ($query) use ($br_id) {
+                $query->select('id')
+                    ->from('menuaccess')
+                    ->where('branch_id', $br_id)
+                    ->whereColumn('menus.menu_id', 'menuaccess.menu_id')
+                    ->limit(1);
+            }, 'menuaccess_id')
+            ->where('menu_type', $request->type)
+            ->where('role_id', $request->role_id)
+            ->orderBy("role_id", "asc")
+            ->get();
+       // dd($data);
+        return $this->successResponse($data, 'Menus fetch successfully');
+    }
+    public function getmenupermission(Request $request)
+    {
+        $br_id =$request->br_id;        
+        $role_id = $request->role_id;
+        $menu_id = $request->menu_id;        
+       /* $data = Menuaccess::select('menu_permission')
+                ->where('branch_id', $br_id)
+                ->where('role_id', $role_id)
+                ->where('menu_id', $menu_id)
+                ->first();*/
+       // dd($data);
+       $data = DB::table('menuaccess AS t1')
+    ->select('t1.menu_permission')
+    ->leftJoin('menus AS t2', 't1.menu_id', '=', 't2.menu_id')
+    ->where('t2.menu_routename', $menu_id)
+    ->where('t1.role_id', $role_id)
+    ->where('t1.branch_id', $br_id)
+    ->first();
+        return $this->successResponse($data, 'Get Menus Permission   successfully');
+    }
+    public function setmenupermission(Request $request)
+    {
+    
+        //dd($request->branch_id);
+         // insert data
+        foreach($request->menu_id as $menuid)
+        {
+            
+            if($request->act[$menuid]=='Insert')
+            {
+                $query = Menuaccess::insert([
+                    'role_id' => $request->role_id,
+                    'branch_id' => $request->br_id,
+                    //'branch_id' => 4,
+                    'menu_id' => $menuid,
+                    'menu_permission' => $request->accessdenied[$menuid],
+                    'created_at' => date("Y-m-d H:i:s")
+                ]); 
+            }
+            else
+            {
+                $query = Menuaccess::where('id',$request->menuaccess_id[$menuid])->update([
+                    'menu_permission' => $request->accessdenied[$menuid],
+                    'updated_at' => date("Y-m-d H:i:s")
+                ]);
+            }
+        } 
+
+        $success = [];
+        if (!$query) {
+            return $this->send500Error('Something went wrong.', ['error' => 'Something went wrong']);
+        } else {
+            return $this->successResponse($success, 'Menu Access Permission Assigned has been successfully saved');
+        }
+            
+        
+    }
+
+    public function getMenuDetails(Request $request)
+    {
+        $validator = \Validator::make($request->all(), [
+            'id' => 'required',
+            'token' => 'required',
+        ]);
+        if (!$validator->passes()) {
+            return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
+        } else {
+            $id = $request->id;
+            $MenuDetails = Menus::where('menu_id', $id)->first();
+            return $this->successResponse($MenuDetails, 'Menu row fetch successfully');
+        }
+    }
+    // Menu API END
 }

@@ -929,4 +929,17 @@ Route::group(['middleware' => ['auth:api', 'throttle:limit_per_user', 'logroute'
     // get today schedules
     Route::get('get_today_schedules_admin', [ApiControllerOne::class, 'getTodaySchedulesAdmin']);
     Route::get('get_today_schedules_teacher', [ApiControllerOne::class, 'getTodaySchedulesTeacher']);
+
+    // Menus routes
+	Route::post('menus/list', [ApiController::class, 'getMenuList']); 
+    
+	Route::post('menus/accesslist', [ApiController::class, 'getMenuAccessList']);     
+	Route::post('menus/add', [ApiController::class, 'addMenu']);
+        
+	Route::post('menus/setpermission', [ApiController::class, 'setmenupermission']);
+    
+    Route::post('menus/menu_details', [ApiController::class, 'getMenuDetails']);
+    Route::post('menus/update', [ApiController::class, 'updateMenuDetails']);
+    Route::post('menus/getpermission', [ApiController::class, 'getmenupermission']);
+
 });
