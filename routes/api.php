@@ -395,7 +395,9 @@ Route::group(['middleware' => ['auth:api', 'throttle:limit_per_user', 'logroute'
     Route::post('add_daily_report_remarks', [ApiController::class, 'addDailyReportRemarks']);
     Route::post('get_classroom_widget_data', [ApiController::class, 'getClassroomWidget']);
     Route::post('add_daily_report_by_student', [ApiController::class, 'addDailyReportByStudent']);
-
+    // classroom attendance
+    Route::post('get_student_attendance_no_subject', [ApiController::class, 'getStudentAttendenceNoSub']);
+    Route::post('add_student_attendance_no_subject', [ApiController::class, 'addStudentAttendenceNoSub']);
     // get studenet attenedance list
     Route::post('get_attendance_list', [ApiController::class, 'getAttendanceList']);
     Route::post('get_child_subjects', [ApiController::class, 'getChildSubjects']);

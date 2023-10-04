@@ -1807,6 +1807,8 @@ class ApiController extends BaseController
                 'end_time' => $eventEt,
                 'all_day' => $request->all_day,
                 'holiday' => isset($request->holiday) ? 0 : 1,
+                'student_holiday' => isset($request->student_holiday) ? "1" : "0",
+                'staff_holiday' => isset($request->staff_holiday) ? "1" : "0",
                 'remarks' => $request->description,
                 'created_by' => $request->created_by,
                 'created_at' => date("Y-m-d H:i:s")
@@ -2072,6 +2074,8 @@ class ApiController extends BaseController
                 'end_time' => $eventEt,
                 'all_day' => $request->all_day,
                 'holiday' => isset($request->holiday) ? 0 : 1,
+                'student_holiday' => isset($request->student_holiday) ? "1" : "0",
+                'staff_holiday' => isset($request->staff_holiday) ? "1" : "0",
                 'remarks' => $request->description,
                 'created_by' => $request->created_by,
                 'updated_at' => date("Y-m-d H:i:s")
@@ -6166,6 +6170,97 @@ class ApiController extends BaseController
             return $this->successResponse($data, 'Attendance record fetch successfully');
         }
     }
+    // get Student Attendence No Sub
+    function getStudentAttendenceNoSub(Request $request)
+    {
+        $validator = \Validator::make($request->all(), [
+            'branch_id' => 'required',
+            'class_id' => 'required',
+            'section_id' => 'required',
+            'date' => 'required'
+        ]);
+        if (!$validator->passes()) {
+            return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
+        } else {
+            // create new connection
+            // get attendance details query
+            $date = $request->date;
+            $leave_date = date('Y-m-d', strtotime($request->date));
+            $semester_id = $request->semester_id;
+            $session_id = $request->session_id;
+            $Connection = $this->createNewConnection($request->branch_id);
+            $getStudentAttendence = $Connection->table('enrolls as en')
+                ->select(
+                    'en.student_id',
+                    'en.roll',
+                    DB::raw('CONCAT(st.first_name, " ", st.last_name) as name'),
+                    'st.register_no',
+                    'sa.id as att_id',
+                    'sa.status as att_status',
+                    'sa.remarks as att_remark',
+                    'sa.date',
+                    'sa.student_behaviour',
+                    'sa.classroom_behaviour',
+                    'sa.reasons',
+                    'sapre.status as current_old_att_status',
+                    'stu_lev.id as taken_leave_status',
+                    'st.birthday',
+                    'st.photo'
+                )
+                ->join('students as st', 'st.id', '=', 'en.student_id')
+                ->leftJoin('student_attendances as sa', function ($q) use ($date, $semester_id, $session_id) {
+                    $q->on('sa.student_id', '=', 'st.id')
+                        ->on('sa.date', '=', DB::raw("'$date'"))
+                        ->on('sa.semester_id', '=', DB::raw("'$semester_id'"))
+                        ->on('sa.session_id', '=', DB::raw("'$session_id'"));
+                })
+                // if already take attendance for the date
+                ->leftJoin('student_attendances as sapre', function ($q) use ($date, $semester_id, $session_id) {
+                    $q->on('sapre.student_id', '=', 'st.id')
+                        ->on('sapre.date', '=', DB::raw("'$date'"))
+                        ->on('sapre.semester_id', '=', DB::raw("'$semester_id'"))
+                        ->on('sapre.session_id', '=', DB::raw("'$session_id'"))
+                        ->on('sapre.day_recent_flag', '=', DB::raw("'1'"));
+                })
+                ->leftJoin('student_leaves as stu_lev', function ($q) use ($date) {
+                    $q->on('stu_lev.student_id', '=', 'st.id')
+                        // ->on('stu_lev.date', '=', DB::raw("'$date'"))
+                        ->on('stu_lev.status', '=', DB::raw("'Approve'"))
+                        ->where('stu_lev.from_leave', '<=', $date)
+                        ->where('stu_lev.to_leave', '>=', $date);
+                })
+                ->where([
+                    ['en.class_id', '=', $request->class_id],
+                    ['en.section_id', '=', $request->section_id],
+                    ['en.academic_session_id', '=', $request->academic_session_id]
+                ])
+                ->groupBy('en.student_id')
+                ->get();
+            $taken_attentance_status = $Connection->table('enrolls as en')
+                ->select(
+                    'sa.status'
+                )
+                ->join('students as st', 'st.id', '=', 'en.student_id')
+                // if already take attendance for the date and subjects
+                ->leftJoin('student_attendances as sa', function ($q) use ($date, $semester_id, $session_id) {
+                    $q->on('sa.student_id', '=', 'st.id')
+                        ->on('sa.date', '=', DB::raw("'$date'"))
+                        ->on('sa.semester_id', '=', DB::raw("'$semester_id'"))
+                        ->on('sa.session_id', '=', DB::raw("'$session_id'"));
+                })
+                ->where([
+                    ['en.class_id', '=', $request->class_id],
+                    ['en.section_id', '=', $request->section_id]
+                ])
+                ->first();
+            $data = [
+                "get_student_attendence" => $getStudentAttendence,
+                "taken_attentance_status" => $taken_attentance_status
+            ];
+            // dd($getTeachersClassName);
+            return $this->successResponse($data, 'No Sub Attendance record fetch successfully');
+        }
+    }
     // getReturnLayoutMode
     function getReturnLayoutMode(Request $request)
     {
@@ -6348,6 +6443,107 @@ class ApiController extends BaseController
 
             $data = $this->getReturnLayoutMode($request);
             return $this->successResponse($data, 'Attendance added successfuly.');
+        }
+    }
+    // add student attendance without subject
+    function addStudentAttendenceNoSub(Request $request)
+    {
+        $validator = \Validator::make($request->all(), [
+            'branch_id' => 'required',
+            'class_id' => 'required',
+            'section_id' => 'required',
+            'date' => 'required',
+            'attendance' => 'required',
+        ]);
+        if (!$validator->passes()) {
+            return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
+        } else {
+            // create new connection
+            $Connection = $this->createNewConnection($request->branch_id);
+            // dd($request);
+            $attendance = $request->attendance;
+            $date = $request->date;
+            $class_id = $request->class_id;
+            $section_id = $request->section_id;
+            // $subject_id = $request->subject_id;
+            $semester_id = $request->semester_id;
+            $session_id = $request->session_id;
+            $date = $request->date;
+            // $data = [];
+            foreach ($attendance as $key => $value) {
+                // dd($value['attendance_id']);
+                // dd($value);
+                $attStatus = (isset($value['att_status']) ? $value['att_status'] : "");
+                $att_remark = (isset($value['att_remark']) ? $value['att_remark'] : "");
+                $reasons = (isset($value['reasons']) ? $value['reasons'] : "");
+                $student_behaviour = "";
+                if (isset($value['student_behaviour'])) {
+                    $student_behaviour = implode(',', $value['student_behaviour']);
+                }
+                $classroom_behaviour = "";
+                if (isset($value['classroom_behaviour'])) {
+                    $classroom_behaviour = implode(',', $value['classroom_behaviour']);
+                }
+                $arrayAttendance = array(
+                    'student_id' => $value['student_id'],
+                    'status' => $attStatus,
+                    'remarks' => $att_remark,
+                    'reasons' => $reasons,
+                    'student_behaviour' => $student_behaviour,
+                    'classroom_behaviour' => $classroom_behaviour,
+                    'date' => $date,
+                    'class_id' => $class_id,
+                    'section_id' => $section_id,
+                    // if no subject its is zero
+                    'subject_id' => 0,
+                    'semester_id' => $semester_id,
+                    'session_id' => $session_id,
+                    'day_recent_flag' => "1",
+                    'created_at' => date("Y-m-d H:i:s")
+
+                );
+                if ((empty($value['attendance_id']) || $value['attendance_id'] == "null")) {
+                    // echo "sdjfsjfsjs";exit;
+                    // return "fjsdjfsdjf";
+                    $row = $Connection->table('student_attendances')->select('id')->where([
+                        ['date', '=', $date],
+                        ['class_id', '=', $class_id],
+                        ['section_id', '=', $section_id],
+                        // if no subject its is zero
+                        ['subject_id', '=', 0],
+                        ['semester_id', '=', $semester_id],
+                        ['session_id', '=', $session_id],
+                        ['student_id', '=', $value['student_id']]
+                    ])->first();
+                    if (isset($row->id)) {
+                        $Connection->table('student_attendances')->where('id', $row->id)->update([
+                            'status' => $attStatus,
+                            'remarks' => $att_remark,
+                            'reasons' => $reasons,
+                            'student_behaviour' => $student_behaviour,
+                            'classroom_behaviour' => $classroom_behaviour,
+                            'day_recent_flag' => "1",
+                            'updated_at' => date("Y-m-d H:i:s")
+                        ]);
+                    } else {
+                        $Connection->table('student_attendances')->insert($arrayAttendance);
+                    }
+                } else {
+                    // return "sdd";
+
+                    $Connection->table('student_attendances')->where('id', $value['attendance_id'])->update([
+                        'status' => $attStatus,
+                        'remarks' => $att_remark,
+                        'reasons' => $reasons,
+                        'student_behaviour' => $student_behaviour,
+                        'classroom_behaviour' => $classroom_behaviour,
+                        'day_recent_flag' => "1",
+                        'updated_at' => date("Y-m-d H:i:s")
+                    ]);
+                }
+            }
+
+            return $this->successResponse([], 'Attendance with no subject added successfuly.');
         }
     }
     // getShortTest
@@ -8472,6 +8668,8 @@ class ApiController extends BaseController
                     'cl.sem_id as semester_id',
                     'cl.session_id',
                     'cl.start',
+                    'ev.start_date',
+                    'ev.end_date',
                     'cl.event_id',
                     'cl.end',
                     's.name as section_name',
@@ -8492,11 +8690,13 @@ class ApiController extends BaseController
                         ->on('cl.subject_id', '=', 'dr.subject_id')
                         ->on(DB::raw('date(cl.end)'), '=', 'dr.date');
                 })
+                // get timetable end date
                 ->leftJoin('events as ev', function ($join) {
                     $join->where([
                         [DB::raw('date(ev.start_date)'), '<=', DB::raw('date(cl.end)')],
                         [DB::raw('date(ev.end_date)'), '>=', DB::raw('date(cl.end)')],
-                        ['ev.holiday', '=', '0']
+                        ['ev.holiday', '=', '0'],
+                        ['ev.staff_holiday', '=', '1']
                     ]);
                 })
                 ->join('subjects as sb', 'cl.subject_id', '=', 'sb.id')
@@ -8630,7 +8830,7 @@ class ApiController extends BaseController
 
 
             $all_event = $Connection->table('calendors as c')
-                ->select('c.id', DB::raw("GROUP_CONCAT(DISTINCT  cl.name) as class_name"), 'et.color', 'c.title', 'c.title as subject_name', 'c.class_id', 'c.start',  'c.end', 'c.event_id', 'et.name as event_type', 'e.id as event_id', 'e.remarks', 'e.audience', 'e.selected_list', 'e.start_time', 'e.end_time', 'e.start_date', 'e.end_date', DB::raw('if(c.all_day=1,false,true) as allDay'))
+                ->select('c.id', DB::raw("GROUP_CONCAT(DISTINCT  cl.name) as class_name"), 'et.color', 'c.title', 'c.title as subject_name', 'c.class_id', 'c.start',  'c.end', 'c.event_id', 'et.name as event_type', 'e.id as event_id', 'e.remarks', 'e.audience', 'e.selected_list', 'e.start_time', 'e.end_time', 'e.holiday', 'e.start_date', 'e.end_date', DB::raw('if(c.all_day=1,false,true) as allDay'))
                 ->leftJoin('events as e', 'c.event_id', '=', 'e.id')
                 ->leftJoin('event_types as et', 'e.type', '=', 'et.id')
                 ->leftjoin("classes as cl", \DB::raw("FIND_IN_SET(cl.id,e.selected_list)"), ">", \DB::raw("'0'"))
@@ -8642,11 +8842,26 @@ class ApiController extends BaseController
                 ->groupBy('c.event_id')
                 ->groupBy('c.start')
                 ->get();
-
-            //     // return $all;
+            // dd($all_event);
+            $all_events_push = [];
+            // // Adding custom fields
+            foreach ($all_event as &$all_event) {
+                // set holiday gray color background
+                if ($all_event->holiday == 0) {
+                    $all_event->display = "background";
+                    // $all_event->rendering = 'background';
+                    // $all_event->backgroundColor = 'gray';
+                    $all_event->color = 'gray';
+                    // $all_event->className = 'bg-danger';
+                }
+                // echo "<pre>";
+                // print_r($all_event);
+                array_push($all_events_push, $all_event);
+            }
+            // dd($all_events_push);
             $event = [];
-            foreach ($all_event as $events) {
-
+            foreach ($all_events_push as $events) {
+                // dd($events->audience);
                 if ($events->audience == "1") {
                     $events->class_name = "EveryOne";
                     array_push($event, $events);
@@ -9147,7 +9362,8 @@ class ApiController extends BaseController
                     $join->where([
                         [DB::raw('date(ev.start_date)'), '<=', DB::raw('date(cl.end)')],
                         [DB::raw('date(ev.end_date)'), '>=', DB::raw('date(cl.end)')],
-                        ['ev.holiday', '=', '0']
+                        ['ev.holiday', '=', '0'],
+                        ['ev.student_holiday', '=', '1']
                     ]);
                 })
                 ->where('stud.id', $request->student_id)
@@ -15753,7 +15969,6 @@ class ApiController extends BaseController
     {
         $validator = \Validator::make($request->all(), [
             'branch_id' => 'required',
-            'token' => 'required',
             'employee' => 'required',
         ]);
         if (!$validator->passes()) {
@@ -15791,11 +16006,20 @@ class ApiController extends BaseController
                     })
                     ->where('s.id', $employee)
                     ->first();
-                $holiday =  $Connection->table("holidays")
-                    ->select('id', 'name', 'date')
-                    ->where('date', '=', DB::raw("'$date'"))
-                    ->whereNull('deleted_at')
+                $holiday =  $Connection->table("events")
+                    ->select('id', 'start_date', 'end_date')
+                    // ->where('start_date', '=', DB::raw("'$date'"))
+                    ->where('start_date', '<=', $date)
+                    ->where('end_date', '>=', $date)
+                    ->where('holiday', '=', '0')
+                    ->where('staff_holiday', '=', '1')
                     ->first();
+                // $holiday =  $Connection->table("holidays")
+                //     ->select('id', 'name', 'date')
+                //     ->where('date', '=', DB::raw("'$date'"))
+                //     ->whereNull('deleted_at')
+                //     ->first();
+                // dd($holiday);
                 $attendance['holiday'] = 0;
                 if ($holiday) {
                     $attendance['holiday'] = 1;
@@ -15810,8 +16034,8 @@ class ApiController extends BaseController
                     ->select(
                         'sl.*',
                     )
-                    ->whereRaw("from_leave <=  date('$date')")
-                    ->whereRaw("to_leave >=  date('$date')")
+                    ->whereRaw("sl.from_leave <=  date('$date')")
+                    ->whereRaw("sl.to_leave >=  date('$date')")
                     ->where('sl.staff_id', $employee)
                     ->where('sl.status', "Approve")
                     ->first();
@@ -17027,18 +17251,19 @@ class ApiController extends BaseController
             $start = date('Y-m-d', strtotime($request->start));
             $end = date('Y-m-d', strtotime($request->end));
             $getStudentExamSchedule = $Connection->table('enrolls as en')
-                ->select(
-                    'tex.id as schedule_id',
-                    'tex.time_start',
-                    'tex.time_end',
-                    'cl.name as class_name',
-                    'sc.name as section_name',
-                    'ex.name as exam_name',
-                    DB::raw("CONCAT('Exam: ',ex.name, ' - ', sbj.name) as title"),
-                    'sbj.name as subject_name',
-                    'sbj.subject_color_calendor as color',
-                    'tex.exam_date as start'
-                )
+            ->select(
+                'tex.id as schedule_id',
+                'tex.time_start',
+                'tex.time_end',
+                'cl.name as class_name',
+                'sc.name as section_name',
+                'ex.name as exam_name',
+                DB::raw("CONCAT('Exam: ',ex.name, ' - ', sbj.name) as title"),
+                'sbj.name as subject_name',
+                'sbj.subject_color_calendor as color',
+                'tex.exam_date as start',
+                'ev.id as event_holiday_id'
+            )
                 ->join('timetable_exam as tex', function ($q) {
                     $q->on('tex.class_id', '=', 'en.class_id')
                         ->on('tex.section_id', '=', 'en.section_id');
@@ -17047,9 +17272,19 @@ class ApiController extends BaseController
                 ->join('sections as sc', 'tex.section_id', '=', 'sc.id')
                 ->join('subjects as sbj', 'tex.subject_id', '=', 'sbj.id')
                 ->join('exam as ex', 'tex.exam_id', '=', 'ex.id')
+                ->leftJoin('events as ev', function ($join) {
+                    $join->where([
+                        [DB::raw('date(ev.start_date)'), '<=', DB::raw('date(tex.exam_date)')],
+                        [DB::raw('date(ev.end_date)'), '>=', DB::raw('date(tex.exam_date)')],
+                        ['ev.holiday', '=', '0'],
+                        ['ev.student_holiday', '=', '1']
+                    ]);
+                })
                 ->where([
-                    ['en.student_id', '=', $request->student_id]
+                    ['en.student_id', '=', $request->student_id],
+                    ['en.active_status', '=', '0']
                 ])
+                ->whereNull('ev.id')
                 ->whereRaw('tex.exam_date between "' . $start . '" and "' . $end . '"')
                 ->get();
             return $this->successResponse($getStudentExamSchedule, 'get schedule exam details record successfully');
@@ -20403,13 +20638,13 @@ class ApiController extends BaseController
             }
         }
     }
-    
+
     // Menu API Start
     public function addMenu(Request $request)
     {
 
         $validator = \Validator::make($request->all(), [
-            
+
             'menu_name' => 'required',
             'menu_type' => 'required',
             'menu_url' => 'required'
@@ -20417,35 +20652,33 @@ class ApiController extends BaseController
         //dd('success');
         if (!$validator->passes()) {
             return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
-        } 
-        else {
-                // insert data
-                $query = Menus::insert([
-                    'role_id' => $request->role_id,
-                    'menu_name' => $request->menu_name,
-                    'menu_type' => $request->menu_type,
-                    'menu_icon' => $request->menu_icon,
-                    'menu_refid' => $request->menu_refid,
-                    'menu_url' => $request->menu_url,
-                    'menu_routename' => $request->menu_routename,
-                    'menu_status' => $request->menu_status,
-                    'menu_dropdown' => $request->menu_dropdown,
-                    'created_at' => date("Y-m-d H:i:s")
-                ]);               
-                $success = [];
-                if (!$query) {
-                    return $this->send500Error('Something went wrong.', ['error' => 'Something went wrong']);
-                } else {
-                    return $this->successResponse($success, 'New Menu has been successfully saved');
-                }
-            
+        } else {
+            // insert data
+            $query = Menus::insert([
+                'role_id' => $request->role_id,
+                'menu_name' => $request->menu_name,
+                'menu_type' => $request->menu_type,
+                'menu_icon' => $request->menu_icon,
+                'menu_refid' => $request->menu_refid,
+                'menu_url' => $request->menu_url,
+                'menu_routename' => $request->menu_routename,
+                'menu_status' => $request->menu_status,
+                'menu_dropdown' => $request->menu_dropdown,
+                'created_at' => date("Y-m-d H:i:s")
+            ]);
+            $success = [];
+            if (!$query) {
+                return $this->send500Error('Something went wrong.', ['error' => 'Something went wrong']);
+            } else {
+                return $this->successResponse($success, 'New Menu has been successfully saved');
+            }
         }
     }
     public function updateMenuDetails(Request $request)
     {
 
         $validator = \Validator::make($request->all(), [
-            
+
             'menu_name' => 'required',
             'menu_type' => 'required',
             'menu_url' => 'required'
@@ -20453,11 +20686,10 @@ class ApiController extends BaseController
         //dd('success');
         if (!$validator->passes()) {
             return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
-        } 
-        else {
-                // Update data
-                $query =  Menus::where('menu_id', $request->menu_id)
-            ->update([
+        } else {
+            // Update data
+            $query =  Menus::where('menu_id', $request->menu_id)
+                ->update([
                     'role_id' => $request->role_id,
                     'menu_name' => $request->menu_name,
                     'menu_type' => $request->menu_type,
@@ -20468,33 +20700,33 @@ class ApiController extends BaseController
                     'menu_status' => $request->menu_status,
                     'menu_dropdown' => $request->menu_dropdown,
                     'updated_at' => date("Y-m-d H:i:s")
-                ]); 
-            
-                 
-                $success = [];
-                if (!$query) {
-                    return $this->send500Error('Something went wrong.', ['error' => 'Something went wrong']);
-                } else {
-                    return $this->successResponse($success, 'New Menu has been successfully Updated');
-                }
-            
+                ]);
+
+
+            $success = [];
+            if (!$query) {
+                return $this->send500Error('Something went wrong.', ['error' => 'Something went wrong']);
+            } else {
+                return $this->successResponse($success, 'New Menu has been successfully Updated');
+            }
         }
     }
 
     public function getMenuList(Request $request)
     {
-        if(isset($request->type))			
-		{$data = Menus::where('menu_type', $request->type)->orderBy("role_id", "asc")->get();}
-		else
-		{$data = Menus::All();}
-	
-	
-		//dd($data);
+        if (isset($request->type)) {
+            $data = Menus::where('menu_type', $request->type)->orderBy("role_id", "asc")->get();
+        } else {
+            $data = Menus::All();
+        }
+
+
+        //dd($data);
         return $this->successResponse($data, 'Menus fetch successfully');
     }
     public function getMenuAccessList(Request $request)
     {
-        $br_id =$request->br_id;
+        $br_id = $request->br_id;
         /* $data = DB::table('menus AS t1')
         ->select('t1.*', 't2.menu_permission','t2.id as menuaccess_id')
         ->leftJoin('menuaccess AS t2', 't1.menu_id', '=', 't2.menu_id')
@@ -20520,39 +20752,37 @@ class ApiController extends BaseController
             ->where('role_id', $request->role_id)
             ->orderBy("role_id", "asc")
             ->get();
-       // dd($data);
+        // dd($data);
         return $this->successResponse($data, 'Menus fetch successfully');
     }
     public function getmenupermission(Request $request)
     {
-        $br_id =$request->br_id;        
+        $br_id = $request->br_id;
         $role_id = $request->role_id;
-        $menu_id = $request->menu_id;        
-       /* $data = Menuaccess::select('menu_permission')
+        $menu_id = $request->menu_id;
+        /* $data = Menuaccess::select('menu_permission')
                 ->where('branch_id', $br_id)
                 ->where('role_id', $role_id)
                 ->where('menu_id', $menu_id)
                 ->first();*/
-       // dd($data);
-       $data = DB::table('menuaccess AS t1')
-    ->select('t1.menu_permission')
-    ->leftJoin('menus AS t2', 't1.menu_id', '=', 't2.menu_id')
-    ->where('t2.menu_routename', $menu_id)
-    ->where('t1.role_id', $role_id)
-    ->where('t1.branch_id', $br_id)
-    ->first();
+        // dd($data);
+        $data = DB::table('menuaccess AS t1')
+            ->select('t1.menu_permission')
+            ->leftJoin('menus AS t2', 't1.menu_id', '=', 't2.menu_id')
+            ->where('t2.menu_routename', $menu_id)
+            ->where('t1.role_id', $role_id)
+            ->where('t1.branch_id', $br_id)
+            ->first();
         return $this->successResponse($data, 'Get Menus Permission   successfully');
     }
     public function setmenupermission(Request $request)
     {
-    
+
         //dd($request->branch_id);
-         // insert data
-        foreach($request->menu_id as $menuid)
-        {
-            
-            if($request->act[$menuid]=='Insert')
-            {
+        // insert data
+        foreach ($request->menu_id as $menuid) {
+
+            if ($request->act[$menuid] == 'Insert') {
                 $query = Menuaccess::insert([
                     'role_id' => $request->role_id,
                     'branch_id' => $request->br_id,
@@ -20560,16 +20790,14 @@ class ApiController extends BaseController
                     'menu_id' => $menuid,
                     'menu_permission' => $request->accessdenied[$menuid],
                     'created_at' => date("Y-m-d H:i:s")
-                ]); 
-            }
-            else
-            {
-                $query = Menuaccess::where('id',$request->menuaccess_id[$menuid])->update([
+                ]);
+            } else {
+                $query = Menuaccess::where('id', $request->menuaccess_id[$menuid])->update([
                     'menu_permission' => $request->accessdenied[$menuid],
                     'updated_at' => date("Y-m-d H:i:s")
                 ]);
             }
-        } 
+        }
 
         $success = [];
         if (!$query) {
@@ -20577,8 +20805,6 @@ class ApiController extends BaseController
         } else {
             return $this->successResponse($success, 'Menu Access Permission Assigned has been successfully saved');
         }
-            
-        
     }
 
     public function getMenuDetails(Request $request)

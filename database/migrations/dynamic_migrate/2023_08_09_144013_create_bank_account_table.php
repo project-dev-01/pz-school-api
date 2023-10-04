@@ -21,12 +21,12 @@ class CreateBankAccountTable extends Migration
             $table->string('bank_address')->nullable();
             $table->string('bank_address_2')->nullable();
             $table->string('ifsc_code')->nullable();
-            $table->string('city')->nullable();;
-            $table->string('state')->nullable();;
-            $table->string('post_code')->nullable();;
-            $table->string('country')->nullable();;
-            $table->string('routing_number')->nullable();;
-            $table->string('shift_code')->nullable();;
+            $table->string('city')->nullable();
+            $table->string('state')->nullable();
+            $table->string('post_code')->nullable();
+            $table->string('country')->nullable();
+            $table->string('routing_number')->nullable();
+            $table->string('shift_code')->nullable();
             $table->string('email');
             $table->string('account_no');
             $table->enum('status', ['0', '1']);
