@@ -3009,7 +3009,8 @@ class ApiController extends BaseController
                         'stream_type_id' => $request->stream_type_id,
                         'race' => $request->race,
                         'joining_date' => $request->joining_date,
-                        'birthday' => date("Y-m-d", strtotime($request->birthday)),
+                        // 'birthday' => date("Y-m-d", strtotime($request->birthday)),
+                        'birthday' => $request->birthday,
                         'gender' => $request->gender,
                         'religion' => $request->religion,
                         'blood_group' => $request->blood_group,
@@ -3034,6 +3035,16 @@ class ApiController extends BaseController
                         'country' => $request->country,
                         'post_code' => $request->post_code,
                         'status' => $request->status,
+                        'department_id' => $request->department_ids,
+                        'department_start_date' => $request->department_start,
+                        'department_end_date' => $request->department_end,
+                        'designation_id' => $request->designation_ids,
+                        'designation_start_date' => $request->designation_start,
+                        'designation_end_date' => $request->designation_end,
+                        'employee_type_id' => $request->employee_type_ids,
+                        'employee_type_start_date' => $request->employee_type_start,
+                        'employee_type_end_date' => $request->employee_type_end,
+                        'job_title_id' => $request->job_title,
                         'created_at' => date("Y-m-d H:i:s")
                     ]);
                     $success = [];
@@ -3167,6 +3178,14 @@ class ApiController extends BaseController
                     's.nric_number',
                     's.passport',
                     's.status',
+                    's.employee_type_id',
+                    's.job_title_id',
+                    's.designation_start_date',
+                    's.designation_end_date',
+                    's.department_start_date',
+                    's.department_end_date',
+                    's.employee_type_start_date',
+                    's.employee_type_end_date',
                     DB::raw("CONCAT(s.first_name, ' ', s.last_name) as name"),
                     DB::raw("GROUP_CONCAT(DISTINCT  dp.name) as department_name")
                 )
@@ -3301,7 +3320,8 @@ class ApiController extends BaseController
                     'stream_type_id' => $request->stream_type_id,
                     'race' => $request->race,
                     'joining_date' => $request->joining_date,
-                    'birthday' => date("Y-m-d", strtotime($request->birthday)),
+                    // 'birthday' => date("Y-m-d", strtotime($request->birthday)),
+                    'birthday' => $request->birthday,
                     'gender' => $request->gender,
                     'religion' => $request->religion,
                     'blood_group' => $request->blood_group,
@@ -3326,6 +3346,16 @@ class ApiController extends BaseController
                     'post_code' => $request->post_code,
                     'passport' => $passport,
                     'status' => $request->status,
+                    'department_id' => $request->department_ids,
+                    'department_start_date' => $request->department_start,
+                    'department_end_date' => $request->department_end,
+                    'designation_id' => $request->designation_ids,
+                    'designation_start_date' => $request->designation_start,
+                    'designation_end_date' => $request->designation_end,
+                    'employee_type_id' => $request->employee_type_ids,
+                    'employee_type_start_date' => $request->employee_type_start,
+                    'employee_type_end_date' => $request->employee_type_end,
+                    'job_title_id' => $request->job_title,
                     'updated_at' => date("Y-m-d H:i:s")
                 ]);
 
@@ -17251,19 +17281,19 @@ class ApiController extends BaseController
             $start = date('Y-m-d', strtotime($request->start));
             $end = date('Y-m-d', strtotime($request->end));
             $getStudentExamSchedule = $Connection->table('enrolls as en')
-            ->select(
-                'tex.id as schedule_id',
-                'tex.time_start',
-                'tex.time_end',
-                'cl.name as class_name',
-                'sc.name as section_name',
-                'ex.name as exam_name',
-                DB::raw("CONCAT('Exam: ',ex.name, ' - ', sbj.name) as title"),
-                'sbj.name as subject_name',
-                'sbj.subject_color_calendor as color',
-                'tex.exam_date as start',
-                'ev.id as event_holiday_id'
-            )
+                ->select(
+                    'tex.id as schedule_id',
+                    'tex.time_start',
+                    'tex.time_end',
+                    'cl.name as class_name',
+                    'sc.name as section_name',
+                    'ex.name as exam_name',
+                    DB::raw("CONCAT('Exam: ',ex.name, ' - ', sbj.name) as title"),
+                    'sbj.name as subject_name',
+                    'sbj.subject_color_calendor as color',
+                    'tex.exam_date as start',
+                    'ev.id as event_holiday_id'
+                )
                 ->join('timetable_exam as tex', function ($q) {
                     $q->on('tex.class_id', '=', 'en.class_id')
                         ->on('tex.section_id', '=', 'en.section_id');

@@ -944,4 +944,7 @@ Route::group(['middleware' => ['auth:api', 'throttle:limit_per_user', 'logroute'
     Route::post('menus/update', [ApiController::class, 'updateMenuDetails']);
     Route::post('menus/getpermission', [ApiController::class, 'getmenupermission']);
 
+    Route::get('job_title/list', [ApiControllerOne::class, 'jobTitleList']);
+    Route::get('employee_type/list', [ApiControllerOne::class, 'employeeTypeList']);
+
 });

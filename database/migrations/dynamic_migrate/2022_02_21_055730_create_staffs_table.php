@@ -22,7 +22,8 @@ class CreateStaffsTable extends Migration
             $table->string('short_name')->nullable();
             $table->string('department_id')->nullable();
             $table->string('designation_id')->nullable();
-            $table->string('staff_qualification_id')->nullable(); 
+            $table->string('employee_type_id')->nullable();
+            $table->string('staff_qualification_id')->nullable();
             $table->string('stream_type_id')->nullable();
             $table->string('joining_date')->nullable();
             $table->date('birthday')->nullable();
@@ -52,6 +53,15 @@ class CreateStaffsTable extends Migration
             $table->string('passport')->nullable();
             $table->enum('status', ['0', '1']);
             $table->enum('is_active', ['0', '1'])->comment('0 => Active, 1 => Not active')->default('0');
+            $table->date('releive_date')->nullable();
+            $table->enum('working_status', ['0', '1'])->comment('0 => is working, 1 => releive')->default('0');
+            $table->string('job_title_id')->nullable();
+            $table->string('designation_start_date')->nullable();
+            $table->string('designation_end_date')->nullable();
+            $table->string('department_start_date')->nullable();
+            $table->string('department_end_date')->nullable();
+            $table->string('employee_type_start_date')->nullable();
+            $table->string('employee_type_end_date')->nullable();
             $table->timestamps();
         });
     }

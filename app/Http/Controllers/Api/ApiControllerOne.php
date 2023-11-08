@@ -9609,4 +9609,40 @@ class ApiControllerOne extends BaseController
             return $this->successResponse($combinedArray, 'Today Schedule Events Fetched successfully');
         }
     }
+    // job title list
+    public function jobTitleList(Request $request)
+    {
+        $validator = \Validator::make($request->all(), [
+            'branch_id' => 'required',
+        ]);
+
+        if (!$validator->passes()) {
+            return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
+        } else {
+            // create new connection
+            $Connection = $this->createNewConnection($request->branch_id);
+            // get data
+            $data = $Connection->table('job_title')->select('id', 'name', 'description')->whereNull('deleted_at')->get();
+
+            return $this->successResponse($data, 'job title record fetch successfully');
+        }
+    }
+    // employee type list
+    public function employeeTypeList(Request $request)
+    {
+        $validator = \Validator::make($request->all(), [
+            'branch_id' => 'required',
+        ]);
+
+        if (!$validator->passes()) {
+            return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
+        } else {
+            // create new connection
+            $Connection = $this->createNewConnection($request->branch_id);
+            // get data
+            $data = $Connection->table('employee_types')->select('id', 'name')->whereNull('deleted_at')->get();
+
+            return $this->successResponse($data, 'employee types record fetch successfully');
+        }
+    }
 }
