@@ -507,8 +507,8 @@ class ApiController extends BaseController
     {
 
         $validator = \Validator::make($request->all(), [
-            'token' => 'required',
             'name' => 'required',
+            'department_id' => 'required',
             'short_name' => 'required',
             'branch_id' => 'required'
         ]);
@@ -524,6 +524,7 @@ class ApiController extends BaseController
             } else {
                 // insert data
                 $query = $createConnection->table('classes')->insert([
+                    'department_id' => $request->department_id,
                     'name' => $request->name,
                     'short_name' => $request->short_name,
                     'name_numeric' => $request->name_numeric,
@@ -553,7 +554,11 @@ class ApiController extends BaseController
             // create new connection
             $classConn = $this->createNewConnection($request->branch_id);
             // get data
-            $class = $classConn->table('classes')->orderBy('name', 'asc')->get();
+            $class = $classConn->table('classes as cl')
+                ->select('cl.id', 'cl.name', 'cl.short_name', 'cl.name_numeric', 'cl.department_id', 'stf_dp.name as department_name')
+                ->leftJoin('staff_departments as stf_dp', 'cl.department_id', '=', 'stf_dp.id')
+                ->orderBy('cl.department_id', 'desc')
+                ->get();
             return $this->successResponse($class, 'Grade record fetch successfully');
         }
     }
@@ -582,7 +587,7 @@ class ApiController extends BaseController
     public function updateClassDetails(Request $request)
     {
         $validator = \Validator::make($request->all(), [
-            'token' => 'required',
+            'department_id' => 'required',
             'name' => 'required',
             'short_name' => 'required',
             'branch_id' => 'required'
@@ -600,6 +605,7 @@ class ApiController extends BaseController
             } else {
                 // update data
                 $query = $staffConn->table('classes')->where('id', $class_id)->update([
+                    'department_id' => $request->department_id,
                     'name' => $request->name,
                     'short_name' => $request->short_name,
                     'name_numeric' => $request->name_numeric,
@@ -646,6 +652,7 @@ class ApiController extends BaseController
     {
 
         $validator = \Validator::make($request->all(), [
+            'department_id' => 'required',
             'class_id' => 'required',
             'section_id' => 'required',
             'branch_id' => 'required'
@@ -662,6 +669,7 @@ class ApiController extends BaseController
             } else {
                 // insert data
                 $query = $createConnection->table('section_allocations')->insert([
+                    'department_id' => $request->department_id,
                     'class_id' => $request->class_id,
                     'section_id' => $request->section_id,
                     'capacity' => $request->capacity,
@@ -689,9 +697,11 @@ class ApiController extends BaseController
             $secConn = $this->createNewConnection($request->branch_id);
             // get data
             $sectionAllocation = $secConn->table('section_allocations as sa')
-                ->select('sa.id', 'sa.capacity', 'sa.class_id', 'sa.section_id', 's.name as section_name', 'c.name as class_name', 'c.name_numeric')
+                ->select('sa.id', 'sa.capacity', 'sa.class_id', 'sa.section_id', 's.name as section_name', 'c.name as class_name', 'c.name_numeric', 'stf_dp.name as department_name')
                 ->join('sections as s', 'sa.section_id', '=', 's.id')
                 ->join('classes as c', 'sa.class_id', '=', 'c.id')
+                ->leftJoin('staff_departments as stf_dp', 'sa.department_id', '=', 'stf_dp.id')
+                ->orderBy('sa.department_id', 'desc')
                 ->orderBy('c.name', 'asc')
                 ->orderBy('s.name', 'asc')
                 ->get();
@@ -723,6 +733,7 @@ class ApiController extends BaseController
     {
         $validator = \Validator::make($request->all(), [
             'id' => 'required',
+            'department_id' => 'required',
             'class_id' => 'required',
             'section_id' => 'required',
             'branch_id' => 'required',
@@ -740,6 +751,7 @@ class ApiController extends BaseController
             } else {
                 // update data
                 $query = $createConnection->table('section_allocations')->where('id', $id)->update([
+                    'department_id' => $request->department_id,
                     'class_id' => $request->class_id,
                     'section_id' => $request->section_id,
                     'capacity' => $request->capacity,
@@ -786,7 +798,7 @@ class ApiController extends BaseController
     {
 
         $validator = \Validator::make($request->all(), [
-            'token' => 'required',
+            'department_id' => 'required',
             'branch_id' => 'required',
             'class_id' => 'required',
             'section_id' => 'required',
@@ -821,6 +833,7 @@ class ApiController extends BaseController
                 // $query = $createConnection->table('subject_assigns')->where('id', $old->id)->update($arraySubject);
             } else {
                 $arrayData = array(
+                    'department_id' => $request->department_id,
                     'class_id' => $request->class_id,
                     'section_id' => $request->section_id,
                     'teacher_id' => $request->teacher_id,
@@ -874,6 +887,7 @@ class ApiController extends BaseController
             $success = $createConnection->table('teacher_allocations as ta')
                 ->select(
                     'ta.id',
+                    'stf_dp.name as department_name',
                     'ta.class_id',
                     'ta.section_id',
                     'ta.teacher_id',
@@ -885,7 +899,9 @@ class ApiController extends BaseController
                 ->join('sections as s', 'ta.section_id', '=', 's.id')
                 ->join('staffs as st', 'ta.teacher_id', '=', 'st.id')
                 ->join('classes as c', 'ta.class_id', '=', 'c.id')
+                ->leftJoin('staff_departments as stf_dp', 'ta.department_id', '=', 'stf_dp.id')
                 ->where('ta.academic_session_id', $request->academic_session_id)
+                ->orderBy('ta.department_id', 'desc')
                 ->get();
             return $this->successResponse($success, 'Teacher Allocation record fetch successfully');
         }
@@ -917,7 +933,7 @@ class ApiController extends BaseController
     public function updateTeacherAllocation(Request $request)
     {
         $validator = \Validator::make($request->all(), [
-            'token' => 'required',
+            'department_id' => 'required',
             'branch_id' => 'required',
             'id' => 'required',
             'class_id' => 'required',
@@ -957,6 +973,7 @@ class ApiController extends BaseController
                 return $this->send422Error('Main Class Teacher Already Assigned', ['error' => 'Main Class Teacher Already Assigned']);
             } else {
                 $arrayData = array(
+                    'department_id' => $request->department_id,
                     'class_id' => $request->class_id,
                     'section_id' => $request->section_id,
                     'teacher_id' => $request->teacher_id,
@@ -1150,6 +1167,7 @@ class ApiController extends BaseController
     {
         $validator = \Validator::make($request->all(), [
             'branch_id' => 'required',
+            'department_id' => 'required',
             'class_id' => 'required',
             'section_id' => 'required',
             'subject_id' => 'required',
@@ -1175,6 +1193,7 @@ class ApiController extends BaseController
                 return $this->send422Error('This class and section is already assigned', ['error' => 'This class and section is already assigned']);
             } else {
                 $arraySubject = array(
+                    'department_id' =>  $request->department_id,
                     'class_id' =>  $request->class_id,
                     'section_id' => $request->section_id,
                     'subject_id' => $request->subject_id,
@@ -1208,11 +1227,12 @@ class ApiController extends BaseController
             // create new connection
             $createConnection = $this->createNewConnection($request->branch_id);
             $success = $createConnection->table('subject_assigns as sa')
-                ->select('sa.id', 'sa.class_id', 'sa.section_id', 'sa.subject_id', 'sa.teacher_id', 's.name as section_name', 'sb.name as subject_name', 'c.name as class_name')
+                ->select('sa.id', 'sa.class_id', 'sa.section_id', 'sa.subject_id', 'sa.teacher_id', 's.name as section_name', 'sb.name as subject_name', 'c.name as class_name', 'stf_dp.name as department_name')
                 ->join('sections as s', 'sa.section_id', '=', 's.id')
                 // ->leftJoin('staffs as st', 'sa.teacher_id', '=', 'st.id')
                 ->join('subjects as sb', 'sa.subject_id', '=', 'sb.id')
                 ->join('classes as c', 'sa.class_id', '=', 'c.id')
+                ->leftJoin('staff_departments as stf_dp', 'sa.department_id', '=', 'stf_dp.id')
                 ->where([
                     ['sa.type', '=', '0'],
                     ['sa.academic_session_id', $request->academic_session_id]
@@ -1223,6 +1243,7 @@ class ApiController extends BaseController
                 ->when($section_id, function ($q)  use ($section_id) {
                     $q->where('sa.section_id', $section_id);
                 })
+                ->orderBy('sa.department_id', 'desc')
                 ->get();
             return $this->successResponse($success, 'Section Allocation record fetch successfully');
         }
@@ -1249,6 +1270,7 @@ class ApiController extends BaseController
     public function updateClassAssign(Request $request)
     {
         $validator = \Validator::make($request->all(), [
+            'department_id' => 'required',
             'branch_id' => 'required',
             'id' => 'required',
             'class_id' => 'required',
@@ -1277,6 +1299,7 @@ class ApiController extends BaseController
                 return $this->send422Error('This class and section is already assigned', ['error' => 'This class and section is already assigned']);
             } else {
                 $arraySubject = array(
+                    'department_id' =>  $request->department_id,
                     'class_id' =>  $request->class_id,
                     'section_id' => $request->section_id,
                     'subject_id' => $request->subject_id,
@@ -1324,6 +1347,7 @@ class ApiController extends BaseController
     public function addTeacherSubject(Request $request)
     {
         $validator = \Validator::make($request->all(), [
+            'department_id' => 'required',
             'branch_id' => 'required',
             'class_id' => 'required',
             'section_id' => 'required',
@@ -1358,6 +1382,7 @@ class ApiController extends BaseController
             //     return $this->send422Error('Teacher is already assigned to this class and section', ['error' => 'Teacher is already assigned to this class and section']);
             // } else {
             $arraySubject = array(
+                'department_id' =>  $request->department_id,
                 'class_id' =>  $request->class_id,
                 'section_id' => $request->section_id,
                 'subject_id' => $request->subject_id,
@@ -1410,13 +1435,16 @@ class ApiController extends BaseController
                     'sa.type',
                     's.name as section_name',
                     'sb.name as subject_name',
-                    'c.name as class_name'
+                    'c.name as class_name',
+                    'stf_dp.name as department_name'
                 )
                 ->join('sections as s', 'sa.section_id', '=', 's.id')
                 ->join('staffs as st', 'sa.teacher_id', '=', 'st.id')
                 ->join('subjects as sb', 'sa.subject_id', '=', 'sb.id')
                 ->join('classes as c', 'sa.class_id', '=', 'c.id')
+                ->leftJoin('staff_departments as stf_dp', 'sa.department_id', '=', 'stf_dp.id')
                 ->where('sa.academic_session_id', $request->academic_session_id)
+                ->orderBy('sa.department_id', 'desc')
                 ->get();
             return $this->successResponse($success, 'Teacher record fetch successfully');
         }
@@ -1443,6 +1471,7 @@ class ApiController extends BaseController
     public function updateTeacherSubject(Request $request)
     {
         $validator = \Validator::make($request->all(), [
+            'department_id' => 'required',
             'branch_id' => 'required',
             'id' => 'required',
             'class_id' => 'required',
@@ -1462,11 +1491,11 @@ class ApiController extends BaseController
                 $getCount = $createConnection->table('subject_assigns')
                     ->where(
                         [
-                            ['section_id', $request->section_id],
-                            ['class_id', $request->class_id],
-                            ['subject_id', $request->subject_id],
-                            ['academic_session_id', $request->academic_session_id],
-                            ['type', $request->type],
+                            ['section_id', '=', $request->section_id],
+                            ['class_id', '=', $request->class_id],
+                            ['subject_id', '=', $request->subject_id],
+                            ['academic_session_id', '=', $request->academic_session_id],
+                            ['type', '=', $request->type],
                             ['id', '!=', $request->id]
                         ]
                     )
@@ -1487,6 +1516,7 @@ class ApiController extends BaseController
                 return $this->send422Error('Main subject is already assigned to this class and section', ['error' => 'Main subject is already assigned to this class and section']);
             } else {
                 $arraySubject = array(
+                    'department_id' =>  $request->department_id,
                     'class_id' =>  $request->class_id,
                     'section_id' => $request->section_id,
                     'subject_id' => $request->subject_id,
@@ -11431,6 +11461,7 @@ class ApiController extends BaseController
             'password' => 'required|min:6',
             'confirm_password' => 'required|same:password|min:6',
 
+            'department_id' => 'required',
             'class_id' => 'required',
             'section_id' => 'required',
 
@@ -11627,6 +11658,7 @@ class ApiController extends BaseController
                 $enroll = $conn->table('enrolls')->insert([
                     'student_id' => $studentId,
                     'academic_session_id' => $request->year,
+                    'department_id' => $request->department_id,
                     'class_id' => $request->class_id,
                     'section_id' => $request->section_id,
                     'roll' => $request->roll_no,
@@ -12615,6 +12647,7 @@ class ApiController extends BaseController
             'mobile_no' => 'required',
             'email' => 'required',
 
+            'department_id' => 'required',
             'class_id' => 'required',
             'section_id' => 'required',
 
@@ -12718,6 +12751,7 @@ class ApiController extends BaseController
                 }
 
                 $enroll = $conn->table('enrolls')->where('student_id', $request->student_id)->update([
+                    'department_id' => $request->department_id,
                     'class_id' => $request->class_id,
                     'section_id' => $request->section_id,
                     'roll' => $request->roll_no,
@@ -12812,6 +12846,7 @@ class ApiController extends BaseController
                     'e.academic_session_id as year',
                     'c.name as class_name',
                     'sec.name as section_name',
+                    'e.department_id',
                     'e.class_id',
                     'e.section_id',
                     'e.session_id',

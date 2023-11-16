@@ -9645,4 +9645,25 @@ class ApiControllerOne extends BaseController
             return $this->successResponse($data, 'employee types record fetch successfully');
         }
     }
+    // gradeListByDepartment
+    public function gradeListByDepartment(Request $request)
+    {
+        $validator = \Validator::make($request->all(), [
+            'branch_id' => 'required',
+            'department_id' => 'required'
+        ]);
+        if (!$validator->passes()) {
+            return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
+        } else {
+            // create new connection
+            $createConnection = $this->createNewConnection($request->branch_id);
+            $success = $createConnection->table('classes as cl')
+                ->select('cl.id', 'cl.name', 'cl.short_name')
+                ->where([
+                    ['cl.department_id', '=', $request->department_id],
+                ])
+                ->get();
+            return $this->successResponse($success, 'grade list by department fetch successfully');
+        }
+    }
 }
