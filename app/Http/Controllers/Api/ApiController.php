@@ -18524,6 +18524,7 @@ class ApiController extends BaseController
         $validator = \Validator::make($request->all(), [
             'branch_id' => 'required',
             'token' => 'required',
+            "department_id" => "required",
             "class_id" => "required",
             "subject_id" => "required",
             "paper_name" => "required",
@@ -18539,6 +18540,7 @@ class ApiController extends BaseController
             // check exist name
             // insert data
             $data = [
+                "department_id" =>$request->department_id,
                 "class_id" => $request->class_id,
                 "subject_id" => $request->subject_id,
                 "paper_name" => $request->paper_name,
@@ -18622,6 +18624,7 @@ class ApiController extends BaseController
         $validator = \Validator::make($request->all(), [
             'branch_id' => 'required',
             "id" => "required",
+            "department_id" => "required",
             "class_id" => "required",
             "subject_id" => "required",
             "paper_name" => "required",
@@ -18637,6 +18640,7 @@ class ApiController extends BaseController
             $Connection = $this->createNewConnection($request->branch_id);
             // update data
             $data = [
+                "department_id" =>$request->department_id,
                 "class_id" => $request->class_id,
                 "subject_id" => $request->subject_id,
                 "paper_name" => $request->paper_name,
