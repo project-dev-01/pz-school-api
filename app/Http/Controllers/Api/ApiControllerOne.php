@@ -8298,8 +8298,10 @@ class ApiControllerOne extends BaseController
                     'c.name'
                 )
                 ->join('classes as c', 'ta.class_id', '=', 'c.id')
+                ->join("staffs as sf", \DB::raw("FIND_IN_SET(sf.department_id,ta.department_id)"), ">", \DB::raw("'0'"))
                 ->where('ta.academic_session_id', $request->academic_session_id)
                 ->where('ta.teacher_id', $request->teacher_id)
+                 ->groupBy("ta.class_id")
                 ->get();
             return $this->successResponse($success, 'Class teacher record fetch successfully');
         }

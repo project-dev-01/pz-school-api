@@ -5782,7 +5782,7 @@ class ApiController extends BaseController
     {
 
         $validator = \Validator::make($request->all(), [
-            'token' => 'required',
+           // 'token' => 'required',
             'branch_id' => 'required',
             'teacher_id' => 'required',
         ]);
@@ -5794,6 +5794,8 @@ class ApiController extends BaseController
             $getTeachersClassName = $Connection->table('subject_assigns as sa')
                 ->select('sa.class_id', 'sa.teacher_id', 'c.name as class_name')
                 ->join('classes as c', 'sa.class_id', '=', 'c.id')
+                ->join("staffs as sf", \DB::raw("FIND_IN_SET(sf.department_id,sa.department_id)"), ">", \DB::raw("'0'"))
+               // ->join('staffs as sf', 'sa.department_id', '=', 'sf.department_id')
                 ->where('sa.teacher_id', $request->teacher_id)
                 ->groupBy("sa.class_id")
                 ->get();
