@@ -31,6 +31,7 @@ use App\Models\Forum_post_replie_counts;
 use Illuminate\Support\Arr;
 // notifications
 use App\Notifications\LeaveApply;
+use App\Notifications\LeaveApprove;
 use App\Notifications\StudentHomeworkSubmit;
 use App\Notifications\TeacherHomework;
 use App\Notifications\ParentEmail;
@@ -14862,7 +14863,6 @@ class ApiController extends BaseController
     {
         $validator = \Validator::make($request->all(), [
             'branch_id' => 'required',
-            'token' => 'required',
         ]);
 
         if (!$validator->passes()) {
@@ -15255,9 +15255,10 @@ class ApiController extends BaseController
         $validator = \Validator::make($request->all(), [
             'branch_id' => 'required',
             'staff_id' => 'required',
-            'from_leave' => 'required',
-            'to_leave' => 'required',
-            'total_leave' => 'required',
+            'leave_request' => 'required',
+            // 'from_leave' => 'required',
+            // 'to_leave' => 'required',
+            // 'total_leave' => 'required',
             'leave_type' => 'required',
             'reason' => 'required',
             // 'status' => 'required'
@@ -15268,8 +15269,17 @@ class ApiController extends BaseController
             // create new connection
             $staffConn = $this->createNewConnection($request->branch_id);
             $branch_id = $request->branch_id;
-            $from_leave = date('Y-m-d', strtotime($request['from_leave']));
-            $to_leave = date('Y-m-d', strtotime($request['to_leave']));
+            if ($request['leave_request'] == "Days") {
+                $from_leave = date('Y-m-d', strtotime($request['from_leave']));
+                $to_leave = date('Y-m-d', strtotime($request['to_leave']));
+            } else {
+                $from_leave = date('Y-m-d', strtotime($request['leave_date']));
+                $to_leave = date('Y-m-d', strtotime($request['leave_date']));
+            }
+            // echo $from_leave;
+            // echo "-----";
+            // echo $from_leave;
+            // exit;
             // check leave exist
             $fromLeaveCnt = $staffConn->table('staff_leaves as lev')
                 ->where([
@@ -15325,6 +15335,9 @@ class ApiController extends BaseController
                         'staff_id' => $request['staff_id'],
                         'from_leave' => $from_leave,
                         'to_leave' => $to_leave,
+                        'leave_request' => $request['leave_request'],
+                        'start_time' => $request['start_time'],
+                        'end_time' => $request['end_time'],
                         'leave_type' => $request['leave_type'],
                         'reason_id' => $request['reason'],
                         'status' => $request['status'],
@@ -15346,17 +15359,19 @@ class ApiController extends BaseController
                     $assignerID = [];
                     if (isset($getAssignStaff)) {
                         foreach ($getAssignStaff as $key => $value) {
+                            // 1st level notifications
                             if ($value->level_one_staff_id) {
                                 array_push($assignerID, $value->level_one_staff_id);
                             }
-                            if ($value->level_two_staff_id) {
-                                array_push($assignerID, $value->level_two_staff_id);
-                            }
-                            if ($value->level_three_staff_id) {
-                                array_push($assignerID, $value->level_three_staff_id);
-                            }
+                            // if ($value->level_two_staff_id) {
+                            //     array_push($assignerID, $value->level_two_staff_id);
+                            // }
+                            // if ($value->level_three_staff_id) {
+                            //     array_push($assignerID, $value->level_three_staff_id);
+                            // }
                         }
                     }
+                    // dd($assignerID);
                     // dd($assignerID);
 
                     // send leave notifications
@@ -15481,18 +15496,47 @@ class ApiController extends BaseController
             // create new connection
             $Conn = $this->createNewConnection($request->branch_id);
             // dd($request->approver_level);
+            // send notifications to assign staff
+            //  $getAssignStaff = $Conn->table('assign_leave_approval')
+            //  ->select('staff_id','level_one_staff_id','level_two_staff_id','level_three_staff_id')
+            //  ->where([
+            //      ['id', '=', $request->leave_id]
+            //  ])->first();
+            $getAssignStaff = $Conn->table('staff_leaves as sl')
+                ->select(
+                    'sl.id',
+                    'sl.from_leave',
+                    'sl.to_leave',
+                    'sl.level_one_status',
+                    'sl.level_two_status',
+                    'sl.level_three_status',
+                    'sl.status',
+                    'alap.staff_id',
+                    'alap.level_one_staff_id',
+                    'alap.level_two_staff_id',
+                    'alap.level_three_staff_id'
+                )
+                ->join('assign_leave_approval as alap', 'sl.staff_id', '=', 'alap.staff_id')
+                ->where('sl.id', $request->leave_id)
+                ->first();
+            // dd($getAssignStaff);
             if ($request->status == "Reject") {
                 $reject = "1";
             }
+            $assignerUserID = 0;
             $arrDetails = array(
                 'leave_reject' => (isset($reject) ? $reject : "0"),
                 'updated_at' => date("Y-m-d H:i:s"),
             );
             if ($request->approver_level == "1") {
+                // next level approver sent notifications
+                $assignerUserID = (isset($getAssignStaff->level_two_staff_id) ? $getAssignStaff->level_two_staff_id : 0);
                 $arrDetails['level_one_status'] = $request->status;
                 $arrDetails['level_one_staff_remarks'] = (isset($request->assiner_remarks) ? $request->assiner_remarks : "");
             }
             if ($request->approver_level == "2") {
+                // next level approver sent notifications
+                $assignerUserID = (isset($getAssignStaff->level_three_staff_id) ? $getAssignStaff->level_three_staff_id : 0);
                 $arrDetails['level_two_status'] = $request->status;
                 $arrDetails['level_two_staff_remarks'] = (isset($request->assiner_remarks) ? $request->assiner_remarks : "");
             }
@@ -15517,6 +15561,7 @@ class ApiController extends BaseController
                 ->join('assign_leave_approval as alap', 'sl.staff_id', '=', 'alap.staff_id')
                 ->where('sl.id', $leave_id)
                 ->get();
+
             $approveCount = 0;
             $rejectCount = 0;
             $pendingCount = 0;
@@ -15586,6 +15631,67 @@ class ApiController extends BaseController
                 );
             }
             $Conn->table('staff_leaves')->where('id', $leave_id)->update($overallStatus);
+
+            if ($approveCount == $countLevel) {
+                // sent notifications to who applied leave
+                if ($request->status == "Approve") {
+                    $StaffID = (isset($getAssignStaff->staff_id) ? $getAssignStaff->staff_id : null);
+                    // sent notification to next level approver
+                    if (isset($assignerUserID)) {
+                        $user = User::where('user_id', $StaffID)->where([
+                            ['branch_id', '=', $request->branch_id]
+                        ])->where(function ($q) {
+                            $q->where('role_id', 2)
+                                ->orWhere('role_id', 3)
+                                ->orWhere('role_id', 4);
+                        })->get();
+
+                        $staff_name = $Conn->table('staffs')
+                            ->select(
+                                DB::raw('CONCAT(staffs.first_name, " ", staffs.last_name) as staff_name')
+                            )
+                            ->where([
+                                ['id', '=', $getAssignStaff->staff_id]
+                            ])->first();
+                        $data = [
+                            'staff_id' => $getAssignStaff->staff_id,
+                            'from_leave' => $getAssignStaff->from_leave,
+                            'to_leave' => $getAssignStaff->to_leave
+                        ];
+                        // dd($data);
+
+                        Notification::send($user, new LeaveApprove($data, $request->branch_id, $staff_name->staff_name));
+                    }
+                }
+            } else {
+                // sent notifications to who is the approver
+                if ($request->status == "Approve") {
+                    // sent notification to next level approver
+                    $user = User::where('user_id', $assignerUserID)->where([
+                        ['branch_id', '=', $request->branch_id]
+                    ])->where(function ($q) {
+                        $q->where('role_id', 2)
+                            ->orWhere('role_id', 3)
+                            ->orWhere('role_id', 4);
+                    })->get();
+
+                    $staff_name = $Conn->table('staffs')
+                        ->select(
+                            DB::raw('CONCAT(staffs.first_name, " ", staffs.last_name) as staff_name')
+                        )
+                        ->where([
+                            ['id', '=', $getAssignStaff->staff_id]
+                        ])->first();
+                    $data = [
+                        'staff_id' => $getAssignStaff->staff_id,
+                        'from_leave' => $getAssignStaff->from_leave,
+                        'to_leave' => $getAssignStaff->to_leave
+                    ];
+                    // dd($data);
+
+                    Notification::send($user, new LeaveApply($data, $request->branch_id, $staff_name->staff_name));
+                }
+            }
 
             $success = [];
             if ($query) {
@@ -15769,6 +15875,9 @@ class ApiController extends BaseController
                     'lev.document',
                     'lev.status',
                     'lev.remarks',
+                    'lev.leave_request',
+                    'lev.start_time',
+                    'lev.end_time',
                     'lev.assiner_remarks',
                     'lev.level_one_status',
                     'lev.level_two_status',
@@ -15874,6 +15983,9 @@ class ApiController extends BaseController
                 ->select(
                     'lev.id',
                     'lev.staff_id',
+                    'lev.leave_request',
+                    'lev.start_time',
+                    'lev.end_time',
                     'lev.level_one_status',
                     'lev.level_two_status',
                     'lev.level_three_status',
@@ -15913,55 +16025,33 @@ class ApiController extends BaseController
                 // ->orWhere('alp.level_three_staff_id', $staff_id)
                 ->where('alp.id', '=', $request->assign_leave_approval_id)
                 ->first();
-            // dd($leaveDetails['assign_leave_approval_details']);
-            // dd($leaveDetails['leave_details']);
-            // $leaveDetails['leave_type_details'] = $conn->table('staff_leaves as lev')
-            // ->select(
-            //     'lev.staff_id',
-            //     'lt.name as leave_name',
-            //     DB::raw('sum(total_leave) as used_leave'),
-            //     'sla.leave_days as total_leave'
-            // )
-            // ->join('leave_types as lt', 'lev.leave_type', '=', 'lt.id')
-            // ->join('staff_leave_assign as sla', 'lev.leave_type', '=', 'sla.leave_type')
-            // ->where(
-            //     [
-            //         ['lev.staff_id', '=', $staff_id],
-            //         ['lev.status', '=', 'Approve'],
-            //     ]
-            // )
-            // ->where('lev.staff_id', '=', $staff_id)
-            // ->where('sla.staff_id', '=', $staff_id)
-            // ->groupBy('lev.leave_type')
-            // ->get();
-            $leaveDetails['leave_type_details'] = $conn->table('staff_leave_assign as sla')
+            $leave_type_details = $conn->table('staff_leave_assign as sla')
                 ->select(
-                    'sla.staff_id',
-                    // 'sla.leave_type',
-                    'lt.name as leave_name',
-                    DB::raw('sum(lev.total_leave) as used_leave'),
-                    DB::raw('sum(levapp.total_leave) as applied_leave'),
-                    'sla.leave_days as total_leave'
+                    'sla.leave_type',
+                    'lt.name as leave_type_name',
+                    'sla.leave_days as all_type_total_days',
+                    DB::raw("TIME(SUM(CASE WHEN lev.status = 'Approve' THEN TIMEDIFF(lev.end_time, lev.start_time) END)) AS total_hours_you_taken"),
+                    DB::raw("TIME(SUM(CASE WHEN lev.status != 'Approve' THEN TIMEDIFF(lev.end_time, lev.start_time) END)) AS total_hours_applied"),
+                    DB::raw('time(sum(TIMEDIFF( lev.end_time, lev.start_time ))) as total_hours_you_taken_both'),
+                    DB::raw("GROUP_CONCAT(IFNULL(lev.leave_request, 'null') SEPARATOR ',') AS leave_request"),
+                    DB::raw("GROUP_CONCAT(IFNULL(lev.start_time, 'null') SEPARATOR ',') AS start_time"),
+                    DB::raw("GROUP_CONCAT(IFNULL(lev.end_time, 'null') SEPARATOR ',') AS end_time"),
+                    DB::raw("GROUP_CONCAT(IFNULL(lev.total_leave, 'null') SEPARATOR ',') AS total_leave"),
+                    DB::raw("GROUP_CONCAT(IFNULL(lev.status, 'null') SEPARATOR ',') AS status"),
+                    DB::raw("GROUP_CONCAT(IFNULL(lev.leave_reject, 'null') SEPARATOR ',') AS leave_reject"),
+
                 )
-                // approved leaves count
                 ->leftJoin('staff_leaves as lev', function ($q) use ($staff_id, $academic_session_id) {
                     $q->on('sla.leave_type', '=', 'lev.leave_type')
                         ->on('sla.staff_id', '=',  'lev.staff_id')
-                        ->where('lev.academic_session_id', '=', $academic_session_id)
-                        ->where('lev.status', '=', 'Approve');
+                        ->where('lev.academic_session_id', '=', $academic_session_id);
                 })
-                // // pending leaves count
-                ->leftJoin('staff_leaves as levapp', function ($q) use ($staff_id, $academic_session_id) {
-                    $q->on('sla.leave_type', '=', 'levapp.leave_type')
-                        ->on('sla.staff_id', '=',  'levapp.staff_id')
-                        ->where('levapp.academic_session_id', '=', $academic_session_id)
-                        ->where('levapp.status', '!=', 'Approve');
-                })
-                ->leftJoin('leave_types as lt', 'sla.leave_type', '=', 'lt.id')
+                ->join('leave_types as lt', 'sla.leave_type', '=', 'lt.id')
                 ->where('sla.staff_id', '=', $staff_id)
                 // ->where('sla.academic_session_id', '=', $academic_session_id)
                 ->groupBy('sla.leave_type')
                 ->get();
+            $leaveDetails['leave_type_details'] = $this->historyLeaveDetails($leave_type_details);
             // dd($leaveDetails['leave_type_details']);
             return $this->successResponse($leaveDetails, 'Staff leave row details fetch successfully');
         }
@@ -15982,58 +16072,234 @@ class ApiController extends BaseController
             // get data
             $staff_id = $request->staff_id;
             $academic_session_id = $request->academic_session_id;
-
-
-            // $leave_type_details = $conn->table('staff_leave_assign as sla')
-            // ->select(
-            //     'lev.staff_id',
-            //     'lt.name as leave_name',
-            //     DB::raw('sum(total_leave) as used_leave'),
-            //     'sla.leave_days as total_leave'
-            // )
-            // ->leftJoin('staff_leaves as lev', function ($q) use ($staff_id,$academic_session_id) {
-            //         $q->on('sla.leave_type', '=', 'lev.leave_type')
-            //             ->where('lev.status', '=', 'Approve')
-            //             ->where('lev.staff_id', '=', $staff_id)
-            //             ->where('lev.academic_session_id', '=', $academic_session_id);
-            //     })
-            // ->leftJoin('leave_types as lt', 'sla.leave_type', '=', 'lt.id')
-            // ->where('sla.staff_id', '=', $staff_id)
-            // ->where('sla.academic_session_id', '=', $academic_session_id)
-            // ->groupBy('lev.leave_type')
-            // ->get();
             $leave_type_details = $conn->table('staff_leave_assign as sla')
                 ->select(
-                    'sla.staff_id',
-                    // 'sla.leave_type',
-                    'lt.name as leave_name',
-                    DB::raw('sum(lev.total_leave) as used_leave'),
-                    DB::raw('sum(levapp.total_leave) as applied_leave'),
-                    'sla.leave_days as total_leave'
+                    'sla.leave_type',
+                    'lt.name as leave_type_name',
+                    'sla.leave_days as all_type_total_days',
+                    DB::raw("TIME(SUM(CASE WHEN lev.status = 'Approve' THEN TIMEDIFF(lev.end_time, lev.start_time) END)) AS total_hours_you_taken"),
+                    DB::raw("TIME(SUM(CASE WHEN lev.status != 'Approve' THEN TIMEDIFF(lev.end_time, lev.start_time) END)) AS total_hours_applied"),
+                    DB::raw('time(sum(TIMEDIFF( lev.end_time, lev.start_time ))) as total_hours_you_taken_both'),
+                    DB::raw("GROUP_CONCAT(IFNULL(lev.leave_request, 'null') SEPARATOR ',') AS leave_request"),
+                    DB::raw("GROUP_CONCAT(IFNULL(lev.start_time, 'null') SEPARATOR ',') AS start_time"),
+                    DB::raw("GROUP_CONCAT(IFNULL(lev.end_time, 'null') SEPARATOR ',') AS end_time"),
+                    DB::raw("GROUP_CONCAT(IFNULL(lev.total_leave, 'null') SEPARATOR ',') AS total_leave"),
+                    DB::raw("GROUP_CONCAT(IFNULL(lev.status, 'null') SEPARATOR ',') AS status"),
+                    DB::raw("GROUP_CONCAT(IFNULL(lev.leave_reject, 'null') SEPARATOR ',') AS leave_reject"),
+
                 )
-                // approved leaves count
                 ->leftJoin('staff_leaves as lev', function ($q) use ($staff_id, $academic_session_id) {
                     $q->on('sla.leave_type', '=', 'lev.leave_type')
                         ->on('sla.staff_id', '=',  'lev.staff_id')
-                        ->where('lev.academic_session_id', '=', $academic_session_id)
-                        ->where('lev.status', '=', 'Approve');
+                        ->where('lev.academic_session_id', '=', $academic_session_id);
                 })
-                // // pending leaves count
-                ->leftJoin('staff_leaves as levapp', function ($q) use ($staff_id, $academic_session_id) {
-                    $q->on('sla.leave_type', '=', 'levapp.leave_type')
-                        ->on('sla.staff_id', '=',  'levapp.staff_id')
-                        ->where('levapp.academic_session_id', '=', $academic_session_id)
-                        ->where('levapp.status', '!=', 'Approve');
-                })
-                ->leftJoin('leave_types as lt', 'sla.leave_type', '=', 'lt.id')
+                ->join('leave_types as lt', 'sla.leave_type', '=', 'lt.id')
                 ->where('sla.staff_id', '=', $staff_id)
                 // ->where('sla.academic_session_id', '=', $academic_session_id)
                 ->groupBy('sla.leave_type')
                 ->get();
-            return $this->successResponse($leave_type_details, 'Staff leave history details fetch successfully');
+            // dd($leave_type_details);
+            $leaveHistoryArr = $this->historyLeaveDetails($leave_type_details);
+            // dd($leaveHistoryArr);
+
+            return $this->successResponse($leaveHistoryArr, 'Staff leave history details fetch successfully');
         }
     }
+    public function historyLeaveDetails($leave_type_details)
+    {
+        $leaveHistoryArr = [];
+        if (count($leave_type_details) > 0) {
+            foreach ($leave_type_details as $key => $val) {
+                $object = new \stdClass();
+                $object->leave_type = $val->leave_type;
+                $object->leave_type_name = $val->leave_type_name;
+                $total_leave_cnt = $val->all_type_total_days;
+                // $total_hours_you_taken = $val->total_hours_you_taken;
+                $total_hours_you_taken = isset($val->total_hours_you_taken) ? $val->total_hours_you_taken : '0:00:00';
+                $total_hours_applied = isset($val->total_hours_applied) ? $val->total_hours_applied : '0:00:00';
+                $addLeaveDays = 0;
+                $addAppliedLeaveDays = 0;
+                $leave_request = isset($val->leave_request) ? explode(",", $val->leave_request) : [];
+                $total_leaves = isset($val->total_leave) ? explode(",", $val->total_leave) : [];
+                $all_status = isset($val->status) ? explode(",", $val->status) : [];
+                $countLeaveRequest = count($leave_request);
+                for ($i = 0; $i < $countLeaveRequest; $i++) {
+                    if ($leave_request[$i] == "Days") {
+                        if ($all_status[$i] == "Approve") {
+                            $addLeaveDays += $total_leaves[$i];
+                        } else {
+                            $addAppliedLeaveDays += $total_leaves[$i];
+                        }
+                    }
+                }
+                // echo "<pre>";
+                // echo "<br>";
+                // echo "addLeaveDays = $addLeaveDays";
+                // echo "<br>";
+                // echo "addAppliedLeaveDays = $addAppliedLeaveDays";
+                // echo "<br>";
+                // exit;
+                $hoursPerDay = 8;
+                // all leave hours convert
+                $totalAssignHoursTakenOff = $total_leave_cnt * $hoursPerDay;
+                $OverallTakenOff = sprintf('%02d:00:00', $totalAssignHoursTakenOff);
+                // taken leave by days
+                $totalHoursTakenOff = $addLeaveDays * $hoursPerDay;
+                $TakenOffByDays = sprintf('%02d:00:00', $totalHoursTakenOff);
+                // applied leave by days
+                $totalHoursApplied = $addAppliedLeaveDays * $hoursPerDay;
+                $TakenAppliedByDays = sprintf('%02d:00:00', $totalHoursApplied);
 
+                // taken leave by hours
+                $TakenByHours  = substr($total_hours_you_taken, 0, 8);
+                // applied leave by hours
+                $AppliedByHours  = substr($total_hours_applied, 0, 8);
+                // here now add take leave by days and hours
+                // Convert times to seconds
+                $time1_seconds = $this->timeToSeconds($TakenOffByDays);
+                $time2_seconds = $this->timeToSeconds($TakenByHours);
+                // echo "<pre>";
+                // echo "<br>";
+                // echo "TakenOffByDays = $TakenOffByDays";
+                // echo "<br>";
+                // echo "TakenByHours = $TakenByHours";
+                // echo "<br>";
+                // Convert times to seconds
+                $applied_time1_seconds = $this->timeToSeconds($TakenAppliedByDays);
+                $applied_time2_seconds = $this->timeToSeconds($AppliedByHours);
+                // echo "<pre>";
+                // echo "<br>";
+                // echo "AppliedByDays = $TakenAppliedByDays";
+                // echo "<br>";
+                // echo "AppliedByHours = $AppliedByHours";
+                // echo "<br>";
+                // Add the seconds together
+                $total_seconds = $time1_seconds + $time2_seconds;
+                // Add the seconds together
+                $applied_total_seconds = $applied_time1_seconds + $applied_time2_seconds;
+                // echo "<pre>";
+                // echo "<br>";
+                // echo "total_seconds = $total_seconds";
+                // echo "<br>";
+                // echo "applied_total_seconds = $applied_total_seconds";
+                // echo "<br>";
+                // Calculate hours, minutes, and seconds
+                $total_hours = floor($total_seconds / 3600);
+                $total_seconds %= 3600;
+                $total_minutes = floor($total_seconds / 60);
+                $total_seconds %= 60;
+                // Calculate hours, minutes, and seconds
+                $applied_total_hours = floor($applied_total_seconds / 3600);
+                $applied_total_seconds %= 3600;
+                $applied_total_minutes = floor($applied_total_seconds / 60);
+                $applied_total_seconds %= 60;
+                // Format total time
+                $TakenHoursDaysAdded = sprintf("%02d:%02d:%02d", $total_hours, $total_minutes, $total_seconds);
+                // Format total time
+                $AppliedHoursDaysAdded = sprintf("%02d:%02d:%02d", $applied_total_hours, $applied_total_minutes, $applied_total_seconds);
+                // echo "<pre>";
+                // echo "<br>";
+                // echo "TakenHoursDaysAdded = $TakenHoursDaysAdded";
+                // echo "<br>";
+                // echo "AppliedHoursDaysAdded = $AppliedHoursDaysAdded";
+                // echo "<br>";
+                // here hh:mm:ss to decimal hours
+                $OverallTakenOffDecimal = $this->timeToDecimals($OverallTakenOff);
+                // $TakenOffByDaysDecimal = $this->timeToDecimals($TakenOffByDays);
+                // $TakenOffByHoursDecimal = $this->timeToDecimals($TakenByHours);
+                $TakenHoursDaysAddedDecimal = $this->timeToDecimals($TakenHoursDaysAdded);
+                $AppliedHoursDaysAddedDecimal = $this->timeToDecimals($AppliedHoursDaysAdded);
+                // here decimal to days
+                $OverallDays = $this->decimalHourToDays($OverallTakenOffDecimal, $hoursPerDay);
+                // $takenOffdays = $this->decimalHourToDays($TakenOffByDaysDecimal, $hoursPerDay);
+                // $takenOffHours = $this->decimalHourToDays($TakenOffByHoursDecimal, $hoursPerDay);
+                $takenHoursDaysAddedDays = $this->decimalHourToDays($TakenHoursDaysAddedDecimal, $hoursPerDay);
+                $appliedHoursDaysAddedDays = $this->decimalHourToDays($AppliedHoursDaysAddedDecimal, $hoursPerDay);
+                // echo "<pre>";
+                // echo "<br>";
+                // echo "TakenHoursDaysAddedDecimal = $TakenHoursDaysAddedDecimal";
+                // echo "<br>";
+                // echo "AppliedHoursDaysAddedDecimal = $AppliedHoursDaysAddedDecimal";
+                // echo "<br>";
+                // echo "<pre>";
+                // echo "<br>";
+                // echo "takenHoursDaysAddedDays = $takenHoursDaysAddedDays";
+                // echo "<br>";
+                // echo "appliedHoursDaysAddedDays = $appliedHoursDaysAddedDays";
+                // echo "<br>";
+                // leave balance
+                $BalanceLeaveDays = $OverallDays - $takenHoursDaysAddedDays;
+                $BalanceLeaveHours = $OverallTakenOffDecimal - $TakenHoursDaysAddedDecimal;
+                $object->overall_days = $OverallDays;
+                $object->overall_days_by_hours = $OverallTakenOffDecimal;
+                $object->used_leave_days = $takenHoursDaysAddedDays;
+                $object->used_leave_days_by_hours = $TakenHoursDaysAddedDecimal;
+                // $object->used_leave_dhm = $this->calcDaysHoursMinutes($TakenHoursDaysAddedDecimal);
+                $object->applied_leave_days = $appliedHoursDaysAddedDays;
+                $object->applied_leave_days_by_hours = $AppliedHoursDaysAddedDecimal;
+                $object->balance_days = ($BalanceLeaveDays - floor($BalanceLeaveDays) != 0)
+                    ? number_format($BalanceLeaveDays, 3)
+                    : number_format($BalanceLeaveDays, 0);
+                $object->balance_days_by_hours = ($BalanceLeaveHours - floor($BalanceLeaveHours) != 0)
+                    ? number_format($BalanceLeaveHours, 3)
+                    : number_format($BalanceLeaveHours, 0);
+                array_push($leaveHistoryArr, $object);
+            }
+        }
+        return $leaveHistoryArr;
+    }
+    public function timeToSeconds($time)
+    {
+        sscanf($time, "%d:%d:%d", $hours, $minutes, $seconds);
+        return $hours * 3600 + $minutes * 60 + $seconds;
+    }
+    public function calcDaysHoursMinutes($hours)
+    {
+        // Calculate days
+        $days = floor($hours / 24);
+        // Calculate remaining hours
+        $remainingHours = $hours % 24;
+        // Calculate remaining minutes
+        $minutes = $remainingHours * 60;
+        return "$days days, $remainingHours hours, and $minutes minutes.";
+    }
+    public function timeToDecimals($time)
+    {
+        // Explode the time into hours, minutes, and seconds
+        list($hours, $minutes, $seconds) = explode(':', $time);
+        // If all values are zero, set the total hours to 0
+        if ($hours == 0 && $minutes == 0 && $seconds == 0) {
+            return $total_hours = 0;
+        } else {
+            // Convert minutes to hours (divide by 60) and seconds to hours (divide by 3600)
+            $minutes_in_hours = $minutes / 60;
+            $seconds_in_hours = $seconds / 3600;
+            // Calculate the total duration in decimal format
+            $total_hours = $hours + $minutes_in_hours + $seconds_in_hours;
+        }
+        // Display the result with decimal places only if there's a fraction of an hour
+        if (floor($total_hours) != $total_hours) {
+            return number_format($total_hours, 3);
+        } else {
+            return number_format($total_hours, 0);
+        }
+        // return number_format($total_hours, 3);
+    }
+    public function decimalHourToDays($decimal_hours, $hoursPerDay)
+    {
+        // Convert decimal hours to days with decimals
+        // $days_with_decimals = $decimal_hours / $hoursPerDay;
+        // return number_format($days_with_decimals, 3);
+        // Convert decimal hours to days with decimals
+        $days_with_decimals = $decimal_hours / $hoursPerDay;
+
+        // Format the result to show three decimal places if non-zero
+        $formatted_result = ($days_with_decimals - floor($days_with_decimals) != 0)
+            ? number_format($days_with_decimals, 3)
+            : number_format($days_with_decimals, 0);
+
+        return $formatted_result;
+    }
     // get Employee Attendance List
     public function getEmployeeAttendanceList(Request $request)
     {

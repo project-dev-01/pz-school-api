@@ -8,7 +8,7 @@ use App\Http\Controllers\Api\ImportController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\CommonController;
 use App\Http\Controllers\Api\ChatController;
-
+use App\Http\Controllers\Api\ApiControllerThree;
 use App\Http\Controllers\Api\TwoFactorAuth;
 /*
 |--------------------------------------------------------------------------
@@ -948,26 +948,26 @@ Route::group(['middleware' => ['auth:api', 'throttle:limit_per_user', 'logroute'
     Route::get('employee_type/list', [ApiControllerOne::class, 'employeeTypeList']);
     Route::post('grade_list_by_department', [ApiControllerOne::class, 'gradeListByDepartment']);
      // buletin_board routes
-     Route::post('buletin_board/add', [ApiController::class, 'addBuletinBoard']);
-     Route::get('buletin_board/list', [ApiController::class, 'getBuletinBoardList']);
-     Route::get('buletin_board/usernames', [ApiController::class, 'usernameBuletin']);
-     Route::post('buletin_board/delete', [ApiController::class, 'deleteBuletinBoard']);
-     Route::post('buletin_board/buletin_board-details', [ApiController::class, 'getBuletinBoardDetails']);
-     Route::post('buletin_board/update', [ApiController::class, 'updateBuletinBoard']);
-     Route::post('get_student_details_buletin_board', [ApiController::class, 'getStudentListForBulletinBoard']);
-     Route::post('get_parent_details_buletin_board', [ApiController::class, 'getParentListForBulletinBoard']);
+     Route::post('buletin_board/add', [ApiControllerThree::class, 'addBuletinBoard']);
+     Route::get('buletin_board/list', [ApiControllerThree::class, 'getBuletinBoardList']);
+     Route::get('buletin_board/usernames', [ApiControllerThree::class, 'usernameBuletin']);
+     Route::post('buletin_board/delete', [ApiControllerThree::class, 'deleteBuletinBoard']);
+     Route::post('buletin_board/buletin_board-details', [ApiControllerThree::class, 'getBuletinBoardDetails']);
+     Route::post('buletin_board/update', [ApiControllerThree::class, 'updateBuletinBoard']);
+     Route::post('get_student_details_buletin_board', [ApiControllerThree::class, 'getStudentListForBulletinBoard']);
+     Route::post('get_parent_details_buletin_board', [ApiControllerThree::class, 'getParentListForBulletinBoard']);
  
-     Route::get('buletin_board/list/parent', [ApiController::class, 'getBulletinParent']);
-     Route::get('buletin_board/imp_list/parent', [ApiController::class, 'getBulletinImpParent']);
-     Route::post('bulletin_board/bulletin_star', [ApiController::class, 'bulletinParentStar']);
+     Route::get('buletin_board/list/parent', [ApiControllerThree::class, 'getBulletinParent']);
+     Route::get('buletin_board/imp_list/parent', [ApiControllerThree::class, 'getBulletinImpParent']);
+     Route::post('bulletin_board/bulletin_star', [ApiControllerThree::class, 'bulletinParentStar']);
  
-     Route::get('buletin_board/list/student', [ApiController::class, 'getBulletinStudent']);
-     Route::get('buletin_board/imp_list/student', [ApiController::class, 'getBulletinImpStudent']);
-     Route::post('bulletin_board/bulletin_star_student', [ApiController::class, 'bulletinStudentStar']);
+     Route::get('buletin_board/list/student', [ApiControllerThree::class, 'getBulletinStudent']);
+     Route::get('buletin_board/imp_list/student', [ApiControllerThree::class, 'getBulletinImpStudent']);
+     Route::post('bulletin_board/bulletin_star_student', [ApiControllerThree::class, 'bulletinStudentStar']);
      
-     Route::get('buletin_board/list/teacher', [ApiController::class, 'getBulletinTeacher']);
-     Route::get('buletin_board/imp_list/teacher', [ApiController::class, 'getBulletinImpTeacher']);
-     Route::post('bulletin_board/bulletin_star_teacher', [ApiController::class, 'bulletinTeacherStar']);
+     Route::get('buletin_board/list/teacher', [ApiControllerThree::class, 'getBulletinTeacher']);
+     Route::get('buletin_board/imp_list/teacher', [ApiControllerThree::class, 'getBulletinImpTeacher']);
+     Route::post('bulletin_board/bulletin_star_teacher', [ApiControllerThree::class, 'bulletinTeacherStar']);
       // retired routes
-     Route::post('retired/list', [ApiController::class, 'getRetiredList']);
+     Route::post('retired/list', [ApiControllerThree::class, 'getRetiredList']);
 });
