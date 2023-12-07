@@ -54,12 +54,12 @@ class ApiController extends BaseController
     //
     public function getRoles(Request $request)
     {
-        // if ($request->status == 'All') {
-        //     $data = Role::where('status','!=', $request->status)->get();
-        // } else {
-        //     $data = Role::where('status','!=', $request->status)->get();
-        // }
-        $data = Role::where('status', '!=', '1')->get();
+        if($request->status=='All')			
+		{$data = Role::get();}
+		else
+		{$data = Role::where('status', $request->status)->get();}
+	
+        //$data = Role::where('status', '!=', '1')->get();
         return $this->successResponse($data, 'Section record fetch successfully');
     }
     // add section
@@ -3098,12 +3098,18 @@ class ApiController extends BaseController
                                 'created_at' => date("Y-m-d H:i:s")
                             ]);
                         }
+
+                        $rid=$request->role_id;
+                        $roleIds1 = $Connection->table('school_roles')->where('id', $rid)->first();
+                    
+                        $prole_id=$roleIds1->portal_roleid;
                         // add picture
                         $user = new User();
 
                         $user->name = (isset($request->first_name) ? $request->first_name : "") . " " . (isset($request->last_name) ? $request->last_name : "");
                         $user->user_id = $Staffid;
-                        $user->role_id = $request->role_id;
+                        $user->role_id =  $prole_id;
+                        $user->school_roleid=$request->role_id;
                         $user->branch_id = $request->branch_id;
                         $user->picture = $fileName;
                         $user->email = $request->email;
@@ -3255,6 +3261,37 @@ class ApiController extends BaseController
             return $this->successResponse($empDetails, 'Employee row fetch successfully');
         }
     }
+     // getEmployeeDetails PAGE row details
+    public function getEmployeePageDetails(Request $request)
+    {     
+        $validator = \Validator::make($request->all(), [
+            'email' => 'required',
+            'branch_id' => 'required',
+            'token' => 'required'
+        ]);
+    
+    
+        if (!$validator->passes()) {
+            return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
+        } else {
+            $email = $request->email;
+            //$id = $request->id;
+            //dd($email);
+            // create new connection
+            $staffConn = $this->createNewConnection($request->branch_id);
+            $branch_id = $request->branch_id;
+            // get data
+            $getEmpDetails = $staffConn->table('staffs as s')
+                ->select(
+                    's.id'
+                )
+            ->where('s.email', $email)
+                ->get();
+        
+        
+            return $this->successResponse($getEmpDetails, 'Employee row fetch successfully');
+        }
+    }
     // update updateEmployee
     public function updateEmployee(Request $request)
     {
@@ -3397,6 +3434,10 @@ class ApiController extends BaseController
                 if (!$query) {
                     return $this->send500Error('Something went wrong.', ['error' => 'Something went wrong on Update employee']);
                 } else {
+$rid=$request->role_id;
+                    $roleIds1 = $Connection->table('school_roles')->where('id', $rid)->first();
+                    
+                    $prole_id=$roleIds1->portal_roleid;
                     // update users
                     if (isset($request->role_user_id) && isset($request->password)) {
                         $user = User::find($request->role_user_id);
@@ -3406,7 +3447,8 @@ class ApiController extends BaseController
                         $user->password = bcrypt($request->password);
                         $user->status = $request->status;
                         $user->google2fa_secret_enable = $request->google2fa_secret_enable;
-                        $user->role_id = $request->role_id;
+                        $user->role_id = $prole_id;
+                        $user->school_roleid=$request->role_id;
                         $updateUser = $user->save();
                     }
                     if (isset($request->role_user_id) && isset($request->email)) {
@@ -3416,7 +3458,8 @@ class ApiController extends BaseController
                         $user->picture = $fileName;
                         $user->status = $request->status;
                         $user->google2fa_secret_enable = $request->google2fa_secret_enable;
-                        $user->role_id = $request->role_id;
+                        $user->role_id = $prole_id;
+                        $user->school_roleid=$request->role_id;
                         $updateUser = $user->save();
                     }
                     if (isset($request->old_photo) && empty($request->photo)) {
@@ -3425,7 +3468,8 @@ class ApiController extends BaseController
                         $user->picture = $fileName;
                         $user->status = $request->status;
                         $user->google2fa_secret_enable = $request->google2fa_secret_enable;
-                        $user->role_id = $request->role_id;
+                        $user->role_id = $prole_id;
+                        $user->school_roleid=$request->role_id;
                         $updateUser = $user->save();
                     }
                     // add bank details
@@ -10433,10 +10477,17 @@ class ApiController extends BaseController
                     // ->orderBy('sa.score', 'desc')
                     ->orderBy('name', 'asc')
                     ->get();
-
-                $data = [
-                    'get_subject_marks' => $getSubjectMarks
-                ];
+                    $exampaper = $Connection->table('exam_papers')
+                    ->where('id', '=', $paper_id)->first();
+                    $score_type=$exampaper->score_type;
+                    $grade = $Connection->table('grade_marks')->select('id','grade')
+                    ->where('score_type', '=', $score_type)->get();
+                    $success=[]  ;     
+                    $data = [
+                        'get_subject_marks' => $getSubjectMarks,
+                        'grade' => $grade,
+                        'exampaper' => $exampaper
+                    ];   
                 return $this->successResponse($data, 'Subject vs marks record fetch successfully');
             }
         }
@@ -10518,6 +10569,8 @@ class ApiController extends BaseController
 
                 $student_id = (isset($value['student_id']) ? $value['student_id'] : "");
                 $score = (isset($value['score']) ? $value['score'] : "");
+                $points = (isset($value['points']) ? $value['points'] : "");								
+                $freetext = (isset($value['freetext']) ? $value['freetext'] : "");
                 $grade = (isset($value['grade']) ? $value['grade'] : "");
                 $ranking = (isset($value['score']) ? $value['ranking'] : "");
                 $memo = (isset($value['memo']) ? $value['memo'] : "");
@@ -10535,6 +10588,8 @@ class ApiController extends BaseController
                     'session_id' => $session_id,
                     'grade_category' => $grade_category,
                     'score' => $score,
+                    'points' => $points,
+					'freetext' => $freetext,
                     'grade' => $grade,
                     'pass_fail' => $pass_fail,
                     'ranking' => $ranking,
@@ -10581,6 +10636,8 @@ class ApiController extends BaseController
                     if (isset($row->id)) {
                         $Connection->table('student_marks')->where('id', $row->id)->update([
                             'score' => $score,
+							'points' => $points,
+							'freetext' => $freetext,
                             'grade' => $grade,
                             'ranking' => $ranking,
                             'pass_fail' => $pass_fail,
@@ -10594,6 +10651,8 @@ class ApiController extends BaseController
                 } else {
                     $Connection->table('student_marks')->where('id', $value['studentmarks_tbl_pk_id'])->update([
                         'score' => $score,
+						'points' => $points,
+						'freetext' => $freetext,
                         'grade' => $grade,
                         'ranking' => $ranking,
                         'pass_fail' => $pass_fail,
@@ -10786,6 +10845,7 @@ class ApiController extends BaseController
                     'max_mark' => $request->max_mark,
                     'grade_point' => $request->grade_point,
                     'grade_category' => $request->grade_category,
+                    'score_type' => $request->score_type,
                     'notes' => isset($request->notes) ? $request->notes : "",
                     'status' => $request->status,
                     'created_at' => date("Y-m-d H:i:s")
@@ -10821,6 +10881,7 @@ class ApiController extends BaseController
                     'gm.grade',
                     'gm.grade_point',
                     'gm.grade_category',
+                    'gm.score_type',
                     'gm.notes',
                     'gm.status',
                     'gc.name as grade_category_name',
@@ -10883,6 +10944,7 @@ class ApiController extends BaseController
                     'max_mark' => $request->max_mark,
                     'grade_point' => $request->grade_point,
                     'grade_category' => $request->grade_category,
+                    'score_type' => $request->score_type,
                     'status' => $request->status,
                     'notes' => isset($request->notes) ? $request->notes : "",
                     'updated_at' => date("Y-m-d H:i:s")
@@ -11685,6 +11747,7 @@ class ApiController extends BaseController
                     $user->name = $studentName;
                     $user->user_id = $studentId;
                     $user->role_id = "6";
+$query->school_roleid=$request->school_roleid;
                     $user->branch_id = $request->branch_id;
                     $user->email = $request->email;
                     $user->status = $request->status;
@@ -12792,6 +12855,7 @@ class ApiController extends BaseController
                             ->update([
                                 'name' => $studentName,
                                 'email' => $request->email,
+                                'school_roleid' => $request->school_roleid,
                                 'status' => $request->status,
                                 'google2fa_secret_enable' => isset($request->google2fa_secret_enable) ? '1' : '0',
                                 'password' => bcrypt($request->password)
@@ -12802,6 +12866,7 @@ class ApiController extends BaseController
                         ->update([
                             'name' => $studentName,
                             'email' => $request->email,
+                            'school_roleid' => $request->school_roleid,
                             'status' => $request->status,
                             'google2fa_secret_enable' => isset($request->google2fa_secret_enable) ? '1' : '0'
                         ]);
@@ -13041,12 +13106,17 @@ class ApiController extends BaseController
                 if (!$parentId) {
                     return $this->send500Error('Something went wrong.', ['error' => 'Something went wrong add Parent']);
                 } else {
+$user = new User();
 
+                    //$user->name = (isset($request->first_name) ? $request->first_name : "") . " " . (isset($request->last_name) ? $request->last_name : "");
+                    //$user->user_id = $Staffid;
+                   // $user->role_id =  $roleIds;
                     // add User
                     $query = new User();
                     $query->name = $name;
                     $query->user_id = $parentId;
                     $query->role_id = "5";
+                    $query->school_roleid=$request->school_roleid ;
                     $query->branch_id = $request->branch_id;
                     $query->email = $request->email;
                     $query->status = $request->status;
@@ -13260,6 +13330,7 @@ class ApiController extends BaseController
                         ->update([
                             'name' => $name,
                             'email' => $request->email,
+                            'school_roleid' => $request->school_roleid,
                             'status' => $request->status,
                             'google2fa_secret_enable' => isset($request->google2fa_secret_enable) ? '1' : '0',
                         ]);
@@ -18853,6 +18924,7 @@ class ApiController extends BaseController
                     'exp.paper_name',
                     'exp.paper_type',
                     'exp.grade_category',
+                    'exp.score_type',
                     'exp.subject_weightage',
                     'exp.notes',
                 )
@@ -18913,7 +18985,8 @@ class ApiController extends BaseController
                 "subject_id" => $request->subject_id,
                 "paper_name" => $request->paper_name,
                 "paper_type" => isset($request->paper_type) ? $request->paper_type : "",
-                "grade_category" => $request->grade_category,
+                "grade_category" => $request->grade_category,                
+                "score_type" => $request->score_type,
                 "academic_session_id" => $request->academic_session_id,
                 "subject_weightage" => isset($request->subject_weightage) ? $request->subject_weightage : "",
                 "notes" => isset($request->notes) ? $request->notes : "",
@@ -20979,189 +21052,6 @@ class ApiController extends BaseController
         }
     }
 
-    // Menu API Start
-    public function addMenu(Request $request)
-    {
-
-        $validator = \Validator::make($request->all(), [
-
-            'menu_name' => 'required',
-            'menu_type' => 'required',
-            'menu_url' => 'required'
-        ]);
-        //dd('success');
-        if (!$validator->passes()) {
-            return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
-        } else {
-            // insert data
-            $query = Menus::insert([
-                'role_id' => $request->role_id,
-                'menu_name' => $request->menu_name,
-                'menu_type' => $request->menu_type,
-                'menu_icon' => $request->menu_icon,
-                'menu_refid' => $request->menu_refid,
-                'menu_url' => $request->menu_url,
-                'menu_routename' => $request->menu_routename,
-                'menu_status' => $request->menu_status,
-                'menu_dropdown' => $request->menu_dropdown,
-                'created_at' => date("Y-m-d H:i:s")
-            ]);
-            $success = [];
-            if (!$query) {
-                return $this->send500Error('Something went wrong.', ['error' => 'Something went wrong']);
-            } else {
-                return $this->successResponse($success, 'New Menu has been successfully saved');
-            }
-        }
-    }
-    public function updateMenuDetails(Request $request)
-    {
-
-        $validator = \Validator::make($request->all(), [
-
-            'menu_name' => 'required',
-            'menu_type' => 'required',
-            'menu_url' => 'required'
-        ]);
-        //dd('success');
-        if (!$validator->passes()) {
-            return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
-        } else {
-            // Update data
-            $query =  Menus::where('menu_id', $request->menu_id)
-                ->update([
-                    'role_id' => $request->role_id,
-                    'menu_name' => $request->menu_name,
-                    'menu_type' => $request->menu_type,
-                    'menu_icon' => $request->menu_icon,
-                    'menu_refid' => $request->menu_refid,
-                    'menu_url' => $request->menu_url,
-                    'menu_routename' => $request->menu_routename,
-                    'menu_status' => $request->menu_status,
-                    'menu_dropdown' => $request->menu_dropdown,
-                    'updated_at' => date("Y-m-d H:i:s")
-                ]);
-
-
-            $success = [];
-            if (!$query) {
-                return $this->send500Error('Something went wrong.', ['error' => 'Something went wrong']);
-            } else {
-                return $this->successResponse($success, 'New Menu has been successfully Updated');
-            }
-        }
-    }
-
-    public function getMenuList(Request $request)
-    {
-        if (isset($request->type)) {
-            $data = Menus::where('menu_type', $request->type)->orderBy("role_id", "asc")->get();
-        } else {
-            $data = Menus::All();
-        }
-
-
-        //dd($data);
-        return $this->successResponse($data, 'Menus fetch successfully');
-    }
-    public function getMenuAccessList(Request $request)
-    {
-        $br_id = $request->br_id;
-        /* $data = DB::table('menus AS t1')
-        ->select('t1.*', 't2.menu_permission','t2.id as menuaccess_id')
-        ->leftJoin('menuaccess AS t2', 't1.menu_id', '=', 't2.menu_id')
-        ->where('t1.menu_type', $request->type)->where('t1.role_id', $request->role_id)->orderBy("t1.role_id", "asc")->get();
-        */
-        $br_id = $request->br_id;
-        $data = Menus::select('menus.*')
-            ->selectSub(function ($query) use ($br_id) {
-                $query->select('menu_permission')
-                    ->from('menuaccess')
-                    ->where('branch_id', $br_id)
-                    ->whereColumn('menus.menu_id', 'menuaccess.menu_id')
-                    ->limit(1);
-            }, 'menu_permission')
-            ->selectSub(function ($query) use ($br_id) {
-                $query->select('id')
-                    ->from('menuaccess')
-                    ->where('branch_id', $br_id)
-                    ->whereColumn('menus.menu_id', 'menuaccess.menu_id')
-                    ->limit(1);
-            }, 'menuaccess_id')
-            ->where('menu_type', $request->type)
-            ->where('role_id', $request->role_id)
-            ->orderBy("role_id", "asc")
-            ->get();
-        // dd($data);
-        return $this->successResponse($data, 'Menus fetch successfully');
-    }
-    public function getmenupermission(Request $request)
-    {
-        $br_id = $request->br_id;
-        $role_id = $request->role_id;
-        $menu_id = $request->menu_id;
-        /* $data = Menuaccess::select('menu_permission')
-                ->where('branch_id', $br_id)
-                ->where('role_id', $role_id)
-                ->where('menu_id', $menu_id)
-                ->first();*/
-        // dd($data);
-        $data = DB::table('menuaccess AS t1')
-            ->select('t1.menu_permission')
-            ->leftJoin('menus AS t2', 't1.menu_id', '=', 't2.menu_id')
-            ->where('t2.menu_routename', $menu_id)
-            ->where('t1.role_id', $role_id)
-            ->where('t1.branch_id', $br_id)
-            ->first();
-        return $this->successResponse($data, 'Get Menus Permission   successfully');
-    }
-    public function setmenupermission(Request $request)
-    {
-
-        //dd($request->branch_id);
-        // insert data
-        foreach ($request->menu_id as $menuid) {
-
-            if ($request->act[$menuid] == 'Insert') {
-                $query = Menuaccess::insert([
-                    'role_id' => $request->role_id,
-                    'branch_id' => $request->br_id,
-                    //'branch_id' => 4,
-                    'menu_id' => $menuid,
-                    'menu_permission' => $request->accessdenied[$menuid],
-                    'created_at' => date("Y-m-d H:i:s")
-                ]);
-            } else {
-                $query = Menuaccess::where('id', $request->menuaccess_id[$menuid])->update([
-                    'menu_permission' => $request->accessdenied[$menuid],
-                    'updated_at' => date("Y-m-d H:i:s")
-                ]);
-            }
-        }
-
-        $success = [];
-        if (!$query) {
-            return $this->send500Error('Something went wrong.', ['error' => 'Something went wrong']);
-        } else {
-            return $this->successResponse($success, 'Menu Access Permission Assigned has been successfully saved');
-        }
-    }
-
-    public function getMenuDetails(Request $request)
-    {
-        $validator = \Validator::make($request->all(), [
-            'id' => 'required',
-            'token' => 'required',
-        ]);
-        if (!$validator->passes()) {
-            return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
-        } else {
-            $id = $request->id;
-            $MenuDetails = Menus::where('menu_id', $id)->first();
-            return $this->successResponse($MenuDetails, 'Menu row fetch successfully');
-        }
-    }
-    // Menu API END
     // get bulletin 
     public function getBuletinBoardList(Request $request)
     {
@@ -22147,5 +22037,17 @@ class ApiController extends BaseController
                 return $this->successResponse($success, 'Important Bulliten Board has been successfully updated');
             }
         }
+    }
+    function get_pointsresult(Request $request)
+    {
+        $id=$request->grade_id;
+        $conn = $this->createNewConnection($request->branch_id);
+        $grade = $conn->table('grade_marks')->select('id','grade','status')
+        ->where('id', '=', $id)->first();
+        $success=[]  ;     
+        $data = [            
+            'grade' => $grade           
+        ];
+        return $this->successResponse($data, 'Exam Point Status Get Successfully'); 
     }
 }

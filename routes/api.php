@@ -10,13 +10,14 @@ use App\Http\Controllers\Api\CommonController;
 use App\Http\Controllers\Api\ChatController;
 use App\Http\Controllers\Api\ApiControllerThree;
 use App\Http\Controllers\Api\TwoFactorAuth;
-/*
+use App\Http\Controllers\Api\MenuAccessController;
+/*school_roles
 |--------------------------------------------------------------------------
 | API Routes
 |--------------------------------------------------------------------------
 |
 | Here is where you can register API routes for your application. These
-| routes are loaded by the RouteServiceProvider within a group which
+| routes are loaded by the RsouteServiceProvider within a group which
 | is assigned the "api" middleware group. Enjoy building your API!
 |
 */
@@ -932,17 +933,28 @@ Route::group(['middleware' => ['auth:api', 'throttle:limit_per_user', 'logroute'
     Route::get('get_today_schedules_admin', [ApiControllerOne::class, 'getTodaySchedulesAdmin']);
     Route::get('get_today_schedules_teacher', [ApiControllerOne::class, 'getTodaySchedulesTeacher']);
 
-    // Menus routes
-	Route::post('menus/list', [ApiController::class, 'getMenuList']); 
     
-	Route::post('menus/accesslist', [ApiController::class, 'getMenuAccessList']);     
-	Route::post('menus/add', [ApiController::class, 'addMenu']);
-        
-	Route::post('menus/setpermission', [ApiController::class, 'setmenupermission']);
+    //Menu Routes
+	Route::post('menus/list', [MenuAccessController::class, 'getMenuList']);
+	Route::post('menus/accesslist', [MenuAccessController::class, 'getMenuAccessList']);     
+	Route::post('menus/add', [MenuAccessController::class, 'addMenu']);
+	Route::post('menus/setpermission', [MenuAccessController::class, 'setmenupermission']);
+    Route::post('menus/menu_details', [MenuAccessController::class, 'getMenuDetails']);
+    Route::post('menus/update', [MenuAccessController::class, 'updateMenuDetails']);
+    Route::post('menus/getpermission', [MenuAccessController::class, 'getmenupermission']);
+
+    // School Role routes
+    Route::post('school_role/add', [MenuAccessController::class, 'addschool_role']);
+    Route::get('school_role/list', [MenuAccessController::class, 'getschool_roleList']);
+    Route::post('school_role/school_role-details', [MenuAccessController::class, 'getschool_roleDetails']);
+    Route::post('school_role/update', [MenuAccessController::class, 'updateschool_role']);
+    Route::post('school_role/delete', [MenuAccessController::class, 'deleteschool_role']);
+
+    // School role Permissions
     
-    Route::post('menus/menu_details', [ApiController::class, 'getMenuDetails']);
-    Route::post('menus/update', [ApiController::class, 'updateMenuDetails']);
-    Route::post('menus/getpermission', [ApiController::class, 'getmenupermission']);
+	Route::post('menus/schoolaccesslist', [MenuAccessController::class, 'getschoolmenuaccesslist']); 
+	Route::post('menus/setschoolpermission', [MenuAccessController::class, 'setschoolpermission']);  
+	Route::post('menus/getschoolroleaccess', [MenuAccessController::class, 'getschoolroleaccess']); 
 
     Route::get('job_title/list', [ApiControllerOne::class, 'jobTitleList']);
     Route::get('employee_type/list', [ApiControllerOne::class, 'employeeTypeList']);
