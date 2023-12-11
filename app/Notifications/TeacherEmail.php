@@ -26,7 +26,7 @@ class TeacherEmail extends Notification
      *
      * @return array<int, string>
      */
-    public function via(object $notifiable): array
+    public function via($notifiable)
     {
         return ['mail'];
     }
@@ -34,12 +34,14 @@ class TeacherEmail extends Notification
     /**
      * Get the mail representation of the notification.
      */
-    public function toMail(object $notifiable): MailMessage
+    public function toMail($notifiable)
     {
         return (new MailMessage)
-                    ->line('The introduction to the notification.')
-                    ->action('Notification Action', url('/'))
-                    ->line('Thank you for using our application!');
+        ->subject('New Bulletin Board Notification')
+        ->line('Hello!')
+        ->line('A new notification has been posted on the bulletin board.')
+        //->action('View Bulletin Board', $url)
+        ->line('Thank you for using our application!');
     }
 
     /**
@@ -47,7 +49,7 @@ class TeacherEmail extends Notification
      *
      * @return array<string, mixed>
      */
-    public function toArray(object $notifiable): array
+    public function toArray($notifiable)
     {
         return [
             'branch_id' => $this->branch_id

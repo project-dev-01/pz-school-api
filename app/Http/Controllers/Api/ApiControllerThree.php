@@ -124,7 +124,7 @@ class ApiControllerThree extends BaseController
                 $base64 = base64_decode($request->file);
                 File::ensureDirectoryExists(base_path() . $path);
                 $file = base_path() . $path . $fileName;
-                // $picture = file_put_contents($file, $base64);
+                $picture = file_put_contents($file, $base64);
             } else {
                 $fileName = null;
             }
@@ -154,7 +154,7 @@ class ApiControllerThree extends BaseController
                 $class_id =   $request->class_id;
                 $section_id = $request->section_id;
                 $student_id  = $request->student_id;
-                $getStudent = $con->table('enrolls as e')->select('s.id', DB::raw('CONCAT(s.first_name, " ", s.last_name) as name'), 's.register_no', 's.roll_no', 's.mobile_no', 's.email', 's.gender', 's.photo')
+                $getStudent = $conn->table('enrolls as e')->select('s.id', DB::raw('CONCAT(s.first_name, " ", s.last_name) as name'), 's.register_no', 's.roll_no', 's.mobile_no', 's.email', 's.gender', 's.photo')
                     ->leftJoin('students as s', 'e.student_id', '=', 's.id')
                     ->when($class_id, function ($query, $class_id) {
                         return $query->where('e.class_id', $class_id);
@@ -182,10 +182,10 @@ class ApiControllerThree extends BaseController
                     $q->where('role_id', 6);
                 })->get();
                 // Before sending the notification
-                \Log::info('Sending notification to users: ' . json_encode($user));
+                //\Log::info('Sending notification to users: ' . json_encode($user));
                 Notification::send($user, new StudentEmail($request->branch_id));
                 // After sending the notification
-                \Log::info('Notification sent successfully to users: ' . json_encode($user));
+                //\Log::info('Notification sent successfully to users: ' . json_encode($user));
             }
             if ($target_user_array == [2, 5]) {
                 $class_id =   $request->class_id;
@@ -224,10 +224,10 @@ class ApiControllerThree extends BaseController
                     $q->where('role_id', 5);
                 })->get();
                 // Before sending the notification
-                \Log::info('Sending notification to users: ' . json_encode($user));
+               // \Log::info('Sending notification to users: ' . json_encode($user));
                 Notification::send($user, new ParentEmail($request->branch_id));
                 // After sending the notification
-                \Log::info('Notification sent successfully to users: ' . json_encode($user));
+                //\Log::info('Notification sent successfully to users: ' . json_encode($user));
             }
             if ($target_user_array == [2, 4]) {
                 $deptId = $request->department_id;

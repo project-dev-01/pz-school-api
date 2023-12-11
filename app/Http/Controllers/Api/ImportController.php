@@ -733,5 +733,179 @@ class ImportController extends BaseController
         }
         return $response;
     }
+    public function getPromotionDataBulk(Request $request)
+    {
+        
+        $validator = \Validator::make($request->all(), [
+            'branch_id' => 'required',
+            'file' => 'required'
+        ]);
+        if (!$validator->passes()) {
+            return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
+        } else {
+            // create new connection
+            $Connection = $this->createNewConnection($request->branch_id);
+
+            $filename = $request->fileName;
+            $extension = $request->extension;
+            $tempPath = $request->tempPath;
+            $fileSize = $request->fileSize;
+            $mimeType = $request->mimeType;
+            header('Content-type: text/plain; charset=utf-8');
+            // Valid File Extensions
+            $valid_extension = array("csv");
+            // 2MB in Bytes
+            $maxFileSize = 2097152;
+            // Check file extension
+            if (in_array(strtolower($extension), $valid_extension)) {
+                // Check file size
+                if ($fileSize <= $maxFileSize) {
+
+                    
+                    // File upload location
+                    $path = base_path().'/public/' . $request->branch_id . '/uploads/';
+                    $base64 = base64_decode($request->file);
+                    File::ensureDirectoryExists($path);
+                    $file = $path . $filename;
+                    $picture = file_put_contents($file, $base64);
+                    // Upload file
+                    // Import CSV to Database
+                    $filepath = $path . "/" . $filename;
+                    // Reading file
+                    $file = fopen($filepath, "r");
+                    $importData_arr = array();
+                    $i = 0;
+                    while (($filedata = fgetcsv($file, 1000, ",")) !== FALSE) {
+                        $num = count($filedata);
+                        // Skip first row (Remove below comment if you want to skip the first row)
+                        if ($i == 0) {
+                            $i++;
+                            continue;
+                        }
+                        for ($c = 0; $c < $num; $c++) {
+                            $importData_arr[$i][] = $filedata[$c];
+                        }
+                        $i++;
+                    }
+                    // exit();
+                    fclose($file);
+                    // dummyemail
+                    $dummyInc = 1;
+                   
+                    // Insert to MySQL database
+                    foreach ($importData_arr as $importData) 
+                    {
+                        $dummyInc++;
+                       //  dd($importData);
+                        $student_name = $importData[1];
+                        $student_number = $importData[2];
+                        $current_attendance_no = $importData[3];
+                        $promoted_attendance_no = $importData[10];
+
+                        $role = "6";   
+                        
+                            $dynamic_row = [ 
+                                ['table_name'=>'staff_departments','number'=>'5'],
+                                ['table_name'=>'academic_year','number'=>'4'],
+                                ['table_name'=>'classes','number'=>'6'],
+                                ['table_name'=>'sections','number'=>'7'],
+                                ['table_name'=>'session','number'=>'9'],
+                                ['table_name'=>'semester','number'=>'8'],
+                                ['table_name'=>'staff_departments','number'=>'12'],
+                                ['table_name'=>'academic_year','number'=>'11'],
+                                ['table_name'=>'classes','number'=>'13'],
+                                ['table_name'=>'sections','number'=>'14'],
+                                ['table_name'=>'session','number'=>'16'],
+                                ['table_name'=>'semester','number'=>'15'],
+                            ];
+    
+                            $dynamic_data = [];
+                            foreach($dynamic_row as $row) {
+                                $number = $row['number'];
+                                $column = [
+                                    'token' => $request->token,
+                                    'branch_id' => $request->branch_id,
+                                    'name' => $importData[$number],
+                                    'table_name' => $row['table_name']
+                                ];
+                                // return $column;
+                                $row = $this->getLikeColumnName($column);
+                                $dynamic_data[$number] = $row;
+                            }
+                               
+                                $studentId = $Connection->table('students')->select('id')->where('roll_no', '=', $student_number)->first();
+                               
+                                if (!empty($studentId)) 
+                                {
+                                   
+                                    $classDetails = [
+                                        'student_id' =>  $studentId->id,
+                                        'department_id' => $dynamic_data[5],
+                                        'class_id' => $dynamic_data[6],
+                                        'section_id' => $dynamic_data[7],
+                                        'academic_session_id' => $dynamic_data[4],
+                                        'session_id' => isset($dynamic_data[9]) ? $dynamic_data[9] : 0,
+                                        'semester_id' => isset($dynamic_data[8]) ? $dynamic_data[8] : 0,
+                                        'attendance_no' => $current_attendance_no,
+                                        'promoted_department_id' => $dynamic_data[12],
+                                        'promoted_class_id' => $dynamic_data[13],
+                                        'promoted_section_id' => $dynamic_data[14],
+                                        'promoted_academic_session_id' => $dynamic_data[11],
+                                        'roll' => $student_number,
+                                        'promoted_session_id' => isset($dynamic_data[16]) ? $dynamic_data[16] : 0,
+                                        'promoted_semester_id' => isset($dynamic_data[15]) ? $dynamic_data[15] : 0,
+                                        'promoted_attendance_no' => $promoted_attendance_no
+                                    ];
+                                    
+                                    // Insert the record and get the last inserted ID
+                                        $insertedId = $Connection->table('temp_promotion')->insertGetId($classDetails);
+                                       
+                                        // Retrieve the inserted data using the last inserted ID
+                                        $insertedRecord = $Connection->table('temp_promotion as tp')
+                                        ->select("tp.attendance_no",
+                                            "st1.first_name",
+                                            "tp.roll",
+                                            "d1.name as deptName",
+                                            "c1.name as className",
+                                            "s1.name as sectionName", 
+                                            "sem1.name as semName",
+                                            "ses1.name as sesName",
+                                            "d2.name as deptPromotionName",
+                                            "c2.name as classPromotionName",
+                                            "s2.name as sectionPromotionName",
+                                            "sem2.name as semPromotionName", 
+                                            "ses2.name as sesPromotionName")
+                                        ->leftJoin('classes as c1', 'c1.id', '=', 'tp.class_id')
+                                        ->leftJoin('classes as c2', 'c2.id', '=', 'tp.promoted_class_id')
+                                        ->leftJoin('sections as s1', 's1.id', '=', 'tp.section_id')
+                                        ->leftJoin('sections as s2', 's2.id', '=', 'tp.promoted_section_id')
+                                        ->leftJoin('staff_departments as d1', 'd1.id', '=', 'tp.department_id')
+                                        ->leftJoin('staff_departments as d2', 'd2.id', '=', 'tp.promoted_department_id')
+                                        ->leftJoin('students as st1', 'st1.id', '=', 'tp.student_id')
+                                        ->leftJoin('semester as sem1', 'sem1.id', '=', 'tp.semester_id')
+                                        ->leftJoin('semester as sem2', 'sem2.id', '=', 'tp.promoted_semester_id')
+                                        ->leftJoin('session as ses1', 'ses1.id', '=', 'tp.session_id')
+                                        ->leftJoin('session as ses2', 'ses2.id', '=', 'tp.promoted_session_id')
+                                        ->where('tp.id',"=" ,$insertedId)
+                                        ->get()->toArray();
+
+                                        // Add the inserted data to the array
+                                        $insertedData[] = $insertedRecord;
+                                }
+                           // return $insertedData;    
+                    }
+                   // return $insertedData;
+                    if (\File::exists($filepath)) {
+                        \File::delete($filepath);
+                    }
+                    return $this->successResponse(['data' => $insertedData], 'Import Successful');
+                } else {
+                    return $this->send422Error('Validation error.', ['error' => 'File too large. File must be less than 2MB.']);
+                }
+            } else {
+                return $this->send422Error('Validation error.', ['error' => 'Invalid File Extension']);
+            }
+        }
+    }
     
 }

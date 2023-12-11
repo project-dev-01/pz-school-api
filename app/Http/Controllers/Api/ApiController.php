@@ -21126,7 +21126,7 @@ $user = new User();
                 $base64 = base64_decode($request->file);
                 File::ensureDirectoryExists(base_path() . $path);
                 $file = base_path() . $path . $fileName;
-                // $picture = file_put_contents($file, $base64);
+                $picture = file_put_contents($file, $base64);
             } else {
                 $fileName = null;
             }
