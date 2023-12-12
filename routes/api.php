@@ -57,6 +57,9 @@ Route::post('application/relation/list', [ApiController::class, 'getApplicationR
 Route::post('application/academic_year/list', [ApiController::class, 'applicationAcademicYearList']);
 Route::post('application/grade/list', [ApiController::class, 'getApplicationGradeList']);
 Route::post('application/add', [ApiController::class, 'addApplication']);
+Route::post('application/email/', [ApiController::class, 'emailApplication']);
+Route::post('application/verify', [ApiController::class, 'verifyApplication']);
+Route::post('register_number', [ApiController::class, 'registerNumber']);
 // 2fa end
 // Route::group(['middleware' => ['auth:api', 'logroute']], function () {
 // Route::group(['middleware' => ['auth:api','check-single-session-api', 'logroute']], function () {
@@ -487,16 +490,27 @@ Route::group(['middleware' => ['auth:api', 'throttle:limit_per_user', 'logroute'
     Route::post('admission/add', [ApiController::class, 'addAdmission']);
     Route::post('student/list', [ApiController::class, 'getStudentList']);
     Route::post('student/update', [ApiController::class, 'updateStudent']);
+    Route::post('parent/student/update', [ApiController::class, 'parentUpdateStudent']);
     Route::post('student/student-details', [ApiController::class, 'getStudentDetails']);
     Route::post('student/delete', [ApiController::class, 'deleteStudent']);
 
     // parent routes
     Route::post('parent/add', [ApiController::class, 'addParent']);
     Route::get('parent/list', [ApiController::class, 'getParentList']);
+    Route::get('parent/student/update_info/list', [ApiController::class, 'getParentStudentUpdateInfoList']);
+    Route::get('parent/update_info/list', [ApiController::class, 'getParentUpdateInfoList']);
+    Route::post('parent/update_info/view', [ApiController::class, 'getParentUpdateInfoDetails']);
+    Route::post('parent/update/view', [ApiController::class, 'getParentUpdateView']);
+    
     Route::post('parent/parent-details', [ApiController::class, 'getParentDetails']);
     Route::get('parent/name', [ApiController::class, 'getParentName']);
     Route::post('parent/update', [ApiController::class, 'updateParent']);
+    Route::post('parent/update_info/update', [ApiController::class, 'updateParentUpdateInfo']);
+    Route::post('student/update_info/update', [ApiController::class, 'updateStudentUpdateInfo']);
     Route::post('parent/delete', [ApiController::class, 'deleteParent']);
+    
+    Route::get('student/update_info/list', [ApiController::class, 'getStudentUpdateInfoList']);
+    Route::post('student/update_info/view', [ApiController::class, 'getStudentUpdateInfoDetails']);
     // get all teacher list
     Route::get('get_all_teacher_list', [ApiController::class, 'getAllTeacherList']);
     Route::get('get_homework_list_dashboard', [ApiController::class, 'getHomeworkListDashboard']);
@@ -880,6 +894,7 @@ Route::group(['middleware' => ['auth:api', 'throttle:limit_per_user', 'logroute'
 
 
     Route::get('application/list', [ApiController::class, 'getApplicationList']);
+    Route::post('application/add', [ApiController::class, 'addApplication']);
     Route::post('application/application-details', [ApiController::class, 'getApplicationDetails']);
     Route::post('application/approve', [ApiController::class, 'approveApplication']);
     Route::post('application/update', [ApiController::class, 'updateApplication']);
@@ -983,4 +998,36 @@ Route::group(['middleware' => ['auth:api', 'throttle:limit_per_user', 'logroute'
      Route::post('bulletin_board/bulletin_star_teacher', [ApiControllerThree::class, 'bulletinTeacherStar']);
       // retired routes
      Route::post('retired/list', [ApiControllerThree::class, 'getRetiredList']);
+
+    
+    // Email Type routes
+    Route::post('email_type/add', [ApiController::class, 'addEmailType']);
+    Route::get('email_type/list', [ApiController::class, 'getEmailTypeList']);
+    Route::post('email_type/email_type-details', [ApiController::class, 'getEmailTypeDetails']);
+    Route::post('email_type/update', [ApiController::class, 'updateEmailType']);
+    Route::post('email_type/delete', [ApiController::class, 'deleteEmailType']);
+    
+    // Email Template routes
+    Route::post('email_template/add', [ApiController::class, 'addEmailTemplate']);
+    Route::get('email_template/list', [ApiController::class, 'getEmailTemplateList']);
+    Route::post('email_template/email_template-details', [ApiController::class, 'getEmailTemplateDetails']);
+    Route::post('email_template/update', [ApiController::class, 'updateEmailTemplate']);
+    Route::post('email_template/delete', [ApiController::class, 'deleteEmailTemplate']);
+    
+    Route::post('email/send', [ApiController::class, 'sendEmail']);
+
+    // Form Field routes
+    Route::get('form_field/list', [ApiController::class, 'getFormFieldList']);
+    Route::post('form_field/form_field-details', [ApiController::class, 'getFormFieldDetails']);
+    Route::post('form_field/update', [ApiController::class, 'updateFormField']);
+
+    
+
+    // Termination routes
+    Route::post('termination/add', [ApiController::class, 'addTermination']);
+    Route::get('termination/list', [ApiController::class, 'getTerminationList']);
+    Route::post('termination/termination-details', [ApiController::class, 'getTerminationDetails']);
+    Route::post('termination/update', [ApiController::class, 'updateTermination']);
+    Route::post('termination/update/admin', [ApiController::class, 'updateTerminationAdmin']);
+    Route::post('termination/delete', [ApiController::class, 'deleteTermination']);
 });

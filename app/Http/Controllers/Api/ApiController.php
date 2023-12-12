@@ -12,6 +12,8 @@ use Symfony\Component\HttpFoundation\Response;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Api\BaseController as BaseController;
 use Illuminate\Validation\Rule;
+use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Mail;
 use DateTime;
 use DateInterval;
 use DatePeriod;
@@ -30,6 +32,7 @@ use Carbon\Carbon;
 use App\Models\Forum_post_replie_counts;
 use Illuminate\Support\Arr;
 // notifications
+use App\Notifications\SendEmail;
 use App\Notifications\LeaveApply;
 use App\Notifications\LeaveApprove;
 use App\Notifications\StudentHomeworkSubmit;
@@ -37,6 +40,10 @@ use App\Notifications\TeacherHomework;
 use App\Notifications\ParentEmail;
 use App\Notifications\StudentEmail;
 use App\Notifications\TeacherEmail;
+use App\Notifications\ParentTermination;
+use App\Notifications\AdminTermination;
+use App\Notifications\ParentInfoUpdate;
+use App\Notifications\StudentInfoUpdate;
 use Illuminate\Support\Facades\Notification;
 // encrypt and decrypt
 use Illuminate\Support\Facades\Crypt;
@@ -3024,6 +3031,41 @@ class ApiController extends BaseController
                     } else {
                         $fileName = null;
                     }
+
+                    $visa_fileName = null;
+                    if ($request->visa_photo) {
+
+                        $visa_now = now();
+                        $visa_name = strtotime($visa_now);
+                        $visa_extension = $request->visa_file_extension;
+
+                        $visa_fileName = $visa_name . '.' . $visa_extension;
+
+                        // return $fileName;
+                        $visa_path = '/public/' . $request->branch_id . '/users/images/';
+                        $visa_base64 = base64_decode($request->visa_photo);
+                        File::ensureDirectoryExists(base_path() . $visa_path);
+                        $visa_file = base_path() . $visa_path . $visa_fileName;
+                        $visa_suc = file_put_contents($visa_file, $visa_base64);
+                    }
+
+                    $passport_fileName = null;
+                    if ($request->passport_photo) {
+
+                        $passport_now = now();
+                        $passport_name = strtotime($passport_now);
+                        $passport_extension = $request->passport_file_extension;
+
+                        $passport_fileName = $passport_name . '.' . $passport_extension;
+
+                        // return $fileName;
+                        $passport_path = '/public/' . $request->branch_id . '/users/images/';
+                        $passport_base64 = base64_decode($request->passport_photo);
+                        File::ensureDirectoryExists(base_path() . $passport_path);
+                        $passport_file = base_path() . $passport_path . $passport_fileName;
+                        $passport_suc = file_put_contents($passport_file, $passport_base64);
+                    }
+
                     $present_address = isset($request->present_address) ? Crypt::encryptString($request->present_address) : "";
                     $permanent_address = isset($request->permanent_address) ? Crypt::encryptString($request->permanent_address) : "";
                     $nric_number = isset($request->nric_number) ? Crypt::encryptString($request->nric_number) : "";
@@ -3079,6 +3121,16 @@ class ApiController extends BaseController
                         'employee_type_start_date' => $request->employee_type_start,
                         'employee_type_end_date' => $request->employee_type_end,
                         'job_title_id' => $request->job_title,
+                        'first_name_english' => isset($request->first_name_english) ? $request->first_name_english : "",
+                        'last_name_english' => isset($request->last_name_english) ? $request->last_name_english : "",
+                        'first_name_furigana' => isset($request->first_name_furigana) ? $request->first_name_furigana : "",
+                        'last_name_furigana' => isset($request->last_name_furigana) ? $request->last_name_furigana : "",
+                        'passport_expiry_date' => $request->passport_expiry_date,
+                        'visa_number' => $request->visa_number,
+                        'visa_expiry_date' => $request->visa_expiry_date,
+                        'nationality' => $request->nationality,
+                        'passport_photo' => $passport_fileName,
+                        'visa_photo' => $visa_fileName,
                         'created_at' => date("Y-m-d H:i:s")
                     ]);
                     $success = [];
@@ -3371,6 +3423,55 @@ class ApiController extends BaseController
                         $fileName = null;
                     }
                 }
+
+
+                $visa_fileName = null;
+                if ($request->visa_photo) {
+
+                    $visa_now = now();
+                    $visa_name = strtotime($visa_now);
+                    $visa_extension = $request->visa_file_extension;
+
+                    $visa_fileName = $visa_name . '.' . $visa_extension;
+
+                    // return $fileName;
+                    $visa_path = '/public/' . $request->branch_id . '/users/images/';
+                    $visa_base64 = base64_decode($request->visa_photo);
+                    File::ensureDirectoryExists(base_path() . $visa_path);
+                    $visa_file = base_path() . $visa_path . $visa_fileName;
+                    $visa_suc = file_put_contents($visa_file, $visa_base64);
+
+
+                    if ($request->visa_old_photo) {
+                        if (\File::exists(base_path($path . $request->visa_old_photo))) {
+                            \File::delete(base_path($path . $request->visa_old_photo));
+                        }
+                    }
+                }
+
+                $passport_fileName = null;
+                if ($request->passport_photo) {
+
+                    $passport_now = now();
+                    $passport_name = strtotime($passport_now);
+                    $passport_extension = $request->passport_file_extension;
+
+                    $passport_fileName = $passport_name . '.' . $passport_extension;
+
+                    // return $fileName;
+                    $passport_path = '/public/' . $request->branch_id . '/users/images/';
+                    $passport_base64 = base64_decode($request->passport_photo);
+                    File::ensureDirectoryExists(base_path() . $passport_path);
+                    $passport_file = base_path() . $passport_path . $passport_fileName;
+                    $passport_suc = file_put_contents($passport_file, $passport_base64);
+
+
+                    if ($request->passport_old_photo) {
+                        if (\File::exists(base_path($path . $request->passport_old_photo))) {
+                            \File::delete(base_path($path . $request->passport_old_photo));
+                        }
+                    }
+                }
                 // update data
                 $present_address = isset($request->present_address) ? Crypt::encryptString($request->present_address) : "";
                 $permanent_address = isset($request->permanent_address) ? Crypt::encryptString($request->permanent_address) : "";
@@ -3427,6 +3528,16 @@ class ApiController extends BaseController
                     'employee_type_start_date' => $request->employee_type_start,
                     'employee_type_end_date' => $request->employee_type_end,
                     'job_title_id' => $request->job_title,
+                    'first_name_english' => isset($request->first_name_english) ? $request->first_name_english : "",
+                    'last_name_english' => isset($request->last_name_english) ? $request->last_name_english : "",
+                    'first_name_furigana' => isset($request->first_name_furigana) ? $request->first_name_furigana : "",
+                    'last_name_furigana' => isset($request->last_name_furigana) ? $request->last_name_furigana : "",
+                    'passport_expiry_date' => $request->passport_expiry_date,
+                    'visa_number' => $request->visa_number,
+                    'visa_expiry_date' => $request->visa_expiry_date,
+                    'nationality' => $request->nationality,
+                    'passport_photo' => $passport_fileName,
+                    'visa_photo' => $visa_fileName,
                     'updated_at' => date("Y-m-d H:i:s")
                 ]);
 
@@ -11516,7 +11627,6 @@ $rid=$request->role_id;
     // add Admission
     public function addAdmission(Request $request)
     {
-
         $validator = \Validator::make($request->all(), [
             'year' => 'required',
             'register_no' => 'required',
@@ -11567,6 +11677,50 @@ $rid=$request->role_id;
                     $suc = file_put_contents($file, $base64);
                 }
 
+                $visa_fileName = null;
+                if ($request->visa_photo) {
+
+                    $visa_extension = $request->visa_file_extension;
+
+                    $visa_fileName = 'UIMG_' . date('Ymd') . uniqid() . '.' . $visa_extension;
+
+                    // return $fileName;
+                    $visa_path = '/public/' . $request->branch_id . '/users/images/';
+                    $visa_base64 = base64_decode($request->visa_photo);
+                    File::ensureDirectoryExists(base_path() . $visa_path);
+                    $visa_file = base_path() . $visa_path . $visa_fileName;
+                    $visa_suc = file_put_contents($visa_file, $visa_base64);
+
+
+                    if ($request->visa_old_photo) {
+                        if (\File::exists(base_path($path . $request->visa_old_photo))) {
+                            \File::delete(base_path($path . $request->visa_old_photo));
+                        }
+                    }
+                }
+
+                $passport_fileName = null;
+                if ($request->passport_photo) {
+
+                    $passport_extension = $request->passport_file_extension;
+
+                    $passport_fileName = 'UIMG_' . date('Ymd') . uniqid() . '.' . $passport_extension;
+
+                    // return $fileName;
+                    $passport_path = '/public/' . $request->branch_id . '/users/images/';
+                    $passport_base64 = base64_decode($request->passport_photo);
+                    File::ensureDirectoryExists(base_path() . $passport_path);
+                    $passport_file = base_path() . $passport_path . $passport_fileName;
+                    $passport_suc = file_put_contents($passport_file, $passport_base64);
+
+
+                    if ($request->passport_old_photo) {
+                        if (\File::exists(base_path($path . $request->passport_old_photo))) {
+                            \File::delete(base_path($path . $request->passport_old_photo));
+                        }
+                    }
+                }
+
                 $passport = isset($request->passport) ? Crypt::encryptString($request->passport) : "";
                 $nric = isset($request->nric) ? Crypt::encryptString($request->nric) : "";
                 $mobile_no = isset($request->mobile_no) ? Crypt::encryptString($request->mobile_no) : "";
@@ -11580,17 +11734,21 @@ $rid=$request->role_id;
                     $mother_id = "";
                     $guardian_id = "";
                     if ($student_application->father_first_name) {
+                        if ($conn->table('parent')->where('email', '=', $student_application->father_email)->count() > 0) {
+                            $father_id = $conn->table('parent')->select('id')->where('email', '=', $student_application->father_email)->first();
+                            $father_id = $father_id->id;
+                        } else {
+                            $father_id = $conn->table('parent')->insertGetId([
 
-                        $father_id = $conn->table('parent')->insertGetId([
-
-                            'first_name' => isset($student_application->father_first_name) ? $student_application->father_first_name : "",
-                            'last_name' => isset($student_application->father_last_name) ? $student_application->father_last_name : "",
-                            'occupation' => $student_application->father_occupation,
-                            'mobile_no' => $student_application->father_phone_number,
-                            'email' => $student_application->father_email,
-                            'status' => "0",
-                            'created_at' => date("Y-m-d H:i:s")
-                        ]);
+                                'first_name' => isset($student_application->father_first_name) ? $student_application->father_first_name : "",
+                                'last_name' => isset($student_application->father_last_name) ? $student_application->father_last_name : "",
+                                'occupation' => $student_application->father_occupation,
+                                'mobile_no' => $student_application->father_phone_number,
+                                'email' => $student_application->father_email,
+                                'status' => "0",
+                                'created_at' => date("Y-m-d H:i:s")
+                            ]);
+                        }
 
                         $father_name = $student_application->father_first_name . ' ' . $student_application->father_last_name;
                         if (!$father_id) {
@@ -11611,16 +11769,22 @@ $rid=$request->role_id;
                         }
                     }
                     if ($student_application->mother_first_name) {
-                        $mother_id = $conn->table('parent')->insertGetId([
+                        if ($conn->table('parent')->where('email', '=', $student_application->mother_email)->count() > 0) {
 
-                            'first_name' => isset($student_application->mother_first_name) ? $student_application->mother_first_name : "",
-                            'last_name' => isset($student_application->mother_last_name) ? $student_application->mother_last_name : "",
-                            'occupation' => $student_application->mother_occupation,
-                            'mobile_no' => $student_application->mother_phone_number,
-                            'email' => $student_application->mother_email,
-                            'status' => "0",
-                            'created_at' => date("Y-m-d H:i:s")
-                        ]);
+                            $mother_id = $conn->table('parent')->select('id')->where('email', '=', $student_application->mother_email)->first();
+                            $mother_id = $mother_id->id;
+                        } else {
+                            $mother_id = $conn->table('parent')->insertGetId([
+
+                                'first_name' => isset($student_application->mother_first_name) ? $student_application->mother_first_name : "",
+                                'last_name' => isset($student_application->mother_last_name) ? $student_application->mother_last_name : "",
+                                'occupation' => $student_application->mother_occupation,
+                                'mobile_no' => $student_application->mother_phone_number,
+                                'email' => $student_application->mother_email,
+                                'status' => "0",
+                                'created_at' => date("Y-m-d H:i:s")
+                            ]);
+                        }
 
                         $mother_name = $student_application->mother_first_name . ' ' . $student_application->mother_last_name;
                         if (!$mother_id) {
@@ -11642,16 +11806,21 @@ $rid=$request->role_id;
                     }
                     if ($student_application->guardian_first_name) {
                         // return $student_application;
-                        $guardian_id = $conn->table('parent')->insertGetId([
+                        if ($conn->table('parent')->where('email', '=', $student_application->guardian_email)->count() > 0) {
+                            $guardian_id = $conn->table('parent')->select('id')->where('email', '=', $student_application->guardian_email)->first();
+                            $guardian_id = $guardian_id->id;
+                        } else {
+                            $guardian_id = $conn->table('parent')->insertGetId([
 
-                            'first_name' => isset($student_application->guardian_first_name) ? $student_application->guardian_first_name : "",
-                            'last_name' => isset($student_application->guardian_last_name) ? $student_application->guardian_last_name : "",
-                            'occupation' => $student_application->guardian_occupation,
-                            'mobile_no' => $student_application->guardian_phone_number,
-                            'email' => $student_application->guardian_email,
-                            'status' => "0",
-                            'created_at' => date("Y-m-d H:i:s")
-                        ]);
+                                'first_name' => isset($student_application->guardian_first_name) ? $student_application->guardian_first_name : "",
+                                'last_name' => isset($student_application->guardian_last_name) ? $student_application->guardian_last_name : "",
+                                'occupation' => $student_application->guardian_occupation,
+                                'mobile_no' => $student_application->guardian_phone_number,
+                                'email' => $student_application->guardian_email,
+                                'status' => "0",
+                                'created_at' => date("Y-m-d H:i:s")
+                            ]);
+                        }
 
                         $guardian_name = $student_application->guardian_first_name . ' ' . $student_application->guardian_last_name;
                         if (!$guardian_id) {
@@ -11675,7 +11844,8 @@ $rid=$request->role_id;
                     $father_id = $request->father_id;
                     $mother_id = $request->mother_id;
                     $guardian_id = $request->guardian_id;
-                }                // return $request;
+                }
+                // return $request;
                 $studentId = $conn->table('students')->insertGetId([
                     'year' => $request->year,
                     'father_id' => $father_id,
@@ -11711,6 +11881,16 @@ $rid=$request->role_id;
                     'room_id' => $request->room_id,
                     'previous_details' => $previous_details,
                     'status' => isset($request->status) ? $request->status : "0",
+                    'first_name_english' => isset($request->first_name_english) ? $request->first_name_english : "",
+                    'last_name_english' => isset($request->last_name_english) ? $request->last_name_english : "",
+                    'first_name_furigana' => isset($request->first_name_furigana) ? $request->first_name_furigana : "",
+                    'last_name_furigana' => isset($request->last_name_furigana) ? $request->last_name_furigana : "",
+                    'passport_expiry_date' => $request->passport_expiry_date,
+                    'visa_number' => $request->visa_number,
+                    'visa_expiry_date' => $request->visa_expiry_date,
+                    'nationality' => $request->nationality,
+                    'passport_photo' => $passport_fileName,
+                    'visa_photo' => $visa_fileName,
                     'created_at' => date("Y-m-d H:i:s")
                 ]);
                 // return $studentId;
@@ -12766,6 +12946,49 @@ $query->school_roleid=$request->school_roleid;
                     $fileName = $request->old_photo;
                 }
 
+                $visa_fileName = $request->visa_old_photo;
+                // return $request;
+                if ($request->visa_photo) {
+
+                    $visa_extension = $request->visa_file_extension;
+
+                    $visa_fileName = 'UIMG_' . date('Ymd') . uniqid() . '.' . $visa_extension;
+
+                    $visa_path = '/public/' . $request->branch_id . '/users/images/';
+                    $visa_base64 = base64_decode($request->visa_photo);
+                    File::ensureDirectoryExists(base_path() . $visa_path);
+                    $visa_file = base_path() . $visa_path . $visa_fileName;
+                    $visa_suc = file_put_contents($visa_file, $visa_base64);
+
+
+                    if ($request->visa_old_photo) {
+                        if (\File::exists(base_path($visa_path . $request->visa_old_photo))) {
+                            \File::delete(base_path($visa_path . $request->visa_old_photo));
+                        }
+                    }
+                }
+                $passport_fileName = $request->passport_old_photo;
+                if ($request->passport_photo) {
+
+                    $passport_extension = $request->passport_file_extension;
+
+                    $passport_fileName = 'UIMG_' . date('Ymd') . uniqid() . '.' . $passport_extension;
+
+                    // return $fileName;
+                    $passport_path = '/public/' . $request->branch_id . '/users/images/';
+                    $passport_base64 = base64_decode($request->passport_photo);
+                    File::ensureDirectoryExists(base_path() . $passport_path);
+                    $passport_file = base_path() . $passport_path . $passport_fileName;
+                    $passport_suc = file_put_contents($passport_file, $passport_base64);
+
+
+                    if ($request->passport_old_photo) {
+                        if (\File::exists(base_path($passport_path . $request->passport_old_photo))) {
+                            \File::delete(base_path($passport_path . $request->passport_old_photo));
+                        }
+                    }
+                }
+
                 $passport = isset($request->passport) ? Crypt::encryptString($request->passport) : "";
                 $nric = isset($request->nric) ? Crypt::encryptString($request->nric) : "";
                 $mobile_no = isset($request->mobile_no) ? Crypt::encryptString($request->mobile_no) : "";
@@ -12807,6 +13030,19 @@ $query->school_roleid=$request->school_roleid;
                     'room_id' => $request->room_id,
                     'previous_details' => $previous_details,
                     'status' => isset($request->status) ? $request->status : "0",
+                    'first_name_english' => isset($request->first_name_english) ? $request->first_name_english : "",
+                    'last_name_english' => isset($request->last_name_english) ? $request->last_name_english : "",
+                    'first_name_furigana' => isset($request->first_name_furigana) ? $request->first_name_furigana : "",
+                    'last_name_furigana' => isset($request->last_name_furigana) ? $request->last_name_furigana : "",
+                    'passport_expiry_date' => $request->passport_expiry_date,
+                    'visa_number' => $request->visa_number,
+                    'visa_expiry_date' => $request->visa_expiry_date,
+                    'passport_photo' => $passport_fileName,
+                    'visa_photo' => $visa_fileName,
+                    'nationality' => $request->nationality,
+                    'race' => $request->race,
+                    'religion' => $request->religion,
+                    'blood_group' => $request->blood_group,
                     'created_at' => date("Y-m-d H:i:s")
                 ]);
 
@@ -13063,6 +13299,35 @@ $query->school_roleid=$request->school_roleid;
                     $suc = file_put_contents($file, $base64);
                 }
 
+                $visa_fileName = null;
+                if ($request->visa_photo) {
+
+                    $visa_extension = $request->visa_file_extension;
+
+                    $visa_fileName = 'VIMG_' . date('Ymd') . uniqid() . '.' . $visa_extension;
+
+                    // return $fileName;
+                    $visa_path = '/public/' . $request->branch_id . '/users/images/';
+                    $visa_base64 = base64_decode($request->visa_photo);
+                    File::ensureDirectoryExists(base_path() . $visa_path);
+                    $visa_file = base_path() . $visa_path . $visa_fileName;
+                    $visa_suc = file_put_contents($visa_file, $visa_base64);
+                }
+
+                $passport_fileName = null;
+                if ($request->passport_photo) {
+
+                    $passport_extension = $request->passport_file_extension;
+
+                    $passport_fileName = 'PIMG_' . date('Ymd') . uniqid() . '.' . $passport_extension;
+
+                    // return $fileName;
+                    $passport_path = '/public/' . $request->branch_id . '/users/images/';
+                    $passport_base64 = base64_decode($request->passport_photo);
+                    File::ensureDirectoryExists(base_path() . $passport_path);
+                    $passport_file = base_path() . $passport_path . $passport_fileName;
+                    $passport_suc = file_put_contents($passport_file, $passport_base64);
+                }
 
 
                 $name = $request->first_name . " " . $request->last_name;
@@ -13100,14 +13365,23 @@ $query->school_roleid=$request->school_roleid;
                     'linkedin_url' => $request->linkedin_url,
                     'twitter_url' => $request->twitter_url,
                     'status' => $request->status,
+                    'first_name_english' => $request->first_name_english,
+                    'last_name_english' => $request->last_name_english,
+                    'first_name_furigana' => $request->first_name_furigana,
+                    'last_name_furigana' => $request->last_name_furigana,
+                    'passport_expiry_date' => $request->passport_expiry_date,
+                    'visa_number' => $request->visa_number,
+                    'visa_expiry_date' => $request->visa_expiry_date,
+                    'nationality' => $request->nationality,
+                    'passport_photo' => $passport_fileName,
+                    'visa_photo' => $visa_fileName,
                     'created_at' => date("Y-m-d H:i:s")
                 ]);
 
                 if (!$parentId) {
                     return $this->send500Error('Something went wrong.', ['error' => 'Something went wrong add Parent']);
                 } else {
-$user = new User();
-
+                    // $user = new User();
                     //$user->name = (isset($request->first_name) ? $request->first_name : "") . " " . (isset($request->last_name) ? $request->last_name : "");
                     //$user->user_id = $Staffid;
                    // $user->role_id =  $roleIds;
@@ -13150,6 +13424,68 @@ $user = new User();
             // get data
             $parentDetails = $conn->table('parent')->select("*", DB::raw("CONCAT(first_name, ' ', last_name) as name"))->get();
             return $this->successResponse($parentDetails, 'Parent record fetch successfully');
+        }
+    }
+
+    // getParentStudentUpdateList
+    public function getParentStudentUpdateInfoList(Request $request)
+    {
+        $validator = \Validator::make($request->all(), [
+            'branch_id' => 'required',
+            'token' => 'required',
+        ]);
+
+        if (!$validator->passes()) {
+            return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
+        } else {
+            // create new connection
+            $conn = $this->createNewConnection($request->branch_id);
+            // get data
+            $parentDetails = $conn->table('parent_change_info as pi')->select("p.email", "pi.status_parent", "p.id as parent_id", "pi.id", "p.occupation", DB::raw("CONCAT(p.first_name, ' ', p.last_name) as name"))
+                ->leftJoin('parent as p', 'pi.parent_id', '=', 'p.id')->where('pi.status', $request->status)->get()->toArray();
+            $studentDetails = $conn->table('student_change_info as si')->select("s.email", "si.status_parent", "s.id as student_id", 'si.id', "s.roll_no", DB::raw("CONCAT(s.first_name, ' ', s.last_name) as name"))
+                ->leftJoin('students as s', 'si.student_id', '=', 's.id')->where('si.status', $request->status)->get()->toArray();
+            $details = array_merge($parentDetails, $studentDetails);
+            return $this->successResponse($details, 'Parent record fetch successfully');
+        }
+    }
+    // getParentUpdateList
+    public function getParentUpdateInfoList(Request $request)
+    {
+        $validator = \Validator::make($request->all(), [
+            'branch_id' => 'required',
+            'token' => 'required',
+        ]);
+
+        if (!$validator->passes()) {
+            return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
+        } else {
+            // create new connection
+            $conn = $this->createNewConnection($request->branch_id);
+            // get data
+            $parentDetails = $conn->table('parent_change_info as pi')->select("p.email", "pi.status_parent", "p.id as parent_id", "pi.id", "p.occupation", DB::raw("CONCAT(p.first_name, ' ', p.last_name) as name"))
+                ->leftJoin('parent as p', 'pi.parent_id', '=', 'p.id')->where('pi.status', $request->status)->get();
+            return $this->successResponse($parentDetails, 'Parent record fetch successfully');
+        }
+    }
+
+    // getStudentUpdateList
+    public function getStudentUpdateInfoList(Request $request)
+    {
+        $validator = \Validator::make($request->all(), [
+            'branch_id' => 'required',
+            'token' => 'required',
+        ]);
+
+        if (!$validator->passes()) {
+            return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
+        } else {
+            // create new connection
+            $conn = $this->createNewConnection($request->branch_id);
+            // get data
+            $studentDetails = $conn->table('student_change_info as si')->select("s.email", "s.id as student_id", 'si.id', "s.roll_no", DB::raw("CONCAT(s.first_name, ' ', s.last_name) as name"))
+                ->leftJoin('students as s', 'si.student_id', '=', 's.id')->where('si.status', $request->status)->get();
+            return $this->successResponse($studentDetails, 'Student record fetch successfully');
         }
     }
     // get Parent row details
@@ -13211,6 +13547,122 @@ $user = new User();
                 }
             }
             $parentDetails['user'] = $sql;
+            return $this->successResponse($parentDetails, 'Parent row fetch successfully');
+        }
+    }
+    // get Parent row details
+    public function getParentUpdateInfoDetails(Request $request)
+    {
+
+        $validator = \Validator::make($request->all(), [
+            'id' => 'required',
+            'branch_id' => 'required',
+            'token' => 'required'
+        ]);
+
+        if (!$validator->passes()) {
+            return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
+        } else {
+            $id = $request->id;
+            // create new connection
+            $conn = $this->createNewConnection($request->branch_id);
+            // get data
+            // $parentDetails['parent'] = $conn->table('parent')->select('*', DB::raw("CONCAT(first_name, ' ', last_name) as name"))->where('id', $id)->first();
+
+            $getparentDetails = $conn->table('parent_change_info as pci')
+                ->select(
+                    'id',
+                    'parent_id',
+                    'passport',
+                    'nric',
+                    'blood_group',
+                    'occupation',
+                    'income',
+                    'education',
+                    'mobile_no',
+                    'race',
+                    'religion',
+                    'address',
+                    'address_2',
+                    'country',
+                    'city',
+                    'state',
+                    'post_code',
+                    'photo',
+                    'facebook_url',
+                    'linkedin_url',
+                    'twitter_url',
+                    'nationality',
+                    'passport_photo',
+                    'passport_expiry_date',
+                    'visa_number',
+                    'visa_photo',
+                    'visa_expiry_date',
+                    // DB::raw("CONCAT(s.first_name, ' ', s.last_name) as name")
+                )
+                ->where('pci.id', $id)
+                ->first();
+            $parent_id = $getparentDetails->parent_id;
+            unset($getparentDetails->id, $getparentDetails->parent_id, $getparentDetails->created_at, $getparentDetails->updated_at);
+            // dd($getparentDetails);
+            $parentObj = new \stdClass();
+            if (!empty($getparentDetails)) {
+                foreach ($getparentDetails as $key => $suc) {
+
+                    $old = $conn->table('parent')->where('id', '=', $parent_id)->first();
+
+                    // dd(${$key});
+                    if ($suc) {
+                        // dd($key);
+
+                        if ($key == "passport" || $key == "nric" || $key == "mobile_no" || $key == "address" || $key == "address_2") {
+                            // $encrypt = Helper::decryptStringData($old->$key);
+                            // dd(Crypt::encryptString($old->$key));
+
+                            ${$key} = [];
+                            ${$key}['old_value'] =  Helper::decryptStringData($old->$key);
+                            ${$key}['new_value'] =  Helper::decryptStringData($suc);
+                        } else {
+                            ${$key} = [];
+                            ${$key}['old_value'] =  $old->$key;
+                            ${$key}['new_value'] =  $suc;
+                        }
+
+                        $parentObj->$key = ${$key};
+                    }
+                    // dd($parentObj);
+                    // $date_of_birth = [];
+                    // $date_of_birth['old_value'] =  $old->date_of_birth; 
+                    // $date_of_birth['new_value'] = $suc->date_of_birth; 
+
+
+                    // $passport = [];
+                    // $passport['old_value'] = Helper::decryptStringData($old->passport); 
+                    // $passport['new_value'] = Helper::decryptStringData($suc->passport); 
+
+
+
+                    // $nric = [];
+                    // $nric['old_value'] = Helper::decryptStringData($old->nric); 
+                    // $nric['new_value'] = Helper::decryptStringData($suc->nric); 
+
+
+                    // $mobile_no = [];
+                    // $mobile_no['old_value'] = Helper::decryptStringData($old->mobile_no); 
+                    // $mobile_no['new_value'] = Helper::decryptStringData($suc->mobile_no); 
+
+                    // $parentObj->date_of_birth = $date_of_birth;
+                    // $parentObj->passport = $passport;
+                    // $parentObj->nric = $nric;
+                    // $parentObj->mobile_no = $mobile_no;
+                }
+            }
+            $parentDetails['parent'] = $parentObj;
+            $profile = $old;
+            $profile->address = Helper::decryptStringData($old->address);
+            $profile->mobile_no = Helper::decryptStringData($old->mobile_no);
+            $parentDetails['profile'] = $profile;
+
             return $this->successResponse($parentDetails, 'Parent row fetch successfully');
         }
     }
@@ -13300,6 +13752,36 @@ $user = new User();
                 } else {
                     $fileName = $request->old_photo;
                 }
+                $visa_fileName = null;
+                if ($request->visa_photo) {
+
+                    $visa_extension = $request->visa_file_extension;
+
+                    $visa_fileName = 'VIMG_' . date('Ymd') . uniqid() . '.' . $visa_extension;
+
+                    // return $fileName;
+                    $visa_path = '/public/' . $request->branch_id . '/users/images/';
+                    $visa_base64 = base64_decode($request->visa_photo);
+                    File::ensureDirectoryExists(base_path() . $visa_path);
+                    $visa_file = base_path() . $visa_path . $visa_fileName;
+                    $visa_suc = file_put_contents($visa_file, $visa_base64);
+                }
+
+                $passport_fileName = null;
+                if ($request->passport_photo) {
+
+                    $passport_extension = $request->passport_file_extension;
+
+                    $passport_fileName = 'PIMG_' . date('Ymd') . uniqid() . '.' . $passport_extension;
+
+                    // return $fileName;
+                    $passport_path = '/public/' . $request->branch_id . '/users/images/';
+                    $passport_base64 = base64_decode($request->passport_photo);
+                    File::ensureDirectoryExists(base_path() . $passport_path);
+                    $passport_file = base_path() . $passport_path . $passport_fileName;
+                    $passport_suc = file_put_contents($passport_file, $passport_base64);
+                }
+
                 $password = $request->password;
                 $name = $request->first_name . " " . $request->last_name;
                 if ($password) {
@@ -13320,7 +13802,7 @@ $user = new User();
                             ->update([
                                 'name' => $name,
                                 'email' => $request->email,
-                                'status' => $request->status,
+                                'status' => isset($request->status) ? $request->status : '0',
                                 'google2fa_secret_enable' => isset($request->google2fa_secret_enable) ? '1' : '0',
                                 'password' => $updatePassword
                             ]);
@@ -13331,7 +13813,7 @@ $user = new User();
                             'name' => $name,
                             'email' => $request->email,
                             'school_roleid' => $request->school_roleid,
-                            'status' => $request->status,
+                            'status' => isset($request->status) ? $request->status : '0',
                             'google2fa_secret_enable' => isset($request->google2fa_secret_enable) ? '1' : '0',
                         ]);
                 }
@@ -13343,40 +13825,295 @@ $user = new User();
                 $address = isset($request->address) ? Crypt::encryptString($request->address) : "";
                 $address_2 = isset($request->address_2) ? Crypt::encryptString($request->address_2) : "";
 
-                $query = $staffConn->table('parent')->where('id', $id)->update([
-                    'first_name' => isset($request->first_name) ? $request->first_name : "",
-                    'last_name' => isset($request->last_name) ? $request->last_name : "",
-                    'gender' => $request->gender,
-                    'date_of_birth' => $request->date_of_birth,
-                    'passport' => $passport,
-                    'race' => $request->race,
-                    'religion' => $request->religion,
-                    'nric' => $nric,
-                    'blood_group' => $request->blood_group,
-                    'occupation' => $request->occupation,
-                    'income' => $request->income,
-                    'education' => $request->education,
-                    'country' => $request->country,
-                    'post_code' => $request->post_code,
-                    'city' => $request->city,
-                    'state' => $request->state,
-                    'mobile_no' => $mobile_no,
-                    'address' => $address,
-                    'address_2' => $address_2,
-                    'email' => $request->email,
-                    'photo' => $fileName,
-                    'facebook_url' => $request->facebook_url,
-                    'linkedin_url' => $request->linkedin_url,
-                    'twitter_url' => $request->twitter_url,
-                    'status' => $request->status,
-                    'updated_at' => date("Y-m-d H:i:s")
-                ]);
+                if ($request->role_id == "5") {
+                    $old = $staffConn->table('parent')->where('id', '=', $id)->first();
+
+
+                    $insertArr = [];
+                    $insertArr['status'] = "Admin";
+                    foreach ($old as $key => $o) {
+                        if ($request->has($key)) {
+                            if ($key == "passport" || $key == "nric" || $key == "mobile_no" || $key == "address" || $key == "address_2") {
+                                // $encrypt = Helper::decryptStringData($old->$key);
+                                // dd(Crypt::encryptString($old->$key));
+                                if (Helper::decryptStringData($old->$key) != $request->$key) {
+                                    $insertArr[$key] = Crypt::encryptString($request->$key);
+                                }
+                            } else {
+                                if ($old->$key != $request->$key) {
+                                    $insertArr[$key] = $request->$key;
+                                }
+                            }
+                        }
+                    }
+                    // return $insertArr;
+                    // dd($insertArr);
+                    if (count($insertArr) > 0) {
+
+                        $insertArr['parent_id'] = $id;
+                        if ($staffConn->table('parent_change_info')->where('parent_id', $id)->count() > 0) {
+                            $query = $staffConn->table('parent_change_info')->where('parent_id', '=', $id)->delete();
+                        }
+                        $query = $staffConn->table('parent_change_info')->insertGetId($insertArr);
+
+                        // send Termination notifications
+
+                        $user = User::where([
+                            ['branch_id', '=', $request->branch_id],
+                            ['role_id', '=', 2]
+                        ])->get();
+                        // return $user;
+
+                        $parent_name = $staffConn->table('parent as p')
+                            ->select(DB::raw("CONCAT(p.first_name, ' ', p.last_name) as name"))
+                            ->where('p.id', $id)->first();
+
+                        $info_update = [];
+                        $info_update['parent_name'] = $parent_name->name;
+                        $details = [
+                            'branch_id' => $request->branch_id,
+                            'parent_id' => $id,
+                            'info_update_id' => $query,
+                            'info_update' => $info_update
+                        ];
+                        // notifications sent
+                        Notification::send($user, new ParentInfoUpdate($details));
+                    } else {
+                        $query = 1;
+                    }
+                } else {
+                    $query = $staffConn->table('parent')->where('id', $id)->update([
+                        'first_name' => isset($request->first_name) ? $request->first_name : "",
+                        'last_name' => isset($request->last_name) ? $request->last_name : "",
+                        'gender' => $request->gender,
+                        'date_of_birth' => $request->date_of_birth,
+                        'passport' => $passport,
+                        'race' => $request->race,
+                        'religion' => $request->religion,
+                        'nric' => $nric,
+                        'blood_group' => $request->blood_group,
+                        'occupation' => $request->occupation,
+                        'income' => $request->income,
+                        'education' => $request->education,
+                        'country' => $request->country,
+                        'post_code' => $request->post_code,
+                        'city' => $request->city,
+                        'state' => $request->state,
+                        'mobile_no' => $mobile_no,
+                        'address' => $address,
+                        'address_2' => $address_2,
+                        'email' => $request->email,
+                        'photo' => $fileName,
+                        'facebook_url' => $request->facebook_url,
+                        'linkedin_url' => $request->linkedin_url,
+                        'twitter_url' => $request->twitter_url,
+                        'status' => $request->status,
+                        'first_name_english' => $request->first_name_english,
+                        'last_name_english' => $request->last_name_english,
+                        'first_name_furigana' => $request->first_name_furigana,
+                        'last_name_furigana' => $request->last_name_furigana,
+                        'passport_expiry_date' => $request->passport_expiry_date,
+                        'visa_number' => $request->visa_number,
+                        'visa_expiry_date' => $request->visa_expiry_date,
+                        'nationality' => $request->nationality,
+                        'passport_photo' => $passport_fileName,
+                        'visa_photo' => $visa_fileName,
+                        'updated_at' => date("Y-m-d H:i:s")
+                    ]);
+                }
                 $success = [];
                 if ($query) {
                     return $this->successResponse($success, 'Parent Details have Been updated');
                 } else {
                     return $this->send500Error('Something went wrong.', ['error' => 'Something went wrong']);
                 }
+            }
+        }
+    }
+    // update Parent Info
+    public function updateParentUpdateInfo(Request $request)
+    {
+        // return $request;
+        $id = $request->parent_id;
+        $validator = \Validator::make($request->all(), [
+            'parent_id' => 'required',
+            'branch_id' => 'required',
+            'token' => 'required',
+        ]);
+
+        if (!$validator->passes()) {
+            return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
+        } else {
+            // return isset($request->google2fa_secret_enable) ? '1' : '0';
+            // return $request;
+            // create new connection
+            $conn = $this->createNewConnection($request->branch_id);
+            $request->request->remove('branch_id');
+            $request->request->remove('parent_id');
+            $request->request->remove('token');
+            // dd($request);
+            $accept = 0;
+            $remand = 0;
+            $reject = 0;
+            $insertArr = [];
+            $changeInfo = [];
+            $changeInfo['status'] = "Parent";
+            $changeInfo['remarks'] = $request->remarks;
+            foreach ($request->request as $key => $req) {
+                // dd($req);
+                $new = $conn->table('parent_change_info')->where('parent_id', '=', $id)->first();
+                if ($request->$key == "accept") {
+                    $insertArr[$key] = $new->$key;
+
+                    $ted = $key . "_remark";
+                    $col = $key . "_status";
+                    // $changeInfo[$ted] = $request->$ted;
+                    $encode['status'] = $req;
+                    $encode['remark'] = $request->$ted;
+                    $changeInfo[$col] = json_encode($encode);
+
+                    $accept++;
+                } else if ($request->$key == "reject") {
+                    $ted = $key . "_remark";
+                    $col = $key . "_status";
+                    // $changeInfo[$ted] = $request->$ted;
+                    $encode['status'] = $req;
+                    $encode['remark'] = $request->$ted;
+                    $changeInfo[$col] = json_encode($encode);
+                    $reject++;
+                } else if ($request->$key == "remand") {
+                    $ted = $key . "_remark";
+                    $col = $key . "_status";
+                    // $changeInfo[$ted] = $request->$ted;
+                    $encode['status'] = $req;
+                    $encode['remark'] = $request->$ted;
+                    $changeInfo[$col] = json_encode($encode);
+                    $remand++;
+                }
+            }
+            $status_count = "";
+            if ($remand > 0) {
+                $status_count = "Remand";
+            } else if ($reject > 0 && $reject >= $accept && $remand == 0) {
+
+                $status_count = "Reject";
+            } else if ($accept > 0 && $remand == 0 && $reject == 0) {
+
+                $status_count = "Accept";
+            }
+            $changeInfo['status_parent'] = $status_count;
+            // return $changeInfo;
+            if (!empty($insertArr)) {
+
+                // return $insertArr;
+                $query = $conn->table('parent')->where('id', '=', $id)->update($insertArr);
+            }
+            // return 1;
+            if (!empty($changeInfo)) {
+                $query = $conn->table('parent_change_info')->where('parent_id', $id)->update($changeInfo);
+            }
+            // dd($query);
+            $success = [];
+            if ($query) {
+                return $this->successResponse($success, 'Parent Details have been Updated successfully');
+            } else {
+                return $this->send500Error('Something went wrong.', ['error' => 'Something went wrong']);
+            }
+        }
+    }
+    // update Student Info
+    public function updateStudentUpdateInfo(Request $request)
+    {
+        // return $request;
+        $id = $request->student_id;
+        $validator = \Validator::make($request->all(), [
+            'student_id' => 'required',
+            'branch_id' => 'required',
+            'token' => 'required',
+        ]);
+
+        if (!$validator->passes()) {
+            return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
+        } else {
+            // return isset($request->google2fa_secret_enable) ? '1' : '0';
+            // return $request;
+            // create new connection
+            $conn = $this->createNewConnection($request->branch_id);
+            $request->request->remove('branch_id');
+            $request->request->remove('student_id');
+            $request->request->remove('token');
+            $request->request->remove('_token');
+            // dd($request);
+            $accept = 0;
+            $remand = 0;
+            $reject = 0;
+            $insertArr = [];
+            $changeInfo = [];
+            $changeInfo['status'] = "Parent";
+            $changeInfo['remarks'] = $request->remarks;
+            foreach ($request->request as $key => $req) {
+                // dd($key);
+                $new = $conn->table('student_change_info')->where('student_id', '=', $id)->first();
+                // return $new;
+                if ($request->$key == "accept") {
+                    $insertArr[$key] = $new->$key;
+
+                    $ted = $key . "_remark";
+                    $col = $key . "_status";
+                    // $changeInfo[$ted] = $request->$ted;
+                    $encode['status'] = $req;
+                    $encode['remark'] = $request->$ted;
+                    $changeInfo[$col] = json_encode($encode);
+
+                    $accept++;
+                } else if ($request->$key == "reject") {
+                    $ted = $key . "_remark";
+                    $col = $key . "_status";
+                    // $changeInfo[$ted] = $request->$ted;
+                    $encode['status'] = $req;
+                    $encode['remark'] = $request->$ted;
+                    $changeInfo[$col] = json_encode($encode);
+                    $reject++;
+                } else if ($request->$key == "remand") {
+                    $ted = $key . "_remark";
+                    $col = $key . "_status";
+                    // $changeInfo[$ted] = $request->$ted;
+                    $encode['status'] = $req;
+                    $encode['remark'] = $request->$ted;
+                    $changeInfo[$col] = json_encode($encode);
+                    $remand++;
+                }
+            }
+            // return $insertArr;
+            // dd($insertArr);
+
+            $status_count = "";
+            if ($remand > 0) {
+                $status_count = "Remand";
+            } else if ($reject > 0 && $reject >= $accept && $remand == 0) {
+
+                $status_count = "Reject";
+            } else if ($accept > 0 && $remand == 0 && $reject == 0) {
+
+                $status_count = "Accept";
+            }
+            $changeInfo['status_parent'] = $status_count;
+            if (!empty($insertArr)) {
+
+                // return $insertArr;
+                $query = $conn->table('students')->where('id', '=', $id)->update($insertArr);
+            }
+            // return 1;
+            if (!empty($changeInfo)) {
+                $query = $conn->table('student_change_info')->where('student_id', $id)->update($changeInfo);
+            }
+            // $query = $conn->table('students')->where('id', '=', $id)->update($insertArr);
+            // $conn->table('student_change_info')->where('student_id', $id)->delete();
+            $success = [];
+            if ($query) {
+                return $this->successResponse($success, 'Student Details have been Updated successfully');
+            } else {
+                return $this->send500Error('Something went wrong.', ['error' => 'Something went wrong']);
             }
         }
     }
@@ -20077,7 +20814,6 @@ $user = new User();
     // add Application
     public function addApplication(Request $request)
     {
-        // return $request;
         $validator = \Validator::make($request->all(), [
             'first_name' => 'required',
             'mobile_no' => 'required',
@@ -20112,7 +20848,7 @@ $user = new User();
             if ($conn->table('student_applications')->where('email', '=', $request->email)->count() > 0) {
                 return $this->send422Error('Student Email Already Exist', ['error' => 'Student Email Already Exist']);
             } else {
-
+                $email_token = Str::random(60);
                 // return $request;
                 $query = $conn->table('student_applications')->insert([
                     'first_name' => isset($request->first_name) ? $request->first_name : "",
@@ -20154,9 +20890,35 @@ $user = new User();
                     'guardian_phone_number' => $request->guardian_phone_number,
                     'guardian_occupation' => $request->guardian_occupation,
                     'guardian_email' => $request->guardian_email,
+                    'created_by' => $request->created_by,
+                    'created_by_role' => isset($request->created_by_role) ? $request->created_by_role : "",
+                    'email_token' => $email_token,
                     'status' => "Applied",
+                    'first_name_english' => isset($request->first_name_english) ? $request->first_name_english : "",
+                    'last_name_english' => isset($request->last_name_english) ? $request->last_name_english : "",
+                    'first_name_furigana' => isset($request->first_name_furigana) ? $request->first_name_furigana : "",
+                    'last_name_furigana' => isset($request->last_name_furigana) ? $request->last_name_furigana : "",
+                    'race' => $request->race,
+                    'religion' => $request->religion,
+                    'blood_group' => $request->blood_group,
+                    'nationality' => $request->nationality,
+                    'type' => $request->type,
+                    'last_date_of_withdrawal' => $request->last_date_of_withdrawal,
                     'created_at' => date("Y-m-d H:i:s")
                 ]);
+                $email =  $request->verify_email;
+                $link = $request->url . '/application/email/' . $email_token;
+                if ($email) {
+                    $data = array('link' => $link, 'name' => $request->first_name . ' ' . $request->last_name);
+                    Mail::send('auth.mail', $data, function ($message) use ($email) {
+                        $message->to("rajesh@aibots.my", 'Parent')->subject('Email Verification');
+                        $message->from("askyourquery@paxsuzen.com", 'Email Verification');
+                    });
+                    // Mail::send('auth.mail', $data, function ($message) use ($email) {
+                    //     $message->to("rajesh@aibots.my", 'User')->subject('Email Verification');
+                    //     $message->from(env('MAIL_FROM_ADDRESS'), env('MAIL_FROM_NAME'));
+                    // });
+                }
 
                 $success = [];
                 if (!$query) {
@@ -20167,6 +20929,127 @@ $user = new User();
             }
 
             // return $request;
+        }
+    }
+
+    // email Application
+    public function emailApplication(Request $request)
+    {
+
+        // return 1;
+        $validator = \Validator::make($request->all(), [
+            'token' => 'required',
+            'branch_id' => 'required',
+        ]);
+        if (!$validator->passes()) {
+            return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
+        } else {
+            $token = $request->token;
+            // create new connection
+            $conn = $this->createNewConnection($request->branch_id);
+            // check exist name
+
+            // return $request;
+            if ($conn->table('guest')->where('token', '=', $token)->count() > 0) {
+
+                $guest = $conn->table('guest')->where('token', $token)->first();
+                $guest_id = $guest->id;
+                if ($conn->table('guest')->where([['id', '=', $guest_id], ['email_verify', '=', "1"]])->count() > 0) {
+                    return $this->send422Error('Email Already Verified', ['error' => 'Email Already Verified']);
+                } else {
+                    $email =  $guest->email;
+                    $date = date('Y-m-d', strtotime('+30 days'));
+                    // insert data
+                    $update = $conn->table('guest')->where('id', $guest_id)->update([
+                        'date' => $date,
+                        'email_verify' => "1",
+                        'updated_at' => date("Y-m-d H:i:s")
+                    ]);
+
+                    $name = "Guest" . $guest_id;
+                    if ($guest_id) {
+
+                        $query = new User();
+                        $query->name = $name;
+                        $query->user_id = $guest_id;
+                        $query->role_id = "7";
+                        $query->branch_id = $request->branch_id;
+                        $query->email = $guest->email;
+                        $query->status = "0";
+                        $query->google2fa_secret_enable = '0';
+                        $query->password = bcrypt($guest->email);
+                        $query->save();
+                    }
+
+                    $link = $request->url . '/guest/login';
+                    if ($query) {
+                        $data = array('link' => $link, 'email' => $email, 'password' => $guest->email);
+                        $query = Mail::send('auth.login_credential_mail', $data, function ($message) use ($email) {
+                            $message->to($email)->subject('Login Details');
+                            $message->from("askyourquery@paxsuzen.com", 'Email Verification');
+                        });
+                    }
+                }
+            } else {
+                return $this->send422Error('Link Has been Expired', ['error' => 'Link Has been Expired']);
+            }
+
+            $success = [];
+            if (!$query) {
+                return $this->send500Error('Something went wrong.', ['error' => 'Something went wrong']);
+            } else {
+                return $this->successResponse($success, 'Email Verified Successfully');
+            }
+        }
+    }
+    public function verifyApplication(Request $request)
+    {
+
+        $validator = \Validator::make($request->all(), [
+            'branch_id' => 'required',
+            'email' => 'required'
+        ]);
+        if (!$validator->passes()) {
+            return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
+        } else {
+            // create new connection
+            $conn = $this->createNewConnection($request->branch_id);
+
+            $email =  $request->email;
+
+            $token = Str::random(60);
+            if ($conn->table('guest')->where([['email', '=', $email]])->count() > 0) {
+                $token = Str::random(60);
+                if ($conn->table('guest')->where([['email', '=', $email], ['email_verify', '=', "0"]])->count() > 0) {
+                    $guest_id = $conn->table('guest')->where('email', '=', $email)->update([
+                        'token' => $token,
+                        'created_at' => date("Y-m-d H:i:s")
+                    ]);
+                } else if ($conn->table('guest')->where([['email', '=', $email], ['email_verify', '=', "1"]])->count() > 0) {
+                    return $this->send422Error('Email Already Verified', ['error' => 'Email Already Verified']);
+                }
+            } else {
+                // insert data
+                $guest_id = $conn->table('guest')->insert([
+                    'email' => $email,
+                    'token' => $token,
+                    'created_at' => date("Y-m-d H:i:s")
+                ]);
+            }
+            $link = $request->url . '/application/email/' . $request->branch_id . '/' . $token;
+            if ($email) {
+                $data = array('link' => $link, 'email' => $email);
+                $query = Mail::send('auth.verify_mail', $data, function ($message) use ($email) {
+                    $message->to($email, 'Guest')->subject('Email Verification');
+                    $message->from("askyourquery@paxsuzen.com", 'Email Verification');
+                });
+            }
+            $success = [];
+            if (!$query) {
+                return $this->send500Error('Something went wrong.', ['error' => 'Something went wrong']);
+            } else {
+                return $this->successResponse($success, 'Verification has been Sended Successfully');
+            }
         }
     }
 
@@ -20186,11 +21069,12 @@ $user = new User();
             $conn = $this->createNewConnection($request->branch_id);
             // get data
 
-
-            $data = $conn->table('student_applications as s')
+            $application = $conn->table('student_applications as s')
                 ->select(
                     's.*',
                     DB::raw("CONCAT(s.first_name, ' ', s.last_name) as name"),
+                    DB::raw("CONCAT(s.first_name_english, ' ', s.last_name_english) as name_english"),
+                    DB::raw("CONCAT(s.first_name_furigana, ' ', s.last_name) as name_furigana"),
                     'academic_cl.name as academic_grade',
                     'ay.name as academic_year',
                 )
@@ -20198,7 +21082,7 @@ $user = new User();
                 ->leftJoin('academic_year as ay', 's.academic_year', '=', 'ay.id')
                 ->leftJoin('classes as academic_cl', 's.academic_grade', '=', 'academic_cl.id')
                 ->when($request->admission == 1, function ($query) {
-                    return $query->where('s.status', '=', 'Approved');
+                    return $query->where('s.status', '=', 'Approved')->where('s.phase_2_status', '=', 'Approved');
                 })
                 ->when($request->academic_year, function ($query) use ($request) {
                     return $query->where('s.academic_year', '=', $request->academic_year);
@@ -20206,16 +21090,41 @@ $user = new User();
                 ->when($request->academic_grade, function ($query)  use ($request) {
                     return $query->where('s.academic_grade', '=', $request->academic_grade);
                 })
+                ->when($request->created_by, function ($query)  use ($request) {
+                    return $query->where('s.created_by', '=', $request->created_by)->where('s.created_by_role', '=', $request->role);
+                })
+                // ->when("s.created_by_role" == "5", function ($query) {
+                //     return $query->leftJoin('parent as p', 's.created_by', '=', 'p.id');
+                // })
                 ->get();
 
-            return $this->successResponse($data, 'Application record fetch successfully');
+            // $data = new \stdClass();
+            foreach ($application as $key => $app) {
+                $created_by = "Public";
+                if ($app->created_by_role == "5") {
+                    $name = $conn->table('parent')->select(DB::raw("CONCAT(first_name, ' ', last_name) as name"))->where('id', $app->created_by)->first();
+                    $created_by = $name->name . " (Parent)";
+                } else if ($app->created_by_role == "2") {
+                    $name = $conn->table('staffs')->select(DB::raw("CONCAT(first_name, ' ', last_name) as name"))->where('id', $app->created_by)->first();
+                    $created_by = $name->name . " (Admin)";
+                }
+                // else if($app->created_by_role == "7"){
+                //     $name = $conn->table('guest')->select("name")->where('id',$app->created_by)->first();
+                //     $created_by = $name->name. " (Guest)";
+                // }
+                // dd($created_by);
+                $application[$key]->created_by = $created_by;
+                // $data = $app;
+                // $application = $app;
+            }
+
+            return $this->successResponse($application, 'Application record fetch successfully');
         }
     }
 
     // student Application
     public function getApplicationDetails(Request $request)
     {
-
         $validator = \Validator::make($request->all(), [
             'id' => 'required',
             'branch_id' => 'required',
@@ -20232,12 +21141,14 @@ $user = new User();
             $getstudentDetails = $conn->table('student_applications as s')
                 ->select(
                     's.*',
-                    'academic_cl.name as academic_grade',
-                    'school_cl.name as grade',
-                    'r.name as guardian_relation',
-                    'ay.name as academic_year',
-                    'sy.name as school_year',
-                    DB::raw("CONCAT(s.first_name, ' ', s.last_name) as name")
+                    // 'academic_cl.name as academic_grade',
+                    // 'school_cl.name as grade',
+                    // 'r.name as guardian_relation',
+                    // 'ay.name as academic_year',
+                    // 'sy.name as school_year',
+                    DB::raw("CONCAT(s.first_name, ' ', s.last_name) as name"),
+                    DB::raw("CONCAT(s.first_name_english, ' ', s.last_name) as name_english"),
+                    DB::raw("CONCAT(s.first_name_furigana, ' ', s.last_name) as name_furigana")
                 )
                 ->leftJoin('classes as academic_cl', 's.academic_grade', '=', 'academic_cl.id')
                 ->leftJoin('classes as school_cl', 's.grade', '=', 'school_cl.id')
@@ -20285,6 +21196,77 @@ $user = new User();
         } else {
             // create new connection
             $conn = $this->createNewConnection($request->branch_id);
+            $visa_fileName = null;
+            if ($request->visa_photo) {
+
+                $visa_now = now();
+                $visa_name = strtotime($visa_now);
+                $visa_extension = $request->visa_file_extension;
+
+                $visa_fileName = $visa_name . '.' . $visa_extension;
+
+                // return $fileName;
+                $visa_path = '/public/' . $request->branch_id . '/users/images/';
+                $visa_base64 = base64_decode($request->visa_photo);
+                File::ensureDirectoryExists(base_path() . $visa_path);
+                $visa_file = base_path() . $visa_path . $visa_fileName;
+                $visa_suc = file_put_contents($visa_file, $visa_base64);
+            }
+
+            $passport_fileName = null;
+            if ($request->passport_photo) {
+
+                $passport_now = now();
+                $passport_name = strtotime($passport_now);
+                $passport_extension = $request->passport_file_extension;
+
+                $passport_fileName = $passport_name . '.' . $passport_extension;
+
+                // return $fileName;
+                $passport_path = '/public/' . $request->branch_id . '/users/images/';
+                $passport_base64 = base64_decode($request->passport_photo);
+                File::ensureDirectoryExists(base_path() . $passport_path);
+                $passport_file = base_path() . $passport_path . $passport_fileName;
+                $passport_suc = file_put_contents($passport_file, $passport_base64);
+            }
+            $registerNumber = null;
+            if ($request->role_id == "2") {
+                if ($request->status == "Approved" || $request->phase_2_status == "Approved") {
+
+
+                    $assignedNumber = "9" . substr(str_shuffle("0123456789"), 0, 5);
+                    $reverse_number  = array_reverse(array_map('intval', str_split($assignedNumber)));
+                    // dd(array_reverse($reverse_number));
+
+                    $oddNumber = 1;
+                    $evenNumber = 2;
+
+                    $modifiedNumber = array();
+                    foreach ($reverse_number as $key => $value) {
+                        if ($key == 0) {
+                            $multiply = $value * $evenNumber;
+                        } else {
+                            if ($value % 2 == 1) {
+                                $multiply = $value * $oddNumber;
+                            } else {
+                                $multiply = $value * $evenNumber;
+                            }
+                        }
+                        if ($multiply > 10) {
+                            $multiply  = 1 + ($multiply % 10);
+                        }
+                        $modifiedNumber[] = $multiply;
+                    }
+                    $totalNumber = array_sum($modifiedNumber);
+                    if ($totalNumber % 10 == 0) {
+                        $generatedNumber = 0;
+                    } else {
+                        $generatedNumber = 10 - ($totalNumber % 10);
+                    }
+                    $registerNumber = $assignedNumber . $generatedNumber;
+                }
+            }
+
             // update data
             $query = $conn->table('student_applications')->where('id', $request->id)->update([
                 'first_name' => isset($request->first_name) ? $request->first_name : "",
@@ -20326,6 +21308,28 @@ $user = new User();
                 'guardian_phone_number' => $request->guardian_phone_number,
                 'guardian_occupation' => $request->guardian_occupation,
                 'guardian_email' => $request->guardian_email,
+                'status' => $request->status,
+                'first_name_english' => isset($request->first_name_english) ? $request->first_name_english : "",
+                'last_name_english' => isset($request->last_name_english) ? $request->last_name_english : "",
+                'first_name_furigana' => isset($request->first_name_furigana) ? $request->first_name_furigana : "",
+                'last_name_furigana' => isset($request->last_name_furigana) ? $request->last_name_furigana : "",
+                'race' => $request->race,
+                'religion' => $request->religion,
+                'blood_group' => $request->blood_group,
+                'nationality' => $request->nationality,
+                'enrollment' => $request->enrollment,
+                'trail_date' => $request->trail_date,
+                'nric' => $request->nric,
+                'passport' => $request->passport,
+                'passport_expiry_date' => $request->passport_expiry_date,
+                'visa_number' => $request->visa_number,
+                'visa_expiry_date' => $request->visa_expiry_date,
+                'passport_photo' => $passport_fileName,
+                'visa_photo' => $visa_fileName,
+                'phase_2_status' => $request->phase_2_status,
+                'phase_1_reason' => $request->phase_1_reason,
+                'phase_2_reason' => $request->phase_2_reason,
+                'register_number' => $registerNumber,
                 'updated_at' => date("Y-m-d H:i:s")
             ]);
 
@@ -22049,5 +23053,1125 @@ $user = new User();
             'grade' => $grade           
         ];
         return $this->successResponse($data, 'Exam Point Status Get Successfully'); 
+    }
+
+    // addEmailType
+    public function addEmailType(Request $request)
+    {
+
+        $validator = \Validator::make($request->all(), [
+            'name' => 'required',
+            'branch_id' => 'required',
+            'token' => 'required',
+        ]);
+
+        if (!$validator->passes()) {
+            return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
+        } else {
+            // create new connection
+            $conn = $this->createNewConnection($request->branch_id);
+            // check exist name
+            if ($conn->table('email_types')->where('name', '=', $request->name)->count() > 0) {
+                return $this->send422Error('Name Already Exist', ['error' => 'Name Already Exist']);
+            } else {
+                // insert data
+                $query = $conn->table('email_types')->insert([
+                    'name' => $request->name,
+                    'created_at' => date("Y-m-d H:i:s")
+                ]);
+                $success = [];
+                if (!$query) {
+                    return $this->send500Error('Something went wrong.', ['error' => 'Something went wrong']);
+                } else {
+                    return $this->successResponse($success, 'Email Type has been successfully saved');
+                }
+            }
+        }
+    }
+    // getEmailTypeList
+    public function getEmailTypeList(Request $request)
+    {
+
+        // $conn = $this->createNewConnection($request->branch_id);
+        // // get data
+        // $user = User::where('id', 2)->get();
+        // // dd($user);
+        //     $details = [
+        //         "subject" => "test mail",
+        //         "page" => "auth.email_birthday",
+        //         "school_name" => "クアラルンプール日本人学校",
+        //         "school_image" => "http://localhost/paxsuzen-api-dev/public/common-asset/images/logo_jskl.jpeg"
+        //     ];
+
+        //     Notification::send($user, new SendEmail($details));
+        // // return $details;
+        // // notifications sent
+        // return "done";
+        $validator = \Validator::make($request->all(), [
+            'branch_id' => 'required',
+            'token' => 'required',
+        ]);
+
+        if (!$validator->passes()) {
+            return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
+        } else {
+            // create new connection
+            $conn = $this->createNewConnection($request->branch_id);
+            // get data
+            $emailTypeDetails = $conn->table('email_types')->get();
+            return $this->successResponse($emailTypeDetails, 'Email Type record fetch successfully');
+        }
+    }
+    // get EmailType row details
+    public function getEmailTypeDetails(Request $request)
+    {
+
+        $validator = \Validator::make($request->all(), [
+            'id' => 'required',
+            'branch_id' => 'required',
+            'token' => 'required'
+        ]);
+
+        if (!$validator->passes()) {
+            return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
+        } else {
+            $id = $request->id;
+            // create new connection
+            $conn = $this->createNewConnection($request->branch_id);
+            // get data
+            $emailTypeDetails = $conn->table('email_types')->where('id', $id)->first();
+            return $this->successResponse($emailTypeDetails, 'Email Type row fetch successfully');
+        }
+    }
+    // update EmailType
+    public function updateEmailType(Request $request)
+    {
+        $id = $request->id;
+        $validator = \Validator::make($request->all(), [
+            'name' => 'required',
+            'branch_id' => 'required',
+            'token' => 'required',
+        ]);
+
+        if (!$validator->passes()) {
+            return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
+        } else {
+
+            // create new connection
+            $conn = $this->createNewConnection($request->branch_id);
+            // check exist name
+            if ($conn->table('email_types')->where([['name', '=', $request->name], ['id', '!=', $id]])->count() > 0) {
+                return $this->send422Error('Name Already Exist', ['error' => 'Name Already Exist']);
+            } else {
+                // update data
+                $query = $conn->table('email_types')->where('id', $id)->update([
+                    'name' => $request->name,
+                    'updated_at' => date("Y-m-d H:i:s")
+                ]);
+                $success = [];
+                if ($query) {
+                    return $this->successResponse($success, 'Email Type Details have Been updated');
+                } else {
+                    return $this->send500Error('Something went wrong.', ['error' => 'Something went wrong']);
+                }
+            }
+        }
+    }
+    // delete EmailType
+    public function deleteEmailType(Request $request)
+    {
+
+        $id = $request->id;
+        $validator = \Validator::make($request->all(), [
+            'token' => 'required',
+            'branch_id' => 'required',
+            'id' => 'required',
+        ]);
+
+        if (!$validator->passes()) {
+            return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
+        } else {
+            // create new connection
+            $conn = $this->createNewConnection($request->branch_id);
+            // get data
+            $query = $conn->table('email_types')->where('id', $id)->delete();
+
+            $success = [];
+            if ($query) {
+                return $this->successResponse($success, 'Email Type have been deleted successfully');
+            } else {
+                return $this->send500Error('Something went wrong.', ['error' => 'Something went wrong']);
+            }
+        }
+    }
+
+    // addEmailTemplate
+    public function addEmailTemplate(Request $request)
+    {
+
+        $validator = \Validator::make($request->all(), [
+            'type_id' => 'required',
+            'subject' => 'required',
+            'template_body' => 'required',
+            'branch_id' => 'required',
+            'token' => 'required',
+        ]);
+
+        if (!$validator->passes()) {
+            return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
+        } else {
+            // create new connection
+            $conn = $this->createNewConnection($request->branch_id);
+            // insert data
+            $query = $conn->table('email_template')->insert([
+                'type_id' => $request->type_id,
+                'subject' => $request->subject,
+                'template_body' => $request->template_body,
+            ]);
+            $success = [];
+            if (!$query) {
+                return $this->send500Error('Something went wrong.', ['error' => 'Something went wrong']);
+            } else {
+                return $this->successResponse($success, 'Email Template has been successfully saved');
+            }
+        }
+    }
+    // getEmailTemplateList
+    public function getEmailTemplateList(Request $request)
+    {
+        $validator = \Validator::make($request->all(), [
+            'branch_id' => 'required',
+            'token' => 'required',
+        ]);
+
+        if (!$validator->passes()) {
+            return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
+        } else {
+            // create new connection
+            $conn = $this->createNewConnection($request->branch_id);
+            // get data
+            // $emailTemplateDetails = $conn->table('email_template')->get();
+
+            $emailTemplateDetails = $conn->table('email_template as etm')->select('etm.*', 'et.name as type_id')
+                ->leftjoin('email_types as et', 'et.id', '=', 'etm.type_id')->get();
+            return $this->successResponse($emailTemplateDetails, 'Email Template record fetch successfully');
+        }
+    }
+    // get EmailTemplate row details
+    public function getEmailTemplateDetails(Request $request)
+    {
+
+        $validator = \Validator::make($request->all(), [
+            'id' => 'required',
+            'branch_id' => 'required',
+            'token' => 'required'
+        ]);
+
+        if (!$validator->passes()) {
+            return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
+        } else {
+            $id = $request->id;
+            // create new connection
+            $conn = $this->createNewConnection($request->branch_id);
+            // get data
+            $emailTemplateDetails = $conn->table('email_template')->where('id', $id)->first();
+            return $this->successResponse($emailTemplateDetails, 'Email Template row fetch successfully');
+        }
+    }
+    // update EmailTemplate
+    public function updateEmailTemplate(Request $request)
+    {
+        $id = $request->id;
+        $validator = \Validator::make($request->all(), [
+            'type_id' => 'required',
+            'subject' => 'required',
+            'template_body' => 'required',
+            'branch_id' => 'required',
+            'token' => 'required',
+        ]);
+
+        if (!$validator->passes()) {
+            return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
+        } else {
+
+            // create new connection
+            $conn = $this->createNewConnection($request->branch_id);
+            // update data
+            $query = $conn->table('email_template')->where('id', $id)->update([
+                'type_id' => $request->type_id,
+                'subject' => $request->subject,
+                'template_body' => $request->template_body,
+                'updated_at' => date("Y-m-d H:i:s")
+            ]);
+            $success = [];
+            if ($query) {
+                return $this->successResponse($success, 'Email Template Details have Been updated');
+            } else {
+                return $this->send500Error('Something went wrong.', ['error' => 'Something went wrong']);
+            }
+        }
+    }
+    // delete EmailTemplate
+    public function deleteEmailTemplate(Request $request)
+    {
+
+        $id = $request->id;
+        $validator = \Validator::make($request->all(), [
+            'token' => 'required',
+            'branch_id' => 'required',
+            'id' => 'required',
+        ]);
+
+        if (!$validator->passes()) {
+            return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
+        } else {
+            // create new connection
+            $conn = $this->createNewConnection($request->branch_id);
+            // get data
+            $query = $conn->table('email_template')->where('id', $id)->delete();
+
+            $success = [];
+            if ($query) {
+                return $this->successResponse($success, 'Email Template have been deleted successfully');
+            } else {
+                return $this->send500Error('Something went wrong.', ['error' => 'Something went wrong']);
+            }
+        }
+    }
+
+    // update Student
+    public function parentUpdateStudent(Request $request)
+    {
+
+        $validator = \Validator::make($request->all(), [
+            'student_id' => 'required',
+
+            'branch_id' => 'required',
+            'token' => 'required',
+        ]);
+
+        // return $request['old_photo'];
+
+        $id = $request->student_id;
+        if (!$validator->passes()) {
+            return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
+        } else {
+            // create new connection
+            $conn = $this->createNewConnection($request->branch_id);
+
+            $visa_fileName = null;
+            if ($request->visa_photo) {
+
+                $visa_extension = $request->visa_file_extension;
+
+                $visa_fileName = 'VIMG_' . date('Ymd') . uniqid() . '.' . $visa_extension;
+
+                // return $fileName;
+                $visa_path = '/public/' . $request->branch_id . '/users/images/';
+                $visa_base64 = base64_decode($request->visa_photo);
+                File::ensureDirectoryExists(base_path() . $visa_path);
+                $visa_file = base_path() . $visa_path . $visa_fileName;
+                $visa_suc = file_put_contents($visa_file, $visa_base64);
+            }
+
+            $passport_fileName = null;
+            if ($request->passport_photo) {
+
+                $passport_extension = $request->passport_file_extension;
+
+                $passport_fileName = 'PIMG_' . date('Ymd') . uniqid() . '.' . $passport_extension;
+
+                // return $fileName;
+                $passport_path = '/public/' . $request->branch_id . '/users/images/';
+                $passport_base64 = base64_decode($request->passport_photo);
+                File::ensureDirectoryExists(base_path() . $passport_path);
+                $passport_file = base_path() . $passport_path . $passport_fileName;
+                $passport_suc = file_put_contents($passport_file, $passport_base64);
+            }
+
+            $old = $conn->table('students')->where('id', '=', $id)->first();
+            $insertArr = [];
+            $insertArr['status'] = "Admin";
+            // return Helper::decryptStringData($old->$passport);
+            foreach ($old as $key => $o) {
+                if ($request->has($key)) {
+                    if ($key == "passport" || $key == "nric" || $key == "mobile_no" || $key == "current_address" || $key == "permanent_address") {
+                        // $encrypt = Helper::decryptStringData($old->$key);
+                        // dd(Crypt::encryptString($old->$key));
+                        if (Helper::decryptStringData($old->$key) != $request->$key) {
+                            $insertArr[$key] = Crypt::encryptString($request->$key);
+                        }
+                    } else {
+                        if ($old->$key != $request->$key) {
+                            $insertArr[$key] = $request->$key;
+                        }
+                    }
+                }
+            }
+            // return $insertArr;
+            // dd($insertArr);
+            if (count($insertArr) > 0) {
+                $insertArr['student_id'] = $id;
+                $insertArr['parent_id'] = $request->parent_id;
+                if ($conn->table('student_change_info')->where('student_id', $id)->count() > 0) {
+
+                    $query = $conn->table('student_change_info')->where('student_id', '=', $id)->delete();
+                }
+                $query = $conn->table('student_change_info')->insertGetId($insertArr);
+
+
+                // send Termination notifications
+
+                $user = User::where([
+                    ['branch_id', '=', $request->branch_id],
+                    ['role_id', '=', 2]
+                ])->get();
+
+                $parent_name = $conn->table('parent as p')
+                    ->select(DB::raw("CONCAT(p.first_name, ' ', p.last_name) as name"))
+                    ->where('p.id', $request->parent_id)->first();
+
+                // return $parent_name;
+                $info_update = [];
+                $info_update['parent_name'] = $parent_name->name;
+                $info_update['student_name'] = $old->first_name . ' ' . $old->last_name;
+                $details = [
+                    'branch_id' => $request->branch_id,
+                    'parent_id' => $request->parent_id,
+                    'info_update_id' => $query,
+                    'info_update' => $info_update
+                ];
+                // return $details;
+                // notifications sent
+                Notification::send($user, new StudentInfoUpdate($details));
+            } else {
+                $query = 1;
+            }
+            // $query;
+            // dd($old);
+            // foreach($old as $key=>$o){
+            //     dd($request->$key);
+            //     // if($old->$key == $request-)
+            // }
+            $success = [];
+            if (!$query) {
+                return $this->send500Error('Something went wrong.', ['error' => 'Something went wrong']);
+            } else {
+                return $this->successResponse($success, 'Student has been successfully Updated');
+            }
+        }
+    }
+
+    // get Student row details
+    public function getStudentUpdateInfoDetails(Request $request)
+    {
+
+        $validator = \Validator::make($request->all(), [
+            'id' => 'required',
+            'branch_id' => 'required',
+            'token' => 'required'
+        ]);
+
+        if (!$validator->passes()) {
+            return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
+        } else {
+            $id = $request->id;
+            // create new connection
+            $conn = $this->createNewConnection($request->branch_id);
+            // get data
+            $getstudentDetails = $conn->table('student_change_info as sci')
+                ->select(
+                    'sci.id',
+                    'sci.student_id',
+                    'sci.parent_id',
+                    'sci.passport',
+                    'sci.passport_photo',
+                    'sci.passport_expiry_date',
+                    'sci.visa_number',
+                    'sci.visa_photo',
+                    'sci.visa_expiry_date',
+                    'sci.nationality',
+                    'sci.nric',
+                    'sci.religion',
+                    'sci.race',
+                    'sci.blood_group',
+                    'sci.mother_tongue',
+                    'sci.current_address',
+                    'sci.permanent_address',
+                    'sci.country',
+                    'sci.state',
+                    'sci.city',
+                    'sci.post_code',
+                    'sci.mobile_no',
+                    // DB::raw("CONCAT(s.first_name, ' ', s.last_name) as name")
+                )
+                ->where('sci.id', $id)
+                ->first();
+            $student_id = $getstudentDetails->student_id;
+            unset($getstudentDetails->id, $getstudentDetails->student_id, $getstudentDetails->parent_id);
+            // dd($getstudentDetails);
+            $studentObj = new \stdClass();
+            if (!empty($getstudentDetails)) {
+                foreach ($getstudentDetails as $key => $suc) {
+
+                    $old = $conn->table('students as s')->select('s.*', DB::raw("CONCAT(s.first_name, ' ', s.last_name) as name"), 'c.name as class_name', 'sc.name as section_name')
+                        ->leftJoin('enrolls as e', 'e.student_id', '=', 's.id')
+                        ->leftJoin('classes as c', 'e.class_id', '=', 'c.id')
+                        ->leftJoin('sections as sc', 'e.section_id', '=', 'sc.id')
+                        ->where('s.id', '=', $student_id)->first();
+                    // dd($old);
+                    // dd(${$key});
+                    if ($suc) {
+                        // dd($key);
+
+                        if ($key == "passport" || $key == "nric" || $key == "mobile_no" || $key == "current_address" || $key == "permanent_address") {
+                            // $encrypt = Helper::decryptStringData($old->$key);
+                            // dd(Crypt::encryptString($old->$key));
+
+                            ${$key} = [];
+                            ${$key}['old_value'] =  Helper::decryptStringData($old->$key);
+                            ${$key}['new_value'] =  Helper::decryptStringData($suc);
+                        } else {
+                            ${$key} = [];
+                            ${$key}['old_value'] =  $old->$key;
+                            ${$key}['new_value'] =  $suc;
+                        }
+
+                        $studentObj->$key = ${$key};
+                    }
+                }
+            }
+            $studentDetails['student'] = $studentObj;
+            $profile = $old;
+            $profile->current_address = Helper::decryptStringData($old->current_address);
+            $profile->mobile_no = Helper::decryptStringData($old->mobile_no);
+            $studentDetails['profile'] = $profile;
+
+            return $this->successResponse($studentDetails, 'Student row fetch successfully');
+        }
+    }
+
+    // getFormFieldList
+    public function getFormFieldList(Request $request)
+    {
+        $validator = \Validator::make($request->all(), [
+            'branch_id' => 'required',
+            'token' => 'required',
+        ]);
+
+        if (!$validator->passes()) {
+            return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
+        } else {
+            // create new connection
+            $conn = $this->createNewConnection($request->branch_id);
+            // get data
+            $formFieldDetails = $conn->table('form_fields')->get();
+            return $this->successResponse($formFieldDetails, 'Form Field record fetch successfully');
+        }
+    }
+    // get FormField row details
+    public function getFormFieldDetails(Request $request)
+    {
+
+        $validator = \Validator::make($request->all(), [
+            'id' => 'required',
+            'branch_id' => 'required',
+            'token' => 'required'
+        ]);
+
+        if (!$validator->passes()) {
+            return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
+        } else {
+            $id = $request->id;
+            // create new connection
+            $conn = $this->createNewConnection($request->branch_id);
+            // get data
+            $formFieldDetails = $conn->table('form_fields')->where('id', $id)->first();
+            return $this->successResponse($formFieldDetails, 'Form Field row fetch successfully');
+        }
+    }
+    // update FormField
+    public function updateFormField(Request $request)
+    {
+        $id = $request->id;
+        $validator = \Validator::make($request->all(), [
+            'branch_id' => 'required',
+            'token' => 'required',
+        ]);
+
+        if (!$validator->passes()) {
+            return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
+        } else {
+
+            // create new connection
+            $conn = $this->createNewConnection($request->branch_id);
+
+            // update data
+            $query = $conn->table('form_fields')->where('id', $id)->update([
+                'name_english' => isset($request->name_english) ? $request->name_english : 1,
+                'name_furigana' => isset($request->name_furigana) ? $request->name_furigana : 1,
+                'visa' => isset($request->visa) ? $request->visa : 1,
+                'nationality' => isset($request->nationality) ? $request->nationality : 1,
+                'passport' => isset($request->passport) ? $request->passport : 1,
+                'nric' => isset($request->nric) ? $request->nric : 1,
+                'race' => isset($request->race) ? $request->race : 1,
+                'religion' => isset($request->religion) ? $request->religion : 1,
+                'blood_group' => isset($request->blood_group) ? $request->blood_group : 1,
+                'updated_at' => date("Y-m-d H:i:s")
+            ]);
+            $success = [];
+            if ($query) {
+                return $this->successResponse($success, 'Form Field Details have Been updated');
+            } else {
+                return $this->send500Error('Something went wrong.', ['error' => 'Something went wrong']);
+            }
+        }
+    }
+    public function registerNumber(Request $request)
+    {
+
+        // $assignedNumber = "9" . substr(str_shuffle("0123456789"), 0, 5);
+
+        $assignedNumber = $request->register_number;
+        $reverse_number  = array_reverse(array_map('intval', str_split($assignedNumber)));
+        // dd(array_reverse($reverse_number));
+
+        $oddNumber = 1;
+        $evenNumber = 2;
+
+        $modifiedNumber = array();
+        foreach ($reverse_number as $key => $value) {
+            if ($key == 0) {
+                $multiply = $value * $evenNumber;
+            } else {
+                if ($value % 2 == 1) {
+                    $multiply = $value * $oddNumber;
+                } else {
+                    $multiply = $value * $evenNumber;
+                }
+            }
+            if ($multiply > 10) {
+                $multiply  = 1 + ($multiply % 10);
+            }
+            $modifiedNumber[] = $multiply;
+        }
+        $totalNumber = array_sum($modifiedNumber);
+        if ($totalNumber % 10 == 0) {
+            $generatedNumber = 0;
+        } else {
+            $generatedNumber = 10 - ($totalNumber % 10);
+        }
+        $registerNumber = $assignedNumber . $generatedNumber;
+
+        return $registerNumber;
+    }
+    // get Parent update view details
+    public function getParentUpdateView(Request $request)
+    {
+
+        $validator = \Validator::make($request->all(), [
+            'id' => 'required',
+            'branch_id' => 'required',
+            'token' => 'required'
+        ]);
+
+        if (!$validator->passes()) {
+            return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
+        } else {
+            $id = $request->id;
+            // create new connection
+            $conn = $this->createNewConnection($request->branch_id);
+            // get data
+            // $parentDetails['parent'] = $conn->table('parent')->select('*', DB::raw("CONCAT(first_name, ' ', last_name) as name"))->where('id', $id)->first();
+            $type = $request->type;
+            if ($type == "Parent") {
+
+                $getparentDetails = $conn->table('parent_change_info as pci')
+                    ->select(
+                        'id',
+                        'parent_id',
+                        'passport',
+                        'nric',
+                        'blood_group',
+                        'occupation',
+                        'income',
+                        'education',
+                        'mobile_no',
+                        'race',
+                        'religion',
+                        'address',
+                        'address_2',
+                        'country',
+                        'city',
+                        'state',
+                        'post_code',
+                        'photo',
+                        'facebook_url',
+                        'linkedin_url',
+                        'twitter_url',
+                        'nationality',
+                        'passport_photo',
+                        'passport_expiry_date',
+                        'visa_number',
+                        'visa_photo',
+                        'visa_expiry_date',
+                        // DB::raw("CONCAT(s.first_name, ' ', s.last_name) as name")
+                    )
+                    ->where('pci.id', $id)
+                    ->first();
+                $parent_id = $getparentDetails->parent_id;
+                unset($getparentDetails->id, $getparentDetails->parent_id, $getparentDetails->created_at, $getparentDetails->updated_at);
+                // dd($getparentDetails);
+                $parentObj = new \stdClass();
+                if (!empty($getparentDetails)) {
+                    foreach ($getparentDetails as $key => $suc) {
+
+                        $new = $conn->table('parent_change_info')->where('id', '=', $id)->first();
+                        $old = $conn->table('parent')->where('id', '=', $parent_id)->first();
+
+                        // dd(${$key});
+                        if ($suc) {
+                            // dd($key);
+
+                            if ($key == "passport" || $key == "nric" || $key == "mobile_no" || $key == "address" || $key == "address_2") {
+                                // $encrypt = Helper::decryptStringData($old->$key);
+                                // dd(Crypt::encryptString($old->$key));
+
+                                ${$key} = [];
+                                ${$key}['old_value'] =  Helper::decryptStringData($old->$key);
+                                ${$key}['new_value'] =  Helper::decryptStringData($suc);
+                            } else {
+                                ${$key} = [];
+                                ${$key}['old_value'] =  $old->$key;
+                                ${$key}['new_value'] =  $suc;
+                            }
+                            $column = $key . "_status";
+                            $details = json_decode($new->$column);
+                            ${$key}['status'] =  $details->status;
+                            ${$key}['remark'] =  $details->remark;
+
+                            $parentObj->$key = ${$key};
+                        }
+                    }
+                }
+
+                return $this->successResponse($parentObj, 'Parent row fetch successfully');
+            } else if ($type == "Student") {
+                // get data
+                $getstudentDetails = $conn->table('student_change_info as sci')
+                    ->select(
+                        'sci.id',
+                        'sci.student_id',
+                        'sci.parent_id',
+                        'sci.passport',
+                        'sci.passport_photo',
+                        'sci.passport_expiry_date',
+                        'sci.visa_number',
+                        'sci.visa_photo',
+                        'sci.visa_expiry_date',
+                        'sci.nationality',
+                        'sci.nric',
+                        'sci.religion',
+                        'sci.race',
+                        'sci.blood_group',
+                        'sci.mother_tongue',
+                        'sci.current_address',
+                        'sci.permanent_address',
+                        'sci.country',
+                        'sci.state',
+                        'sci.city',
+                        'sci.post_code',
+                        'sci.mobile_no',
+                        // DB::raw("CONCAT(s.first_name, ' ', s.last_name) as name")
+                    )
+                    ->where('sci.id', $id)
+                    ->first();
+                // return $getstudentDetails;
+                $student_id = $getstudentDetails->student_id;
+                unset($getstudentDetails->id, $getstudentDetails->student_id, $getstudentDetails->parent_id);
+                // dd($getstudentDetails);
+                $studentObj = new \stdClass();
+                if (!empty($getstudentDetails)) {
+                    foreach ($getstudentDetails as $key => $suc) {
+
+
+                        $new = $conn->table('student_change_info')->where('id', '=', $id)->first();
+                        $old = $conn->table('students as s')->select('s.*', DB::raw("CONCAT(s.first_name, ' ', s.last_name) as name"), 'c.name as class_name', 'sc.name as section_name')
+                            ->leftJoin('enrolls as e', 'e.student_id', '=', 's.id')
+                            ->leftJoin('classes as c', 'e.class_id', '=', 'c.id')
+                            ->leftJoin('sections as sc', 'e.section_id', '=', 'sc.id')
+                            ->where('s.id', '=', $student_id)->first();
+                        // dd($old);
+                        // dd(${$key});
+                        if ($suc) {
+                            // dd($key);
+
+                            if ($key == "passport" || $key == "nric" || $key == "mobile_no" || $key == "current_address" || $key == "permanent_address") {
+                                // $encrypt = Helper::decryptStringData($old->$key);
+                                // dd(Crypt::encryptString($old->$key));
+
+                                ${$key} = [];
+                                ${$key}['old_value'] =  Helper::decryptStringData($old->$key);
+                                ${$key}['new_value'] =  Helper::decryptStringData($suc);
+                            } else {
+                                ${$key} = [];
+                                ${$key}['old_value'] =  $old->$key;
+                                ${$key}['new_value'] =  $suc;
+                            }
+                            $column = $key . "_status";
+                            $details = json_decode($new->$column);
+                            ${$key}['status'] =  $details->status;
+                            ${$key}['remark'] =  $details->remark;
+
+                            $studentObj->$key = ${$key};
+                        }
+                    }
+                }
+
+                return $this->successResponse($studentObj, 'Student row fetch successfully');
+            }
+        }
+    }
+
+
+    // add Termination
+    public function addTermination(Request $request)
+    {
+        $validator = \Validator::make($request->all(), [
+            'token' => 'required',
+            'branch_id' => 'required',
+            'student_id' => 'required',
+            'date' => 'required',
+            'schedule_date_of_termination' => 'required',
+            'reason_for_transfer' => 'required',
+            'transfer_destination_school_name' => 'required',
+            'transfer_destination_tel' => 'required',
+            'parent_phone_number_after_transfer' => 'required',
+            'parent_email_address_after_transfer' => 'required',
+            'parent_address_after_transfer' => 'required',
+        ]);
+
+        //    return $request;
+        if (!$validator->passes()) {
+            return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
+        } else {
+
+            // create new connection
+            $conn = $this->createNewConnection($request->branch_id);
+
+            if ($conn->table('termination')->where('student_id', '=', $request->student_id)->count() > 0) {
+                return $this->send422Error('Student Termination Already Exist', ['error' => 'Student Termination Already Exist']);
+            } else {
+                $year = date("y");
+                $last_id = $conn->table('termination')->latest('id')->first();
+                $number = 0;
+                if ($last_id) {
+                    $number = $last_id->id;
+                }
+                $control_number = $year . sprintf("%04d", $number + 1);
+                // return $request;
+                $query = $conn->table('termination')->insertGetId([
+                    'student_id' => $request->student_id,
+                    'control_number' => $control_number,
+                    'date' => $request->date,
+                    'schedule_date_of_termination' => $request->schedule_date_of_termination,
+                    'reason_for_transfer' => $request->reason_for_transfer,
+                    'transfer_destination_school_name' => $request->transfer_destination_school_name,
+                    'transfer_destination_tel' => $request->transfer_destination_tel,
+                    'parent_phone_number_after_transfer' => $request->parent_phone_number_after_transfer,
+                    'parent_email_address_after_transfer' => $request->parent_email_address_after_transfer,
+                    'parent_address_after_transfer' => $request->parent_address_after_transfer,
+                    'termination_status' => $request->termination_status,
+                    'created_by' => $request->created_by,
+                    'created_at' => date("Y-m-d H:i:s")
+                ]);
+
+                // send Termination notifications
+
+                $user = User::where([
+                    ['branch_id', '=', $request->branch_id],
+                    ['role_id', '=', 2]
+                ])->get();
+                // return $user;
+
+                $student_name = $conn->table('students as s')
+                    ->select(DB::raw("CONCAT(s.first_name, ' ', s.last_name) as name"))
+                    ->where('s.id', $request->student_id)->first();
+
+                $parent_name = $conn->table('parent as p')
+                    ->select(DB::raw("CONCAT(p.first_name, ' ', p.last_name) as name"))
+                    ->where('p.id', $request->created_by)->first();
+
+                $termination = [];
+                $termination['status'] = "Applied";
+                $termination['student_name'] = $student_name->name;
+                $termination['parent_name'] = $parent_name->name;
+                $details = [
+                    'branch_id' => $request->branch_id,
+                    'parent_id' => $request->created_by,
+                    'termination_id' => $query,
+                    'termination' => $termination
+                ];
+                // notifications sent
+                Notification::send($user, new ParentTermination($details));
+            }
+
+            $success = [];
+            if (!$query) {
+                return $this->send500Error('Something went wrong.', ['error' => 'Something went wrong']);
+            } else {
+                return $this->successResponse($success, 'Termination has been successfully saved');
+            }
+        }
+    }
+    // get Terminations 
+    public function getTerminationList(Request $request)
+    {
+
+        $validator = \Validator::make($request->all(), [
+            'token' => 'required',
+            'branch_id' => 'required',
+        ]);
+
+        if (!$validator->passes()) {
+            return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
+        } else {
+
+            // create new connection
+            $conn = $this->createNewConnection($request->branch_id);
+            // get data
+            $parent_id = $request->parent_id;
+            $terminationDetails = $conn->table('termination as t')->select('t.*', 'ay.name as academic_year', 's.gender', DB::raw("CONCAT(s.first_name_english, ' ', s.last_name_english) as name_english"), DB::raw("CONCAT(s.first_name, ' ', s.last_name) as name"), 'c.name as class_name', 'sc.name as section_name')
+                ->leftJoin('students as s', 's.id', '=', 't.student_id')
+                ->leftJoin('enrolls as e', 'e.student_id', '=', 's.id')
+                ->leftJoin('classes as c', 'e.class_id', '=', 'c.id')
+                ->leftJoin('sections as sc', 'e.section_id', '=', 'sc.id')
+                ->leftJoin('academic_year as ay', 'e.academic_session_id', '=', 'ay.id')
+                ->where('e.active_status', '=', '0')
+                ->when($parent_id, function ($query, $parent_id) {
+                    return $query->where('t.created_by', $parent_id);
+                })->get()->toArray();
+
+            // $groupDetails = $conn->table('termination')->get()->toArray();
+            return $this->successResponse($terminationDetails, 'Termination record fetch successfully');
+        }
+    }
+    // get Termination row details
+    public function getTerminationDetails(Request $request)
+    {
+
+        $validator = \Validator::make($request->all(), [
+            'id' => 'required',
+            'branch_id' => 'required',
+            'token' => 'required',
+        ]);
+
+        if (!$validator->passes()) {
+            return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
+        } else {
+            // create new connection
+            $conn = $this->createNewConnection($request->branch_id);
+            // get data
+            $id = $request->id;
+            $terminationDetails = $conn->table('termination as t')->select('t.*', DB::raw("CONCAT(s.first_name_english, ' ', s.last_name_english) as name_english"), DB::raw("CONCAT(s.first_name, ' ', s.last_name) as name"), 'c.name as class_name', 'sc.name as section_name')
+                ->leftJoin('students as s', 's.id', '=', 't.student_id')
+                ->leftJoin('enrolls as e', 'e.student_id', '=', 's.id')
+                ->leftJoin('classes as c', 'e.class_id', '=', 'c.id')
+                ->leftJoin('sections as sc', 'e.section_id', '=', 'sc.id')
+                ->where('t.id', $id)->first();
+            $terminationDetails->today_date =  now()->format('Y-m-d');
+            return $this->successResponse($terminationDetails, 'Termination row fetch successfully');
+        }
+    }
+    // update Termination
+    public function updateTermination(Request $request)
+    {
+        $id = $request->id;
+        $validator = \Validator::make($request->all(), [
+            'token' => 'required',
+            'branch_id' => 'required',
+            'student_id' => 'required',
+            'control_number' => 'required',
+            'date' => 'required',
+            'schedule_date_of_termination' => 'required',
+            'reason_for_transfer' => 'required',
+            'transfer_destination_school_name' => 'required',
+            'transfer_destination_tel' => 'required',
+            'parent_phone_number_after_transfer' => 'required',
+            'parent_email_address_after_transfer' => 'required',
+            'parent_address_after_transfer' => 'required',
+        ]);
+
+        //    return $request;
+        if (!$validator->passes()) {
+            return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
+        } else {
+
+            // create new connection
+            $conn = $this->createNewConnection($request->branch_id);
+            $query = $conn->table('termination')->where('id', $id)->update([
+                'student_id' => $request->student_id,
+                'control_number' => $request->control_number,
+                'date' => $request->date,
+                'schedule_date_of_termination' => $request->schedule_date_of_termination,
+                'reason_for_transfer' => $request->reason_for_transfer,
+                'transfer_destination_school_name' => $request->transfer_destination_school_name,
+                'transfer_destination_tel' => $request->transfer_destination_tel,
+                'parent_phone_number_after_transfer' => $request->parent_phone_number_after_transfer,
+                'parent_email_address_after_transfer' => $request->parent_email_address_after_transfer,
+                'parent_address_after_transfer' => $request->parent_address_after_transfer,
+
+                'school_fees_payment_status' => $request->school_fees_payment_status,
+                'termination_status' => $request->termination_status,
+                'delete_google_address' => $request->delete_google_address,
+                'remarks' => $request->remarks,
+                'student_status' => $request->student_status,
+                'date_of_termination' => $request->date_of_termination,
+                'updated_at' => date("Y-m-d H:i:s")
+            ]);
+
+            // return $request;
+            if ($request->termination_notification == "Yes") {
+                // send Termination notifications
+
+                $user = User::where([
+                    ['branch_id', '=', $request->branch_id],
+                    ['role_id', '=', 2]
+                ])->get();
+                // return $user;
+
+                $student_name = $conn->table('students as s')
+                    ->select(DB::raw("CONCAT(s.first_name, ' ', s.last_name) as name"))
+                    ->where('s.id', $request->student_id)->first();
+
+                $parent_name = $conn->table('parent as p')
+                    ->select(DB::raw("CONCAT(p.first_name, ' ', p.last_name) as name"))
+                    ->where('p.id', $request->created_by)->first();
+
+                $termination = [];
+                $termination['status'] = "Date Changed";
+                $termination['student_name'] = $student_name->name;
+                $termination['parent_name'] = $parent_name->name;
+
+                $details = [
+                    'branch_id' => $request->branch_id,
+                    'parent_id' => $request->created_by,
+                    'termination_id' => $id,
+                    'termination' => $termination
+                ];
+                // return $details;
+                // notifications sent
+                Notification::send($user, new ParentTermination($details));
+            }
+
+            $success = [];
+            if (!$query) {
+                return $this->send500Error('Something went wrong.', ['error' => 'Something went wrong']);
+            } else {
+                return $this->successResponse($success, 'Termination has been successfully Updated');
+            }
+        }
+    }
+
+    // update Termination Admin
+    public function updateTerminationAdmin(Request $request)
+    {
+
+        $id = $request->id;
+        $validator = \Validator::make($request->all(), [
+            'token' => 'required',
+            'branch_id' => 'required',
+        ]);
+
+        //    return $request;
+        if (!$validator->passes()) {
+            return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
+        } else {
+
+            // create new connection
+            $conn = $this->createNewConnection($request->branch_id);
+
+            $query = $conn->table('termination')->where('id', $id)->update([
+                'school_fees_payment_status' => $request->school_fees_payment_status,
+                'termination_status' => $request->termination_status,
+                'delete_google_address' => $request->delete_google_address,
+                'remarks' => $request->remarks,
+                'student_status' => $request->student_status,
+                'date_of_termination' => $request->date_of_termination,
+                'updated_at' => date("Y-m-d H:i:s")
+            ]);
+
+            if ($request->termination_notification == "Yes") {
+                // send Termination notifications
+
+                $termination_info = $conn->table('termination')->where('id', $id)->first();
+                $user = User::where([
+                    ['branch_id', '=', $request->branch_id],
+                    ['role_id', '=', 5],
+                    ['user_id', '=', $termination_info->created_by]
+                ])->get();
+
+
+                $student_name = $conn->table('students as s')
+                    ->select(DB::raw("CONCAT(s.first_name, ' ', s.last_name) as name"))
+                    ->where('s.id', $termination_info->student_id)->first();
+
+                $termination = [];
+                $termination['status'] = "Approved";
+                $termination['student_name'] = $student_name->name;
+                $termination['date'] = $request->date_of_termination;
+
+                $details = [
+                    'branch_id' => $request->branch_id,
+                    'parent_id' => $request->created_by,
+                    'termination_id' => $id,
+                    'termination' => $termination
+                ];
+                // return $details;
+                // notifications sent
+                Notification::send($user, new AdminTermination($details));
+                $email = 'rajesh@aibots.my';
+
+                $data = array(
+                    'student' => isset($student_name->name) ? $student_name->name : "",
+                    'date' => isset($request->date_of_termination) ? $request->date_of_termination : "",
+                );
+                // return $data;
+                Mail::send('auth.email_termination', $data, function ($message) use ($email) {
+                    $message->to($email, 'Parent')->subject('Termination Approval');
+                    $message->from("askyourquery@paxsuzen.com", 'Termination');
+                });
+            }
+            $success = [];
+            if (!$query) {
+                return $this->send500Error('Something went wrong.', ['error' => 'Something went wrong']);
+            } else {
+                return $this->successResponse($success, 'Termination has been successfully Updated');
+            }
+        }
+    }
+    // delete Termination
+    public function deleteTermination(Request $request)
+    {
+        $validator = \Validator::make($request->all(), [
+            'token' => 'required',
+            'id' => 'required',
+            'branch_id' => 'required',
+        ]);
+        $termination_id = $request->id;
+        if (!$validator->passes()) {
+            return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
+        } else {
+            // create new connection
+            $conn = $this->createNewConnection($request->branch_id);
+            // get data
+            $query = $conn->table('termination')->where('id', $termination_id)->delete();
+            $success = [];
+            if ($query) {
+                return $this->successResponse($success, 'Termination have been deleted successfully');
+            } else {
+                return $this->send500Error('Something went wrong.', ['error' => 'Something went wrong']);
+            }
+        }
     }
 }
