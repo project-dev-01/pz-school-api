@@ -516,6 +516,8 @@ Route::group(['middleware' => ['auth:api', 'throttle:limit_per_user', 'logroute'
     Route::get('get_homework_list_dashboard', [ApiController::class, 'getHomeworkListDashboard']);
     Route::post('get_test_score_dashboard', [ApiController::class, 'getTestScoreDashboard']);
     // student leave apply
+    Route::get('student_leave/get_student_leave_types', [ApiControllerThree::class, 'getStudentLeaveTypes']);
+    Route::post('student_leave/get_reasons_by_leave_type', [ApiControllerThree::class, 'getReasonsByLeaveType']);
     Route::get('get_students_parentdashboard', [ApiController::class, 'get_studentsparentdashboard']);
     Route::post('std_leave_apply', [ApiController::class, 'student_leaveapply']);
     Route::get('get_student_leaves', [ApiController::class, 'get_studentleaves']);
@@ -526,6 +528,7 @@ Route::group(['middleware' => ['auth:api', 'throttle:limit_per_user', 'logroute'
 
     Route::post('teacher_leave_approve', [ApiController::class, 'teacher_leaveapprove']);
     Route::post('get_all_student_leaves', [ApiController::class, 'getAllStudentLeaves']);
+    Route::post('view_student_leave_details_row', [ApiControllerThree::class, 'viewStudentLeaveDetailsRow']);
 
     Route::get('get_birthday_calendor_teacher', [ApiController::class, 'getBirthdayCalendorTeacher']);
     Route::get('get_birthday_calendor_admin', [ApiController::class, 'getBirthdayCalendorAdmin']);
@@ -581,7 +584,7 @@ Route::group(['middleware' => ['auth:api', 'throttle:limit_per_user', 'logroute'
     Route::post('employee-leave/leave_approval_history_by_staff', [ApiController::class, 'leaveApprovalHistoryByStaff']);
     Route::post('employee-leave/leave_details', [ApiController::class, 'staffLeaveDetails']);
     Route::post('employee-leave/leave_taken_history', [ApiController::class, 'staffLeaveTakenHist']);
-
+    Route::post('employee-leave/leave_taken_history_by_staff', [ApiController::class, 'leaveTakenHistByStf']);
     //attendance Routes
     Route::get('attendance/employee_list', [ApiController::class, 'getEmployeeAttendanceList']);
     Route::post('attendance/employee_add', [ApiController::class, 'addEmployeeAttendance']);
