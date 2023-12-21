@@ -667,6 +667,8 @@ Route::group(['middleware' => ['auth:api', 'throttle:limit_per_user', 'logroute'
     Route::post('importcsv/timetable', [ApiControllerOne::class, 'importCsvTimetable']);
     // import add exam timetable details in csv
     Route::post('importcsv/exam_timetable', [ApiControllerOne::class, 'addExamTimetable']);
+    //import expense details in csv
+    Route::post('importcsv/expense', [ImportController::class, 'importCsvExpense']);
 
     // exam results routes
     // by class
@@ -845,6 +847,9 @@ Route::group(['middleware' => ['auth:api', 'throttle:limit_per_user', 'logroute'
     Route::post('fees/active_tab_details', [ApiControllerOne::class, 'feesActiveTabDetails']);
     Route::post('fees/get_pay_mode_id', [ApiControllerOne::class, 'getPayModeID']);
     // fees 
+    Route::post('fees/expense/export', [ApiControllerOne::class, 'feesExpenseExport']);
+    Route::post('fees/get_fees_expense_students', [ApiControllerOne::class, 'getFeesExpenseStudents']);
+    Route::post('fees/expense/update', [ApiControllerOne::class, 'feesExpenseUpdate']);
     Route::post('fees/get_fees_allocated_students', [ApiControllerOne::class, 'getFeesAllocatedStudents']);
     Route::post('fees/fees-details', [ApiControllerOne::class, 'getFeesDetails']);
     Route::post('fees/delete', [ApiControllerOne::class, 'deleteFeesDetails']);

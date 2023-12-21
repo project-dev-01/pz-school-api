@@ -5844,6 +5844,123 @@ class ApiControllerOne extends BaseController
             return $this->successResponse($studentData, 'Fees Type row fetch successfully');
         }
     }
+    // get fees expense
+    public function getFeesExpenseStudents(Request $request)
+    {
+
+        $validator = \Validator::make($request->all(), [
+            'branch_id' => 'required',
+            'class_id' => 'required',
+            'section_id' => 'required',
+            'academic_session_id' => 'required'
+        ]);
+
+        if (!$validator->passes()) {
+            return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
+        } else {
+            // create new connection
+            $conn = $this->createNewConnection($request->branch_id);
+            // get data
+            $studentData = $conn->table('enrolls as e')
+                ->select(
+                    'e.student_id',
+                    DB::raw('CONCAT(st.first_name, " ", st.last_name) as name'),
+                    'st.email',
+                    'st.photo',
+                    'st.roll_no'
+                )
+                // ->join('enrolls as en', 'en.student_id', '=', 'fa.student_id')
+                ->leftJoin('students as st', 'e.student_id', '=', 'st.id')
+                ->where([
+                    ['e.class_id', '=', $request->class_id],
+                    ['e.section_id', '=', $request->section_id],
+                    // ['e.department_id', '=', $request->department_id],
+                    ['e.academic_session_id', '=', $request->academic_session_id]
+                ])
+                ->groupBy('e.student_id')
+                ->get()->toArray();
+                // dd($studentData);
+            $arrData = [];
+            if (!empty($studentData)) {
+                foreach ($studentData as $key => $value) {
+                    $object = new \stdClass();
+                    $object->student_id = $value->student_id;
+                    $object->academic_year = $request->academic_session_id;
+                    $object->email = $value->email;
+                    $object->name = $value->name;
+                    $object->photo = $value->photo;
+                    $object->roll_no = $value->roll_no;
+                    $semester = $conn->table('fees_expense as fe')->where([
+                        ['fe.student_id', '=', $value->student_id],
+                        ['fe.academic_year', '=', $request->academic_session_id]
+                    ])->first();
+                    $object->id = isset($semester->id) ? $semester->id : null;
+                    $object->semester_1 = isset($semester->semester_1) ? $semester->semester_1 : null;
+                    $object->semester_2 = isset($semester->semester_2) ? $semester->semester_2 : null;
+                    $object->semester_3 = isset($semester->semester_3) ? $semester->semester_3 : null;
+                    
+                    array_push($arrData, $object);
+                }
+            }
+            return $this->successResponse($arrData, 'get student details fetch successfully');
+        }
+    }
+    // fees Expense Update
+    public function feesExpenseUpdate(Request $request)
+    {
+        $id = $request->id;
+        $validator = \Validator::make($request->all(), [
+            'student_id' => 'required',
+            'branch_id' => 'required',
+            'token' => 'required',
+        ]);
+
+        if (!$validator->passes()) {
+            return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
+        } else {
+
+            // create new connection
+            $conn = $this->createNewConnection($request->branch_id);
+            // check exist name
+            
+            $value = "";
+            if($request->semester_1){
+                $name= "semester_1";
+                $value = $request->semester_1;
+            }else if($request->semester_2){
+                $name= "semester_2";
+                $value = $request->semester_2;
+            }else if($request->semester_3){
+                $name= "semester_3";
+                $value = $request->semester_3;
+            }
+
+            $data = [
+                'student_id' => $request->student_id,
+                'academic_year' => $request->academic_year,
+                $name => $value,
+                'created_at' => date("Y-m-d H:i:s")
+            ];
+            
+            if ($conn->table('fees_expense')->where('id', '=', $id)->count() > 0) {
+                
+                // return $request;
+                $query = $conn->table('fees_expense')->where('id', $id)->update([
+                    $name => $value,
+                    'updated_at' => date("Y-m-d H:i:s")
+                ]);
+            } else {
+                // update data
+                $query = $conn->table('fees_expense')->insert($data);
+            }
+            $success = [];
+            if ($query) {
+                return $this->successResponse($success, 'Fees Expense Details have Been updated');
+            } else {
+                return $this->send500Error('Something went wrong.', ['error' => 'Something went wrong']);
+            }
+        }
+    }
     // get fees
     public function getFeesAllocatedStudents(Request $request)
     {
@@ -9666,6 +9783,62 @@ class ApiControllerOne extends BaseController
                 ])
                 ->get();
             return $this->successResponse($success, 'grade list by department fetch successfully');
+        }
+    }
+
+    public function feesExpenseExport(Request $request)
+    {
+        // return 1;
+        $validator = \Validator::make($request->all(), [
+            'branch_id' => 'required',
+            'token' => 'required',
+            'class_id' => 'required',
+            'section_id' => 'required',
+            'department_id' => '',
+        ]);
+        if (!$validator->passes()) {
+            return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
+        } else {
+            
+            $conn = $this->createNewConnection($request->branch_id);
+        $studentData = $conn->table('enrolls as e')
+                ->select(
+                    'e.student_id',
+                    DB::raw('CONCAT(st.first_name, " ", st.last_name) as name'),
+                    'st.email',
+                    'st.photo',
+                    'st.roll_no'
+                )
+                // ->join('enrolls as en', 'en.student_id', '=', 'fa.student_id')
+                ->leftJoin('students as st', 'e.student_id', '=', 'st.id')
+                ->where([
+                    ['e.class_id', '=', $request->class_id],
+                    ['e.section_id', '=', $request->section_id],
+                    // ['e.department_id', '=', $request->department_id],
+                    ['e.academic_session_id', '=', $request->academic_session_id]
+                ])
+                ->groupBy('e.student_id')
+                ->get()->toArray();
+                // dd($studentData);
+            $arrData = [];
+            if (!empty($studentData)) {
+                foreach ($studentData as $key => $value) {
+                    $object = new \stdClass();
+                    $object->name = $value->name;
+                    $object->roll_no = $value->roll_no;
+                    $semester = $conn->table('fees_expense as fe')->where([
+                        ['fe.student_id', '=', $value->student_id],
+                        ['fe.academic_year', '=', $request->academic_session_id]
+                    ])->first();
+                    $object->semester_1 = isset($semester->semester_1) ? $semester->semester_1 : "N/A";
+                    $object->semester_2 = isset($semester->semester_2) ? $semester->semester_2 : "N/A";
+                    $object->semester_3 = isset($semester->semester_3) ? $semester->semester_3 : "N/A";
+                    
+                    array_push($arrData, $object);
+                }
+            }            
+            $details['expense'] = $arrData;
+            return $this->successResponse($details, 'Fees Expense record fetch successfully');
         }
     }
 }

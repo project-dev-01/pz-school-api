@@ -21050,19 +21050,6 @@ $query->school_roleid=$request->school_roleid;
                     'last_date_of_withdrawal' => $request->last_date_of_withdrawal,
                     'created_at' => date("Y-m-d H:i:s")
                 ]);
-                $email =  $request->verify_email;
-                $link = $request->url . '/application/email/' . $email_token;
-                if ($email) {
-                    $data = array('link' => $link, 'name' => $request->first_name . ' ' . $request->last_name);
-                    Mail::send('auth.mail', $data, function ($message) use ($email) {
-                        $message->to("rajesh@aibots.my", 'Parent')->subject('Email Verification');
-                        $message->from("askyourquery@paxsuzen.com", 'Email Verification');
-                    });
-                    // Mail::send('auth.mail', $data, function ($message) use ($email) {
-                    //     $message->to("rajesh@aibots.my", 'User')->subject('Email Verification');
-                    //     $message->from(env('MAIL_FROM_ADDRESS'), env('MAIL_FROM_NAME'));
-                    // });
-                }
 
                 $success = [];
                 if (!$query) {
@@ -21125,14 +21112,14 @@ $query->school_roleid=$request->school_roleid;
                         $query->save();
                     }
 
+                    $email = $guest->email;
+                    // return $update;
                     $link = $request->url . '/guest/login';
-                    if ($query) {
-                        $data = array('link' => $link, 'email' => $email, 'password' => $guest->email);
-                        $query = Mail::send('auth.login_credential_mail', $data, function ($message) use ($email) {
-                            $message->to($email)->subject('Login Details');
-                            $message->from("askyourquery@paxsuzen.com", 'Email Verification');
-                        });
-                    }
+                    $data = array('link' => $link, 'email' => $email, 'password' => $guest->email);
+                    $query = Mail::send('auth.login_credentials_mail', $data, function ($message) use ($email) {
+                        $message->to($email, 'Guest')->subject('Login Details');
+                        $message->from("askyourquery@paxsuzen.com", 'Login Details');
+                    });
                 }
             } else {
                 return $this->send422Error('Link Has been Expired', ['error' => 'Link Has been Expired']);
@@ -24256,6 +24243,8 @@ $query->school_roleid=$request->school_roleid;
                 ])->get();
 
 
+                $parent = $conn->table('parent as p')->select("email")
+                            ->where('p.id', $termination_info->created_by)->first();
                 $student_name = $conn->table('students as s')
                     ->select(DB::raw("CONCAT(s.first_name, ' ', s.last_name) as name"))
                     ->where('s.id', $termination_info->student_id)->first();
@@ -24267,14 +24256,14 @@ $query->school_roleid=$request->school_roleid;
 
                 $details = [
                     'branch_id' => $request->branch_id,
-                    'parent_id' => $request->created_by,
+                    'parent_id' => $termination_info->created_by,
                     'termination_id' => $id,
                     'termination' => $termination
                 ];
                 // return $details;
                 // notifications sent
                 Notification::send($user, new AdminTermination($details));
-                $email = 'rajesh@aibots.my';
+                $email = $parent->email;
 
                 $data = array(
                     'student' => isset($student_name->name) ? $student_name->name : "",

@@ -908,4 +908,126 @@ class ImportController extends BaseController
         }
     }
     
+    // import Csv Expense
+    public function importCsvExpense(Request $request)
+    {
+        $validator = \Validator::make($request->all(), [
+            'branch_id' => 'required',
+            'file' => 'required'
+        ]);
+        if (!$validator->passes()) {
+            return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
+        } else {
+            // create new connection
+            $Connection = $this->createNewConnection($request->branch_id);
+
+            $filename = $request->fileName;
+            $extension = $request->extension;
+            $tempPath = $request->tempPath;
+            // $tempPath = "C:\xampp\tmp\phpB37E.tmp";
+            $fileSize = $request->fileSize;
+            $mimeType = $request->mimeType;
+           
+            // File Details 
+            header('Content-type: text/plain; charset=utf-8');
+            // Valid File Extensions
+            $valid_extension = array("csv");
+            // 2MB in Bytes
+            $maxFileSize = 2097152;
+            // return $maxFileSize;
+            
+            // dd($valid_extension);
+            // Check file extension
+            if (in_array(strtolower($extension), $valid_extension)) {
+                // dd($request);
+                // Check file size
+                if ($fileSize <= $maxFileSize) {
+                    // File upload location
+                    $path = base_path().'/public/' . $request->branch_id . '/uploads/';
+                    $base64 = base64_decode($request->file);
+                    File::ensureDirectoryExists($path);
+                    $file = $path . $filename;
+                    $picture = file_put_contents($file, $base64);
+                    // Upload file
+                    // Import CSV to Database
+                    $filepath = $path . "/" . $filename;
+                    // Reading file
+                    $file = fopen($filepath, "r");
+                    $importData_arr = array();
+                    $i = 0;
+                    while (($filedata = fgetcsv($file, 1000, ",")) !== FALSE) {
+                        $num = count($filedata);
+                        // Skip first row (Remove below comment if you want to skip the first row)
+                        if ($i == 0) {
+                            $i++;
+                            continue;
+                        }
+                        for ($c = 0; $c < $num; $c++) {
+                            $importData_arr[$i][] = $filedata[$c];
+                        }
+                        $i++;
+                    }
+                    // exit();
+                    fclose($file);
+                    // dummyemail
+                    $dummyInc = 1;
+                    // Insert to MySQL database
+                    foreach ($importData_arr as $importData) {
+                        // return $importData[1];
+                        
+                        $dummyInc++;
+                        // insert data
+                        $semester_1 =  isset($importData[4]) ? $importData[4] : "";
+                        $semester_2 =  isset($importData[5]) ? $importData[5] : "";
+                        $semester_3 =  isset($importData[6]) ? $importData[6] : "";
+
+
+                            $dynamic_row = [ 
+                                ['table_name'=>'academic_year','number'=>'1'],
+                            ];
+    
+                            $dynamic_data = [];
+                            foreach($dynamic_row as $row) {
+                                $number = $row['number'];
+                                $column = [
+                                    'token' => $request->token,
+                                    'branch_id' => $request->branch_id,
+                                    'name' => $importData[$number],
+                                    'table_name' => $row['table_name']
+                                ];
+                                $row = $this->getLikeColumnName($column);
+                                $dynamic_data[$number] = $row;
+                            }
+                            $student = $Connection->table('students')->select('id')->where('email', '=', $importData[3])->first();
+                            $studentId = $student->id;
+                            $student_data = [
+                                'semester_1' => $semester_1,
+                                'semester_2' => $semester_2,
+                                'semester_3' => $semester_3,
+                                'academic_year' => $dynamic_data[1],
+                                'student_id' => $studentId,
+                                'created_at' => date("Y-m-d H:i:s")
+                            ];
+                            if ($Connection->table('fees_expense')->where([['academic_year', '=', $dynamic_data[1]], ['student_id', '=', $studentId]])->count() < 1) {
+                                $Connection->table('fees_expense')->insertGetId($student_data);
+                            }else{
+                                $expense_id = $Connection->table('fees_expense')->where([['academic_year', '=', $dynamic_data[1]], ['student_id', '=', $studentId]])->first();
+                                $expense = $Connection->table('fees_expense')->where('id', $expense_id->id)->update($student_data);
+                            }
+                    }
+                    
+                    if (\File::exists($filepath)) {
+                        \File::delete($filepath);
+                    }
+                    return $this->successResponse([], 'Import Successful');
+                } else {
+                    return $this->send422Error('Validation error.', ['error' => 'File too large. File must be less than 2MB.']);
+                }
+            } else {
+                return $this->send422Error('Validation error.', ['error' => 'Invalid File Extension']);
+            }
+        }
+    }
+
+    
 }
