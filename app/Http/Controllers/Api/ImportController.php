@@ -54,7 +54,7 @@ class ImportController extends BaseController
                 // Check file size
                 if ($fileSize <= $maxFileSize) {
 
-                    $path = base_path().'/public/' . $request->branch_id . '/uploads/';
+                    $path = base_path() . '/public/' . $request->branch_id . '/uploads/';
                     $base64 = base64_decode($request->file);
                     File::ensureDirectoryExists($path);
                     $file = $path . $filename;
@@ -134,7 +134,7 @@ class ImportController extends BaseController
                             'role' => $role,
                             'confirm_password' => $confirm_password,
                         ];
-                    
+
                         $user_rules = [
                             'email' => 'required',
                             'first_name' => 'required',
@@ -143,24 +143,24 @@ class ImportController extends BaseController
                             'password' => 'required|min:6',
                             'confirm_password' => 'required|same:password|min:6'
                         ];
-                        $userValidator = \Validator::make( $user_data, $user_rules );
-                        if($userValidator->passes()) {
-                            
-                        
-                            $dynamic_row = [ 
-                                ['table_name'=>'religions','number'=>'5'],
-                                ['table_name'=>'races','number'=>'6'],
-                                ['table_name'=>'role','number'=>'18'],
-                                ['table_name'=>'staff_designations','number'=>'20'],
-                                ['table_name'=>'staff_departments','number'=>'21'],
-                                ['table_name'=>'staff_positions','number'=>'22'],
-                                ['table_name'=>'staff_categories','number'=>'24'],
-                                ['table_name'=>'qualifications','number'=>'25'],
-                                ['table_name'=>'stream_types','number'=>'26']
+                        $userValidator = \Validator::make($user_data, $user_rules);
+                        if ($userValidator->passes()) {
+
+
+                            $dynamic_row = [
+                                ['table_name' => 'religions', 'number' => '5'],
+                                ['table_name' => 'races', 'number' => '6'],
+                                ['table_name' => 'role', 'number' => '18'],
+                                ['table_name' => 'staff_designations', 'number' => '20'],
+                                ['table_name' => 'staff_departments', 'number' => '21'],
+                                ['table_name' => 'staff_positions', 'number' => '22'],
+                                ['table_name' => 'staff_categories', 'number' => '24'],
+                                ['table_name' => 'qualifications', 'number' => '25'],
+                                ['table_name' => 'stream_types', 'number' => '26']
                             ];
-    
+
                             $dynamic_data = [];
-                            foreach($dynamic_row as $row) {
+                            foreach ($dynamic_row as $row) {
                                 $number = $row['number'];
                                 $column = [
                                     'token' => $request->token,
@@ -171,7 +171,7 @@ class ImportController extends BaseController
                                 $row = $this->getLikeColumnName($column);
                                 $dynamic_data[$number] = $row;
                             }
-    
+
                             $employee_data = [
                                 'first_name' => $first_name,
                                 'last_name' => $last_name,
@@ -207,9 +207,9 @@ class ImportController extends BaseController
                                 'facebook_url' => $facebook_url,
                                 'linkedin_url' => $linkedin_url,
                                 'created_at' => date("Y-m-d H:i:s")
-                            ]; 
-                            
-                            if (DB::table('users')->where([['email', '=', $email],['branch_id', '=', $request->branch_id]])->count() < 1) {
+                            ];
+
+                            if (DB::table('users')->where([['email', '=', $email], ['branch_id', '=', $request->branch_id]])->count() < 1) {
                                 if ($Connection->table('staffs')->where('email', '=', $email)->count() < 1) {
                                     $staffId = $Connection->table('staffs')->insertGetId($employee_data);
 
@@ -229,12 +229,12 @@ class ImportController extends BaseController
                                         'account_no' => 'required',
                                         'ifsc_code' => 'required'
                                     ];
-                                    $bankValidator = \Validator::make( $bank_data, $bank_rules );
+                                    $bankValidator = \Validator::make($bank_data, $bank_rules);
                                     // add bank details
                                     if ($bankValidator->passes()) {
                                         $bank = $Connection->table('staff_bank_accounts')->insert($bank_data);
                                     }
-        
+
                                     if ($staffId) {
                                         $user = new User();
                                         $user->name = (isset($first_name) ? $first_name : "") . " " . (isset($last_name) ? $last_name : "");
@@ -248,11 +248,9 @@ class ImportController extends BaseController
                                         $query = $user->save();
                                     }
                                 }
-                            } 
-                            
-                            
+                            }
                         }
-                        
+
                         // check exist name
                         // if ($Connection->table($table)->where('name', '=', $name)->count() < 1) {
                         //     // insert data
@@ -319,7 +317,7 @@ class ImportController extends BaseController
             $tempPath = $request->tempPath;
             $fileSize = $request->fileSize;
             $mimeType = $request->mimeType;
-           
+
             // File Details 
             header('Content-type: text/plain; charset=utf-8');
             // Valid File Extensions
@@ -332,7 +330,7 @@ class ImportController extends BaseController
                 // Check file size
                 if ($fileSize <= $maxFileSize) {
                     // File upload location
-                    $path = base_path().'/public/' . $request->branch_id . '/uploads/';
+                    $path = base_path() . '/public/' . $request->branch_id . '/uploads/';
                     $base64 = base64_decode($request->file);
                     File::ensureDirectoryExists($path);
                     $file = $path . $filename;
@@ -389,7 +387,7 @@ class ImportController extends BaseController
                         $linkedin_url = $importData[25];
 
                         $role = "5";
-                        
+
                         $user_data = [
                             'email' => $email,
                             'first_name' => $first_name,
@@ -400,7 +398,7 @@ class ImportController extends BaseController
                             'role' => $role,
                             'confirm_password' => $confirm_password,
                         ];
-                    
+
                         $user_rules = [
                             'email' => 'required',
                             'occupation' => 'required',
@@ -411,16 +409,16 @@ class ImportController extends BaseController
                             'confirm_password' => 'required|same:password|min:6'
                         ];
 
-                        $userValidator = \Validator::make( $user_data, $user_rules );
-                        if($userValidator->passes()) {
-                            $dynamic_row = [ 
-                                ['table_name'=>'religions','number'=>'9'],
-                                ['table_name'=>'races','number'=>'10'],
-                                ['table_name'=>'educations','number'=>'11'],
+                        $userValidator = \Validator::make($user_data, $user_rules);
+                        if ($userValidator->passes()) {
+                            $dynamic_row = [
+                                ['table_name' => 'religions', 'number' => '9'],
+                                ['table_name' => 'races', 'number' => '10'],
+                                ['table_name' => 'educations', 'number' => '11'],
                             ];
-    
+
                             $dynamic_data = [];
-                            foreach($dynamic_row as $row) {
+                            foreach ($dynamic_row as $row) {
                                 $number = $row['number'];
                                 $column = [
                                     'token' => $request->token,
@@ -431,7 +429,7 @@ class ImportController extends BaseController
                                 $row = $this->getLikeColumnName($column);
                                 $dynamic_data[$number] = $row;
                             }
-    
+
                             $parent_data = [
                                 'first_name' => $first_name,
                                 'last_name' => $last_name,
@@ -459,7 +457,7 @@ class ImportController extends BaseController
                                 'status' => "0",
                                 'created_at' => date("Y-m-d H:i:s")
                             ];
-                            if (DB::table('users')->where([['email', '=', $email],['branch_id', '=', $request->branch_id]])->count() < 1) {
+                            if (DB::table('users')->where([['email', '=', $email], ['branch_id', '=', $request->branch_id]])->count() < 1) {
                                 if ($Connection->table('parent')->where('email', '=', $email)->count() < 1) {
                                     $parentId = $Connection->table('parent')->insertGetId($parent_data);
                                     if ($parentId) {
@@ -474,11 +472,11 @@ class ImportController extends BaseController
                                         $user->password = bcrypt($password);
                                         $query = $user->save();
                                     }
-                                } 
+                                }
                             }
                         }
                     }
-                    
+
                     if (\File::exists($filepath)) {
                         \File::delete($filepath);
                     }
@@ -505,7 +503,7 @@ class ImportController extends BaseController
         } else {
             // create new connection
             $Connection = $this->createNewConnection($request->branch_id);
-            
+
             $filename = $request->fileName;
             $extension = $request->extension;
             $tempPath = $request->tempPath;
@@ -521,9 +519,9 @@ class ImportController extends BaseController
                 // Check file size
                 if ($fileSize <= $maxFileSize) {
 
-                    
+
                     // File upload location
-                    $path = base_path().'/public/' . $request->branch_id . '/uploads/';
+                    $path = base_path() . '/public/' . $request->branch_id . '/uploads/';
                     $base64 = base64_decode($request->file);
                     File::ensureDirectoryExists($path);
                     $file = $path . $filename;
@@ -590,7 +588,7 @@ class ImportController extends BaseController
                             'role' => $role,
                             'confirm_password' => $confirm_password,
                         ];
-                    
+
                         $user_rules = [
                             'email' => 'required',
                             'first_name' => 'required',
@@ -600,26 +598,26 @@ class ImportController extends BaseController
                             'confirm_password' => 'required|same:password|min:6'
                         ];
 
-                        $userValidator = \Validator::make( $user_data, $user_rules );
-                        if($userValidator->passes()) {
-                            
-                        
-                            $dynamic_row = [ 
-                                ['table_name'=>'religions','number'=>'8'],
-                                ['table_name'=>'races','number'=>'9'],
-                                ['table_name'=>'academic_year','number'=>'17'],
-                                ['table_name'=>'classes','number'=>'21'],
-                                ['table_name'=>'sections','number'=>'22'],
-                                ['table_name'=>'session','number'=>'23'],
-                                ['table_name'=>'semester','number'=>'24'],
-                                ['table_name'=>'parent','number'=>'28'],
-                                ['table_name'=>'parent','number'=>'29'],
-                                ['table_name'=>'parent','number'=>'30'],
-                                ['table_name'=>'relations','number'=>'31'],
+                        $userValidator = \Validator::make($user_data, $user_rules);
+                        if ($userValidator->passes()) {
+
+
+                            $dynamic_row = [
+                                ['table_name' => 'religions', 'number' => '8'],
+                                ['table_name' => 'races', 'number' => '9'],
+                                ['table_name' => 'academic_year', 'number' => '17'],
+                                ['table_name' => 'classes', 'number' => '21'],
+                                ['table_name' => 'sections', 'number' => '22'],
+                                ['table_name' => 'session', 'number' => '23'],
+                                ['table_name' => 'semester', 'number' => '24'],
+                                ['table_name' => 'parent', 'number' => '28'],
+                                ['table_name' => 'parent', 'number' => '29'],
+                                ['table_name' => 'parent', 'number' => '30'],
+                                ['table_name' => 'relations', 'number' => '31'],
                             ];
-    
+
                             $dynamic_data = [];
-                            foreach($dynamic_row as $row) {
+                            foreach ($dynamic_row as $row) {
                                 $number = $row['number'];
                                 $column = [
                                     'token' => $request->token,
@@ -662,8 +660,8 @@ class ImportController extends BaseController
                                 'created_at' => date("Y-m-d H:i:s")
                             ];
                             // return $dynamic_data;
-                            
-                            if (DB::table('users')->where([['email', '=', $email],['branch_id', '=', $request->branch_id]])->count() < 1) {
+
+                            if (DB::table('users')->where([['email', '=', $email], ['branch_id', '=', $request->branch_id]])->count() < 1) {
                                 if ($Connection->table('students')->where('email', '=', $email)->count() < 1) {
                                     $studentId = $Connection->table('students')->insertGetId($student_data);
 
@@ -691,10 +689,10 @@ class ImportController extends BaseController
                                         $query = $user->save();
                                     }
                                 }
-                            } 
+                            }
                         }
                     }
-                    
+
                     if (\File::exists($filepath)) {
                         \File::delete($filepath);
                     }
@@ -715,27 +713,334 @@ class ImportController extends BaseController
         $conn = $this->createNewConnection($request['branch_id']);
         // get dat
         $table_name = $request['table_name'];
-        $name = explode(',',$request['name']);
-        if ($request['table_name']=="role") {
-            $data = DB::table('roles')->select(DB::raw("group_concat(id) as id"))->whereIn('role_name',$name)->get();
-        } else if ($request['table_name']=="parent") {
-            $data = $conn->table($table_name)->select("id")->whereIn('first_name',$name)->orWhereIn('last_name',$name)->get();
+        $name = explode(',', $request['name']);
+        if ($request['table_name'] == "role") {
+            $data = DB::table('roles')->select(DB::raw("group_concat(id) as id"))->whereIn('role_name', $name)->get();
+        } else if ($request['table_name'] == "parent") {
+            $data = $conn->table($table_name)->select("id")->whereIn('first_name', $name)->orWhereIn('last_name', $name)->get();
         } else {
-            $data = $conn->table($table_name)->select(DB::raw("group_concat(id) as id"))->whereIn('name',$name )->get();
+            $data = $conn->table($table_name)->select(DB::raw("group_concat(id) as id"))->whereIn('name', $name)->get();
         }
 
         // return $data;
         $response = "";
         if (!$data->isEmpty()) {
-            if($data[0]->id != null){
+            if ($data[0]->id != null) {
                 $response = $data[0]->id;
             }
         }
         return $response;
     }
+    public function importCsvExamMarks(Request $request)
+    {
+
+        $validator = \Validator::make($request->all(), [
+            'branch_id' => 'required',
+            'file' => 'required'
+        ]);
+        if (!$validator->passes()) {
+            return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
+        } else {
+            // create new connection
+            $Connection = $this->createNewConnection($request->branch_id);
+            // File Details 
+            $academic_session_id = $request->academic_session_id;
+            $department_id = $request->department_id;
+            $class_id = $request->class_id;
+            $section_id = $request->section_id;
+            $exam_id = $request->exam_id;
+            $subject_id = $request->subject_id;
+            $semester_id = $request->semester_id;
+            $session_id = $request->session_id;
+
+            $filename = $request->fileName;
+            $extension = $request->extension;
+            $tempPath = $request->tempPath;
+            $fileSize = $request->fileSize;
+            $mimeType = $request->mimeType;
+
+            header('Content-type: text/plain; charset=utf-8');
+            // Valid File Extensions
+            $valid_extension = array("csv");
+            // 2MB in Bytes
+            $maxFileSize = 2097152;
+            // Check file extension
+            if (in_array(strtolower($extension), $valid_extension)) {
+                // Check file size
+                if ($fileSize <= $maxFileSize) {
+
+                    $path = base_path() . '/public/' . $request->branch_id . '/uploads/';
+                    $base64 = base64_decode($request->file);
+                    File::ensureDirectoryExists($path);
+                    $file = $path . $filename;
+                    $picture = file_put_contents($file, $base64);
+                    // Upload file
+                    // Import CSV to Database
+                    $filepath = $path . "/" . $filename;
+                    // Reading file
+                    $file = fopen($filepath, "r");
+                    $importData_arr = array();
+                    $i = 0;
+                    while (($filedata = fgetcsv($file, 1000, ",")) !== FALSE) {
+                        $num = count($filedata);
+                        // Skip first row (Remove below comment if you want to skip the first row)
+                        if ($i == 0) {
+                            $i++;
+                            continue;
+                        }
+                        for ($c = 0; $c < $num; $c++) {
+                            $importData_arr[$i][] = $filedata[$c];
+                        }
+                        $i++;
+                    }
+                    // exit();
+                    fclose($file);
+                    // dummyemail
+
+
+                    $dummyInc = 1;
+                    // Insert to MySQL database
+                    foreach ($importData_arr as $importData) {
+
+                        $dummyInc++;
+
+                        $student_roll = $importData[1];
+                        $mark1 = $importData[4];
+                        $mark2 = $importData[5];
+                        $mark3 = $importData[6];
+                        $score = "";
+                        $points = "";
+                        $freetext =  "";
+                        $grade = "";
+                        $ranking = "";
+                        $memo = "";
+                        $pass_fail = "";
+                        $status = "present";
+                        $students = $Connection->table('students')->select('id', 'first_name', 'last_name')->where('id', '=', $student_roll)->first();
+                        $student_id = $students->id;
+                        // 'Knowledge & Skills' Get Paper ID,Grade_category,Pass or Fail Start
+                        $paper1 = $Connection->table('exam_papers')->select('id', 'grade_category')->where([
+                            ['class_id', '=', $class_id],
+                            ['subject_id', '=', $subject_id],
+                            ['paper_name', '=', 'Knowledge & Skills'],
+                            ['department_id', '=', $department_id],
+                            ['academic_session_id', '=', $academic_session_id]
+                        ])->first();
+                        $paper_id1 = $paper1->id;
+                        $grade_category1 = $paper1->grade_category;
+                        $grade_marks1 = $Connection->table('grade_marks')->select('grade', 'status')->where([
+                            ['grade_category', '=', $grade_category1],
+                            ['min_mark', '<=', $mark1],
+                            ['max_mark', '>=', $mark1]
+                        ])->first();
+                        $grade1 = $grade_marks1->grade;
+                        $pass_fail1 = $grade_marks1->status;
+                        // 'Knowledge & Skills' Get Paper ID ,Grade_category,Pass or Fail End
+                        // 'Thinking, Judgment, and Expression' Get Paper ID,Grade_category,Pass or Fail Start
+                        $paper2 = $Connection->table('exam_papers')->select('id', 'grade_category')->where([
+                            ['class_id', '=', $class_id],
+                            ['subject_id', '=', $subject_id],
+                            ['paper_name', '=', 'Thinking, Judgment, and Expression'],
+                            ['department_id', '=', $department_id],
+                            ['academic_session_id', '=', $academic_session_id]
+                        ])->first();
+                        $paper_id2 = $paper2->id;
+                        $grade_category2 = $paper2->grade_category;
+                        $grade_marks2 = $Connection->table('grade_marks')->select('grade', 'status')->where([
+                            ['grade_category', '=', $grade_category2],
+                            ['min_mark', '<=', $mark2],
+                            ['max_mark', '>=', $mark2]
+                        ])->first();
+                        $grade2 = $grade_marks2->grade;
+                        $pass_fail2 = $grade_marks2->status;
+                        // 'Thinking, Judgment, and Expression' Get Paper ID,Grade_category,Pass or Fail End
+                        // 'Attitude to proactive learning' Get Paper ID,Grade_category,Pass or Fail Start
+                        $paper3 = $Connection->table('exam_papers')->select('id', 'grade_category')->where([
+                            ['class_id', '=', $class_id],
+                            ['subject_id', '=', $subject_id],
+                            ['paper_name', '=', 'Attitude to proactive learning'],
+                            ['department_id', '=', $department_id],
+                            ['academic_session_id', '=', $academic_session_id]
+                        ])->first();
+                        $paper_id3 = $paper3->id;
+                        $grade_category3 = $paper3->grade_category;
+                        $grade_marks3 = $Connection->table('grade_marks')->select('grade', 'status')->where([
+                            ['grade_category', '=', $grade_category3],
+                            ['min_mark', '<=', $mark3],
+                            ['max_mark', '>=', $mark3]
+                        ])->first();
+                        $grade3 = $grade_marks3->grade;
+                        $pass_fail3 = $grade_marks3->status;
+                        // 'Attitude to proactive learning' Get Paper ID,Grade_category,Pass or Fail End
+
+                        // 'Knowledge & Skills' Insert Mark Start
+                        $arrayStudentMarks1 = array(
+                            'student_id' => $student_id,
+                            'class_id' => $class_id,
+                            'section_id' => $section_id,
+                            'subject_id' => $subject_id,
+                            'exam_id' => $exam_id,
+                            'paper_id' => $paper_id1,
+                            'semester_id' => $semester_id,
+                            'session_id' => $session_id,
+                            'grade_category' => $grade_category1,
+                            'score' => $mark1,
+                            'points' => $points,
+                            'freetext' => $freetext,
+                            'grade' => $grade1,
+                            'pass_fail' => $pass_fail1,
+                            'ranking' => $ranking,
+                            'status' => $status,
+                            'memo' => $memo,
+                            'academic_session_id' => $academic_session_id,
+                            'created_at' => date("Y-m-d H:i:s")
+                        );
+
+                        $row = $Connection->table('student_marks')->select('id')->where([
+                            ['class_id', '=', $class_id],
+                            ['section_id', '=', $section_id],
+                            ['subject_id', '=', $subject_id],
+                            ['student_id', '=', $student_id],
+                            ['exam_id', '=', $exam_id],
+                            ['semester_id', '=', $semester_id],
+                            ['session_id', '=', $session_id],
+                            ['paper_id', '=', $paper_id1],
+                            ['academic_session_id', '=', $academic_session_id]
+                        ])->first();
+                        if (isset($row->id)) {
+                            $Connection->table('student_marks')->where('id', $row->id)->update([
+                                'score' => $mark1,
+                                'points' => $points,
+                                'freetext' => $freetext,
+                                'grade' => $grade1,
+                                'ranking' => $ranking,
+                                'pass_fail' => $pass_fail1,
+                                'status' => $status,
+                                'memo' => $memo,
+                                'updated_at' => date("Y-m-d H:i:s")
+                            ]);
+                        } else {
+                            $Connection->table('student_marks')->insert($arrayStudentMarks1);
+                        }
+                        // 'Knowledge & Skills' Insert Mark End
+                        // 'Thinking, Judgment, and Expression' Insert Mark Start
+                        $arrayStudentMarks2 = array(
+                            'student_id' => $student_id,
+                            'class_id' => $class_id,
+                            'section_id' => $section_id,
+                            'subject_id' => $subject_id,
+                            'exam_id' => $exam_id,
+                            'paper_id' => $paper_id2,
+                            'semester_id' => $semester_id,
+                            'session_id' => $session_id,
+                            'grade_category' => $grade_category2,
+                            'score' => $mark2,
+                            'points' => $points,
+                            'freetext' => $freetext,
+                            'grade' => $grade2,
+                            'pass_fail' => $pass_fail2,
+                            'ranking' => $ranking,
+                            'status' => $status,
+                            'memo' => $memo,
+                            'academic_session_id' => $academic_session_id,
+                            'created_at' => date("Y-m-d H:i:s")
+                        );
+
+                        $row = $Connection->table('student_marks')->select('id')->where([
+                            ['class_id', '=', $class_id],
+                            ['section_id', '=', $section_id],
+                            ['subject_id', '=', $subject_id],
+                            ['student_id', '=', $student_id],
+                            ['exam_id', '=', $exam_id],
+                            ['semester_id', '=', $semester_id],
+                            ['session_id', '=', $session_id],
+                            ['paper_id', '=', $paper_id2],
+                            ['academic_session_id', '=', $academic_session_id]
+                        ])->first();
+                        if (isset($row->id)) {
+                            $Connection->table('student_marks')->where('id', $row->id)->update([
+                                'score' => $mark1,
+                                'points' => $points,
+                                'freetext' => $freetext,
+                                'grade' => $grade2,
+                                'ranking' => $ranking,
+                                'pass_fail' => $pass_fail2,
+                                'status' => $status,
+                                'memo' => $memo,
+                                'updated_at' => date("Y-m-d H:i:s")
+                            ]);
+                        } else {
+                            $Connection->table('student_marks')->insert($arrayStudentMarks2);
+                        }
+                        // 'Thinking, Judgment, and Expression' Insert Mark End
+                        // 'Attitude to proactive learning' Insert Mark Start
+                        $arrayStudentMarks3 = array(
+                            'student_id' => $student_id,
+                            'class_id' => $class_id,
+                            'section_id' => $section_id,
+                            'subject_id' => $subject_id,
+                            'exam_id' => $exam_id,
+                            'paper_id' => $paper_id3,
+                            'semester_id' => $semester_id,
+                            'session_id' => $session_id,
+                            'grade_category' => $grade_category3,
+                            'score' => $mark3,
+                            'points' => $points,
+                            'freetext' => $freetext,
+                            'grade' => $grade3,
+                            'pass_fail' => $pass_fail3,
+                            'ranking' => $ranking,
+                            'status' => $status,
+                            'memo' => $memo,
+                            'academic_session_id' => $academic_session_id,
+                            'created_at' => date("Y-m-d H:i:s")
+                        );
+
+                        $row = $Connection->table('student_marks')->select('id')->where([
+                            ['class_id', '=', $class_id],
+                            ['section_id', '=', $section_id],
+                            ['subject_id', '=', $subject_id],
+                            ['student_id', '=', $student_id],
+                            ['exam_id', '=', $exam_id],
+                            ['semester_id', '=', $semester_id],
+                            ['session_id', '=', $session_id],
+                            ['paper_id', '=', $paper_id3],
+                            ['academic_session_id', '=', $academic_session_id]
+                        ])->first();
+                        if (isset($row->id)) {
+                            $Connection->table('student_marks')->where('id', $row->id)->update([
+                                'score' => $mark3,
+                                'points' => $points,
+                                'freetext' => $freetext,
+                                'grade' => $grade3,
+                                'ranking' => $ranking,
+                                'pass_fail' => $pass_fail3,
+                                'status' => $status,
+                                'memo' => $memo,
+                                'updated_at' => date("Y-m-d H:i:s")
+                            ]);
+                        } else {
+                            $Connection->table('student_marks')->insert($arrayStudentMarks3);
+                        }
+                        // 'Attitude to proactive learning' Insert Mark End
+
+
+                    }
+                    if (\File::exists($filepath)) {
+                        \File::delete($filepath);
+                    }
+                    return $this->successResponse([], 'Student Marks Import Successful');
+                } else {
+                    return $this->send422Error('Validation error.', ['error' => 'File too large. File must be less than 2MB.']);
+                }
+            } else {
+                return $this->send422Error('Validation error.', ['error' => 'Invalid File Extension']);
+            }
+        }
+    }
     public function getPromotionDataBulk(Request $request)
     {
-        
+
         $validator = \Validator::make($request->all(), [
             'branch_id' => 'required',
             'file' => 'required'
@@ -761,9 +1066,9 @@ class ImportController extends BaseController
                 // Check file size
                 if ($fileSize <= $maxFileSize) {
 
-                    
+
                     // File upload location
-                    $path = base_path().'/public/' . $request->branch_id . '/uploads/';
+                    $path = base_path() . '/public/' . $request->branch_id . '/uploads/';
                     $base64 = base64_decode($request->file);
                     File::ensureDirectoryExists($path);
                     $file = $path . $filename;
@@ -791,110 +1096,110 @@ class ImportController extends BaseController
                     fclose($file);
                     // dummyemail
                     $dummyInc = 1;
-                   
+
                     // Insert to MySQL database
-                    foreach ($importData_arr as $importData) 
-                    {
+                    foreach ($importData_arr as $importData) {
                         $dummyInc++;
-                       //  dd($importData);
+                        //  dd($importData);
                         $student_name = $importData[1];
                         $student_number = $importData[2];
                         $current_attendance_no = $importData[3];
                         $promoted_attendance_no = $importData[10];
 
-                        $role = "6";   
-                        
-                            $dynamic_row = [ 
-                                ['table_name'=>'staff_departments','number'=>'5'],
-                                ['table_name'=>'academic_year','number'=>'4'],
-                                ['table_name'=>'classes','number'=>'6'],
-                                ['table_name'=>'sections','number'=>'7'],
-                                ['table_name'=>'session','number'=>'9'],
-                                ['table_name'=>'semester','number'=>'8'],
-                                ['table_name'=>'staff_departments','number'=>'12'],
-                                ['table_name'=>'academic_year','number'=>'11'],
-                                ['table_name'=>'classes','number'=>'13'],
-                                ['table_name'=>'sections','number'=>'14'],
-                                ['table_name'=>'session','number'=>'16'],
-                                ['table_name'=>'semester','number'=>'15'],
-                            ];
-    
-                            $dynamic_data = [];
-                            foreach($dynamic_row as $row) {
-                                $number = $row['number'];
-                                $column = [
-                                    'token' => $request->token,
-                                    'branch_id' => $request->branch_id,
-                                    'name' => $importData[$number],
-                                    'table_name' => $row['table_name']
-                                ];
-                                // return $column;
-                                $row = $this->getLikeColumnName($column);
-                                $dynamic_data[$number] = $row;
-                            }
-                               
-                                $studentId = $Connection->table('students')->select('id')->where('roll_no', '=', $student_number)->first();
-                               
-                                if (!empty($studentId)) 
-                                {
-                                   
-                                    $classDetails = [
-                                        'student_id' =>  $studentId->id,
-                                        'department_id' => $dynamic_data[5],
-                                        'class_id' => $dynamic_data[6],
-                                        'section_id' => $dynamic_data[7],
-                                        'academic_session_id' => $dynamic_data[4],
-                                        'session_id' => isset($dynamic_data[9]) ? $dynamic_data[9] : 0,
-                                        'semester_id' => isset($dynamic_data[8]) ? $dynamic_data[8] : 0,
-                                        'attendance_no' => $current_attendance_no,
-                                        'promoted_department_id' => $dynamic_data[12],
-                                        'promoted_class_id' => $dynamic_data[13],
-                                        'promoted_section_id' => $dynamic_data[14],
-                                        'promoted_academic_session_id' => $dynamic_data[11],
-                                        'roll' => $student_number,
-                                        'promoted_session_id' => isset($dynamic_data[16]) ? $dynamic_data[16] : 0,
-                                        'promoted_semester_id' => isset($dynamic_data[15]) ? $dynamic_data[15] : 0,
-                                        'promoted_attendance_no' => $promoted_attendance_no
-                                    ];
-                                    
-                                    // Insert the record and get the last inserted ID
-                                        $insertedId = $Connection->table('temp_promotion')->insertGetId($classDetails);
-                                       
-                                        // Retrieve the inserted data using the last inserted ID
-                                        $insertedRecord = $Connection->table('temp_promotion as tp')
-                                        ->select("tp.attendance_no",
-                                            "st1.first_name",
-                                            "tp.roll",
-                                            "d1.name as deptName",
-                                            "c1.name as className",
-                                            "s1.name as sectionName", 
-                                            "sem1.name as semName",
-                                            "ses1.name as sesName",
-                                            "d2.name as deptPromotionName",
-                                            "c2.name as classPromotionName",
-                                            "s2.name as sectionPromotionName",
-                                            "sem2.name as semPromotionName", 
-                                            "ses2.name as sesPromotionName")
-                                        ->leftJoin('classes as c1', 'c1.id', '=', 'tp.class_id')
-                                        ->leftJoin('classes as c2', 'c2.id', '=', 'tp.promoted_class_id')
-                                        ->leftJoin('sections as s1', 's1.id', '=', 'tp.section_id')
-                                        ->leftJoin('sections as s2', 's2.id', '=', 'tp.promoted_section_id')
-                                        ->leftJoin('staff_departments as d1', 'd1.id', '=', 'tp.department_id')
-                                        ->leftJoin('staff_departments as d2', 'd2.id', '=', 'tp.promoted_department_id')
-                                        ->leftJoin('students as st1', 'st1.id', '=', 'tp.student_id')
-                                        ->leftJoin('semester as sem1', 'sem1.id', '=', 'tp.semester_id')
-                                        ->leftJoin('semester as sem2', 'sem2.id', '=', 'tp.promoted_semester_id')
-                                        ->leftJoin('session as ses1', 'ses1.id', '=', 'tp.session_id')
-                                        ->leftJoin('session as ses2', 'ses2.id', '=', 'tp.promoted_session_id')
-                                        ->where('tp.id',"=" ,$insertedId)
-                                        ->get()->toArray();
+                        $role = "6";
 
-                                        // Add the inserted data to the array
-                                        $insertedData[] = $insertedRecord;
-                                }
-                           // return $insertedData;    
+                        $dynamic_row = [
+                            ['table_name' => 'staff_departments', 'number' => '5'],
+                            ['table_name' => 'academic_year', 'number' => '4'],
+                            ['table_name' => 'classes', 'number' => '6'],
+                            ['table_name' => 'sections', 'number' => '7'],
+                            ['table_name' => 'session', 'number' => '9'],
+                            ['table_name' => 'semester', 'number' => '8'],
+                            ['table_name' => 'staff_departments', 'number' => '12'],
+                            ['table_name' => 'academic_year', 'number' => '11'],
+                            ['table_name' => 'classes', 'number' => '13'],
+                            ['table_name' => 'sections', 'number' => '14'],
+                            ['table_name' => 'session', 'number' => '16'],
+                            ['table_name' => 'semester', 'number' => '15'],
+                        ];
+
+                        $dynamic_data = [];
+                        foreach ($dynamic_row as $row) {
+                            $number = $row['number'];
+                            $column = [
+                                'token' => $request->token,
+                                'branch_id' => $request->branch_id,
+                                'name' => $importData[$number],
+                                'table_name' => $row['table_name']
+                            ];
+                            // return $column;
+                            $row = $this->getLikeColumnName($column);
+                            $dynamic_data[$number] = $row;
+                        }
+
+                        $studentId = $Connection->table('students')->select('id')->where('roll_no', '=', $student_number)->first();
+
+                        if (!empty($studentId)) {
+
+                            $classDetails = [
+                                'student_id' =>  $studentId->id,
+                                'department_id' => $dynamic_data[5],
+                                'class_id' => $dynamic_data[6],
+                                'section_id' => $dynamic_data[7],
+                                'academic_session_id' => $dynamic_data[4],
+                                'session_id' => isset($dynamic_data[9]) ? $dynamic_data[9] : 0,
+                                'semester_id' => isset($dynamic_data[8]) ? $dynamic_data[8] : 0,
+                                'attendance_no' => $current_attendance_no,
+                                'promoted_department_id' => $dynamic_data[12],
+                                'promoted_class_id' => $dynamic_data[13],
+                                'promoted_section_id' => $dynamic_data[14],
+                                'promoted_academic_session_id' => $dynamic_data[11],
+                                'roll' => $student_number,
+                                'promoted_session_id' => isset($dynamic_data[16]) ? $dynamic_data[16] : 0,
+                                'promoted_semester_id' => isset($dynamic_data[15]) ? $dynamic_data[15] : 0,
+                                'promoted_attendance_no' => $promoted_attendance_no
+                            ];
+
+                            // Insert the record and get the last inserted ID
+                            $insertedId = $Connection->table('temp_promotion')->insertGetId($classDetails);
+
+                            // Retrieve the inserted data using the last inserted ID
+                            $insertedRecord = $Connection->table('temp_promotion as tp')
+                                ->select(
+                                    "tp.attendance_no",
+                                    "st1.first_name",
+                                    "tp.roll",
+                                    "d1.name as deptName",
+                                    "c1.name as className",
+                                    "s1.name as sectionName",
+                                    "sem1.name as semName",
+                                    "ses1.name as sesName",
+                                    "d2.name as deptPromotionName",
+                                    "c2.name as classPromotionName",
+                                    "s2.name as sectionPromotionName",
+                                    "sem2.name as semPromotionName",
+                                    "ses2.name as sesPromotionName"
+                                )
+                                ->leftJoin('classes as c1', 'c1.id', '=', 'tp.class_id')
+                                ->leftJoin('classes as c2', 'c2.id', '=', 'tp.promoted_class_id')
+                                ->leftJoin('sections as s1', 's1.id', '=', 'tp.section_id')
+                                ->leftJoin('sections as s2', 's2.id', '=', 'tp.promoted_section_id')
+                                ->leftJoin('staff_departments as d1', 'd1.id', '=', 'tp.department_id')
+                                ->leftJoin('staff_departments as d2', 'd2.id', '=', 'tp.promoted_department_id')
+                                ->leftJoin('students as st1', 'st1.id', '=', 'tp.student_id')
+                                ->leftJoin('semester as sem1', 'sem1.id', '=', 'tp.semester_id')
+                                ->leftJoin('semester as sem2', 'sem2.id', '=', 'tp.promoted_semester_id')
+                                ->leftJoin('session as ses1', 'ses1.id', '=', 'tp.session_id')
+                                ->leftJoin('session as ses2', 'ses2.id', '=', 'tp.promoted_session_id')
+                                ->where('tp.id', "=", $insertedId)
+                                ->get()->toArray();
+
+                            // Add the inserted data to the array
+                            $insertedData[] = $insertedRecord;
+                        }
+                        // return $insertedData;    
                     }
-                   // return $insertedData;
+                    // return $insertedData;
                     if (\File::exists($filepath)) {
                         \File::delete($filepath);
                     }
@@ -907,7 +1212,7 @@ class ImportController extends BaseController
             }
         }
     }
-    
+
     // import Csv Expense
     public function importCsvExpense(Request $request)
     {
@@ -927,7 +1232,7 @@ class ImportController extends BaseController
             // $tempPath = "C:\xampp\tmp\phpB37E.tmp";
             $fileSize = $request->fileSize;
             $mimeType = $request->mimeType;
-           
+
             // File Details 
             header('Content-type: text/plain; charset=utf-8');
             // Valid File Extensions
@@ -935,7 +1240,7 @@ class ImportController extends BaseController
             // 2MB in Bytes
             $maxFileSize = 2097152;
             // return $maxFileSize;
-            
+
             // dd($valid_extension);
             // Check file extension
             if (in_array(strtolower($extension), $valid_extension)) {
@@ -943,7 +1248,7 @@ class ImportController extends BaseController
                 // Check file size
                 if ($fileSize <= $maxFileSize) {
                     // File upload location
-                    $path = base_path().'/public/' . $request->branch_id . '/uploads/';
+                    $path = base_path() . '/public/' . $request->branch_id . '/uploads/';
                     $base64 = base64_decode($request->file);
                     File::ensureDirectoryExists($path);
                     $file = $path . $filename;
@@ -974,7 +1279,7 @@ class ImportController extends BaseController
                     // Insert to MySQL database
                     foreach ($importData_arr as $importData) {
                         // return $importData[1];
-                        
+
                         $dummyInc++;
                         // insert data
                         $semester_1 =  isset($importData[4]) ? $importData[4] : "";
@@ -982,40 +1287,40 @@ class ImportController extends BaseController
                         $semester_3 =  isset($importData[6]) ? $importData[6] : "";
 
 
-                            $dynamic_row = [ 
-                                ['table_name'=>'academic_year','number'=>'1'],
+                        $dynamic_row = [
+                            ['table_name' => 'academic_year', 'number' => '1'],
+                        ];
+
+                        $dynamic_data = [];
+                        foreach ($dynamic_row as $row) {
+                            $number = $row['number'];
+                            $column = [
+                                'token' => $request->token,
+                                'branch_id' => $request->branch_id,
+                                'name' => $importData[$number],
+                                'table_name' => $row['table_name']
                             ];
-    
-                            $dynamic_data = [];
-                            foreach($dynamic_row as $row) {
-                                $number = $row['number'];
-                                $column = [
-                                    'token' => $request->token,
-                                    'branch_id' => $request->branch_id,
-                                    'name' => $importData[$number],
-                                    'table_name' => $row['table_name']
-                                ];
-                                $row = $this->getLikeColumnName($column);
-                                $dynamic_data[$number] = $row;
-                            }
-                            $student = $Connection->table('students')->select('id')->where('email', '=', $importData[3])->first();
-                            $studentId = $student->id;
-                            $student_data = [
-                                'semester_1' => $semester_1,
-                                'semester_2' => $semester_2,
-                                'semester_3' => $semester_3,
-                                'academic_year' => $dynamic_data[1],
-                                'student_id' => $studentId,
-                                'created_at' => date("Y-m-d H:i:s")
-                            ];
-                            if ($Connection->table('fees_expense')->where([['academic_year', '=', $dynamic_data[1]], ['student_id', '=', $studentId]])->count() < 1) {
-                                $Connection->table('fees_expense')->insertGetId($student_data);
-                            }else{
-                                $expense_id = $Connection->table('fees_expense')->where([['academic_year', '=', $dynamic_data[1]], ['student_id', '=', $studentId]])->first();
-                                $expense = $Connection->table('fees_expense')->where('id', $expense_id->id)->update($student_data);
-                            }
+                            $row = $this->getLikeColumnName($column);
+                            $dynamic_data[$number] = $row;
+                        }
+                        $student = $Connection->table('students')->select('id')->where('email', '=', $importData[3])->first();
+                        $studentId = $student->id;
+                        $student_data = [
+                            'semester_1' => $semester_1,
+                            'semester_2' => $semester_2,
+                            'semester_3' => $semester_3,
+                            'academic_year' => $dynamic_data[1],
+                            'student_id' => $studentId,
+                            'created_at' => date("Y-m-d H:i:s")
+                        ];
+                        if ($Connection->table('fees_expense')->where([['academic_year', '=', $dynamic_data[1]], ['student_id', '=', $studentId]])->count() < 1) {
+                            $Connection->table('fees_expense')->insertGetId($student_data);
+                        } else {
+                            $expense_id = $Connection->table('fees_expense')->where([['academic_year', '=', $dynamic_data[1]], ['student_id', '=', $studentId]])->first();
+                            $expense = $Connection->table('fees_expense')->where('id', $expense_id->id)->update($student_data);
+                        }
                     }
-                    
+
                     if (\File::exists($filepath)) {
                         \File::delete($filepath);
                     }
@@ -1028,6 +1333,4 @@ class ImportController extends BaseController
             }
         }
     }
-
-    
 }

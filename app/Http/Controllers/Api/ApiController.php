@@ -24307,4 +24307,439 @@ $query->school_roleid=$request->school_roleid;
             }
         }
     }
+    public function exam_studentslist(Request $request)
+    {
+       // dd($request);
+        $class_id = $request->class_id;
+        $section_id = $request->section_id;
+        $academic_session_id = $request->academic_session_id;
+        /*$Connection = $this->createNewConnection($request->branch_id);
+        //dd($class_id);
+        $getStudents = $Connection->table('enrolls as en')
+            ->select(
+                'en.student_id',
+                'en.roll',
+                DB::raw('CONCAT(st.first_name, " ", st.last_name) as name'),
+                'st.register_no',                        
+            )
+            ->join('students as st', 'st.id', '=', 'en.student_id')            
+            ->where([
+                ['en.class_id', '=', $request->class_id],
+                ['en.section_id', '=', $request->section_id],
+                ['en.academic_session_id', '=', $academic_session_id]
+            ])
+            // ->orderBy('sa.score', 'desc')
+            ->orderBy('name', 'asc')
+            ->get();    */
+            $Connection = $this->createNewConnection($request->branch_id);
+
+            $studentdetails = $Connection->table('enrolls as en')
+                ->select(
+                    'en.student_id',
+                    'en.roll',
+                    DB::raw('CONCAT(st.first_name, " ", st.last_name) as name'),
+                    'st.register_no',
+                )
+                ->leftJoin('students as st', 'st.id', '=', 'en.student_id')               
+                ->where([
+                    ['en.class_id', '=', $request->class_id],
+                    ['en.section_id', '=', $request->section_id]
+                ])
+                ->get();
+
+               
+        return $this->successResponse($studentdetails, 'Student Lists');
+    }
+    public function exam_papermarks(Request $request)
+    {
+       
+        $exam_id = $request->exam_id;
+        $class_id = $request->class_id;
+        $section_id = $request->section_id;
+        $subject_id = '9';
+        $semester_id = $request->semester_id;
+        $session_id = $request->session_id;
+        $academic_session_id = $request->academic_session_id;        
+        $student_id = $request->student_id;
+        $paper=$request->paper;
+        $Connection = $this->createNewConnection($request->branch_id);
+        $getSubjectMarks = $Connection->table('exam_papers as ep')
+        ->select(
+            'ep.notes',
+            'sa.paper_id',
+            'gm.grade',
+        )   
+        ->leftJoin('student_marks as sa', function ($q) use ($class_id, $section_id, $exam_id, $subject_id, $semester_id, $session_id, $academic_session_id,$student_id) {
+            $q->on('sa.paper_id', '=', 'ep.id')
+                ->on('sa.exam_id', '=', DB::raw("'$exam_id'"))
+                ->on('sa.class_id', '=', DB::raw("'$class_id'"))
+                ->on('sa.section_id', '=', DB::raw("'$section_id'"))
+                ->on('sa.semester_id', '=', DB::raw("'$semester_id'"))
+                ->on('sa.session_id', '=', DB::raw("'$session_id'"))
+                ->on('sa.subject_id', '=', DB::raw("'$subject_id'"))
+                ->on('sa.student_id', '=', DB::raw("'$student_id'"))
+                ->on('sa.academic_session_id', '=', DB::raw("'$academic_session_id'"));
+        }) 
+        ->leftJoin('grade_marks as gm', 'gm.id', '=', 'sa.points')
+        ->where([
+            ['ep.class_id', '=', $request->class_id],
+            ['ep.subject_id', '=', $subject_id],
+            ['ep.academic_session_id', '=', $academic_session_id],
+            ['ep.paper_name', 'like', $paper."%"]
+        ])   
+        ->get();
+        return $this->successResponse($getSubjectMarks, 'Mark Detatils');
+    }
+    public function stuexam_marklist(Request $request)
+    {        
+        $exam_id = $request->exam_id;
+        $class_id = $request->class_id;
+        $section_id = $request->section_id;
+      
+        $session_id = $request->session_id;
+        $academic_session_id = $request->academic_session_id;        
+        $student_id = $request->student_id;        
+        $subject = $request->subject;
+        $paper=$request->paper;
+
+        $semester1 = 1;
+        $semester2 = 2;
+        $semester3 = 3;
+
+
+        $Connection = $this->createNewConnection($request->branch_id);
+        $subjectrow = $Connection->table('subjects')->select('id')
+        ->where('name', '=', $subject)->first();
+        $subject_id=$subjectrow ->id;
+
+        $getSemesterMark1 = $Connection->table('exam_papers as ep')
+        ->select(
+            'ep.id',
+            'sa.score',
+            'sa.grade',
+            'gm.grade as grade_name',
+        )   
+        ->leftJoin('student_marks as sa', function ($q) use ($class_id, $section_id, $exam_id, $subject_id, $semester1, $session_id, $academic_session_id,$student_id) {
+            $q->on('sa.paper_id', '=', 'ep.id')                
+                ->on('sa.class_id', '=', DB::raw("'$class_id'"))
+                ->on('sa.section_id', '=', DB::raw("'$section_id'"))
+                ->on('sa.semester_id', '=', DB::raw("'$semester1'"))
+                ->on('sa.session_id', '=', DB::raw("'$session_id'"))
+                ->on('sa.subject_id', '=', DB::raw("'$subject_id'"))
+                ->on('sa.student_id', '=', DB::raw("'$student_id'"))
+                ->on('sa.academic_session_id', '=', DB::raw("'$academic_session_id'"));
+        }) 
+        ->leftJoin('grade_marks as gm', 'gm.id', '=', 'sa.points')
+        ->where([
+            ['ep.class_id', '=', $request->class_id],
+            ['ep.subject_id', '=', $subject_id],
+            ['ep.academic_session_id', '=', $academic_session_id],
+            ['ep.paper_name', '=', $paper]
+        ])   
+        ->first();
+        $getSemesterMark2 = $Connection->table('exam_papers as ep')
+        ->select(
+            'ep.id',
+            'sa.score',
+            'sa.grade',
+            'gm.grade as grade_name',
+        )   
+        ->leftJoin('student_marks as sa', function ($q) use ($class_id, $section_id, $exam_id, $subject_id, $semester2, $session_id, $academic_session_id,$student_id) {
+            $q->on('sa.paper_id', '=', 'ep.id')                
+                ->on('sa.class_id', '=', DB::raw("'$class_id'"))
+                ->on('sa.section_id', '=', DB::raw("'$section_id'"))
+                ->on('sa.semester_id', '=', DB::raw("'$semester2'"))
+                ->on('sa.session_id', '=', DB::raw("'$session_id'"))
+                ->on('sa.subject_id', '=', DB::raw("'$subject_id'"))
+                ->on('sa.student_id', '=', DB::raw("'$student_id'"))
+                ->on('sa.academic_session_id', '=', DB::raw("'$academic_session_id'"));
+        }) 
+        ->leftJoin('grade_marks as gm', 'gm.id', '=', 'sa.points')
+        ->where([
+            ['ep.class_id', '=', $request->class_id],
+            ['ep.subject_id', '=', $subject_id],
+            ['ep.academic_session_id', '=', $academic_session_id],
+            ['ep.paper_name', '=', $paper]
+        ])   
+        ->first();
+        $getSemesterMark3 = $Connection->table('exam_papers as ep')
+        ->select(
+            'ep.id',
+            'sa.score',
+            'sa.grade',
+            'gm.grade as grade_name',
+        )   
+        ->leftJoin('student_marks as sa', function ($q) use ($class_id, $section_id, $exam_id, $subject_id, $semester3, $session_id, $academic_session_id,$student_id) {
+            $q->on('sa.paper_id', '=', 'ep.id')                
+                ->on('sa.class_id', '=', DB::raw("'$class_id'"))
+                ->on('sa.section_id', '=', DB::raw("'$section_id'"))
+                ->on('sa.semester_id', '=', DB::raw("'$semester3'"))
+                ->on('sa.session_id', '=', DB::raw("'$session_id'"))
+                ->on('sa.subject_id', '=', DB::raw("'$subject_id'"))
+                ->on('sa.student_id', '=', DB::raw("'$student_id'"))
+                ->on('sa.academic_session_id', '=', DB::raw("'$academic_session_id'"));
+        }) 
+        ->leftJoin('grade_marks as gm', 'gm.id', '=', 'sa.points')
+        ->where([
+            ['ep.class_id', '=', $request->class_id],
+            ['ep.subject_id', '=', $subject_id],
+            ['ep.academic_session_id', '=', $academic_session_id],
+            ['ep.paper_name', '=', $paper]
+        ])   
+        ->first();
+        $data=[
+            "Semester1"=> $getSemesterMark1,
+            "Semester2"=> $getSemesterMark2,
+            "Semester3"=> $getSemesterMark3
+        ];
+        
+        return $this->successResponse($data, 'Mark Detatils');
+    }
+    public function stuexam_avgmarklist(Request $request)
+    {        
+        $exam_id = $request->exam_id;
+        $class_id = $request->class_id;
+        $section_id = $request->section_id;
+      
+        $session_id = $request->session_id;
+        $academic_session_id = $request->academic_session_id;        
+        $student_id = $request->student_id;        
+        $subject = $request->subject;
+        $paper=$request->paper;
+
+        $semester1 = 1;
+        $semester2 = 2;
+        $semester3 = 3;
+
+
+        $Connection = $this->createNewConnection($request->branch_id);
+        $subjectrow = $Connection->table('subjects')->select('id')
+        ->where('name', '=', $subject)->first();
+        $subject_id=$subjectrow ->id;
+
+        $getSemesterMark1 = $Connection->table('exam_papers as ep')
+        ->select(
+            'ep.id',
+            'sa.score',
+            'sa.grade',
+            DB::raw('AVG(score) as avg'),
+        )   
+        ->leftJoin('student_marks as sa', function ($q) use ($class_id, $section_id, $exam_id, $subject_id, $semester1, $session_id, $academic_session_id,$student_id) {
+            $q->on('sa.paper_id', '=', 'ep.id')                
+                ->on('sa.class_id', '=', DB::raw("'$class_id'"))
+                ->on('sa.section_id', '=', DB::raw("'$section_id'"))
+                ->on('sa.semester_id', '=', DB::raw("'$semester1'"))
+                ->on('sa.session_id', '=', DB::raw("'$session_id'"))
+                ->on('sa.subject_id', '=', DB::raw("'$subject_id'"))               
+                ->on('sa.academic_session_id', '=', DB::raw("'$academic_session_id'"));
+        })       
+        ->where([
+            ['ep.class_id', '=', $request->class_id],
+            ['ep.subject_id', '=', $subject_id],
+            ['ep.academic_session_id', '=', $academic_session_id],
+            ['ep.paper_name', '=', $paper]
+        ])   
+        ->first();
+        $getSemesterMark2 = $Connection->table('exam_papers as ep')
+        ->select(
+            'ep.id',
+            'sa.score',
+            'sa.grade',
+            DB::raw('AVG(score) as avg'),
+        )   
+        ->leftJoin('student_marks as sa', function ($q) use ($class_id, $section_id, $exam_id, $subject_id, $semester2, $session_id, $academic_session_id,$student_id) {
+            $q->on('sa.paper_id', '=', 'ep.id')                
+                ->on('sa.class_id', '=', DB::raw("'$class_id'"))
+                ->on('sa.section_id', '=', DB::raw("'$section_id'"))
+                ->on('sa.semester_id', '=', DB::raw("'$semester2'"))
+                ->on('sa.session_id', '=', DB::raw("'$session_id'"))
+                ->on('sa.subject_id', '=', DB::raw("'$subject_id'"))               
+                ->on('sa.academic_session_id', '=', DB::raw("'$academic_session_id'"));
+        })        
+        ->where([
+            ['ep.class_id', '=', $request->class_id],
+            ['ep.subject_id', '=', $subject_id],
+            ['ep.academic_session_id', '=', $academic_session_id],
+            ['ep.paper_name', '=', $paper]
+        ])   
+        ->first();
+        $getSemesterMark3 = $Connection->table('exam_papers as ep')
+        ->select(
+            'ep.id',
+            'sa.score',
+            'sa.grade',
+            DB::raw('AVG(score) as avg'),
+        )   
+        ->leftJoin('student_marks as sa', function ($q) use ($class_id, $section_id, $exam_id, $subject_id, $semester3, $session_id, $academic_session_id,$student_id) {
+            $q->on('sa.paper_id', '=', 'ep.id')                
+                ->on('sa.class_id', '=', DB::raw("'$class_id'"))
+                ->on('sa.section_id', '=', DB::raw("'$section_id'"))
+                ->on('sa.semester_id', '=', DB::raw("'$semester3'"))
+                ->on('sa.session_id', '=', DB::raw("'$session_id'"))
+                ->on('sa.subject_id', '=', DB::raw("'$subject_id'"))
+                
+                ->on('sa.academic_session_id', '=', DB::raw("'$academic_session_id'"));
+        })
+        ->where([
+            ['ep.class_id', '=', $request->class_id],
+            ['ep.subject_id', '=', $subject_id],
+            ['ep.academic_session_id', '=', $academic_session_id],
+            ['ep.paper_name', '=', $paper]
+        ])   
+        ->first();
+        $data=[
+            "Semester1"=> $getSemesterMark1,
+            "Semester2"=> $getSemesterMark2,
+            "Semester3"=> $getSemesterMark3
+        ];
+        
+        return $this->successResponse($data, 'Mark Detatils');
+    }
+    public function stuexam_spmarklist(Request $request)
+    {        
+        $exam_id = $request->exam_id;
+        $class_id = $request->class_id;
+        $section_id = $request->section_id;
+      
+        $session_id = $request->session_id;
+        $academic_session_id = $request->academic_session_id;        
+        $student_id = $request->student_id;        
+        $subject = $request->subject;
+        $paper=$request->paper;
+
+        $semester1 = 1;
+        $semester2 = 2;
+        $semester3 = 3;
+
+
+        $Connection = $this->createNewConnection($request->branch_id);
+        $subjectrow = $Connection->table('subjects')->select('id')
+        ->where('name', '=', $subject)->first();
+        $subject_id=$subjectrow ->id;
+
+        $getSemesterMark1 = $Connection->table('exam_papers as ep')
+        ->select(
+            'ep.id',
+            'sa.freetext'
+        )   
+        ->leftJoin('student_marks as sa', function ($q) use ($class_id, $section_id, $exam_id, $subject_id, $semester1, $session_id, $academic_session_id,$student_id) {
+            $q->on('sa.paper_id', '=', 'ep.id')                
+                ->on('sa.class_id', '=', DB::raw("'$class_id'"))
+                ->on('sa.section_id', '=', DB::raw("'$section_id'"))
+                ->on('sa.semester_id', '=', DB::raw("'$semester1'"))
+                ->on('sa.session_id', '=', DB::raw("'$session_id'"))
+                ->on('sa.subject_id', '=', DB::raw("'$subject_id'"))
+                ->on('sa.student_id', '=', DB::raw("'$student_id'"))
+                ->on('sa.academic_session_id', '=', DB::raw("'$academic_session_id'"));
+        })        
+        ->where([
+            ['ep.class_id', '=', $request->class_id],
+            ['ep.subject_id', '=', $subject_id],
+            ['ep.academic_session_id', '=', $academic_session_id],
+            ['ep.paper_name', '=', $paper]
+        ])   
+        ->first();
+        $getSemesterMark2 = $Connection->table('exam_papers as ep')
+        ->select(
+            'ep.id',
+            'sa.freetext'
+        )    
+        ->leftJoin('student_marks as sa', function ($q) use ($class_id, $section_id, $exam_id, $subject_id, $semester2, $session_id, $academic_session_id,$student_id) {
+            $q->on('sa.paper_id', '=', 'ep.id')                
+                ->on('sa.class_id', '=', DB::raw("'$class_id'"))
+                ->on('sa.section_id', '=', DB::raw("'$section_id'"))
+                ->on('sa.semester_id', '=', DB::raw("'$semester2'"))
+                ->on('sa.session_id', '=', DB::raw("'$session_id'"))
+                ->on('sa.subject_id', '=', DB::raw("'$subject_id'"))
+                ->on('sa.student_id', '=', DB::raw("'$student_id'"))
+                ->on('sa.academic_session_id', '=', DB::raw("'$academic_session_id'"));
+        }) 
+        ->where([
+            ['ep.class_id', '=', $request->class_id],
+            ['ep.subject_id', '=', $subject_id],
+            ['ep.academic_session_id', '=', $academic_session_id],
+            ['ep.paper_name', '=', $paper]
+        ])   
+        ->first();
+        $getSemesterMark3 = $Connection->table('exam_papers as ep')
+        ->select(
+            'ep.id',
+            'sa.freetext'
+        )   
+        ->leftJoin('student_marks as sa', function ($q) use ($class_id, $section_id, $exam_id, $subject_id, $semester3, $session_id, $academic_session_id,$student_id) {
+            $q->on('sa.paper_id', '=', 'ep.id')                
+                ->on('sa.class_id', '=', DB::raw("'$class_id'"))
+                ->on('sa.section_id', '=', DB::raw("'$section_id'"))
+                ->on('sa.semester_id', '=', DB::raw("'$semester3'"))
+                ->on('sa.session_id', '=', DB::raw("'$session_id'"))
+                ->on('sa.subject_id', '=', DB::raw("'$subject_id'"))
+                ->on('sa.student_id', '=', DB::raw("'$student_id'"))
+                ->on('sa.academic_session_id', '=', DB::raw("'$academic_session_id'"));
+        }) 
+        ->where([
+            ['ep.class_id', '=', $request->class_id],
+            ['ep.subject_id', '=', $subject_id],
+            ['ep.academic_session_id', '=', $academic_session_id],
+            ['ep.paper_name', '=', $paper]
+        ])   
+        ->first();
+        $data=[
+            "Semester1"=> $getSemesterMark1,
+            "Semester2"=> $getSemesterMark2,
+            "Semester3"=> $getSemesterMark3
+        ];
+        
+        return $this->successResponse($data, 'Mark Detatils');
+    }
+    public function studentmonthly_attendance(Request $request)
+    {        
+        
+        $date = $request->atdate;    
+        //dd($date);
+        $year_month=explode('-',$date);
+        $Connection = $this->createNewConnection($request->branch_id);
+        $getAttendanceCounts = $Connection->table('students as stud')
+        ->select(
+            DB::raw('COUNT(CASE WHEN sa.status = "present" then 1 ELSE NULL END) as "presentCount"'),
+            DB::raw('COUNT(CASE WHEN sa.status = "absent" then 1 ELSE NULL END) as "absentCount"'),
+            DB::raw('COUNT(CASE WHEN sa.status = "late" then 1 ELSE NULL END) as "lateCount"'),
+            DB::raw('COUNT(CASE WHEN sa.status = "excused" then 1 ELSE NULL END) as "excusedCount"'),
+        )
+        // ->join('enrolls as en', 'en.student_id', '=', 'stud.id')
+        ->leftJoin('student_attendances as sa', 'sa.student_id', '=', 'stud.id')
+        ->join('enrolls as en', function ($join) {
+            $join->on('stud.id', '=', 'en.student_id')
+                ->on('sa.class_id', '=', 'en.class_id')
+                ->on('sa.section_id', '=', 'en.section_id');
+        })
+        ->where('stud.id', '=', $request->student_id)
+        ->whereMonth('sa.date', $year_month[0])
+        ->whereYear('sa.date', $year_month[1])
+        ->get();
+        return $this->successResponse($getAttendanceCounts, 'Attendance Detatils');
+    }
+    public function getmonthlyholidays(Request $request)
+    {
+        $validator = \Validator::make($request->all(), [
+            'branch_id' => 'required'
+        ]);
+        if (!$validator->passes()) {
+            return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
+        } else {
+            // create new connection
+            $Connection = $this->createNewConnection($request->branch_id);
+            $start = date('Y-m-d', strtotime($request->start));
+            $end = date('Y-m-d', strtotime($request->end));
+            // echo $start;
+            // echo "-----";
+            // echo $end;
+            // exit;
+            $holidays = $Connection->table('holidays as hl')
+                ->select('hl.id')
+                ->whereRaw('hl.date between "' . $start . '" and "' . $end . '"')
+                ->count();
+            
+            return $this->successResponse($holidays, 'Get Holidays Fetched successfully');
+        }
+    }
 }

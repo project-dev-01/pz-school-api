@@ -366,7 +366,8 @@ Route::group(['middleware' => ['auth:api', 'throttle:limit_per_user', 'logroute'
     Route::post('get_student_subject_mark', [ApiController::class, 'getStudentSubjectMark']);
     Route::post('get_student_grade', [ApiController::class, 'getStudentGrade']);
     Route::post('get_subject_division_mark', [ApiController::class, 'getSubDivisionMark']);
-    Route::post('get_subject_mark_status', [ApiController::class, 'getSubjectMarkStatus']);
+    Route::post('get_subject_mark_status', [ApiController::class, 'getSubjectMarkStatus']);       
+    Route::post('get_pointsresult', [ApiController::class, 'get_pointsresult']);
     // get exam paper results
     Route::post('get_exam_paper_results', [ApiControllerOne::class, 'getExamPaperResults']);
     // classroom management
@@ -1038,4 +1039,17 @@ Route::group(['middleware' => ['auth:api', 'throttle:limit_per_user', 'logroute'
     Route::post('termination/update', [ApiController::class, 'updateTermination']);
     Route::post('termination/update/admin', [ApiController::class, 'updateTerminationAdmin']);
     Route::post('termination/delete', [ApiController::class, 'deleteTermination']);
+    
+     // Student English Communication Result
+    Route::post('exam_result/students', [ApiController::class, 'exam_studentslist']);
+    Route::post('exam_result/papermark', [ApiController::class, 'exam_papermarks']);     
+    Route::post('importcsv/exam', [ImportController::class, 'importCsvExamMarks']);
+    Route::post('exam_result/stuexam_marklist', [ApiController::class, 'stuexam_marklist']);    
+    Route::post('exam_result/stuexam_spmarklist', [ApiController::class, 'stuexam_spmarklist']);
+    Route::post('exam_result/stuexam_avgmarklist', [ApiController::class, 'stuexam_avgmarklist']); 
+    Route::post('exam_result/studentmonthly_attendance', [ApiController::class, 'studentmonthly_attendance']);
+    
+    Route::get('getmonthlyholidays', [ApiController::class, 'getmonthlyholidays']);
+    Route::get('testrole', [ApiController::class, 'testrole']);
+
 });
