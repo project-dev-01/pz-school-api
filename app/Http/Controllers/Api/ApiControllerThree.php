@@ -552,6 +552,7 @@ class ApiControllerThree extends BaseController
                     $join->orOn('st.mother_id', '=', 'p.id');
                     $join->orOn('st.guardian_id', '=', 'p.id');
                 })
+                ->where('en.active_status', '=', '0')
                 ->where('en.student_id', '=', $student_id)
                 ->first();
 
@@ -672,6 +673,7 @@ class ApiControllerThree extends BaseController
                     $join->orOn('st.mother_id', '=', 'p.id');
                     $join->orOn('st.guardian_id', '=', 'p.id');
                 })
+                ->where('en.active_status', '=', '0')
                 ->where('en.student_id', '=', $student_id)
                 ->first();
             $class_id = $student_data->class_id;
@@ -1098,12 +1100,6 @@ class ApiControllerThree extends BaseController
                     DB::raw('DATE_FORMAT(lev.from_leave, "%d-%m-%Y") as from_leave'),
                     DB::raw('DATE_FORMAT(lev.to_leave, "%d-%m-%Y") as to_leave'),
                     'lev.total_leave',
-                    'as.name as reason',
-                    'slt.name as leave_type_name',
-                    'asdd.name as nursing_reason_name',
-                    'sltdd.name as nursing_leave_type_name',
-                    'ass.name as teacher_reason_name',
-                    'slts.name as teacher_leave_type_name',
                     'lev.document',
                     'lev.status',
                     'lev.remarks',
@@ -1117,20 +1113,196 @@ class ApiControllerThree extends BaseController
                     'lev.nursing_reason_id',
                     'lev.teacher_leave_type',
                     'lev.nursing_leave_type',
-                    'lev.created_at'
+                    'lev.created_at',
+                    'slt.name as leave_type_name',
+                    'as.name as reason',
+                    'sltdd.name as nursing_leave_type_name',
+                    'asdd.name as nursing_reason_name',
+                    'ass.name as teacher_reason_name',
+                    'slts.name as teacher_leave_type_name',
                 )
                 ->join('students as std', 'lev.student_id', '=', 'std.id')
                 ->join('classes as cl', 'lev.class_id', '=', 'cl.id')
                 ->join('sections as sc', 'lev.section_id', '=', 'sc.id')
                 ->leftJoin('student_leave_types as slt', 'lev.change_lev_type', '=', 'slt.id')
                 ->leftJoin('absent_reasons as as', 'lev.reasonId', '=', 'as.id')
-                ->leftJoin('student_leave_types as slts', 'lev.teacher_leave_type', '=', 'slt.id')
-                ->leftJoin('absent_reasons as ass', 'lev.teacher_reason_id', '=', 'as.id')
-                ->leftJoin('student_leave_types as sltdd', 'lev.nursing_leave_type', '=', 'slt.id')
-                ->leftJoin('absent_reasons as asdd', 'lev.nursing_reason_id', '=', 'as.id')
+                ->leftJoin('student_leave_types as slts', 'lev.teacher_leave_type', '=', 'slts.id')
+                ->leftJoin('absent_reasons as ass', 'lev.teacher_reason_id', '=', 'ass.id')
+                ->leftJoin('student_leave_types as sltdd', 'lev.nursing_leave_type', '=', 'sltdd.id')
+                ->leftJoin('absent_reasons as asdd', 'lev.nursing_reason_id', '=', 'asdd.id')
                 ->where('lev.id', $student_leave_id)
                 ->first();
             return $this->successResponse($studentDetails, 'Student row details fetch successfully');
+        }
+    }
+    // nursingOrHomeroom
+    function nursingOrHomeroom(Request $request)
+    {
+        $validator = \Validator::make($request->all(), [
+            'branch_id' => 'required',
+            'teacher_id' => 'required'
+        ]);
+        if (!$validator->passes()) {
+            return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
+        } else {
+            // create new connection
+            $conn = $this->createNewConnection($request->branch_id);
+            // return $status;
+            $studentDetails = $conn->table('staffs')
+                ->select(
+                    'id',
+                    'teacher_type'
+                )
+                ->where('id', $request->teacher_id)
+                ->first();
+            return $this->successResponse($studentDetails, 'home or nusing fetch successfully');
+        }
+    }
+    public function leaveTypeWiseAllReason(Request $request)
+    {
+        $validator = \Validator::make($request->all(), [
+            'branch_id' => 'required'
+        ]);
+        if (!$validator->passes()) {
+            return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
+        } else {
+            // create new connection
+            $conn = $this->createNewConnection($request->branch_id);
+            $results = $conn->select("
+    SELECT 
+        lt.name AS leave_type,
+        CONCAT('[', GROUP_CONCAT(JSON_OBJECT('reason', r.name)), ']') AS reasons
+    FROM 
+        student_leave_types lt
+    LEFT JOIN 
+        absent_reasons r ON lt.id = r.student_leave_type_id
+    GROUP BY 
+        lt.id
+");
+            $jsonResult = json_encode($results);
+            return $this->successResponse($jsonResult, 'student leave types fetch successfully');
+        }
+    }
+    // callViaLeaveDirectApprove 
+    public function callViaLeaveDirectApprove(Request $request)
+    {
+        $validator = \Validator::make($request->all(), [
+            'branch_id' => 'required',
+            'student_id' => 'required',
+            'class_id' => 'required',
+            'section_id' => 'required',
+            'frm_leavedate' => 'required',
+            'to_leavedate' => 'required',
+            'reason_id' => 'required',
+            'total_leave' => 'required',
+            'change_lev_type' => 'required',
+            'status' => 'required',
+        ]);
+        if (!$validator->passes()) {
+            return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
+        } else {
+
+            // create new connection
+            $staffConn = $this->createNewConnection($request->branch_id);
+            $from_leave = date('Y-m-d', strtotime($request['frm_leavedate']));
+            $to_leave = date('Y-m-d', strtotime($request['to_leavedate']));
+            // check leave exist
+            $fromLeaveCnt = $staffConn->table('student_leaves as lev')
+                ->where([
+                    ['lev.student_id', '=', $request->student_id],
+                    ['lev.class_id', '=', $request->class_id],
+                    ['lev.section_id', '=', $request->section_id],
+                    ['lev.from_leave', '<=', $from_leave],
+                    ['lev.to_leave', '>=', $from_leave],
+                ])->count();
+            $toLeaveCnt = $staffConn->table('student_leaves as lev')
+                ->where([
+                    ['lev.student_id', '=', $request->student_id],
+                    ['lev.class_id', '=', $request->class_id],
+                    ['lev.section_id', '=', $request->section_id],
+                    ['lev.from_leave', '<=', $to_leave],
+                    ['lev.to_leave', '>=', $to_leave]
+                ])->count();
+            if ($fromLeaveCnt > 0 || $toLeaveCnt > 0) {
+                return $this->send422Error('You have already applied for leave between these dates', ['error' => 'You have already applied for leave between these dates']);
+            } else {
+                $student_data = $staffConn->table('enrolls as en')
+                    ->select(
+                        'p.id'
+                    )
+                    ->join('students as st', 'st.id', '=', 'en.student_id')
+                    ->leftjoin('parent as p', function ($join) {
+                        $join->on('st.father_id', '=', 'p.id');
+                        $join->orOn('st.mother_id', '=', 'p.id');
+                        $join->orOn('st.guardian_id', '=', 'p.id');
+                    })
+                    ->where('en.active_status', '=', '0')
+                    ->where('en.student_id', '=', $request->student_id)
+                    ->first();
+                // dd($student_data->id);
+                // insert data
+                if (isset($request->file)) {
+                    $now = now();
+                    $name = strtotime($now);
+                    $extension = $request->file_extension;
+                    $fileName = $name . "." . $extension;
+                    $path = '/public/' . $request->branch_id . '/teacher/student-leaves/';
+                    $base64 = base64_decode($request->file);
+                    File::ensureDirectoryExists(base_path() . $path);
+                    $file = base_path() . $path . $fileName;
+                    $suc = file_put_contents($file, $base64);
+                } else {
+                    $fileName = null;
+                }
+                $data = [
+                    'student_id' => $request['student_id'],
+                    'parent_id' => isset($student_data->id) ? $student_data->id : 0,
+                    'class_id' => $request['class_id'],
+                    'section_id' => $request['section_id'],
+                    'from_leave' => $from_leave,
+                    'to_leave' => $to_leave,
+                    'total_leave' => $request['total_leave'],
+                    'change_lev_type' => $request['change_lev_type'],
+                    'reasonid' => $request['reason_id'],
+                    'remarks' => $request['remarks'],
+                    'document' => $fileName,
+                    'status' => $request['status'],
+                    // 'home_teacher_status' => $request['status'],
+                    'nursing_teacher_status' => $request['status'],
+                    'direct_approval_status' => $request['direct_approval_status'],
+                    'direct_approval_by' => $request['direct_approval_by'],
+                    'created_at' => date("Y-m-d H:i:s")
+                ];
+                $query = $staffConn->table('student_leaves')->insert($data);
+                $success = [];
+                if (!$query) {
+                    return $this->send500Error('Something went wrong.', ['error' => 'Something went wrong']);
+                } else {
+                    return $this->successResponse($success, 'Direct approval successfully');
+                }
+            }
+        }
+    }
+    public function getClassListByDept(Request $request)
+    {
+        $validator = \Validator::make($request->all(), [
+            'branch_id' => 'required',
+            'teacher_id' => 'required'
+        ]);
+
+        if (!$validator->passes()) {
+            return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
+        } else {
+            // create new connection
+            $classConn = $this->createNewConnection($request->branch_id);
+            $class = $classConn->table('classes as cl')
+                ->select('cl.id', 'cl.name', 'cl.short_name', 'cl.name_numeric', 'cl.department_id', 'stf_dp.name as department_name')
+                ->join('staff_departments as stf_dp', 'cl.department_id', '=', 'stf_dp.id')
+                ->join("staffs as sf", \DB::raw("FIND_IN_SET(sf.department_id,cl.department_id)"), ">", \DB::raw("'0'"))
+                ->where('sf.id', '=', $request->teacher_id)
+                ->orderBy('cl.department_id', 'desc')
+                ->get();
+            return $this->successResponse($class, 'class by department record fetch successfully');
         }
     }
 }

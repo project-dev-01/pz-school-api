@@ -45,6 +45,7 @@ use App\Notifications\ParentTermination;
 use App\Notifications\AdminTermination;
 use App\Notifications\ParentInfoUpdate;
 use App\Notifications\StudentInfoUpdate;
+use App\Notifications\LeaveReasonNotification;
 use Illuminate\Support\Facades\Notification;
 // encrypt and decrypt
 use Illuminate\Support\Facades\Crypt;
@@ -557,7 +558,6 @@ class ApiController extends BaseController
     {
         $validator = \Validator::make($request->all(), [
             'branch_id' => 'required',
-            'token' => 'required',
         ]);
 
         if (!$validator->passes()) {
@@ -3154,9 +3154,18 @@ class ApiController extends BaseController
                         }
 
                         $rid=$request->role_id;
-                        $roleIds1 = $Connection->table('school_roles')->where('id', $rid)->first();
-                    
-                        $prole_id=$roleIds1->portal_roleid;
+                        $roleIds1 =$Connection->table('school_menuaccess')
+                        ->select('role_id')
+                        ->distinct()
+                        ->where('school_roleid', '=', $rid)
+                        ->pluck('role_id');
+                        
+                        $rarray=[];
+                        foreach($roleIds1 as $role)
+                        {
+                            array_push($rarray,$role);
+                        }
+                        $prole_id=implode(',',$rarray);
                         // add picture
                         $user = new User();
 
@@ -3550,9 +3559,19 @@ class ApiController extends BaseController
                     return $this->send500Error('Something went wrong.', ['error' => 'Something went wrong on Update employee']);
                 } else {
 $rid=$request->role_id;
-                    $roleIds1 = $Connection->table('school_roles')->where('id', $rid)->first();
-                    
-                    $prole_id=$roleIds1->portal_roleid;
+                    //$roleIds1 = $Connection->table('school_roles')->where('id', $rid)->first();
+                    $roleIds1 =$Connection->table('school_menuaccess')
+                        ->select('role_id')
+                        ->distinct()
+                        ->where('school_roleid', '=', $rid)
+                        ->pluck('role_id');
+                        
+                        $rarray=[];
+                        foreach($roleIds1 as $role)
+                        {
+                            array_push($rarray,$role);
+                        }
+                        $prole_id=implode(',',$rarray);
                     // update users
                     if (isset($request->role_user_id) && isset($request->password)) {
                         $user = User::find($request->role_user_id);
@@ -15347,51 +15366,159 @@ $query->school_roleid=$request->school_roleid;
             // create new connection
             $Conn = $this->createNewConnection($request->branch_id);
             $status = isset($request->status) ? $request->status : null;
+            // nursing teacher 
             $nursing_leave_type = isset($request->nursing_leave_type) ? $request->nursing_leave_type : null;
             $nursing_reason_id = isset($request->nursing_reason_id) ? $request->nursing_reason_id : null;
+            $nursing_teacher_remarks = isset($request->nursing_teacher_remarks) ? $request->nursing_teacher_remarks : null;
+            $nursing_teacher_status = isset($request->nursing_teacher_status) ? $request->nursing_teacher_status : null;
+            // homeroom teacher 
             $teacher_leave_type = isset($request->teacher_leave_type) ? $request->teacher_leave_type : null;
             $teacher_reason_id = isset($request->teacher_reason_id) ? $request->teacher_reason_id : null;
-            $nursing_teacher_remarks = isset($request->nursing_teacher_remarks) ? $request->nursing_teacher_remarks : null;
             $teacher_remarks = isset($request->teacher_remarks) ? $request->teacher_remarks : null;
             $home_teacher_status = isset($request->home_teacher_status) ? $request->home_teacher_status : null;
-            $nursing_teacher_status = isset($request->nursing_teacher_status) ? $request->nursing_teacher_status : null;
-            
-            if(isset($nursing_leave_type)){
-                if($nursing_teacher_status == "Approve"){
+            // if it is one sent notification
+            $sentNotificationToParent = 1;
+            if (isset($nursing_leave_type)) {
+                if ($nursing_teacher_status == "Approve") {
                     $status = "Approve";
                 }
             }
             // direct_approved is true
-            if(isset($request->direct_approved)){
+            if (isset($request->direct_approved)) {
                 $data = [
                     'nursing_teacher_status' => $status,
                     'status' => $status,
                     'updated_at' => date("Y-m-d H:i:s")
                 ];
-            } else {
+            } else if (isset($request->direct_approved_by_teacher)) {
                 $data = [
-                    'nursing_leave_type' => $nursing_leave_type,
-                    'nursing_reason_id' => $nursing_reason_id,
-                    'teacher_leave_type' => $teacher_leave_type,
-                    'teacher_reason_id' => $teacher_reason_id,
-                    'nursing_teacher_remarks' => $nursing_teacher_remarks,
-                    'teacher_remarks' => $teacher_remarks,
-                    'home_teacher_status' => $home_teacher_status,
-                    'nursing_teacher_status' => $nursing_teacher_status,
-                    'status' => $status,
+                    'home_teacher_status' => $status,
                     'updated_at' => date("Y-m-d H:i:s")
                 ];
+                $sentNotificationToParent = 0;
+            } else {
+                if (isset($nursing_leave_type)) {
+                    $data = [
+                        'nursing_leave_type' => $nursing_leave_type,
+                        'nursing_reason_id' => $nursing_reason_id,
+                        'nursing_teacher_remarks' => $nursing_teacher_remarks,
+                        'nursing_teacher_status' => $nursing_teacher_status,
+                        'status' => $status,
+                        'updated_at' => date("Y-m-d H:i:s")
+                    ];
+                } else {
+                    $data = [
+                        'teacher_leave_type' => $teacher_leave_type,
+                        'teacher_reason_id' => $teacher_reason_id,
+                        'teacher_remarks' => $teacher_remarks,
+                        'home_teacher_status' => $home_teacher_status,
+                        'status' => $status,
+                        'updated_at' => date("Y-m-d H:i:s")
+                    ];
+                    $sentNotificationToParent = 0;
+                }
             }
-            
+
             // $status = isset($request->status) ? $request->status : null;
             // update data
             $query = $Conn->table('student_leaves')->where('id', $student_leave_id)->update($data);
+            // after approve sent notifications and email
+            // $this->sentMailToLeaveTypeReason($status);
+            if($sentNotificationToParent == 1){
+                $this->absentReasonsendNotificationAndEmail($request->branch_id, $student_leave_id, $status);
+            }
             $success = [];
             if ($query) {
                 return $this->successResponse($success, 'Leave Request have Been updated');
             } else {
                 return $this->send500Error('Something went wrong.', ['error' => 'Something went wrong']);
             }
+        }
+    }
+
+    // sent mail to particular leave type reason
+    public function sentMailToLeaveTypeReason(Request $request){
+        // dd($request);
+        $branch_id = $request->branch_id;
+        $student_leave_tbl_id = $request->student_leave_tbl_id;
+        $status = $request->status;
+        $this->absentReasonsendNotificationAndEmail($branch_id, $student_leave_tbl_id, $status);
+    }
+    public function absentReasonsendNotificationAndEmail($branch_id, $student_leave_tbl_id, $status)
+    {
+        // echo $branch_id;
+        // echo $student_leave_tbl_id;
+        // echo $status;
+        // exit;
+        if ($branch_id && $student_leave_tbl_id && $status) {
+            $conn = $this->createNewConnection($branch_id);
+            $studentDetails = $conn->table('student_leaves as lev')
+                ->select(
+                    'lev.id',
+                    'lev.student_id',
+                    'lev.parent_id',
+                    DB::raw('DATE_FORMAT(lev.from_leave, "%d-%m-%Y") as from_leave'),
+                    DB::raw('DATE_FORMAT(lev.to_leave, "%d-%m-%Y") as to_leave'),
+                    'as.name as reason',
+                    'as.status as absent_status',
+                    'as.recommended_leave_days',
+                    'lev.status',
+                    DB::raw("CONCAT(std.first_name, ' ', std.last_name) as name"),
+                    DB::raw("CONCAT(p.first_name, ' ', p.last_name) as parent_name"),
+                    'p.email'
+                )
+                ->join('students as std', 'lev.student_id', '=', 'std.id')
+                ->join('parent as p', 'lev.student_id', '=', 'p.id')
+                ->leftJoin('absent_reasons as as', 'lev.reasonId', '=', 'as.id')
+                ->where('lev.id', $student_leave_tbl_id)
+                ->first();
+            // dd($studentDetails);
+            if (isset($studentDetails->absent_status)) {
+                    $user = User::where([
+                        ['branch_id', '=', $branch_id],
+                        ['role_id', '=', 5],
+                        ['user_id', '=', $studentDetails->parent_id]
+                    ])->get();
+                    $leaveapproveDetails = [];
+                    $leaveapproveDetails['status'] = $studentDetails->status;
+                    $leaveapproveDetails['student_name'] = $studentDetails->name;
+                    $leaveapproveDetails['parent_name'] = $studentDetails->parent_name;
+                    $leaveapproveDetails['from_leave'] = $studentDetails->from_leave;
+                    $leaveapproveDetails['to_leave'] = $studentDetails->to_leave;
+                    $leaveapproveDetails['reason'] = $studentDetails->reason;
+                    $leaveapproveDetails['date'] = date("Y-m-d H:i:s");
+                    $details = [
+                        'branch_id' => $branch_id,
+                        'parent_id' => $studentDetails->parent_id,
+                        'student_id' => $studentDetails->student_id,
+                        'student_leave_tbl_id' => $student_leave_tbl_id,
+                        'leave_approve_details' => $leaveapproveDetails
+                    ];
+                    Notification::send($user, new LeaveReasonNotification($details));
+                    if ($studentDetails->absent_status == "1") {
+                        $email = $studentDetails->email;
+                        // $email = "karthik@aibots.my";
+                        $data = array(
+                            'parent_name' => isset($studentDetails->parent_name) ? $studentDetails->parent_name : "",
+                            'reason' => isset($studentDetails->reason) ? $studentDetails->reason : 0,
+                            'status' => isset($studentDetails->status) ? $studentDetails->status : 0,
+                            'recommended_leave_days' => isset($studentDetails->recommended_leave_days) ? $studentDetails->recommended_leave_days : 0,
+                            'date' => date("Y-m-d H:i:s"),
+                        );
+                        // return $data;
+                        Mail::send('auth.absent_reason', $data, function ($message) use ($email) {
+                            $message->to($email, 'Parent')->subject('Absent Reason Suggestions');
+                            $message->from(env('MAIL_FROM_ADDRESS'), 'Absent Reason Suggestions');
+                        });
+                        return true;
+                    } else {
+                        return false;
+                    }
+            } else {
+                return false;
+            }
+        } else {
+            return false;
         }
     }
     // studnet leave end 
@@ -15443,6 +15570,12 @@ $query->school_roleid=$request->school_roleid;
                     'lev.teacher_remarks',
                     'cl.name as class_name',
                     'sc.name as section_name',
+                    'lev.teacher_reason_id',
+                    'lev.teacher_leave_type',
+                    'lev.nursing_reason_id',
+                    'lev.nursing_leave_type',
+                    'lev.home_teacher_status',
+                    'lev.nursing_teacher_status',
                     'lev.nursing_teacher_remarks'
                 )
                 ->join('students as std', 'lev.student_id', '=', 'std.id')

@@ -8398,7 +8398,6 @@ class ApiControllerOne extends BaseController
     {
 
         $validator = \Validator::make($request->all(), [
-            'token' => 'required',
             'branch_id' => 'required',
             'academic_session_id' => 'required',
             'teacher_id' => 'required'

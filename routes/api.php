@@ -89,6 +89,7 @@ Route::group(['middleware' => ['auth:api', 'throttle:limit_per_user', 'logroute'
     Route::post('classes/class-details', [ApiController::class, 'getClassDetails']);
     Route::post('classes/update', [ApiController::class, 'updateClassDetails']);
     Route::post('classes/delete', [ApiController::class, 'deleteClass']);
+    Route::post('classes/list_by_department', [ApiControllerThree::class, 'getClassListByDept']);
 
     Route::post('teacher/class_list', [ApiController::class, 'teacherClassList']);
 
@@ -523,13 +524,16 @@ Route::group(['middleware' => ['auth:api', 'throttle:limit_per_user', 'logroute'
     Route::post('std_leave_apply', [ApiController::class, 'student_leaveapply']);
     Route::get('get_student_leaves', [ApiController::class, 'get_studentleaves']);
     Route::get('get_leave_reasons', [ApiController::class, 'get_leavereasons']);
+    Route::get('leave_type_wise_get_all_reason', [ApiControllerThree::class, 'leaveTypeWiseAllReason']);
     Route::post('studentleave_list', [ApiController::class, 'get_particular_studentleave_list']);
     Route::post('std_leave_apply/reupload_file', [ApiController::class, 'reuploadFileStudent']);
     Route::post('staff_leave_apply/reupload_file', [ApiController::class, 'reuploadFileStaff']);
-
+    Route::post('call_via_leave_approve', [ApiControllerThree::class, 'callViaLeaveDirectApprove']);
     Route::post('teacher_leave_approve', [ApiController::class, 'teacher_leaveapprove']);
+    Route::post('send_email_particular_leave_type_reason', [ApiController::class, 'sentMailToLeaveTypeReason']);
     Route::post('get_all_student_leaves', [ApiController::class, 'getAllStudentLeaves']);
     Route::post('view_student_leave_details_row', [ApiControllerThree::class, 'viewStudentLeaveDetailsRow']);
+    Route::post('nursing_or_homeroom', [ApiControllerThree::class, 'nursingOrHomeroom']);
 
     Route::get('get_birthday_calendor_teacher', [ApiController::class, 'getBirthdayCalendorTeacher']);
     Route::get('get_birthday_calendor_admin', [ApiController::class, 'getBirthdayCalendorAdmin']);
