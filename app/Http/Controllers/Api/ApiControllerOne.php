@@ -3229,6 +3229,7 @@ class ApiControllerOne extends BaseController
                         // Insert data into the 'enrolls' table
                         $enrollData = [
                             'student_id' => $promotion_final[0]->student_id, 
+                            'attendance_no' => $promotion_final[0]->attendance_no, 
                             'department_id' => $promotion_final[0]->department_id,
                             'class_id'  => $promotion_final[0]->class_id,
                             'section_id'  => $promotion_final[0]->section_id,
@@ -3241,6 +3242,7 @@ class ApiControllerOne extends BaseController
                         $enrollId = $conn->table('enrolls')->insertGetId($enrollData);
                         $enrollData2= [
                             'student_id' => $promotion_final[0]->student_id, 
+                            'attendance_no' => $promotion_final[0]->attendance_no, 
                             'roll'  => $promotion_final[0]->roll,
                             'department_id' => $promotion_final[0]->promoted_department_id,
                             'class_id'  => $promotion_final[0]->promoted_class_id,
