@@ -1041,6 +1041,7 @@ class ImportController extends BaseController
     public function getPromotionDataBulk(Request $request)
     {
 
+        
         $validator = \Validator::make($request->all(), [
             'branch_id' => 'required',
             'file' => 'required'
@@ -1066,9 +1067,9 @@ class ImportController extends BaseController
                 // Check file size
                 if ($fileSize <= $maxFileSize) {
 
-
+                    
                     // File upload location
-                    $path = base_path() . '/public/' . $request->branch_id . '/uploads/';
+                    $path = base_path().'/public/' . $request->branch_id . '/uploads/';
                     $base64 = base64_decode($request->file);
                     File::ensureDirectoryExists($path);
                     $file = $path . $filename;
@@ -1096,114 +1097,114 @@ class ImportController extends BaseController
                     fclose($file);
                     // dummyemail
                     $dummyInc = 1;
-
+                   
                     // Insert to MySQL database
-                    foreach ($importData_arr as $importData) {
+                    foreach ($importData_arr as $importData) 
+                    {
                         $dummyInc++;
-                        //  dd($importData);
+                       //  dd($importData);
                         $student_name = $importData[1];
                         $student_number = $importData[2];
                         $current_attendance_no = $importData[3];
-                        $promoted_attendance_no = $importData[10];
 
-                        $role = "6";
-
-                        $dynamic_row = [
-                            ['table_name' => 'staff_departments', 'number' => '5'],
-                            ['table_name' => 'academic_year', 'number' => '4'],
-                            ['table_name' => 'classes', 'number' => '6'],
-                            ['table_name' => 'sections', 'number' => '7'],
-                            ['table_name' => 'session', 'number' => '9'],
-                            ['table_name' => 'semester', 'number' => '8'],
-                            ['table_name' => 'staff_departments', 'number' => '12'],
-                            ['table_name' => 'academic_year', 'number' => '11'],
-                            ['table_name' => 'classes', 'number' => '13'],
-                            ['table_name' => 'sections', 'number' => '14'],
-                            ['table_name' => 'session', 'number' => '16'],
-                            ['table_name' => 'semester', 'number' => '15'],
-                        ];
-
-                        $dynamic_data = [];
-                        foreach ($dynamic_row as $row) {
-                            $number = $row['number'];
-                            $column = [
-                                'token' => $request->token,
-                                'branch_id' => $request->branch_id,
-                                'name' => $importData[$number],
-                                'table_name' => $row['table_name']
+                        $role = "6";   
+                        
+                            $dynamic_row = [ 
+                                ['table_name'=>'staff_departments','number'=>'5'],
+                                ['table_name'=>'academic_year','number'=>'4'],
+                                ['table_name'=>'classes','number'=>'6'],
+                                ['table_name'=>'sections','number'=>'7'],
+                                ['table_name'=>'session','number'=>'9'],
+                                ['table_name'=>'semester','number'=>'8'],
+                                ['table_name'=>'staff_departments','number'=>'11'],
+                                ['table_name'=>'academic_year','number'=>'10'],
+                                ['table_name'=>'classes','number'=>'12'],
+                                ['table_name'=>'sections','number'=>'13'],
+                                ['table_name'=>'session','number'=>'15'],
+                                ['table_name'=>'semester','number'=>'14'],
                             ];
-                            // return $column;
-                            $row = $this->getLikeColumnName($column);
-                            $dynamic_data[$number] = $row;
-                        }
+    
+                            $dynamic_data = [];
+                            foreach($dynamic_row as $row) {
+                                $number = $row['number'];
+                                $column = [
+                                    'token' => $request->token,
+                                    'branch_id' => $request->branch_id,
+                                    'name' => $importData[$number],
+                                    'table_name' => $row['table_name']
+                                ];
+                                // return $column;
+                                $row = $this->getLikeColumnName($column);
+                                $dynamic_data[$number] = $row;
+                            }
+                               //return $dynamic_data;
+                                $studentId = $Connection->table('students')->select('id')->where('roll_no', '=', $student_number)->first();
+                               
+                                if (!empty($studentId)) 
+                                {
+                                   
+                                    $classDetails = [
+                                        'student_id' =>  $studentId->id,
+                                        'department_id' => $dynamic_data[5],
+                                        'class_id' => $dynamic_data[6],
+                                        'section_id' => $dynamic_data[7],
+                                        'academic_session_id' => $dynamic_data[4],
+                                        'session_id' => isset($dynamic_data[9]) ? $dynamic_data[9] : 0,
+                                        'semester_id' => isset($dynamic_data[8]) ? $dynamic_data[8] : 0,
+                                        'attendance_no' => $current_attendance_no,
+                                        'promoted_department_id' => $dynamic_data[11],
+                                        'promoted_class_id' => $dynamic_data[12],
+                                        'promoted_section_id' => $dynamic_data[13],
+                                        'promoted_academic_session_id' => $dynamic_data[10],
+                                        'roll' => $student_number,
+                                        'promoted_session_id' => isset($dynamic_data[15]) ? $dynamic_data[15] : 0,
+                                        'promoted_semester_id' => isset($dynamic_data[14]) ? $dynamic_data[14] : 0,
+                                        'status' => 1
+                                    ];
+                                    
+                                    // Insert the record and get the last inserted ID
+                                         $Connection->table('temp_promotion')->insertGetId($classDetails);
+                                       
+                                        // // Retrieve the inserted data using the last inserted ID
+                                        // $insertedRecord = $Connection->table('temp_promotion as tp')
+                                        // ->select("tp.id","tp.attendance_no",
+                                        //     "st1.first_name",
+                                        //     "tp.roll",
+                                        //     "d1.name as deptName",
+                                        //     "c1.name as className",
+                                        //     "s1.name as sectionName", 
+                                        //     "sem1.name as semName",
+                                        //     "ses1.name as sesName",
+                                        //     "d2.name as deptPromotionName",
+                                        //     "c2.name as classPromotionName",
+                                        //     "s2.name as sectionPromotionName",
+                                        //     "sem2.name as semPromotionName", 
+                                        //     "ses2.name as sesPromotionName"
+                                        //     )
+                                        // ->leftJoin('classes as c1', 'c1.id', '=', 'tp.class_id')
+                                        // ->leftJoin('classes as c2', 'c2.id', '=', 'tp.promoted_class_id')
+                                        // ->leftJoin('sections as s1', 's1.id', '=', 'tp.section_id')
+                                        // ->leftJoin('sections as s2', 's2.id', '=', 'tp.promoted_section_id')
+                                        // ->leftJoin('staff_departments as d1', 'd1.id', '=', 'tp.department_id')
+                                        // ->leftJoin('staff_departments as d2', 'd2.id', '=', 'tp.promoted_department_id')
+                                        // ->leftJoin('students as st1', 'st1.id', '=', 'tp.student_id')
+                                        // ->leftJoin('semester as sem1', 'sem1.id', '=', 'tp.semester_id')
+                                        // ->leftJoin('semester as sem2', 'sem2.id', '=', 'tp.promoted_semester_id')
+                                        // ->leftJoin('session as ses1', 'ses1.id', '=', 'tp.session_id')
+                                        // ->leftJoin('session as ses2', 'ses2.id', '=', 'tp.promoted_session_id')
+                                        // ->where('tp.id',"=" ,$insertedId)
+                                        // ->get()->toArray();
 
-                        $studentId = $Connection->table('students')->select('id')->where('roll_no', '=', $student_number)->first();
-
-                        if (!empty($studentId)) {
-
-                            $classDetails = [
-                                'student_id' =>  $studentId->id,
-                                'department_id' => $dynamic_data[5],
-                                'class_id' => $dynamic_data[6],
-                                'section_id' => $dynamic_data[7],
-                                'academic_session_id' => $dynamic_data[4],
-                                'session_id' => isset($dynamic_data[9]) ? $dynamic_data[9] : 0,
-                                'semester_id' => isset($dynamic_data[8]) ? $dynamic_data[8] : 0,
-                                'attendance_no' => $current_attendance_no,
-                                'promoted_department_id' => $dynamic_data[12],
-                                'promoted_class_id' => $dynamic_data[13],
-                                'promoted_section_id' => $dynamic_data[14],
-                                'promoted_academic_session_id' => $dynamic_data[11],
-                                'roll' => $student_number,
-                                'promoted_session_id' => isset($dynamic_data[16]) ? $dynamic_data[16] : 0,
-                                'promoted_semester_id' => isset($dynamic_data[15]) ? $dynamic_data[15] : 0,
-                                'promoted_attendance_no' => $promoted_attendance_no
-                            ];
-
-                            // Insert the record and get the last inserted ID
-                            $insertedId = $Connection->table('temp_promotion')->insertGetId($classDetails);
-
-                            // Retrieve the inserted data using the last inserted ID
-                            $insertedRecord = $Connection->table('temp_promotion as tp')
-                                ->select(
-                                    "tp.attendance_no",
-                                    "st1.first_name",
-                                    "tp.roll",
-                                    "d1.name as deptName",
-                                    "c1.name as className",
-                                    "s1.name as sectionName",
-                                    "sem1.name as semName",
-                                    "ses1.name as sesName",
-                                    "d2.name as deptPromotionName",
-                                    "c2.name as classPromotionName",
-                                    "s2.name as sectionPromotionName",
-                                    "sem2.name as semPromotionName",
-                                    "ses2.name as sesPromotionName"
-                                )
-                                ->leftJoin('classes as c1', 'c1.id', '=', 'tp.class_id')
-                                ->leftJoin('classes as c2', 'c2.id', '=', 'tp.promoted_class_id')
-                                ->leftJoin('sections as s1', 's1.id', '=', 'tp.section_id')
-                                ->leftJoin('sections as s2', 's2.id', '=', 'tp.promoted_section_id')
-                                ->leftJoin('staff_departments as d1', 'd1.id', '=', 'tp.department_id')
-                                ->leftJoin('staff_departments as d2', 'd2.id', '=', 'tp.promoted_department_id')
-                                ->leftJoin('students as st1', 'st1.id', '=', 'tp.student_id')
-                                ->leftJoin('semester as sem1', 'sem1.id', '=', 'tp.semester_id')
-                                ->leftJoin('semester as sem2', 'sem2.id', '=', 'tp.promoted_semester_id')
-                                ->leftJoin('session as ses1', 'ses1.id', '=', 'tp.session_id')
-                                ->leftJoin('session as ses2', 'ses2.id', '=', 'tp.promoted_session_id')
-                                ->where('tp.id', "=", $insertedId)
-                                ->get()->toArray();
-
-                            // Add the inserted data to the array
-                            $insertedData[] = $insertedRecord;
-                        }
-                        // return $insertedData;    
+                                        // // Add the inserted data to the array
+                                        // $insertedData[] = $insertedRecord;
+                                }
+                           // return $insertedData;    
                     }
-                    // return $insertedData;
+                   // return $insertedData;
                     if (\File::exists($filepath)) {
                         \File::delete($filepath);
                     }
-                    return $this->successResponse(['data' => $insertedData], 'Import Successful');
+                    return $this->successResponse([], 'Import Successful');
                 } else {
                     return $this->send422Error('Validation error.', ['error' => 'File too large. File must be less than 2MB.']);
                 }

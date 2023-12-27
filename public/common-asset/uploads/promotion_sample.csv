@@ -1,2 +1,2 @@
-﻿Student Name,Student Number,Current Grade,Current Class,Current Semester,Current Session,Promoted Grade,Promoted Class,Promoted Semester,Promoted Session
-xxx,9JSKL1234,Grade1,1,1,Morning,Grade2,1,2,Morning
+﻿#,Student Name,Student Number,Current Attendance No,Current Academic Year,Current Department,Current Grade,Current Class,Current Semester,Current Session,Promoted Academic Year,Promoted Department,Promoted Grade,Promoted Class,Promoted Semester,Promoted Session
+1,佐藤,123456789,1,2022-2023,Primary,1,A,第1学期（4月〜7月）,Morning,2023-2024,Primary,2,A,第2学期（8月〜12月）,Morning

@@ -2832,6 +2832,462 @@ class ApiControllerOne extends BaseController
             return $this->successResponse([], 'Promotion successfuly.');
         }
     }
+    public function getPromotionDataBulkSave(Request $request)
+    {
+        $validator = \Validator::make($request->all(), [
+            'branch_id' => 'required'
+        ]);
+        
+        if (!$validator->passes()) {
+            return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
+        } else {
+            $conn = $this->createNewConnection($request->branch_id);
+            $promotion_data = $request->updatedData;
+           // return $promotion_data;
+            foreach ($promotion_data as $row) {
+                $id = $row['id'];
+                $attendance_no = $row['attendance_no'];
+        
+                $conn->table('temp_promotion')->where('id', $id)->update(['attendance_no' => $attendance_no, 'status' => 1]);
+            }    
+        
+            return $this->successResponse($promotion_data, 'Data successfully added');
+        }
+    }
+    public function getPromotionBulkStudentList(Request $request){
+        $validator = \Validator::make($request->all(), [
+            'branch_id' => 'required'
+        ]);
+        
+        if (!$validator->passes()) {
+            return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
+        } else {
+            $conn = $this->createNewConnection($request->branch_id);
+           $allocation = $conn->table('teacher_allocations as ta')
+                ->select(
+                    'class_id',
+                    'section_id',
+                    'department_id'
+                )
+                ->where('ta.teacher_id', $request->teacher_id)
+                ->first();
+            $department_id = "All";
+            if (isset($request->department_id)) {
+                $department_id = $request->department_id;
+            }
+            $grade_id =  $allocation->class_id;
+            if (isset($request->grade_id)) {
+                $grade_id = $request->grade_id;
+            }
+            $section_id = $allocation->section_id;
+            if (isset($request->section_id)) {
+                $section_id = $request->section_id;
+            }
+            $sort_id = "All";
+            if (isset($request->sort_id)) {
+                $sort_id = $request->sort_id;
+            }
+            
+            if($sort_id == 1)
+            {
+                $promotion_data1 = $conn->table('temp_promotion as tp')
+            ->select("tp.id","tp.attendance_no",
+            DB::raw("CONCAT(st1.first_name, ' ', st1.last_name) as name"),
+            "tp.roll",
+            "d1.name as deptName",
+            "c1.name as className",
+            "s1.name as sectionName", 
+            "d2.name as deptPromotionName",
+            "c2.name as classPromotionName",
+            "s2.name as sectionPromotionName",
+            "tp.status"
+            )
+            ->leftJoin('classes as c1', 'c1.id', '=', 'tp.class_id')
+            ->leftJoin('classes as c2', 'c2.id', '=', 'tp.promoted_class_id')
+            ->leftJoin('sections as s1', 's1.id', '=', 'tp.section_id')
+            ->leftJoin('sections as s2', 's2.id', '=', 'tp.promoted_section_id')
+            ->leftJoin('staff_departments as d1', 'd1.id', '=', 'tp.department_id')
+            ->leftJoin('staff_departments as d2', 'd2.id', '=', 'tp.promoted_department_id')
+            ->leftJoin('students as st1', 'st1.id', '=', 'tp.student_id')
+            ->where('tp.department_id', '=', $department_id)
+            ->where('tp.class_id', '=', $grade_id)
+            ->when(!empty($section_id), function ($query) use ($section_id) {
+                return $query->where('tp.section_id', '=', $section_id);
+            })
+            ->whereIn('tp.status', [1, 2, 3])
+            ->orderBy('tp.section_id', 'asc')
+            ->get();
+            }elseif($sort_id == 2){
+                $promotion_data1 = $conn->table('temp_promotion as tp')
+            ->select("tp.id","tp.attendance_no",
+            DB::raw("CONCAT(st1.first_name, ' ', st1.last_name) as name"),
+            "tp.roll",
+            "d1.name as deptName",
+            "c1.name as className",
+            "s1.name as sectionName", 
+            "d2.name as deptPromotionName",
+            "c2.name as classPromotionName",
+            "s2.name as sectionPromotionName",
+             "tp.status"
+            )
+            ->leftJoin('classes as c1', 'c1.id', '=', 'tp.class_id')
+            ->leftJoin('classes as c2', 'c2.id', '=', 'tp.promoted_class_id')
+            ->leftJoin('sections as s1', 's1.id', '=', 'tp.section_id')
+            ->leftJoin('sections as s2', 's2.id', '=', 'tp.promoted_section_id')
+            ->leftJoin('staff_departments as d1', 'd1.id', '=', 'tp.department_id')
+            ->leftJoin('staff_departments as d2', 'd2.id', '=', 'tp.promoted_department_id')
+            ->leftJoin('students as st1', 'st1.id', '=', 'tp.student_id')
+            ->where('tp.department_id', '=', $department_id)
+            ->where('tp.class_id', '=', $grade_id)
+            ->when(!empty($section_id), function ($query) use ($section_id) {
+                return $query->where('tp.section_id', '=', $section_id);
+            })
+            ->whereIn('tp.status', [1, 2, 3])
+            ->orderBy('tp.promoted_section_id', 'asc')
+            ->get();
+            }else{
+                $promotion_data1 = $conn->table('temp_promotion as tp')
+                ->select("tp.id","tp.attendance_no",
+                DB::raw("CONCAT(st1.first_name, ' ', st1.last_name) as name"),
+                "tp.roll",
+                "d1.name as deptName",
+                "c1.name as className",
+                "s1.name as sectionName", 
+                "d2.name as deptPromotionName",
+                "c2.name as classPromotionName",
+                "s2.name as sectionPromotionName",
+                 "tp.status",
+                 "te1.date_of_termination"
+                )
+                ->leftJoin('classes as c1', 'c1.id', '=', 'tp.class_id')
+                ->leftJoin('classes as c2', 'c2.id', '=', 'tp.promoted_class_id')
+                ->leftJoin('sections as s1', 's1.id', '=', 'tp.section_id')
+                ->leftJoin('sections as s2', 's2.id', '=', 'tp.promoted_section_id')
+                ->leftJoin('staff_departments as d1', 'd1.id', '=', 'tp.department_id')
+                ->leftJoin('staff_departments as d2', 'd2.id', '=', 'tp.promoted_department_id')
+                ->leftJoin('students as st1', 'st1.id', '=', 'tp.student_id')
+                ->leftJoin('termination as te1', 'te1.student_id', '=', 'tp.student_id')
+                ->when($department_id == 'All', function ($query) use ($allocation) {
+                    return $query->where('tp.department_id', '=', $allocation->department_id);
+                })
+                ->when($grade_id == 'All', function ($query) use ($allocation) {
+                    return $query->where('tp.class_id', '=', $allocation->class_id);
+                })
+                ->when($section_id == 'All', function ($query) use ($allocation) {
+                    return $query->where('tp.section_id', '=', $allocation->section_id);
+                })
+                ->get();
+             
+            }
+           
+        
+            return $this->successResponse($promotion_data1, 'Data successfully added');
+        }
+    }
+    public function getPromotionUnassignedStudentList(Request $request){
+        $validator = \Validator::make($request->all(), [
+            // 'branch_id' => 'required'
+         ]);
+         
+         if (!$validator->passes()) {
+             return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
+         } else {
+             $conn = $this->createNewConnection($request->branch_id);
+             $department_id = "All";
+                if (isset($request->department_id)) {
+                    $department_id = $request->department_id;
+                }
+                $grade_id = "All";
+                if (isset($request->grade_id)) {
+                    $grade_id = $request->grade_id;
+                }
+                $section_id = "All";
+                if (isset($request->section_id)) {
+                    $section_id = $request->section_id;
+                }
+             $promotion_data_not_in_enroll = $conn->table('temp_promotion as tp')
+                ->select(
+                    "tp.attendance_no",
+                    DB::raw("CONCAT(st1.first_name, ' ', st1.last_name) as name"),
+                    "st1.admission_date",
+                    "tp.roll",
+                    "d1.name as deptName",
+                    "c1.name as className",
+                    "s1.name as sectionName",
+                    "st1.status"
+                )
+                ->leftJoin('classes as c1', 'c1.id', '=', 'tp.class_id')
+                ->leftJoin('sections as s1', 's1.id', '=', 'tp.section_id')
+                ->leftJoin('staff_departments as d1', 'd1.id', '=', 'tp.department_id')
+                ->leftJoin('students as st1', 'st1.id', '=', 'tp.student_id')
+                ->leftJoin('semester as sem1', 'sem1.id', '=', 'tp.semester_id')
+                ->leftJoin('session as ses1', 'ses1.id', '=', 'tp.session_id')
+                ->whereNotExists(function ($query) {
+                    $query->select(DB::raw(1))
+                        ->from('enrolls')
+                        ->whereRaw('enrolls.roll = tp.roll');
+                })
+                ->when($department_id != "All", function ($query) use ($department_id) {
+                    return $query->where('tp.department_id', '=', $department_id);
+                })
+                ->when($grade_id != "All", function ($query) use ($grade_id) {
+                    return $query->where('tp.class_id', '=', $grade_id);
+                })
+                 ->when($section_id != "All", function ($query) use ($section_id) {
+                     return $query->where('tp.section_id', '=', $section_id);
+                 })
+                ->whereIn('tp.status', [1, 2, 3])
+                ->get();
+         
+             return $this->successResponse($promotion_data_not_in_enroll, 'Data successfully added');
+         }
+    }
+    public function getPromotionUnassignedFreezedData(Request $request){
+        $validator = \Validator::make($request->all(), [
+            // 'branch_id' => 'required'
+         ]);
+         
+         if (!$validator->passes()) {
+             return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
+         } else {
+             $branch = 4;
+             $conn = $this->createNewConnection($branch);
+             $promotion_data_not_in_enroll = $conn->table('temp_promotion as tp')
+                ->select(
+                    "tp.attendance_no",
+                    DB::raw("CONCAT(st1.first_name, ' ', st1.last_name) as name"),
+                    "st1.admission_date",
+                    "tp.roll",
+                    "d1.name as deptName",
+                    "c1.name as className",
+                    "s1.name as sectionName",
+                    "st1.status"
+                )
+                ->leftJoin('classes as c1', 'c1.id', '=', 'tp.class_id')
+                ->leftJoin('sections as s1', 's1.id', '=', 'tp.section_id')
+                ->leftJoin('staff_departments as d1', 'd1.id', '=', 'tp.department_id')
+                ->leftJoin('students as st1', 'st1.id', '=', 'tp.student_id')
+                ->leftJoin('semester as sem1', 'sem1.id', '=', 'tp.semester_id')
+                ->leftJoin('session as ses1', 'ses1.id', '=', 'tp.session_id')
+                ->whereNotExists(function ($query) {
+                    $query->select(DB::raw(1))
+                        ->from('enrolls')
+                        ->whereRaw('enrolls.roll = tp.roll');
+                })
+                ->whereIn('tp.status', [1, 2, 3])
+                ->get();
+         
+             return $this->successResponse($promotion_data_not_in_enroll, 'Data successfully added');
+         }
+
+    }
+    public function getPromotionTerminationStudentList(Request $request){
+
+        $validator = \Validator::make($request->all(), [
+            // 'branch_id' => 'required'
+         ]);
+         
+         if (!$validator->passes()) {
+             return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
+         } else {
+           
+            $conn = $this->createNewConnection($request->branch_id);
+            $department_id = "All";
+            if (isset($request->department_id)) {
+                $department_id = $request->department_id;
+            }
+            $grade_id = "All";
+            if (isset($request->grade_id)) {
+                $grade_id = $request->grade_id;
+            }
+            $section_id = "All";
+            if (isset($request->section_id)) {
+                $section_id = $request->section_id;
+            }
+             $promotion_data_inactive_students = $conn->table('temp_promotion as tp')
+             ->select(
+                 "tp.attendance_no",
+                 DB::raw("CONCAT(st1.first_name, ' ', st1.last_name) as name"),
+                 "te1.date_of_termination",
+                 "tp.roll",
+                 "d1.name as deptName",
+                 "c1.name as className",
+                 "s1.name as sectionName"
+             )
+             ->leftJoin('classes as c1', 'c1.id', '=', 'tp.class_id')
+             ->leftJoin('sections as s1', 's1.id', '=', 'tp.section_id')
+             ->leftJoin('staff_departments as d1', 'd1.id', '=', 'tp.department_id')
+             ->leftJoin('students as st1', 'st1.id', '=', 'tp.student_id')
+             ->leftJoin('termination as te1', 'te1.student_id', '=', 'tp.student_id')
+             ->when($department_id != "All", function ($query) use ($department_id) {
+                return $query->where('tp.department_id', '=', $department_id);
+            })
+            ->when($grade_id != "All", function ($query) use ($grade_id) {
+                return $query->where('tp.class_id', '=', $grade_id);
+            })
+             ->when($section_id != "All", function ($query) use ($section_id) {
+                 return $query->where('tp.section_id', '=', $section_id);
+             })
+             ->whereIn('tp.status', [1, 2, 3])
+             ->whereNotNull('te1.date_of_termination')
+             ->get();
+         
+             return $this->successResponse($promotion_data_inactive_students, 'Data successfully added');
+            }
+    }
+    public function getPromotionPreparedDataAdd(Request $request){
+        
+        $validator = \Validator::make($request->all(), [
+            'branch_id' => 'required'
+        ]);
+        
+        if (!$validator->passes()) {
+            return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
+        } else {
+            $conn = $this->createNewConnection($request->branch_id);
+            $promotion_data = $request->updatedData;
+           // return $promotion_data;
+            foreach ($promotion_data as $id) {
+        
+                $conn->table('temp_promotion')->where('id', $id)->update(['status' => 2]);
+            }    
+        
+            return $this->successResponse($promotion_data, 'Data successfully added');
+        }
+    }
+    public function getPromotionFreezedData(Request $request){
+        $validator = \Validator::make($request->all(), [
+            'branch_id' => 'required'
+        ]);
+        
+        if (!$validator->passes()) {
+            return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
+        } else {
+            $conn = $this->createNewConnection($request->branch_id);
+            $status = "All";
+             if (isset($request->status)) {
+                $status = $request->status;
+            }
+            $promotion_data = $conn->table('temp_promotion as tp')
+            ->select(
+            "tp.id",
+            "d1.name as deptName",
+            "c1.name as className",
+            "tp.status"
+            )
+            ->leftJoin('classes as c1', 'c1.id', '=', 'tp.class_id')
+            ->leftJoin('staff_departments as d1', 'd1.id', '=', 'tp.department_id')
+            ->when($status != "All", function ($query) use ($status) {
+                return $query->where('tp.status', '=', $status);
+            })
+            ->whereIn('tp.status', [1, 2, 3])
+            //->groupBy('c1.name')
+            ->get();   
+        
+            return $this->successResponse($promotion_data, 'Data successfully added');
+        }
+    }
+    public function addPromotionStatusData(Request $request){
+        $validator = \Validator::make($request->all(), [
+            'branch_id' => 'required'
+        ]);
+        
+        if (!$validator->passes()) {
+            return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
+        } else {
+            $conn = $this->createNewConnection($request->branch_id);
+            $promotion_data = $request->statusData;
+            // return $promotion_data;
+             foreach ($promotion_data as $rowData) {
+                $id = $rowData['id'];
+                $status = $rowData['selectedStatus'];
+               
+                $conn->table('temp_promotion')->where('id', $id)->update(['status' => $status]);
+             }    
+        
+             return $this->successResponse($promotion_data, 'Data successfully added');
+        }
+    }
+    public function addPromotionFinalData(Request $request){
+        $validator = \Validator::make($request->all(), [
+            'branch_id' => 'required'
+        ]);
+        
+        if (!$validator->passes()) {
+            return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
+        } else {
+            $conn = $this->createNewConnection($request->branch_id);
+            $promotion_data = $request->promotionFinalData;
+           
+             foreach ($promotion_data as $rowData) {
+                $promotion_final = $conn->table('temp_promotion')->where('id',$rowData['id'])->get();
+                if ($promotion_final) {
+                      //return $this->successResponse($promotion_final[0]->student_id, 'Data successfully added');
+                        $conn->table('enrolls')
+                                ->where('student_id', '=', $promotion_final[0]->student_id)
+                                ->update(['active_status' => 1]);
+                        // Insert data into the 'enrolls' table
+                        $enrollData = [
+                            'student_id' => $promotion_final[0]->student_id, 
+                            'department_id' => $promotion_final[0]->department_id,
+                            'class_id'  => $promotion_final[0]->class_id,
+                            'section_id'  => $promotion_final[0]->section_id,
+                            'roll'  => $promotion_final[0]->roll,
+                            'academic_session_id'  => $promotion_final[0]->academic_session_id,
+                            'semester_id'  => $promotion_final[0]->semester_id,
+                            'session_id'  => $promotion_final[0]->session_id,
+                            'active_status' => 1
+                        ];
+                        $enrollId = $conn->table('enrolls')->insertGetId($enrollData);
+                        $enrollData2= [
+                            'student_id' => $promotion_final[0]->student_id, 
+                            'roll'  => $promotion_final[0]->roll,
+                            'department_id' => $promotion_final[0]->promoted_department_id,
+                            'class_id'  => $promotion_final[0]->promoted_class_id,
+                            'section_id'  => $promotion_final[0]->promoted_section_id,
+                            'academic_session_id'  => $promotion_final[0]->promoted_academic_session_id,
+                            'semester_id'  => $promotion_final[0]->promoted_semester_id,
+                            'session_id'  => $promotion_final[0]->promoted_session_id
+                        ];
+                        $enrollId2 = $conn->table('enrolls')->insertGetId($enrollData2);
+                    
+                    if ($enrollId &&  $enrollId2) {
+                        // If the insertion was successful, delete from 'temp_promotion'
+                        $conn->table('temp_promotion')->where('id', $rowData['id'])->delete();
+                    }
+                }
+             }    
+        
+             return $this->successResponse($promotion_data, 'Data successfully added');
+        }
+    }
+    public function downloadPromotionData(Request $request)
+    {
+        $validator = \Validator::make($request->all(), [
+            'branch_id' => 'required'
+        ]);
+        
+        if (!$validator->passes()) {
+            return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
+        } else {
+            $conn = $this->createNewConnection($request->branch_id);
+            $department_id = $request->department_id;
+            $class_id = $request->class_id;
+            $section_id = $request->section_id;
+            $download_data = $conn->table('section_allocations as sa')->select('d.name','cl.name as class_name','s.name as section_name')
+            ->leftJoin('staff_departments as d', 'sa.department_id', '=', 'd.id')
+            ->leftJoin('classes as cl', 'sa.class_id', '=', 'cl.id')
+            ->join('sections as s', 'sa.section_id', '=', 's.id')
+            ->where('sa.department_id', $department_id)
+            ->where('sa.class_id', $class_id)
+            ->when($section_id, function ($query, $section_id) {
+                return $query->where('sa.section_id', $section_id);
+            })
+            ->get();
+
+            return $this->successResponse($download_data, 'Data successfully added');
+        }
+    }
     // relief assignment
     public function getAllLeaveReliefAssignment(Request $request)
     {

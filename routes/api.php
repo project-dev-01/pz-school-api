@@ -731,7 +731,16 @@ Route::group(['middleware' => ['auth:api', 'throttle:limit_per_user', 'logroute'
     Route::post('get_student_list/by_class_section_sem_ses', [ApiControllerOne::class, 'getStudListByClassSecSemSess']);
     Route::post('promotion/add', [ApiControllerOne::class, 'addPromotion']);
     Route::post('get_student_list/promotion_data_bulk', [ImportController::class, 'getPromotionDataBulk']);
-
+    Route::post('get_student_list/promotion_bulk_import_save', [ApiControllerOne::class, 'getPromotionDataBulkSave']);
+    Route::post('get_student_list/promotion_bulk_student_list', [ApiControllerOne::class, 'getPromotionBulkStudentList']);
+    Route::post('get_student_list/promotion_unassigned_student_list', [ApiControllerOne::class, 'getPromotionUnassignedStudentList']);
+    Route::post('get_student_list/promotion_termination_student_list', [ApiControllerOne::class, 'getPromotionTerminationStudentList']);
+    Route::post('get_student_list/promotion_prepared_Data_add', [ApiControllerOne::class, 'getPromotionPreparedDataAdd']);
+    Route::post('get_student_list/promotion_get_data_freezed', [ApiControllerOne::class, 'getPromotionFreezedData']);
+    Route::get('get_student_list/get_studentList_Unassigned_Freezed', [ApiControllerOne::class, 'getPromotionUnassignedFreezedData']);
+    Route::post('get_student_list/promotion_Status_Data_add', [ApiControllerOne::class, 'addPromotionStatusData']);
+    Route::post('get_student_list/promotion_Final_Data_add', [ApiControllerOne::class, 'addPromotionFinalData']);
+    Route::post('get_student_list/promotion_download_csv', [ApiControllerOne::class, 'downloadPromotionData']);
     // Gloabl Setting routes
     Route::post('global_setting/add', [ApiController::class, 'addGlobalSetting']);
     Route::get('global_setting/list', [ApiController::class, 'getGlobalSettingList']);

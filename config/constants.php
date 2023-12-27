@@ -1,4 +1,4 @@
 <?php
 return [
-    'main_db'=>'paxsuzen-api'
+    'main_db'=>'paxsuze-api'
 ];
