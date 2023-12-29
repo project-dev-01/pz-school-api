@@ -13626,7 +13626,55 @@ $query->school_roleid=$request->school_roleid;
             }
         }
     }
+    public function saveStudentSetting(Request $request)
+    {
+        $validator = \Validator::make($request->all(), [
+            'branch_id' => 'required',
+        ]);
 
+        if (!$validator->passes()) {
+            return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
+        } else {
+            // create new connection
+            $conn = $this->createNewConnection($request->branch_id);
+            // $studentDetailsValue = $request->studentDetails ? 1 : 0;
+            // $parent_details = $request->parentDetails ? 1 : 0;
+            // $school_details = $request->schoolDetails ? 1 : 0;
+            // $academic_details = $request->academicDetails ? 1 : 0;
+            // $gradeAndClasses = $request->gradeAndClasses ? 1 : 0;
+            // $attendance = $request->attendance ? 1 : 0;
+            // $testResult = $request->testResult ? 1 : 0;
+            $gardeClassAcademic = $request->gardeClassAcademic;
+            $attendanceAcademic = $request->attendanceAcademic;
+            $testResultAcademic = $request->testResultAcademic;
+            $staff_id = $request->staff_id;
+
+            // insert data
+            $query = $conn->table('student_info_download_settings')->insert([
+                'student_info' => !empty($request->studentDetails == "true") ? "1" : "0",
+                'parent_info' =>  !empty($request->parentDetails == "true") ? "1" : "0",
+                'school_info' =>  !empty($request->schoolDetails == "true") ? "1" : "0",
+                'academic_info' =>  !empty($request->academicDetails == "true") ? "1" : "0",
+                'grade_class_info' =>  !empty($request->gradeAndClasses == "true") ? "1" : "0",
+                'grade_class_academic_year' => $gardeClassAcademic,
+                'attendance_info' =>  !empty($request->attendance == "true") ? "1" : "0",
+                'attendance_academic_year' => $attendanceAcademic,
+                'test_result_info' =>  !empty($request->testResult == "true") ? "1" : "0",
+                'test_result_academic_year' => $testResultAcademic,
+                'staff_id' => $staff_id,
+                'created_by' => $staff_id,
+                'created_at' => date("Y-m-d H:i:s")
+
+            ]);
+            $success = [];
+            if (!$query) {
+                return $this->send500Error('Something went wrong.', ['error' => 'Something went wrong']);
+            } else {
+                return $this->successResponse($success, 'Student Settings has been successfully saved');
+            }
+        }
+
+    }
     // addParent
     public function addParent(Request $request)
     {
