@@ -495,6 +495,7 @@ Route::group(['middleware' => ['auth:api', 'throttle:limit_per_user', 'logroute'
     Route::post('parent/student/update', [ApiController::class, 'parentUpdateStudent']);
     Route::post('student/student-details', [ApiController::class, 'getStudentDetails']);
     Route::post('student/delete', [ApiController::class, 'deleteStudent']);
+    Route::post('student/student_settings', [ApiController::class, 'saveStudentSetting']);
 
     // parent routes
     Route::post('parent/add', [ApiController::class, 'addParent']);
