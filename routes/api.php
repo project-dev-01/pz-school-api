@@ -43,6 +43,7 @@ Route::post('get-cities', [CommonController::class, 'getCityByIdList']);
 // Route::post('reset/password_expired_link', [ApiControllerOne::class, 'passwordExpiredLink']);
 Route::post('reset/password_expired_link', [ApiControllerOne::class, 'passwordExpiredLink']);
 Route::post('reset/expire_reset_password', [AuthController::class, 'expireResetPassword']);
+Route::post('termination/student', [ApiControllerOne::class, 'terminationStudent']);
 // 2fa start
 Route::post('2fa/two_fa_generate_secret_qr', [TwoFactorAuth::class, 'twoFaGenerateSecretQr']);
 Route::post('2fa/two_fa_otp_valid', [TwoFactorAuth::class, 'twoFaOtpValid']);

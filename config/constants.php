@@ -1,4 +1,5 @@
 <?php
 return [
-    'main_db'=>'paxsuze-api'
+    'main_db'=>'paxsuzen-api',
+    'client_email'=>'askyourquery@paxsuzen.com',
 ];
