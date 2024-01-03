@@ -378,13 +378,10 @@ class AuthController extends BaseController
         // dd($link);
         if ($email) {
             $data = array('link' => $link, 'name' => $user->name);
-            // Mail::send('auth.mail', $data, function ($message) use ($email) {
-            //     $message->to('rajeshsakthi645@gmail.com', 'members')->subject('Password Reset');
-            //     $message->from('rajeshsakthi645@gmail.com', 'Password Reset');
-            // });
-            Mail::send('auth.mail', $data, function ($message) use ($email) {
+            $mailFromAddress = env('MAIL_FROM_ADDRESS', config('constants.client_email'));
+            Mail::send('auth.mail', $data, function ($message) use ($email,$mailFromAddress) {
                 $message->to($email, 'User')->subject('Password Reset');
-                $message->from(env('MAIL_FROM_ADDRESS'), env('MAIL_FROM_NAME'));
+                $message->from($mailFromAddress, env('MAIL_FROM_NAME'));
             });
             return $user;
         } else {

@@ -1305,4 +1305,250 @@ class ApiControllerThree extends BaseController
             return $this->successResponse($class, 'class by department record fetch successfully');
         }
     }
+    public function downloadStudentListInformation(Request $request)
+    {
+        $validator = \Validator::make($request->all(), [
+            'branch_id' => 'required',
+            'staff_id' => 'required',
+        ]);
+
+        if (!$validator->passes()) {
+            return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
+        } else {
+            // create new connection
+            $Connection = $this->createNewConnection($request->branch_id);
+            $info = $Connection->table('student_info_download_settings as si')
+                ->where('si.staff_id', '=', $request->staff_id)
+                ->first();
+            $class_id = isset($request->class_id) ? $request->class_id : null;
+            $section_id = isset($request->section_id) ? $request->section_id : null;
+            $enableStudentInfo = isset($info->student_info) ? $info->student_info : null;
+            $attendance_academic_year = 2;
+            // $attendance_academic_year = isset($info->attendance_academic_year) ? $info->attendance_academic_year : 0;
+            // student information
+            if ($enableStudentInfo == "0") {
+                // get student informations
+                $getStudentInfo = $Connection->table('enrolls as en')
+                    ->select(
+                        'en.student_id',
+                        'en.attendance_no',
+                        // 'en.department_id',
+                        // 'en.class_id',
+                        // 'en.section_id',
+                        // 'en.semester_id',
+                        // 'en.session_id',
+                        DB::raw("CONCAT(st.first_name, ' ', st.last_name) as name"),
+                        DB::raw("CONCAT(st.first_name_english, ' ', st.last_name_english) as eng_name"),
+                        DB::raw("CONCAT(st.first_name_furigana, ' ', st.last_name_furigana) as fur_name"),
+                        'st.gender',
+                        'st.birthday',
+                        'st.email',
+                        // 'cl.name as class_name',
+                        // 'sc.name as section_name',
+                        // 'emp.name as department_name'
+                    )
+                    // ->leftJoin('emp_department as emp', 'en.department_id', '=', 'emp.id')
+                    // ->leftJoin('classes as cl', 'en.class_id', '=', 'cl.id')
+                    // ->leftJoin('sections as sc', 'en.section_id', '=', 'sc.id')
+                    ->join('students as st', 'en.student_id', '=', 'st.id')
+                    ->when($class_id, function ($q)  use ($class_id) {
+                        $q->where('en.class_id', $class_id);
+                    })
+                    ->when($section_id, function ($q)  use ($section_id) {
+                        $q->where('en.section_id', $section_id);
+                    })
+                    ->where('en.active_status', '=', '0')
+                    ->groupBy('en.student_id')
+                    ->get()->toArray();
+            }
+            // parent information
+            if ($enableStudentInfo == "0") {
+                // get parent informations
+                $getParentInfo = $Connection->table('enrolls as en')
+                    ->select(
+                        'en.student_id',
+                        // 'en.attendance_no',
+                        // 'en.department_id',
+                        // 'en.class_id',
+                        // 'en.section_id',
+                        // 'en.semester_id',
+                        // 'en.session_id',
+                        DB::raw("CONCAT(p.first_name, ' ', p.last_name) as parent_name"),
+                        DB::raw("CONCAT(p.first_name_english, ' ', p.last_name_english) as parent_eng_name"),
+                        DB::raw("CONCAT(p.first_name_furigana, ' ', p.last_name_furigana) as parent_fur_name"),
+                        'p.nationality',
+                        'p.gender as parent_gender',
+                        'p.date_of_birth as parent_dob',
+                        'p.education as parent_education',
+                        'p.email as parent_email',
+                        // 'st.birthday',
+                        // 'st.email',
+                    )
+                    ->join('students as st', 'en.student_id', '=', 'st.id')
+                    ->leftjoin('parent as p', function ($join) {
+                        $join->on('st.father_id', '=', 'p.id');
+                        $join->orOn('st.mother_id', '=', 'p.id');
+                        $join->orOn('st.guardian_id', '=', 'p.id');
+                    })
+                    ->when($class_id, function ($q)  use ($class_id) {
+                        $q->where('en.class_id', $class_id);
+                    })
+                    ->when($section_id, function ($q)  use ($section_id) {
+                        $q->where('en.section_id', $section_id);
+                    })
+                    ->where('en.active_status', '=', '0')
+                    ->groupBy('en.student_id')
+                    ->get()->toArray();
+            }
+            // if ($enableStudentInfo == "0") {
+            //     // get school informations
+            //     $globalSettings = $Connection->table('global_settings as gls')
+            //         ->select('gls.*')
+            //         ->first();
+            //     // echo "<pre>";
+            //     // print_r($globalSettings);
+            // }
+            // grade and class information
+            if ($enableStudentInfo == "0") {
+                $gradeClassInfo = $Connection->table('enrolls as en')
+                    ->select(
+                        'en.student_id',
+                        'cl.name as class_name',
+                        'sc.name as section_name',
+                        'emp.name as department_name'
+                    )
+                    ->leftJoin('emp_department as emp', 'en.department_id', '=', 'emp.id')
+                    ->leftJoin('classes as cl', 'en.class_id', '=', 'cl.id')
+                    ->leftJoin('sections as sc', 'en.section_id', '=', 'sc.id')
+                    ->join('students as st', 'en.student_id', '=', 'st.id')
+                    ->when($class_id, function ($q)  use ($class_id) {
+                        $q->where('en.class_id', $class_id);
+                    })
+                    ->when($section_id, function ($q)  use ($section_id) {
+                        $q->where('en.section_id', $section_id);
+                    })
+                    ->where('en.active_status', '=', '0')
+                    ->groupBy('en.student_id')
+                    ->get()->toArray();
+            }
+            // attendance information
+            if ($enableStudentInfo == "0") {
+                $attendanceInfo = $Connection->table('enrolls as en')
+                    ->select(
+                        'en.student_id',
+                        'en.class_id',
+                        'en.section_id',
+                        'en.academic_session_id',
+                        'en.active_status',
+                        DB::raw('COUNT(*) as "no_of_days_attendance"'),
+                        DB::raw('COUNT(CASE WHEN sad.status = "present" then 1 ELSE NULL END) as "presentCount"'),
+                        DB::raw('COUNT(CASE WHEN sad.status = "absent" then 1 ELSE NULL END) as "absentCount"'),
+                        DB::raw('COUNT(CASE WHEN sad.status = "late" then 1 ELSE NULL END) as "lateCount"'),
+                        DB::raw('COUNT(CASE WHEN sad.status = "excused" then 1 ELSE NULL END) as "excusedCount"'),
+                    )
+                    ->leftJoin('student_attendances_day as sad', function ($q) {
+                        $q->on('sad.student_id', '=', 'en.student_id')
+                            ->on('sad.class_id', '=', 'en.class_id')
+                            ->on('sad.section_id', '=', 'en.section_id');
+                    })
+                    ->when($class_id, function ($q)  use ($class_id) {
+                        $q->where('en.class_id', $class_id);
+                    })
+                    ->when($section_id, function ($q)  use ($section_id) {
+                        $q->where('en.section_id', $section_id);
+                    })
+                    ->where('en.academic_session_id', '=', $attendance_academic_year)
+                    ->groupBy('en.student_id')
+                    ->get()->toArray();
+            }
+            if ($enableStudentInfo == "0") {
+                $studentMarks = $Connection->table('enrolls as en')
+                    ->select(
+                        'sm.id',
+                        'en.student_id',
+                        'cl.name as class_name',
+                        'sc.name as section_name',
+                        'sb.name as subject_name',
+                        'exp.paper_name',
+                        'sm.score',
+                        'sm.pass_fail',
+                        'sm.status',
+                        'sm.grade',
+                        'sm.points',
+                        'sm.freetext',
+                        'sm.ranking',
+                        'exp.score_type',
+                        'sm.subject_id',
+                        'sm.paper_id',
+                        'sm.grade_category',
+                        'sm.semester_id',
+                        'sm.session_id',
+                        'sm.exam_id',
+                        'en.class_id',
+                        'en.section_id',
+                        'ay.name as academic_session_name'
+                    )
+                    ->leftJoin('classes as cl', 'en.class_id', '=', 'cl.id')
+                    ->leftJoin('sections as sc', 'en.section_id', '=', 'sc.id')
+                    ->leftJoin('student_marks as sm', function ($q) {
+                        $q->on('sm.student_id', '=', 'en.student_id')
+                            ->on('sm.class_id', '=', 'en.class_id')
+                            ->on('sm.section_id', '=', 'en.section_id')
+                            ->on('sm.academic_session_id', '=', 'en.academic_session_id');
+                    })
+                    ->leftJoin('exam_papers as exp', function ($qs) {
+                        $qs->on('exp.class_id', '=', 'sm.class_id')
+                            ->on('sm.subject_id', '=', 'sm.subject_id')
+                            ->on('exp.id', '=', 'sm.paper_id')
+                            ->on('sm.academic_session_id', '=', 'en.academic_session_id');
+                    })
+                    ->leftJoin('subjects as sb', 'sm.subject_id', '=', 'sb.id')
+                    ->leftJoin('academic_year as ay', 'en.academic_session_id', '=', 'ay.id')
+                    ->when($class_id, function ($q)  use ($class_id) {
+                        $q->where('en.class_id', $class_id);
+                    })
+                    ->when($section_id, function ($q)  use ($section_id) {
+                        $q->where('en.section_id', $section_id);
+                    })
+                    ->where('en.academic_session_id', '=', $attendance_academic_year)
+                    ->get()->groupBy('student_id');
+                $studentMarkDetails = array();
+                foreach ($studentMarks as $studentId => $marks) {
+                    $object = new \stdClass();
+                    $object->student_id = $studentId;
+                    $object->all_marks = $marks;
+                    array_push($studentMarkDetails, $object);
+                }
+            }
+            // dd($getStudentInfo);
+            // dd($getParentInfo);
+            // dd($gradeClassInfo);
+            // dd($attendanceInfo);
+            // dd($studentMarkDetails);
+            $collection1 = collect($getStudentInfo);
+            $collection2 = collect($getParentInfo);
+            $collection3 = collect($gradeClassInfo);
+            $collection4 = collect($attendanceInfo);
+            $collection5 = collect($studentMarkDetails);
+            // Merge collections based on 'student_id'
+            $merged = $collection1->reduce(function ($carry, $item) use ($collection2, $collection3, $collection4, $collection5) {
+                
+                $matchingItem2 = $collection2->firstWhere('student_id', $item->student_id);
+                $matchingItem3 = $collection3->firstWhere('student_id', $item->student_id);
+                $matchingItem4 = $collection4->firstWhere('student_id', $item->student_id);
+                $matchingItem5 = $collection5->firstWhere('student_id', $item->student_id);
+
+                $itemArray = json_decode(json_encode($item), true);
+                $matchingItem2Array = ($matchingItem2) ? json_decode(json_encode($matchingItem2), true) : [];
+                $matchingItem3Array = ($matchingItem3) ? json_decode(json_encode($matchingItem3), true) : [];
+                $matchingItem4Array = ($matchingItem4) ? json_decode(json_encode($matchingItem4), true) : [];
+                $matchingItem5Array = ($matchingItem5) ? json_decode(json_encode($matchingItem5), true) : [];
+
+                $mergedItem = array_merge($itemArray, $matchingItem2Array, $matchingItem3Array,$matchingItem4Array, $matchingItem5Array);
+                $carry[] = $mergedItem;
+                return $carry;
+            }, []);
+            return $this->successResponse($merged, 'get all subject record fetch successfully');
+        }
+    }
 }

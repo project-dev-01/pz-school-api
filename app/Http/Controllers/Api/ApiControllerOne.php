@@ -4260,10 +4260,11 @@ class ApiControllerOne extends BaseController
         //Generate, the password reset link. The token generated is embedded in the link
         $link = $url . '/password/expired/reset' . '/' . $token;
         if ($email) {
+            $mailFromAddress = env('MAIL_FROM_ADDRESS', config('constants.client_email'));
             $data = array('link' => $link, 'name' => $user->name);
-            Mail::send('auth.reset_expire_pass_mail', $data, function ($message) use ($email) {
+            Mail::send('auth.reset_expire_pass_mail', $data, function ($message) use ($email,$mailFromAddress) {
                 $message->to($email, 'members')->subject('Resetting Expired Password');
-                $message->from(env('MAIL_FROM_ADDRESS'), 'Password Reset');
+                $message->from($mailFromAddress, 'Password Reset');
             });
             return $user;
         } else {
@@ -8934,11 +8935,10 @@ class ApiControllerOne extends BaseController
                         'school_name' => isset($request->school_name) ? $request->school_name : "",
                         'role_name' => isset($request->role_name) ? $request->role_name : ""
                     );
-                    Mail::send('auth.faq_mail', $data, function ($message) use ($email) {
-                        $message->to(env('MAIL_FROM_ADDRESS'), 'staffs')->subject('FAQ');
+                    $mailFromAddress = env('MAIL_FROM_ADDRESS', config('constants.client_email'));
+                    Mail::send('auth.faq_mail', $data, function ($message) use ($email,$mailFromAddress) {
+                        $message->to($mailFromAddress, 'staffs')->subject('FAQ');
                         $message->from($email, 'FAQ');
-                        // $message->to('karthik@aibots.my', 'staffs')->subject('FAQ');
-                        // $message->from(env('MAIL_FROM_ADDRESS'), 'FAQ');
                     });
                     // return $user;
                     return $this->successResponse([], 'Mail Sended Successfully');
@@ -10538,5 +10538,28 @@ class ApiControllerOne extends BaseController
             $details['expense'] = $arrData;
             return $this->successResponse($details, 'Fees Expense record fetch successfully');
         }
+    }
+    // termination Student
+    public function terminationStudent(Request $request)
+    {
+        $validator = \Validator::make($request->all(), [
+            'branch_id' => 'required',
+        ]);
+        
+        $currentDate = date('Y-m-d');
+        // create new connection
+        $conn = $this->createNewConnection($request->branch_id);
+        // get data
+        $termination = $conn->table('termination')->where('termination_status','=','Approved')->get();
+
+        foreach($termination as $ter){
+            $termination_date = $ter->date_of_termination;
+            if($termination_date <= $currentDate){
+                $conn->table('enrolls')->where('student_id','=',$ter->student_id)->update([
+                    'active_status' => '1'
+                ]);
+            }
+        }
+        return $this->successResponse([], 'Student Has been Terminated');
     }
 }

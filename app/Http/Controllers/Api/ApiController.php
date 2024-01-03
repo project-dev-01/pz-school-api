@@ -3081,8 +3081,8 @@ class ApiController extends BaseController
                         'last_name' => isset($request->last_name) ? $request->last_name : "",
                         'short_name' => $request->short_name,
                         'employment_status' => $request->employment_status,
-                        'department_id' => $request->department_id,
-                        'designation_id' => $request->designation_id,
+                        // 'department_id' => $request->department_id,
+                        // 'designation_id' => $request->designation_id,
                         'staff_qualification_id' => $request->staff_qualification_id,
                         'stream_type_id' => $request->stream_type_id,
                         'race' => $request->race,
@@ -3177,7 +3177,8 @@ class ApiController extends BaseController
                         $user->picture = $fileName;
                         $user->email = $request->email;
                         $user->status = $request->status;
-                        $user->google2fa_secret_enable = $request->google2fa_secret_enable;
+                        // $user->google2fa_secret_enable = $request->google2fa_secret_enable;
+                        $user->google2fa_secret_enable = isset($request->google2fa_secret_enable) ? '1' : '0';
                         $user->password_changed_at = date("Y-m-d H:i:s");
                         $user->password = bcrypt($request->password);
                         $query = $user->save();
@@ -3291,7 +3292,17 @@ class ApiController extends BaseController
                     's.employee_type_start_date',
                     's.employee_type_end_date',
                     DB::raw("CONCAT(s.first_name, ' ', s.last_name) as name"),
-                    DB::raw("GROUP_CONCAT(DISTINCT  dp.name) as department_name")
+                    DB::raw("GROUP_CONCAT(DISTINCT  dp.name) as department_name"),
+                    's.first_name_english',
+                    's.last_name_english',
+                    's.first_name_furigana',
+                    's.last_name_furigana',
+                    's.passport_expiry_date',
+                    's.passport_photo',
+                    's.visa_number',
+                    's.visa_expiry_date',
+                    's.visa_photo',
+                    's.nationality',
                 )
                 ->leftJoin("staff_departments as dp", DB::raw("FIND_IN_SET(dp.id,s.department_id)"), ">", DB::raw("'0'"))
                 ->where('s.id', $id)
@@ -15898,9 +15909,11 @@ $query->school_roleid=$request->school_roleid;
                             'date' => date("Y-m-d H:i:s"),
                         );
                         // return $data;
-                        Mail::send('auth.absent_reason', $data, function ($message) use ($email) {
+                        
+                        $mailFromAddress = env('MAIL_FROM_ADDRESS', config('constants.client_email'));
+                        Mail::send('auth.absent_reason', $data, function ($message) use ($email,$mailFromAddress) {
                             $message->to($email, 'Parent')->subject('Absent Reason Suggestions');
-                            $message->from(env('MAIL_FROM_ADDRESS'), 'Absent Reason Suggestions');
+                            $message->from($mailFromAddress, 'Absent Reason Suggestions');
                         });
                         return true;
                     } else {
@@ -21641,9 +21654,11 @@ $query->school_roleid=$request->school_roleid;
                     // return $update;
                     $link = $request->url . '/guest/login';
                     $data = array('link' => $link, 'email' => $email, 'password' => $guest->email);
-                    $query = Mail::send('auth.login_credentials_mail', $data, function ($message) use ($email) {
+                    
+                    $mailFromAddress = env('MAIL_FROM_ADDRESS', config('constants.client_email'));
+                    $query = Mail::send('auth.login_credentials_mail', $data, function ($message) use ($email,$mailFromAddress) {
                         $message->to($email, 'Guest')->subject('Login Details');
-                        $message->from(env('MAIL_FROM_ADDRESS'), 'Login Details');
+                        $message->from($mailFromAddress, 'Login Details');
                     });
                 }
             } else {
@@ -21692,11 +21707,12 @@ $query->school_roleid=$request->school_roleid;
                 ]);
             }
             $link = $request->url . '/application/email/' . $request->branch_id . '/' . $token;
+            $mailFromAddress = env('MAIL_FROM_ADDRESS', config('constants.client_email'));
             if ($email) {
                 $data = array('link' => $link, 'email' => $email);
-                $query = Mail::send('auth.verify_mail', $data, function ($message) use ($email) {
+                $query = Mail::send('auth.verify_mail', $data, function ($message) use ($email,$mailFromAddress) {
                     $message->to($email, 'Guest')->subject('Email Verification');
-                    $message->from(env('MAIL_FROM_ADDRESS'), 'Email Verification');
+                    $message->from($mailFromAddress, 'Email Verification');
                 });
             }
             $success = [];
@@ -24794,9 +24810,10 @@ $query->school_roleid=$request->school_roleid;
                     'date' => isset($request->date_of_termination) ? $request->date_of_termination : "",
                 );
                 // return $data;
-                Mail::send('auth.email_termination', $data, function ($message) use ($email) {
+                $mailFromAddress = env('MAIL_FROM_ADDRESS', config('constants.client_email'));
+                Mail::send('auth.email_termination', $data, function ($message) use ($email,$mailFromAddress) {
                     $message->to($email, 'Parent')->subject('Termination Approval');
-                    $message->from(env('MAIL_FROM_ADDRESS'), 'Termination');
+                    $message->from($mailFromAddress, 'Termination');
                 });
             }
             $success = [];
