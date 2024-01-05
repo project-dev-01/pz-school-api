@@ -10611,6 +10611,7 @@ class ApiControllerOne extends BaseController
             
             $query = $Connection->table('health_logbooks')->insert([
                 'name' => $request->name,
+                'temp' => $request->temp,
                 'date' => $request->date,
                 'weather' => $request->weather,
                 'humidity' => $request->humidity,
