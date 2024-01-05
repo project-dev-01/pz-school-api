@@ -1305,6 +1305,81 @@ class ApiControllerThree extends BaseController
             return $this->successResponse($class, 'class by department record fetch successfully');
         }
     }
+    public function saveStudentSetting(Request $request)
+    {
+        $validator = \Validator::make($request->all(), [
+            'branch_id' => 'required',
+            'staff_id' => 'required'
+        ]);
+
+        if (!$validator->passes()) {
+            return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
+        } else {
+            // create new connection
+            $conn = $this->createNewConnection($request->branch_id);
+            // $studentDetailsValue = $request->studentDetails ? 1 : 0;
+            // $parent_details = $request->parentDetails ? 1 : 0;
+            // $school_details = $request->schoolDetails ? 1 : 0;
+            // $academic_details = $request->academicDetails ? 1 : 0;
+            // $gradeAndClasses = $request->gradeAndClasses ? 1 : 0;
+            // $attendance = $request->attendance ? 1 : 0;
+            // $testResult = $request->testResult ? 1 : 0;
+            $gardeClassAcademic = $request->gardeClassAcademic;
+            $attendanceAcademic = $request->attendanceAcademic;
+            $testResultAcademic = $request->testResultAcademic;
+            $staff_id = $request->staff_id;
+
+            $old = $conn->table('student_info_download_settings')
+                ->where('staff_id', $request->staff_id)
+                ->first();
+            $insertUpdateDate = array(
+                'student_info' => !empty($request->studentDetails == "true") ? "1" : "0",
+                'parent_info' =>  !empty($request->parentDetails == "true") ? "1" : "0",
+                'school_info' =>  !empty($request->schoolDetails == "true") ? "1" : "0",
+                'academic_info' =>  !empty($request->academicDetails == "true") ? "1" : "0",
+                'grade_class_info' =>  !empty($request->gradeAndClasses == "true") ? "1" : "0",
+                'grade_class_academic_year' => $gardeClassAcademic,
+                'attendance_info' =>  !empty($request->attendance == "true") ? "1" : "0",
+                'attendance_academic_year' => $attendanceAcademic,
+                'test_result_info' =>  !empty($request->testResult == "true") ? "1" : "0",
+                'test_result_academic_year' => $testResultAcademic,
+                'staff_id' => $staff_id,
+                'created_by' => $staff_id
+            );
+            if (isset($old->id)) {
+                $insertUpdateDate['updated_at'] = date("Y-m-d H:i:s");
+                $query = $conn->table('student_info_download_settings')->where('id', $old->id)->update($insertUpdateDate);
+            } else {
+                $insertUpdateDate['created_at'] = date("Y-m-d H:i:s");
+                $query = $conn->table('student_info_download_settings')->insert($insertUpdateDate);
+            }
+            $success = [];
+            if (!$query) {
+                return $this->send500Error('Something went wrong.', ['error' => 'Something went wrong']);
+            } else {
+                return $this->successResponse($success, 'Student Settings has been successfully saved');
+            }
+        }
+    }
+    public function getStudentSownloadSettings(Request $request)
+    {
+        $validator = \Validator::make($request->all(), [
+            'branch_id' => 'required',
+            'staff_id' => 'required'
+        ]);
+
+        if (!$validator->passes()) {
+            return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
+        } else {
+            // create new connection
+            $createConnection = $this->createNewConnection($request->branch_id);
+            // insert data
+            $classAssign = $createConnection->table('student_info_download_settings')
+                ->where('staff_id', $request->staff_id)
+                ->first();
+            return $this->successResponse($classAssign, 'Student download row fetch successfully');
+        }
+    }
     public function downloadStudentListInformation(Request $request)
     {
         $validator = \Validator::make($request->all(), [
@@ -1320,13 +1395,30 @@ class ApiControllerThree extends BaseController
             $info = $Connection->table('student_info_download_settings as si')
                 ->where('si.staff_id', '=', $request->staff_id)
                 ->first();
+            // dd($info);
+            $student_name = isset($request->student_name) ? $request->student_name : null;
+            $session_id = isset($request->session_id) ? $request->session_id : null;
             $class_id = isset($request->class_id) ? $request->class_id : null;
             $section_id = isset($request->section_id) ? $request->section_id : null;
             $enableStudentInfo = isset($info->student_info) ? $info->student_info : null;
-            $attendance_academic_year = 2;
+            $enableParentInfo = isset($info->parent_info) ? $info->parent_info : null;
+            $enableAcademicInfo = isset($info->academic_info) ? $info->academic_info : null;
+            // academic years
+            $grade_class_info = isset($info->grade_class_info) ? $info->grade_class_info : null;
+            $grade_class_academic_year = isset($info->grade_class_academic_year) ? $info->grade_class_academic_year : null;
+            $attendance_info = isset($info->attendance_info) ? $info->attendance_info : null;
+            $attendance_academic_year = isset($info->attendance_academic_year) ? $info->attendance_academic_year : null;
+            $test_result_info = isset($info->test_result_info) ? $info->test_result_info : null;
+            $test_result_academic_year = isset($info->test_result_academic_year) ? $info->test_result_academic_year : null;
+            // $attendance_academic_year = 2;
             // $attendance_academic_year = isset($info->attendance_academic_year) ? $info->attendance_academic_year : 0;
             // student information
-            if ($enableStudentInfo == "0") {
+            $getStudentInfo = [];
+            $getParentInfo = [];
+            $gradeClassInfo = [];
+            $attendanceInfo = [];
+            $studentMarkDetails = [];
+            if ($enableStudentInfo == "1") {
                 // get student informations
                 $getStudentInfo = $Connection->table('enrolls as en')
                     ->select(
@@ -1357,12 +1449,18 @@ class ApiControllerThree extends BaseController
                     ->when($section_id, function ($q)  use ($section_id) {
                         $q->where('en.section_id', $section_id);
                     })
+                    ->when($session_id, function ($query, $session_id) {
+                        return $query->where('en.session_id', $session_id);
+                    })
+                    ->when($student_name, function ($query, $student_name) {
+                        return $query->where('st.first_name', 'like', '%' . $student_name . '%')->orWhere('st.last_name', 'like', '%' . $student_name . '%');
+                    })
                     ->where('en.active_status', '=', '0')
                     ->groupBy('en.student_id')
                     ->get()->toArray();
             }
             // parent information
-            if ($enableStudentInfo == "0") {
+            if ($enableParentInfo == "1") {
                 // get parent informations
                 $getParentInfo = $Connection->table('enrolls as en')
                     ->select(
@@ -1396,20 +1494,18 @@ class ApiControllerThree extends BaseController
                     ->when($section_id, function ($q)  use ($section_id) {
                         $q->where('en.section_id', $section_id);
                     })
+                    ->when($session_id, function ($query, $session_id) {
+                        return $query->where('en.session_id', $session_id);
+                    })
+                    ->when($student_name, function ($query, $student_name) {
+                        return $query->where('st.first_name', 'like', '%' . $student_name . '%')->orWhere('st.last_name', 'like', '%' . $student_name . '%');
+                    })
                     ->where('en.active_status', '=', '0')
                     ->groupBy('en.student_id')
                     ->get()->toArray();
             }
-            // if ($enableStudentInfo == "0") {
-            //     // get school informations
-            //     $globalSettings = $Connection->table('global_settings as gls')
-            //         ->select('gls.*')
-            //         ->first();
-            //     // echo "<pre>";
-            //     // print_r($globalSettings);
-            // }
             // grade and class information
-            if ($enableStudentInfo == "0") {
+            if ($grade_class_info == "1") {
                 $gradeClassInfo = $Connection->table('enrolls as en')
                     ->select(
                         'en.student_id',
@@ -1427,12 +1523,19 @@ class ApiControllerThree extends BaseController
                     ->when($section_id, function ($q)  use ($section_id) {
                         $q->where('en.section_id', $section_id);
                     })
-                    ->where('en.active_status', '=', '0')
+                    ->when($session_id, function ($query, $session_id) {
+                        return $query->where('en.session_id', $session_id);
+                    })
+                    ->when($student_name, function ($query, $student_name) {
+                        return $query->where('st.first_name', 'like', '%' . $student_name . '%')->orWhere('st.last_name', 'like', '%' . $student_name . '%');
+                    })
+                    ->where('en.academic_session_id', '=', $grade_class_academic_year)
+                    // ->where('en.active_status', '=', '0')
                     ->groupBy('en.student_id')
                     ->get()->toArray();
             }
             // attendance information
-            if ($enableStudentInfo == "0") {
+            if ($attendance_info == "1") {
                 $attendanceInfo = $Connection->table('enrolls as en')
                     ->select(
                         'en.student_id',
@@ -1446,6 +1549,7 @@ class ApiControllerThree extends BaseController
                         DB::raw('COUNT(CASE WHEN sad.status = "late" then 1 ELSE NULL END) as "lateCount"'),
                         DB::raw('COUNT(CASE WHEN sad.status = "excused" then 1 ELSE NULL END) as "excusedCount"'),
                     )
+                    ->join('students as st', 'en.student_id', '=', 'st.id')
                     ->leftJoin('student_attendances_day as sad', function ($q) {
                         $q->on('sad.student_id', '=', 'en.student_id')
                             ->on('sad.class_id', '=', 'en.class_id')
@@ -1457,11 +1561,17 @@ class ApiControllerThree extends BaseController
                     ->when($section_id, function ($q)  use ($section_id) {
                         $q->where('en.section_id', $section_id);
                     })
+                    ->when($session_id, function ($query, $session_id) {
+                        return $query->where('en.session_id', $session_id);
+                    })
+                    ->when($student_name, function ($query, $student_name) {
+                        return $query->where('st.first_name', 'like', '%' . $student_name . '%')->orWhere('st.last_name', 'like', '%' . $student_name . '%');
+                    })
                     ->where('en.academic_session_id', '=', $attendance_academic_year)
                     ->groupBy('en.student_id')
                     ->get()->toArray();
             }
-            if ($enableStudentInfo == "0") {
+            if ($test_result_info == "1") {
                 $studentMarks = $Connection->table('enrolls as en')
                     ->select(
                         'sm.id',
@@ -1488,6 +1598,7 @@ class ApiControllerThree extends BaseController
                         'en.section_id',
                         'ay.name as academic_session_name'
                     )
+                    ->join('students as st', 'en.student_id', '=', 'st.id')
                     ->leftJoin('classes as cl', 'en.class_id', '=', 'cl.id')
                     ->leftJoin('sections as sc', 'en.section_id', '=', 'sc.id')
                     ->leftJoin('student_marks as sm', function ($q) {
@@ -1510,9 +1621,15 @@ class ApiControllerThree extends BaseController
                     ->when($section_id, function ($q)  use ($section_id) {
                         $q->where('en.section_id', $section_id);
                     })
-                    ->where('en.academic_session_id', '=', $attendance_academic_year)
+                    ->when($session_id, function ($query, $session_id) {
+                        return $query->where('en.session_id', $session_id);
+                    })
+                    ->when($student_name, function ($query, $student_name) {
+                        return $query->where('st.first_name', 'like', '%' . $student_name . '%')->orWhere('st.last_name', 'like', '%' . $student_name . '%');
+                    })
+                    ->where('en.academic_session_id', '=', $test_result_academic_year)
                     ->get()->groupBy('student_id');
-                $studentMarkDetails = array();
+                // $studentMarkDetails = array();
                 foreach ($studentMarks as $studentId => $marks) {
                     $object = new \stdClass();
                     $object->student_id = $studentId;
@@ -1532,7 +1649,7 @@ class ApiControllerThree extends BaseController
             $collection5 = collect($studentMarkDetails);
             // Merge collections based on 'student_id'
             $merged = $collection1->reduce(function ($carry, $item) use ($collection2, $collection3, $collection4, $collection5) {
-                
+
                 $matchingItem2 = $collection2->firstWhere('student_id', $item->student_id);
                 $matchingItem3 = $collection3->firstWhere('student_id', $item->student_id);
                 $matchingItem4 = $collection4->firstWhere('student_id', $item->student_id);
@@ -1544,11 +1661,218 @@ class ApiControllerThree extends BaseController
                 $matchingItem4Array = ($matchingItem4) ? json_decode(json_encode($matchingItem4), true) : [];
                 $matchingItem5Array = ($matchingItem5) ? json_decode(json_encode($matchingItem5), true) : [];
 
-                $mergedItem = array_merge($itemArray, $matchingItem2Array, $matchingItem3Array,$matchingItem4Array, $matchingItem5Array);
+                $mergedItem = array_merge($itemArray, $matchingItem2Array, $matchingItem3Array, $matchingItem4Array, $matchingItem5Array);
                 $carry[] = $mergedItem;
                 return $carry;
             }, []);
             return $this->successResponse($merged, 'get all subject record fetch successfully');
+        }
+    }
+    // getStudentAttendenceByDay
+    function getStudentAttendenceByDay(Request $request)
+    {
+        $validator = \Validator::make($request->all(), [
+            'branch_id' => 'required',
+            'class_id' => 'required',
+            'section_id' => 'required',
+            'date' => 'required',
+            'academic_session_id' => 'required'
+        ]);
+        if (!$validator->passes()) {
+            return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
+        } else {
+            // create new connection
+            // get attendance details query
+            $date = $request->date;
+            $leave_date = date('Y-m-d', strtotime($request->date));
+            $semester_id = $request->semester_id;
+            $session_id = $request->session_id;
+            $Connection = $this->createNewConnection($request->branch_id);
+            $getStudentAttendence = $Connection->table('enrolls as en')
+                ->select(
+                    'en.student_id',
+                    'en.roll',
+                    DB::raw('CONCAT(st.first_name, " ", st.last_name) as name'),
+                    'st.register_no',
+                    'sa.id as att_id',
+                    'sa.status as att_status',
+                    'sa.remarks as att_remark',
+                    'sa.date',
+                    'sa.student_behaviour',
+                    'sa.classroom_behaviour',
+                    'sa.reasons',
+                    'sapre.status as current_old_att_status',
+                    'stu_lev.id as taken_leave_status',
+                    'st.birthday',
+                    'st.photo'
+                )
+                ->join('students as st', 'st.id', '=', 'en.student_id')
+                ->leftJoin('student_attendances_day as sa', function ($q) use ($date, $semester_id, $session_id) {
+                    $q->on('sa.student_id', '=', 'st.id')
+                        ->on('sa.date', '=', DB::raw("'$date'"))
+                        ->on('sa.semester_id', '=', DB::raw("'$semester_id'"))
+                        ->on('sa.session_id', '=', DB::raw("'$session_id'"));
+                })
+                // if already take attendance for the date
+                ->leftJoin('student_attendances_day as sapre', function ($q) use ($date, $semester_id, $session_id) {
+                    $q->on('sapre.student_id', '=', 'st.id')
+                        ->on('sapre.date', '=', DB::raw("'$date'"))
+                        ->on('sapre.semester_id', '=', DB::raw("'$semester_id'"))
+                        ->on('sapre.session_id', '=', DB::raw("'$session_id'"))
+                        ->on('sapre.day_recent_flag', '=', DB::raw("'1'"));
+                })
+                ->leftJoin('student_leaves as stu_lev', function ($q) use ($date) {
+                    $q->on('stu_lev.student_id', '=', 'st.id')
+                        // ->on('stu_lev.date', '=', DB::raw("'$date'"))
+                        ->on('stu_lev.status', '=', DB::raw("'Approve'"))
+                        ->where('stu_lev.from_leave', '<=', $date)
+                        ->where('stu_lev.to_leave', '>=', $date);
+                })
+                ->where([
+                    ['en.class_id', '=', $request->class_id],
+                    ['en.section_id', '=', $request->section_id],
+                    ['en.academic_session_id', '=', $request->academic_session_id]
+                ])
+                ->groupBy('en.student_id')
+                ->get();
+            // dd($getStudentAttendence);
+            $taken_attentance_status = $Connection->table('enrolls as en')
+                ->select(
+                    'sa.status'
+                )
+                ->join('students as st', 'st.id', '=', 'en.student_id')
+                // if already take attendance for the date and subjects
+                ->leftJoin('student_attendances as sa', function ($q) use ($date, $semester_id, $session_id) {
+                    $q->on('sa.student_id', '=', 'st.id')
+                        ->on('sa.date', '=', DB::raw("'$date'"))
+                        ->on('sa.semester_id', '=', DB::raw("'$semester_id'"))
+                        ->on('sa.session_id', '=', DB::raw("'$session_id'"));
+                })
+                ->where([
+                    ['en.class_id', '=', $request->class_id],
+                    ['en.section_id', '=', $request->section_id]
+                    // ['en.semester_id', '=', $request->semester_id],
+                    // ['en.session_id', '=', $request->session_id]
+                ])
+                ->first();
+            $data = [
+                "get_student_attendence" => $getStudentAttendence,
+                "taken_attentance_status" => $taken_attentance_status
+            ];
+            // dd($getTeachersClassName);
+            return $this->successResponse($data, 'Attendance by day record fetch successfully');
+        }
+    }
+    //add attendance by day
+    function addStudentAttendenceByDay(Request $request)
+    {
+        $validator = \Validator::make($request->all(), [
+            'branch_id' => 'required',
+            'class_id' => 'required',
+            'section_id' => 'required',
+            'date' => 'required',
+            'attendance' => 'required',
+        ]);
+        if (!$validator->passes()) {
+            return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
+        } else {
+            // create new connection
+            $Connection = $this->createNewConnection($request->branch_id);
+
+            $attendance = $request->attendance;
+            $date = $request->date;
+            $class_id = $request->class_id;
+            $section_id = $request->section_id;
+            $semester_id = $request->semester_id;
+            $session_id = $request->session_id;
+            $date = $request->date;
+            // if already take attendance for the date
+            $checkAlreadyTakenAttendance = $Connection->table('student_attendances_day')->select('id')->where([
+                ['date', '=', $date],
+                ['class_id', '=', $class_id],
+                ['section_id', '=', $section_id],
+                ['semester_id', '=', $semester_id],
+                ['session_id', '=', $session_id],
+                ['day_recent_flag', '=', "1"]
+            ])->first();
+            // update flag
+            if (isset($checkAlreadyTakenAttendance->id)) {
+                $Connection->table('student_attendances_day')->where([
+                    ['date', '=', $date],
+                    ['class_id', '=', $class_id],
+                    ['section_id', '=', $section_id],
+                    ['semester_id', '=', $semester_id],
+                    ['session_id', '=', $session_id],
+                    ['day_recent_flag', '=', "1"]
+                ])->update([
+                    'day_recent_flag' => "0",
+                    'updated_at' => date("Y-m-d H:i:s")
+                ]);
+            }
+            foreach ($attendance as $key => $value) {
+
+                $attStatus = (isset($value['att_status']) ? $value['att_status'] : "");
+                $att_remark = (isset($value['att_remark']) ? $value['att_remark'] : "");
+                $reasons = (isset($value['reasons']) ? $value['reasons'] : "");
+                $student_behaviour = "";
+                if (isset($value['student_behaviour'])) {
+                    $student_behaviour = implode(',', $value['student_behaviour']);
+                }
+                $classroom_behaviour = "";
+                if (isset($value['classroom_behaviour'])) {
+                    $classroom_behaviour = implode(',', $value['classroom_behaviour']);
+                }
+                $arrayAttendance = array(
+                    'student_id' => $value['student_id'],
+                    'status' => $attStatus,
+                    'remarks' => $att_remark,
+                    'reasons' => $reasons,
+                    'student_behaviour' => $student_behaviour,
+                    'classroom_behaviour' => $classroom_behaviour,
+                    'date' => $date,
+                    'class_id' => $class_id,
+                    'section_id' => $section_id,
+                    'semester_id' => $semester_id,
+                    'session_id' => $session_id,
+                    'day_recent_flag' => "1",
+                    'created_at' => date("Y-m-d H:i:s")
+
+                );
+                if ((empty($value['attendance_id']) || $value['attendance_id'] == "null")) {
+                    $row = $Connection->table('student_attendances_day')->select('id')->where([
+                        ['date', '=', $date],
+                        ['class_id', '=', $class_id],
+                        ['section_id', '=', $section_id],
+                        ['semester_id', '=', $semester_id],
+                        ['session_id', '=', $session_id],
+                        ['student_id', '=', $value['student_id']]
+                    ])->first();
+                    if (isset($row->id)) {
+                        $Connection->table('student_attendances_day')->where('id', $row->id)->update([
+                            'status' => $attStatus,
+                            'remarks' => $att_remark,
+                            'reasons' => $reasons,
+                            'student_behaviour' => $student_behaviour,
+                            'classroom_behaviour' => $classroom_behaviour,
+                            'day_recent_flag' => "1",
+                            'updated_at' => date("Y-m-d H:i:s")
+                        ]);
+                    } else {
+                        $Connection->table('student_attendances_day')->insert($arrayAttendance);
+                    }
+                } else {
+                    $Connection->table('student_attendances_day')->where('id', $value['attendance_id'])->update([
+                        'status' => $attStatus,
+                        'remarks' => $att_remark,
+                        'reasons' => $reasons,
+                        'student_behaviour' => $student_behaviour,
+                        'classroom_behaviour' => $classroom_behaviour,
+                        'day_recent_flag' => "1",
+                        'updated_at' => date("Y-m-d H:i:s")
+                    ]);
+                }
+            }
+            return $this->successResponse([], 'Attendance added successfuly.');
         }
     }
 }

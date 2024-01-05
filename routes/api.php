@@ -496,8 +496,8 @@ Route::group(['middleware' => ['auth:api', 'throttle:limit_per_user', 'logroute'
     Route::post('parent/student/update', [ApiController::class, 'parentUpdateStudent']);
     Route::post('student/student-details', [ApiController::class, 'getStudentDetails']);
     Route::post('student/delete', [ApiController::class, 'deleteStudent']);
-    Route::post('student/student_settings', [ApiController::class, 'saveStudentSetting']);
-
+    Route::post('student/student_settings', [ApiControllerThree::class, 'saveStudentSetting']);
+    Route::post('get_student_download_settings', [ApiControllerThree::class, 'getStudentSownloadSettings']);
     // parent routes
     Route::post('parent/add', [ApiController::class, 'addParent']);
     Route::get('parent/list', [ApiController::class, 'getParentList']);
@@ -1066,7 +1066,9 @@ Route::group(['middleware' => ['auth:api', 'throttle:limit_per_user', 'logroute'
     
     Route::get('getmonthlyholidays', [ApiController::class, 'getmonthlyholidays']);
     Route::get('testrole', [ApiController::class, 'testrole']);
-    Route::get('download_student_list_information', [ApiControllerThree::class, 'downloadStudentListInformation']);
+    Route::post('download_student_list_information', [ApiControllerThree::class, 'downloadStudentListInformation']);
+    Route::post('get_student_attendance_by_day', [ApiControllerThree::class, 'getStudentAttendenceByDay']);
+    Route::post('add_student_attendance_by_day', [ApiControllerThree::class, 'addStudentAttendenceByDay']);
      //health logbooks
      Route::post('getHealthLogbooks', [ApiControllerOne::class, 'getHealthLogbooks']);
      Route::post('health_logbooks_add', [ApiControllerOne::class, 'addHealthLogbooks']);
