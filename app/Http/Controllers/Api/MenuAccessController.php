@@ -300,7 +300,7 @@ class MenuAccessController extends BaseController
             $conn = $this->createNewConnection($request->branch_id);
             // get data
         $schoolroleDetails =$conn->table('school_roles as t1')
-        ->select('t1.*', 't2.role_name')
+        ->select('t1.*', 't2.role_name', DB::raw('(SELECT DISTINCT role_id FROM school_menuaccess AS t3 WHERE t3.school_roleid = t1.id LIMIT 1) AS roles'))
         ->leftJoin($main_db.'.roles AS t2', 't1.portal_roleid', '=', 't2.id')->get();
      
             return $this->successResponse($schoolroleDetails, 'School Role record fetch successfully');

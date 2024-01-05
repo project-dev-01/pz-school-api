@@ -1065,6 +1065,15 @@ Route::group(['middleware' => ['auth:api', 'throttle:limit_per_user', 'logroute'
     Route::post('exam_result/studentmonthly_attendance', [ApiController::class, 'studentmonthly_attendance']);
     
     Route::get('getmonthlyholidays', [ApiController::class, 'getmonthlyholidays']);
+    Route::post('getacyearholidays', [ApiController::class, 'getacyearholidays']);
+    Route::post('exam_result/studentacyear_attendance', [ApiController::class, 'studentacyear_attendance']);
+    
+    
+    Route::post('studentclasssection', [ApiController::class, 'studentclasssection']);    
+    Route::post('exam_result/stuoverall_marklist', [ApiController::class, 'stuoverall_marklist']);
+    Route::post('exam_result/stuoverall_spmarklist', [ApiController::class, 'stuoverall_spmarklist']);
+        
+    Route::post('student/addstupicture', [ApiController::class, 'addstupicture']);
     Route::get('testrole', [ApiController::class, 'testrole']);
     Route::post('download_student_list_information', [ApiControllerThree::class, 'downloadStudentListInformation']);
     Route::post('get_student_attendance_by_day', [ApiControllerThree::class, 'getStudentAttendenceByDay']);
