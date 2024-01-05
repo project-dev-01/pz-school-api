@@ -25282,5 +25282,5 @@ $query->school_roleid=$request->school_roleid;
             
             return $this->successResponse($holidays, 'Get Holidays Fetched successfully');
         }
-    }
+    }  
 }

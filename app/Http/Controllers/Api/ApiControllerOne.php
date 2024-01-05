@@ -10562,4 +10562,74 @@ class ApiControllerOne extends BaseController
         }
         return $this->successResponse([], 'Student Has been Terminated');
     }
+     public function getHealthLogbooks(Request $request){
+        $validator = \Validator::make($request->all(), [
+            'branch_id' => 'required',
+        ]);
+
+        if (!$validator->passes()) {
+            return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
+        } else {
+            // create new connection
+            $Connection = $this->createNewConnection($request->branch_id);
+            $date= $request->date; 
+            // get data
+            $data = $Connection->table('health_logbooks as hea')->select(
+                    'hea.name',
+                    'hea.gender',
+                    'hea.time',
+                    'hea.event_notes_c',
+                    'hea.temp',
+                    'hea.weather',
+                    'hea.humidity',
+                    'hea.event_notes_a',
+                    'hea.event_notes_b',
+                    'hea.date',
+                    'hea.department_id',
+                    'hea.class_id',
+                    'hea.section_id',
+                    'cl.name as class_name',
+                    'sc.name as section_name'
+                )
+                ->join('classes as cl', 'hea.class_id', '=', 'cl.id')
+                ->join('sections as sc', 'hea.section_id', '=', 'sc.id')
+                 ->where('hea.date', '=', $date)->get();
+
+            return $this->successResponse($data, 'Health logbooks fetch successfully');
+        }
+    }
+    public function addHealthLogbooks(Request $request){
+        $validator = \Validator::make($request->all(), [
+            'branch_id' => 'required',
+        ]);
+
+        if (!$validator->passes()) {
+            return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
+        } else {
+            // create new connection
+            $Connection = $this->createNewConnection($request->branch_id);
+            
+            $query = $Connection->table('health_logbooks')->insert([
+                'name' => $request->name,
+                'date' => $request->date,
+                'weather' => $request->weather,
+                'humidity' => $request->humidity,
+                'event_notes_a' => $request->event_notes_a,
+                'event_notes_b' => $request->event_notes_b,
+                'department_id' => $request->department_id,
+                'class_id' => $request->grade_id,
+                'section_id' => $request->section_id,
+                'gender' => $request->gender,
+                'time' => $request->time,
+                'event_notes_c' => $request->event_notes_c,
+                'created_at' => date("Y-m-d H:i:s")
+            ]);
+            $success = [];
+            if (!$query) {
+                return $this->send500Error('Something went wrong.', ['error' => 'Something went wrong']);
+            } else {
+                return $this->successResponse($success, 'Health logbooks has been successfully saved');
+            }
+        }
+    }
 }

@@ -1067,4 +1067,7 @@ Route::group(['middleware' => ['auth:api', 'throttle:limit_per_user', 'logroute'
     Route::get('getmonthlyholidays', [ApiController::class, 'getmonthlyholidays']);
     Route::get('testrole', [ApiController::class, 'testrole']);
     Route::get('download_student_list_information', [ApiControllerThree::class, 'downloadStudentListInformation']);
+     //health logbooks
+     Route::post('getHealthLogbooks', [ApiControllerOne::class, 'getHealthLogbooks']);
+     Route::post('health_logbooks_add', [ApiControllerOne::class, 'addHealthLogbooks']);
 });
