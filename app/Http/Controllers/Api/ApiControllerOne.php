@@ -10633,4 +10633,156 @@ class ApiControllerOne extends BaseController
             }
         }
     }
+    // addShortcut
+    public function addShortcut(Request $request)
+    {
+
+        $validator = \Validator::make($request->all(), [
+            'name' => 'required',
+            'link' => 'required',
+            'branch_id' => 'required',
+            'token' => 'required',
+        ]);
+
+        if (!$validator->passes()) {
+            return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
+        } else {
+            // create new connection
+            $conn = $this->createNewConnection($request->branch_id);
+
+            // insert data
+            $query = $conn->table('shortcut_links')->insert([
+                'sidebar_name' => $request->name,
+                'links' => $request->link,
+                'staff_id'=> $request->staff_id,
+                'created_at' => date("Y-m-d H:i:s")
+            ]);
+            $success = [];
+            if (!$query) {
+                return $this->send500Error('Something went wrong.', ['error' => 'Something went wrong']);
+            } else {
+                return $this->successResponse($success, 'Shortcut link has been successfully saved');
+            }
+        }
+    }
+    // getShortcutList
+    public function getShortcutList(Request $request)
+    {
+        $validator = \Validator::make($request->all(), [
+            'branch_id' => 'required',
+            //'token' => 'required',
+        ]);
+
+        if (!$validator->passes()) {
+            return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
+        } else {
+            // create new connection
+            $conn = $this->createNewConnection($request->branch_id);
+            // get data
+            $staff_id = $request->staff_id;
+            $ShortcutLislDetails = $conn->table('shortcut_links')->where('staff_id', $staff_id)->get();
+            return $this->successResponse($ShortcutLislDetails, 'Shortcut link record fetch successfully');
+        }
+    }
+    // get shortcut row details
+    public function getShortcutDetails(Request $request)
+    {
+
+        $validator = \Validator::make($request->all(), [
+            'id' => 'required',
+            'branch_id' => 'required',
+            'token' => 'required'
+        ]);
+
+        if (!$validator->passes()) {
+            return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
+        } else {
+            $id = $request->id;
+            // create new connection
+            $conn = $this->createNewConnection($request->branch_id);
+            // get data
+            $ShortcutLislDetails = $conn->table('shortcut_links')->where('id', $id)->first();
+            return $this->successResponse($ShortcutLislDetails, 'Shortcut Link row fetch successfully');
+        }
+    }
+    //updateShortcut
+    public function updateShortcut(Request $request)
+    {
+        $id = $request->id;
+        $validator = \Validator::make($request->all(), [
+            'branch_id' => 'required',
+            //'token' => 'required',
+        ]);
+
+        if (!$validator->passes()) {
+            return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
+        } else {
+
+            // create new connection
+            $conn = $this->createNewConnection($request->branch_id);
+
+            $query = $conn->table('shortcut_links')->where('id', $id)->update([
+                'sidebar_name' => $request->name,
+                'links' => $request->link,
+                'updated_at' => date("Y-m-d H:i:s")
+            ]);
+            $success = [];
+            if ($query) {
+                return $this->successResponse($success, 'Shortcut Link Details have Been updated');
+            } else {
+                return $this->send500Error('Something went wrong.', ['error' => 'Something went wrong']);
+            }
+        }
+    }
+    // deleteShortcut
+    public function deleteShortcut(Request $request)
+    {
+
+        $id = $request->id;
+        $validator = \Validator::make($request->all(), [
+            'token' => 'required',
+            'branch_id' => 'required',
+            'id' => 'required',
+        ]);
+
+        if (!$validator->passes()) {
+            return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
+        } else {
+            // create new connection
+            $conn = $this->createNewConnection($request->branch_id);
+            // get data
+            $query = $conn->table('shortcut_links')->where('id', $id)->delete();
+
+            $success = [];
+            if ($query) {
+                return $this->successResponse($success, 'Shortcut Link have been deleted successfully');
+            } else {
+                return $this->send500Error('Something went wrong.', ['error' => 'Something went wrong']);
+            }
+        }
+    }
+    public function getBulletinDashboard(Request $request)
+    {
+        $validator = \Validator::make($request->all(), [
+            // 'token' => 'required',
+            'branch_id' => 'required',
+        ]);
+
+        if (!$validator->passes()) {
+            return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
+        } else {
+
+            // create new connection
+            $conn = $this->createNewConnection($request->branch_id);
+            // get data
+            $currentDateTime = Carbon::now();
+        $buletinDetails = $conn->table('bulletin_boards as b')
+        ->select("b.file")
+        ->where("b.status", 1)
+        ->where("b.publish", 1)
+        ->where('b.publish_end_date', '>', $currentDateTime)
+        ->get();
+        return $this->successResponse($buletinDetails, 'Bulletin record fetch successfully');
+        }
+    }
 }

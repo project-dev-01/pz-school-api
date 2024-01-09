@@ -90,6 +90,7 @@ class ApiControllerThree extends BaseController
                 ->leftJoin('parent as p', 'p.id', '=', 'b.parent_id')
                 ->leftJoin('students as st', 'st.id', '=', 'b.student_id')
                 ->where("b.status", 1)
+                ->where("b.publish", 1)
                 ->where('b.publish_end_date', '>', $currentDateTime)
                 ->groupBy("b.id")
                 ->orderBy('b.id', 'desc')
@@ -575,6 +576,7 @@ class ApiControllerThree extends BaseController
                     $query->where('b.section_id', $section_id)
                         ->orWhereNull('b.section_id');
                 })
+                ->where("b.publish", 1)
                 ->where("b.status", 1)
                 ->where(function ($query) use ($parent_id, $role_id) {
                     $query->where('b.parent_id', $parent_id)
@@ -693,6 +695,7 @@ class ApiControllerThree extends BaseController
                         ->orWhereNull('b.section_id');
                 })
                 ->where("b.status", 1)
+                ->where("b.publish", 1)
                 ->where(function ($query) use ($parent_id, $role_id) {
                     $query->where('b.parent_id', $parent_id)
                         ->orWhereNull('b.parent_id')
@@ -759,6 +762,7 @@ class ApiControllerThree extends BaseController
                         ->orWhereNull('b.section_id');
                 })
                 ->where("b.status", 1)
+                ->where("b.publish", 1)
                 ->where(function ($query) use ($student_id, $role_id) {
                     $query->where('b.student_id', $student_id)
                         ->orWhereNull('b.student_id')
@@ -869,6 +873,7 @@ class ApiControllerThree extends BaseController
                         ->orWhereNull('b.section_id');
                 })
                 ->where("b.status", 1)
+                ->where("b.publish", 1)
                 ->where(function ($query) use ($student_id, $role_id) {
                     $query->where('b.student_id', $student_id)
                         ->orWhereNull('b.student_id')
@@ -925,6 +930,7 @@ class ApiControllerThree extends BaseController
                         ->whereRaw("FIND_IN_SET('$role_id', b.target_user)");
                 })
                 ->where("b.status", 1)
+                ->where("b.publish", 1)
                 ->where(function ($query) use ($currentDateTime) {
                     $query->where('b.publish_end_date', '>', $currentDateTime)
                         ->orWhereNull('b.publish_end_date');
@@ -976,6 +982,7 @@ class ApiControllerThree extends BaseController
                         ->whereRaw("FIND_IN_SET('$role_id', b.target_user)");
                 })
                 ->where("b.status", 1)
+                ->where("b.publish", 1)
                 ->where("bi.parent_imp", '1')
                 ->where(function ($query) use ($currentDateTime) {
                     $query->where('b.publish_end_date', '>', $currentDateTime)

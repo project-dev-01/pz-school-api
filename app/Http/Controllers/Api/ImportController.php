@@ -1142,7 +1142,8 @@ class ImportController extends BaseController
                                
                                 if (!empty($studentId)) 
                                 {
-                                   
+                                   // Delete existing record
+                                    $Connection->table('temp_promotion')->where('student_id', $studentId->id)->delete();
                                     $classDetails = [
                                         'student_id' =>  $studentId->id,
                                         'department_id' => $dynamic_data[5],

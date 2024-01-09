@@ -1081,4 +1081,12 @@ Route::group(['middleware' => ['auth:api', 'throttle:limit_per_user', 'logroute'
      //health logbooks
      Route::post('getHealthLogbooks', [ApiControllerOne::class, 'getHealthLogbooks']);
      Route::post('health_logbooks_add', [ApiControllerOne::class, 'addHealthLogbooks']);
+     
+       // Shortcut routes
+    Route::post('shortcutLink/add', [ApiControllerOne::class, 'addShortcut']);
+    Route::post('shortcutLink/list', [ApiControllerOne::class, 'getShortcutList']);
+    Route::post('shortcutLink/shortcutLink-details', [ApiControllerOne::class, 'getShortcutDetails']);
+    Route::post('shortcutLink/update', [ApiControllerOne::class, 'updateShortcut']);
+    Route::post('shortcutLink/delete', [ApiControllerOne::class, 'deleteShortcut']);
+    Route::get('bulletinBoard_Dashboard', [ApiControllerOne::class, 'getBulletinDashboard']);
 });
