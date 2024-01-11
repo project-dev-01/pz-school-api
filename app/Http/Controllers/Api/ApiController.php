@@ -12305,7 +12305,7 @@ $rid=$request->role_id;
                     $user->name = $studentName;
                     $user->user_id = $studentId;
                     $user->role_id = "6";
-$query->school_roleid=$request->school_roleid;
+                    $user->school_roleid = $request->school_roleid;
                     $user->branch_id = $request->branch_id;
                     $user->email = $request->email;
                     $user->status = $request->status;
@@ -12319,7 +12319,7 @@ $query->school_roleid=$request->school_roleid;
                         return $this->send500Error('Something went wrong.', ['error' => 'Something went wrong']);
                     } else {
                         if ($request->sudent_application_id) {
-                            $student_application = $conn->table('student_applications')->where('id', '=', $request->sudent_application_id)->update(['status' => "Enrolled"]);
+                            $student_application = $conn->table('student_applications')->where('id', '=', $request->sudent_application_id)->update(['enrolled_status' => "Enrolled",'enrolled_date' => date("Y-m-d H:i:s")]);
                         }
                         return $this->successResponse($success, 'Student has been successfully saved');
                     }

@@ -1882,4 +1882,323 @@ class ApiControllerThree extends BaseController
             return $this->successResponse([], 'Attendance added successfuly.');
         }
     }
+    // studentNewJoiningList 
+    public function studentNewJoiningList(Request $request)
+    {
+        $validator = \Validator::make($request->all(), [
+            'branch_id' => 'required'
+        ]);
+
+        if (!$validator->passes()) {
+            return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
+        } else {
+            // create new connection
+            $Connection = $this->createNewConnection($request->branch_id);
+            $class_id = isset($request->class_id) ? $request->class_id : null;
+            $section_id = isset($request->section_id) ? $request->section_id : null;
+            $academic_session_id = $request->academic_session_id;
+            $data = $Connection->table('enrolls as en')
+                ->select(
+                    'en.id',
+                    'en.student_id',
+                    // 'en.class_id',
+                    // 'en.section_id',
+                    // 'en.academic_session_id',
+                    // 'en.semester_id',
+                    // 'en.session_id',
+                    // 'en.active_status',
+                    DB::raw("CONCAT(stud.first_name, ' ', stud.last_name) as student_name"),
+                    'stud.admission_date',
+                    'cl.name as class_name',
+                    'sc.name as section_name',
+                    'stud.gender',
+                    'stud.gender',
+                    'stud.email'
+                )
+                ->join('classes as cl', 'en.class_id', '=', 'cl.id')
+                ->join('sections as sc', 'en.section_id', '=', 'sc.id')
+                ->join('students as stud', 'en.student_id', '=', 'stud.id')
+                ->where('en.academic_session_id', $academic_session_id)
+                // Not in to other academic id to get new joinee studens
+                ->whereNotIn('en.student_id', function ($query) use ($request) {
+                    $query->select('ens.student_id')
+                        ->from('enrolls as ens')
+                        ->where('ens.academic_session_id', '!=', $request->academic_session_id)
+                        ->distinct();
+                })
+                ->when($class_id, function ($query, $class_id) {
+                    return $query->where('en.class_id', $class_id);
+                })
+                ->when($section_id, function ($query, $section_id) {
+                    return $query->where('en.section_id', $section_id);
+                })
+                ->groupBy("stud.id")
+                ->get();
+            return $this->successResponse($data, 'Teacher Allocation record fetch successfully');
+        }
+    }
+    public function saveAttendanceReportSetting(Request $request)
+    {
+        $validator = \Validator::make($request->all(), [
+            'branch_id' => 'required',
+            'staff_id' => 'required'
+        ]);
+
+        if (!$validator->passes()) {
+            return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
+        } else {
+            // create new connection
+            $conn = $this->createNewConnection($request->branch_id);
+            $staff_id = isset($request->staff_id) ? $request->staff_id : null;
+            $department_id = isset($request->department_id) ? $request->department_id : null;
+            $class_id = isset($request->class_id) ? $request->class_id : null;
+            $section_id = isset($request->section_id) ? $request->section_id : null;
+            $pattern = isset($request->pattern) ? $request->pattern : null;
+
+            $old = $conn->table('attendance_report_settings')
+                ->where('staff_id', $request->staff_id)
+                ->first();
+            $insertUpdateDate = array(
+                'department_id' => $department_id,
+                'class_id' => $class_id,
+                'section_id' => $section_id,
+                'pattern' => $pattern,
+                'staff_id' => $staff_id,
+                'created_by' => $staff_id
+            );
+            if (isset($old->id)) {
+                $insertUpdateDate['updated_at'] = date("Y-m-d H:i:s");
+                $query = $conn->table('attendance_report_settings')->where('id', $old->id)->update($insertUpdateDate);
+            } else {
+                $insertUpdateDate['created_at'] = date("Y-m-d H:i:s");
+                $query = $conn->table('attendance_report_settings')->insert($insertUpdateDate);
+            }
+            $success = [];
+            if (!$query) {
+                return $this->send500Error('Something went wrong.', ['error' => 'Something went wrong']);
+            } else {
+                return $this->successResponse($success, 'Attendance Report Settings has been successfully saved');
+            }
+        }
+    }
+    public function getAttendanceReportSetting(Request $request)
+    {
+        $validator = \Validator::make($request->all(), [
+            'branch_id' => 'required',
+            'staff_id' => 'required'
+        ]);
+
+        if (!$validator->passes()) {
+            return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
+        } else {
+            // create new connection
+            $createConnection = $this->createNewConnection($request->branch_id);
+            // insert data
+            $attRep = $createConnection->table('attendance_report_settings')
+                ->where('staff_id', $request->staff_id)
+                ->first();
+            return $this->successResponse($attRep, 'Attendance report row fetch successfully');
+        }
+    }
+    public function absentAttendanceReport(Request $request)
+    {
+        $validator = \Validator::make($request->all(), [
+            'branch_id' => 'required',
+            'staff_id' => 'required',
+            'academic_session_id' => 'required'
+        ]);
+
+        if (!$validator->passes()) {
+            return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
+        } else {
+            // create new connection
+            $createConnection = $this->createNewConnection($request->branch_id);
+
+            // insert data
+            $attReport = $createConnection->table('attendance_report_settings')
+                ->where('staff_id', $request->staff_id)
+                ->first();
+            $department_id = isset($attReport->department_id) ? $attReport->department_id : null;
+            $class_id = isset($attReport->class_id) ? $attReport->class_id : null;
+            $section_id = isset($attReport->section_id) ? $attReport->section_id : null;
+            // pattern is compulsory
+            $pattern = isset($attReport->pattern) ? $attReport->pattern : null;
+            $Day = $Month = $Term = $Year = null;
+            $startDate = $endDate = $endDate = $termData = $yearData =  "";
+            $currentDate = date('Y-m-d');
+            if ($pattern == "Day") {
+                // Day // current day
+                $Day = $pattern;
+            }
+            if ($pattern == "Month") {
+                // Month // current month
+                $Month = $pattern;
+                // First day of the month.
+                $startDate = date('Y-m-01', strtotime($currentDate));
+                // Last day of the month.
+                $endDate = date('Y-m-t', strtotime($currentDate));
+            }
+            if ($pattern == "Term") {
+                // Term // term mean semester
+                $Term = $pattern;
+                $termData = $createConnection->table('semester as sm')
+                    ->select(
+                        'sm.id',
+                        'sm.name',
+                        'sm.start_date',
+                        'sm.end_date'
+                    )
+                    ->whereRaw('"' . $currentDate . '" between `start_date` and `end_date`')
+                    ->first();
+            }
+            if ($pattern == "Year") {
+                // Year // year mean academic id
+                $Year = $pattern;
+                $yearData = $createConnection->table('semester as sm')
+                    ->select(DB::raw('MIN(sm.start_date) AS year_start_date, MAX(sm.end_date) AS year_end_date'))
+                    ->where([
+                        ['sm.academic_session_id', '=', $request->academic_session_id],
+                    ])
+                    ->get();
+            }
+            // dd($yearData);
+            if ($department_id && $class_id === null && $section_id === null) {
+                // Department exists, Class is null, Section is null
+                $allClasses = $createConnection->table('classes')
+                    ->select('id')
+                    ->where('department_id', $department_id)
+                    ->get()->toArray();
+                $classID = [];
+                if (isset($allClasses)) {
+                    foreach ($allClasses as $key => $value) {
+                        array_push($classID, $value->id);
+                    }
+                }
+                $absentCountDetails = $createConnection->table('student_attendances_day')
+                    ->select(
+                        DB::raw('COUNT(*) as no_of_days_attendance'),
+                        DB::raw('SUM(CASE WHEN status = "present" THEN 1 ELSE 0 END) as presentCount'),
+                        DB::raw('SUM(CASE WHEN status = "absent" THEN 1 ELSE 0 END) as absentCount'),
+                        DB::raw('SUM(CASE WHEN status = "late" THEN 1 ELSE 0 END) as lateCount'),
+                        DB::raw('SUM(CASE WHEN status = "excused" THEN 1 ELSE 0 END) as excusedCount')
+                    )
+                    ->whereIn('class_id', $classID)
+                    // when not null comes here
+                    ->when($Day, function ($q)  use ($currentDate) {
+                        $q->where('date', $currentDate);
+                    })
+                    ->when($Month, function ($qs) use ($startDate, $endDate) {
+                        $qs->where('date', '>=', $startDate)
+                            ->where('date', '<=', $endDate);
+                    })
+                    ->when($Term, function ($qd)  use ($termData) {
+                        $qd->where('date', '>=', $termData->start_date ?? now())
+                            ->where('date', '<=', $termData->end_date ?? now());
+                    })
+                    ->when($Year, function ($qds)  use ($yearData) {
+                        $qds->where('date', '>=', $yearData[0]->year_start_date ?? now())
+                            ->where('date', '<=', $yearData[0]->year_end_date ?? now());
+                    })
+                    ->get();
+                // dd($absentCountDetails);
+            } else if ($department_id && $class_id && $section_id === null) {
+                // Department exists, Class exists, Section is null
+                $absentCountDetails = $createConnection->table('student_attendances_day')
+                    ->select(
+                        DB::raw('COUNT(*) as no_of_days_attendance'),
+                        DB::raw('SUM(CASE WHEN status = "present" THEN 1 ELSE 0 END) as presentCount'),
+                        DB::raw('SUM(CASE WHEN status = "absent" THEN 1 ELSE 0 END) as absentCount'),
+                        DB::raw('SUM(CASE WHEN status = "late" THEN 1 ELSE 0 END) as lateCount'),
+                        DB::raw('SUM(CASE WHEN status = "excused" THEN 1 ELSE 0 END) as excusedCount')
+                    )
+                    // when not null comes here
+                    ->when($Day, function ($q)  use ($currentDate) {
+                        $q->where('date', $currentDate);
+                    })
+                    ->when($Month, function ($qs) use ($startDate, $endDate) {
+                        $qs->where('date', '>=', $startDate)
+                            ->where('date', '<=', $endDate);
+                    })
+                    ->when($Term, function ($qd)  use ($termData) {
+                        $qd->where('date', '>=', $termData->start_date ?? now())
+                            ->where('date', '<=', $termData->end_date ?? now());
+                    })
+                    ->when($Year, function ($qds)  use ($yearData) {
+                        $qds->where('date', '>=', $yearData[0]->year_start_date ?? now())
+                            ->where('date', '<=', $yearData[0]->year_end_date ?? now());
+                    })
+                    ->where('class_id', $class_id)
+                    ->get();
+            } else if ($department_id && $class_id && $section_id) {
+                // Department exists, Class exists, Section exists
+                $absentCountDetails = $createConnection->table('student_attendances_day')
+                    ->select(
+                        DB::raw('COUNT(*) as no_of_days_attendance'),
+                        DB::raw('SUM(CASE WHEN status = "present" THEN 1 ELSE 0 END) as presentCount'),
+                        DB::raw('SUM(CASE WHEN status = "absent" THEN 1 ELSE 0 END) as absentCount'),
+                        DB::raw('SUM(CASE WHEN status = "late" THEN 1 ELSE 0 END) as lateCount'),
+                        DB::raw('SUM(CASE WHEN status = "excused" THEN 1 ELSE 0 END) as excusedCount')
+                    )
+                    // when not null comes here
+                    ->when($Day, function ($q)  use ($currentDate) {
+                        $q->where('date', $currentDate);
+                    })
+                    ->when($Month, function ($qs) use ($startDate, $endDate) {
+                        $qs->where('date', '>=', $startDate)
+                            ->where('date', '<=', $endDate);
+                    })
+                    ->when($Term, function ($qd)  use ($termData) {
+                        $qd->where('date', '>=', $termData->start_date ?? now())
+                            ->where('date', '<=', $termData->end_date ?? now());
+                    })
+                    ->when($Year, function ($qds)  use ($yearData) {
+                        $qds->where('date', '>=', $yearData[0]->year_start_date ?? now())
+                            ->where('date', '<=', $yearData[0]->year_end_date ?? now());
+                    })
+                    ->where([
+                        ['class_id', $class_id],
+                        ['section_id', $section_id]
+                    ])
+                    ->get();
+            } else {
+                // Default scenario
+                $absentCountDetails = [];
+            }
+            return $this->successResponse($absentCountDetails, 'Attendance report row fetch successfully');
+        }
+    }
+    public function presentStudentTerminationList(Request $request)
+    {
+        $validator = \Validator::make($request->all(), [
+            'branch_id' => 'required'
+        ]);
+
+        if (!$validator->passes()) {
+            return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
+        } else {
+            // create new connection
+            $createConnection = $this->createNewConnection($request->branch_id);
+            $currentDate = date('Y-m-d');
+            $attRep = $createConnection->table('termination as t')
+                ->select(
+                    't.*',
+                    'ay.name as academic_year',
+                    's.gender',
+                    DB::raw("CONCAT(s.first_name_english, ' ', s.last_name_english) as name_english"),
+                    DB::raw("CONCAT(s.first_name, ' ', s.last_name) as name"),
+                    'c.name as class_name',
+                    'sc.name as section_name'
+                )
+                ->leftJoin('students as s', 's.id', '=', 't.student_id')
+                ->leftJoin('enrolls as e', 'e.student_id', '=', 's.id')
+                ->leftJoin('classes as c', 'e.class_id', '=', 'c.id')
+                ->leftJoin('sections as sc', 'e.section_id', '=', 'sc.id')
+                ->leftJoin('academic_year as ay', 'e.academic_session_id', '=', 'ay.id')
+                ->where('t.termination_status', '=', 'Approved')
+                ->where('t.date_of_termination', '<=', $currentDate)
+                ->groupBy("e.student_id")
+                ->get();
+            return $this->successResponse($attRep, 'present termination list fetch successfully');
+        }
+    }
 }

@@ -368,7 +368,7 @@ Route::group(['middleware' => ['auth:api', 'throttle:limit_per_user', 'logroute'
     Route::post('get_student_subject_mark', [ApiController::class, 'getStudentSubjectMark']);
     Route::post('get_student_grade', [ApiController::class, 'getStudentGrade']);
     Route::post('get_subject_division_mark', [ApiController::class, 'getSubDivisionMark']);
-    Route::post('get_subject_mark_status', [ApiController::class, 'getSubjectMarkStatus']);       
+    Route::post('get_subject_mark_status', [ApiController::class, 'getSubjectMarkStatus']);
     Route::post('get_pointsresult', [ApiController::class, 'get_pointsresult']);
     // get exam paper results
     Route::post('get_exam_paper_results', [ApiControllerOne::class, 'getExamPaperResults']);
@@ -497,7 +497,6 @@ Route::group(['middleware' => ['auth:api', 'throttle:limit_per_user', 'logroute'
     Route::post('student/student-details', [ApiController::class, 'getStudentDetails']);
     Route::post('student/delete', [ApiController::class, 'deleteStudent']);
     Route::post('student/student_settings', [ApiControllerThree::class, 'saveStudentSetting']);
-    Route::post('get_student_download_settings', [ApiControllerThree::class, 'getStudentSownloadSettings']);
     // parent routes
     Route::post('parent/add', [ApiController::class, 'addParent']);
     Route::get('parent/list', [ApiController::class, 'getParentList']);
@@ -505,14 +504,14 @@ Route::group(['middleware' => ['auth:api', 'throttle:limit_per_user', 'logroute'
     Route::get('parent/update_info/list', [ApiController::class, 'getParentUpdateInfoList']);
     Route::post('parent/update_info/view', [ApiController::class, 'getParentUpdateInfoDetails']);
     Route::post('parent/update/view', [ApiController::class, 'getParentUpdateView']);
-    
+
     Route::post('parent/parent-details', [ApiController::class, 'getParentDetails']);
     Route::get('parent/name', [ApiController::class, 'getParentName']);
     Route::post('parent/update', [ApiController::class, 'updateParent']);
     Route::post('parent/update_info/update', [ApiController::class, 'updateParentUpdateInfo']);
     Route::post('student/update_info/update', [ApiController::class, 'updateStudentUpdateInfo']);
     Route::post('parent/delete', [ApiController::class, 'deleteParent']);
-    
+
     Route::get('student/update_info/list', [ApiController::class, 'getStudentUpdateInfoList']);
     Route::post('student/update_info/view', [ApiController::class, 'getStudentUpdateInfoDetails']);
     // get all teacher list
@@ -973,12 +972,12 @@ Route::group(['middleware' => ['auth:api', 'throttle:limit_per_user', 'logroute'
     Route::get('get_today_schedules_admin', [ApiControllerOne::class, 'getTodaySchedulesAdmin']);
     Route::get('get_today_schedules_teacher', [ApiControllerOne::class, 'getTodaySchedulesTeacher']);
 
-    
+
     //Menu Routes
-	Route::post('menus/list', [MenuAccessController::class, 'getMenuList']);
-	Route::post('menus/accesslist', [MenuAccessController::class, 'getMenuAccessList']);     
-	Route::post('menus/add', [MenuAccessController::class, 'addMenu']);
-	Route::post('menus/setpermission', [MenuAccessController::class, 'setmenupermission']);
+    Route::post('menus/list', [MenuAccessController::class, 'getMenuList']);
+    Route::post('menus/accesslist', [MenuAccessController::class, 'getMenuAccessList']);
+    Route::post('menus/add', [MenuAccessController::class, 'addMenu']);
+    Route::post('menus/setpermission', [MenuAccessController::class, 'setmenupermission']);
     Route::post('menus/menu_details', [MenuAccessController::class, 'getMenuDetails']);
     Route::post('menus/update', [MenuAccessController::class, 'updateMenuDetails']);
     Route::post('menus/getpermission', [MenuAccessController::class, 'getmenupermission']);
@@ -991,53 +990,53 @@ Route::group(['middleware' => ['auth:api', 'throttle:limit_per_user', 'logroute'
     Route::post('school_role/delete', [MenuAccessController::class, 'deleteschool_role']);
 
     // School role Permissions
-    
-	Route::post('menus/schoolaccesslist', [MenuAccessController::class, 'getschoolmenuaccesslist']); 
-	Route::post('menus/setschoolpermission', [MenuAccessController::class, 'setschoolpermission']);  
-	Route::post('menus/getschoolroleaccess', [MenuAccessController::class, 'getschoolroleaccess']); 
+
+    Route::post('menus/schoolaccesslist', [MenuAccessController::class, 'getschoolmenuaccesslist']);
+    Route::post('menus/setschoolpermission', [MenuAccessController::class, 'setschoolpermission']);
+    Route::post('menus/getschoolroleaccess', [MenuAccessController::class, 'getschoolroleaccess']);
 
     Route::get('job_title/list', [ApiControllerOne::class, 'jobTitleList']);
     Route::get('employee_type/list', [ApiControllerOne::class, 'employeeTypeList']);
     Route::post('grade_list_by_department', [ApiControllerOne::class, 'gradeListByDepartment']);
-     // buletin_board routes
-     Route::post('buletin_board/add', [ApiControllerThree::class, 'addBuletinBoard']);
-     Route::get('buletin_board/list', [ApiControllerThree::class, 'getBuletinBoardList']);
-     Route::get('buletin_board/usernames', [ApiControllerThree::class, 'usernameBuletin']);
-     Route::post('buletin_board/delete', [ApiControllerThree::class, 'deleteBuletinBoard']);
-     Route::post('buletin_board/buletin_board-details', [ApiControllerThree::class, 'getBuletinBoardDetails']);
-     Route::post('buletin_board/update', [ApiControllerThree::class, 'updateBuletinBoard']);
-     Route::post('get_student_details_buletin_board', [ApiControllerThree::class, 'getStudentListForBulletinBoard']);
-     Route::post('get_parent_details_buletin_board', [ApiControllerThree::class, 'getParentListForBulletinBoard']);
- 
-     Route::get('buletin_board/list/parent', [ApiControllerThree::class, 'getBulletinParent']);
-     Route::get('buletin_board/imp_list/parent', [ApiControllerThree::class, 'getBulletinImpParent']);
-     Route::post('bulletin_board/bulletin_star', [ApiControllerThree::class, 'bulletinParentStar']);
- 
-     Route::get('buletin_board/list/student', [ApiControllerThree::class, 'getBulletinStudent']);
-     Route::get('buletin_board/imp_list/student', [ApiControllerThree::class, 'getBulletinImpStudent']);
-     Route::post('bulletin_board/bulletin_star_student', [ApiControllerThree::class, 'bulletinStudentStar']);
-     
-     Route::get('buletin_board/list/teacher', [ApiControllerThree::class, 'getBulletinTeacher']);
-     Route::get('buletin_board/imp_list/teacher', [ApiControllerThree::class, 'getBulletinImpTeacher']);
-     Route::post('bulletin_board/bulletin_star_teacher', [ApiControllerThree::class, 'bulletinTeacherStar']);
-      // retired routes
-     Route::post('retired/list', [ApiControllerThree::class, 'getRetiredList']);
+    // buletin_board routes
+    Route::post('buletin_board/add', [ApiControllerThree::class, 'addBuletinBoard']);
+    Route::get('buletin_board/list', [ApiControllerThree::class, 'getBuletinBoardList']);
+    Route::get('buletin_board/usernames', [ApiControllerThree::class, 'usernameBuletin']);
+    Route::post('buletin_board/delete', [ApiControllerThree::class, 'deleteBuletinBoard']);
+    Route::post('buletin_board/buletin_board-details', [ApiControllerThree::class, 'getBuletinBoardDetails']);
+    Route::post('buletin_board/update', [ApiControllerThree::class, 'updateBuletinBoard']);
+    Route::post('get_student_details_buletin_board', [ApiControllerThree::class, 'getStudentListForBulletinBoard']);
+    Route::post('get_parent_details_buletin_board', [ApiControllerThree::class, 'getParentListForBulletinBoard']);
 
-    
+    Route::get('buletin_board/list/parent', [ApiControllerThree::class, 'getBulletinParent']);
+    Route::get('buletin_board/imp_list/parent', [ApiControllerThree::class, 'getBulletinImpParent']);
+    Route::post('bulletin_board/bulletin_star', [ApiControllerThree::class, 'bulletinParentStar']);
+
+    Route::get('buletin_board/list/student', [ApiControllerThree::class, 'getBulletinStudent']);
+    Route::get('buletin_board/imp_list/student', [ApiControllerThree::class, 'getBulletinImpStudent']);
+    Route::post('bulletin_board/bulletin_star_student', [ApiControllerThree::class, 'bulletinStudentStar']);
+
+    Route::get('buletin_board/list/teacher', [ApiControllerThree::class, 'getBulletinTeacher']);
+    Route::get('buletin_board/imp_list/teacher', [ApiControllerThree::class, 'getBulletinImpTeacher']);
+    Route::post('bulletin_board/bulletin_star_teacher', [ApiControllerThree::class, 'bulletinTeacherStar']);
+    // retired routes
+    Route::post('retired/list', [ApiControllerThree::class, 'getRetiredList']);
+
+
     // Email Type routes
     Route::post('email_type/add', [ApiController::class, 'addEmailType']);
     Route::get('email_type/list', [ApiController::class, 'getEmailTypeList']);
     Route::post('email_type/email_type-details', [ApiController::class, 'getEmailTypeDetails']);
     Route::post('email_type/update', [ApiController::class, 'updateEmailType']);
     Route::post('email_type/delete', [ApiController::class, 'deleteEmailType']);
-    
+
     // Email Template routes
     Route::post('email_template/add', [ApiController::class, 'addEmailTemplate']);
     Route::get('email_template/list', [ApiController::class, 'getEmailTemplateList']);
     Route::post('email_template/email_template-details', [ApiController::class, 'getEmailTemplateDetails']);
     Route::post('email_template/update', [ApiController::class, 'updateEmailTemplate']);
     Route::post('email_template/delete', [ApiController::class, 'deleteEmailTemplate']);
-    
+
     Route::post('email/send', [ApiController::class, 'sendEmail']);
 
     // Form Field routes
@@ -1045,7 +1044,7 @@ Route::group(['middleware' => ['auth:api', 'throttle:limit_per_user', 'logroute'
     Route::post('form_field/form_field-details', [ApiController::class, 'getFormFieldDetails']);
     Route::post('form_field/update', [ApiController::class, 'updateFormField']);
 
-    
+
 
     // Termination routes
     Route::post('termination/add', [ApiController::class, 'addTermination']);
@@ -1054,39 +1053,45 @@ Route::group(['middleware' => ['auth:api', 'throttle:limit_per_user', 'logroute'
     Route::post('termination/update', [ApiController::class, 'updateTermination']);
     Route::post('termination/update/admin', [ApiController::class, 'updateTerminationAdmin']);
     Route::post('termination/delete', [ApiController::class, 'deleteTermination']);
-    
-     // Student English Communication Result
+
+    // Student English Communication Result
     Route::post('exam_result/students', [ApiController::class, 'exam_studentslist']);
-    Route::post('exam_result/papermark', [ApiController::class, 'exam_papermarks']);     
+    Route::post('exam_result/papermark', [ApiController::class, 'exam_papermarks']);
     Route::post('importcsv/exam', [ImportController::class, 'importCsvExamMarks']);
-    Route::post('exam_result/stuexam_marklist', [ApiController::class, 'stuexam_marklist']);    
+    Route::post('exam_result/stuexam_marklist', [ApiController::class, 'stuexam_marklist']);
     Route::post('exam_result/stuexam_spmarklist', [ApiController::class, 'stuexam_spmarklist']);
-    Route::post('exam_result/stuexam_avgmarklist', [ApiController::class, 'stuexam_avgmarklist']); 
+    Route::post('exam_result/stuexam_avgmarklist', [ApiController::class, 'stuexam_avgmarklist']);
     Route::post('exam_result/studentmonthly_attendance', [ApiController::class, 'studentmonthly_attendance']);
-    
+
     Route::get('getmonthlyholidays', [ApiController::class, 'getmonthlyholidays']);
     Route::post('getacyearholidays', [ApiController::class, 'getacyearholidays']);
     Route::post('exam_result/studentacyear_attendance', [ApiController::class, 'studentacyear_attendance']);
-    
-    
-    Route::post('studentclasssection', [ApiController::class, 'studentclasssection']);    
+
+
+    Route::post('studentclasssection', [ApiController::class, 'studentclasssection']);
     Route::post('exam_result/stuoverall_marklist', [ApiController::class, 'stuoverall_marklist']);
     Route::post('exam_result/stuoverall_spmarklist', [ApiController::class, 'stuoverall_spmarklist']);
-        
+
     Route::post('student/addstupicture', [ApiController::class, 'addstupicture']);
     Route::get('testrole', [ApiController::class, 'testrole']);
+    Route::post('get_student_download_settings', [ApiControllerThree::class, 'getStudentSownloadSettings']);
     Route::post('download_student_list_information', [ApiControllerThree::class, 'downloadStudentListInformation']);
     Route::post('get_student_attendance_by_day', [ApiControllerThree::class, 'getStudentAttendenceByDay']);
     Route::post('add_student_attendance_by_day', [ApiControllerThree::class, 'addStudentAttendenceByDay']);
-     //health logbooks
-     Route::post('getHealthLogbooks', [ApiControllerOne::class, 'getHealthLogbooks']);
-     Route::post('health_logbooks_add', [ApiControllerOne::class, 'addHealthLogbooks']);
-     
-       // Shortcut routes
+    //health logbooks
+    Route::post('getHealthLogbooks', [ApiControllerOne::class, 'getHealthLogbooks']);
+    Route::post('health_logbooks_add', [ApiControllerOne::class, 'addHealthLogbooks']);
+
+    // Shortcut routes
     Route::post('shortcutLink/add', [ApiControllerOne::class, 'addShortcut']);
     Route::post('shortcutLink/list', [ApiControllerOne::class, 'getShortcutList']);
     Route::post('shortcutLink/shortcutLink-details', [ApiControllerOne::class, 'getShortcutDetails']);
     Route::post('shortcutLink/update', [ApiControllerOne::class, 'updateShortcut']);
     Route::post('shortcutLink/delete', [ApiControllerOne::class, 'deleteShortcut']);
     Route::get('bulletinBoard_Dashboard', [ApiControllerOne::class, 'getBulletinDashboard']);
+    Route::post('student_new_joining_list', [ApiControllerThree::class, 'studentNewJoiningList']);
+    Route::post('settings_attendance_report', [ApiControllerThree::class, 'saveAttendanceReportSetting']);
+    Route::post('get_settings_attendance_report', [ApiControllerThree::class, 'getAttendanceReportSetting']);
+    Route::post('absent_attendance_report', [ApiControllerThree::class, 'absentAttendanceReport']);
+    Route::get('present_student_termination_list', [ApiControllerThree::class, 'presentStudentTerminationList']);
 });
