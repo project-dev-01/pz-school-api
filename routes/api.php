@@ -1094,4 +1094,8 @@ Route::group(['middleware' => ['auth:api', 'throttle:limit_per_user', 'logroute'
     Route::post('get_settings_attendance_report', [ApiControllerThree::class, 'getAttendanceReportSetting']);
     Route::post('absent_attendance_report', [ApiControllerThree::class, 'absentAttendanceReport']);
     Route::get('present_student_termination_list', [ApiControllerThree::class, 'presentStudentTerminationList']);
+    Route::get('getlogmodifyusers', [ApiController::class, 'getlogmodifyusers']);    
+    Route::get('getlogmodifytables', [ApiController::class, 'getlogmodifytables']);
+     
+    Route::get('log_modifylist', [ApiController::class, 'log_modifylist']);
 });

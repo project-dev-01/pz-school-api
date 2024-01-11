@@ -3502,7 +3502,7 @@ class ApiController extends BaseController
                 $passport = isset($request->passport) ? Crypt::encryptString($request->passport) : "";
                 $mobile_no = isset($request->mobile_no) ? Crypt::encryptString($request->mobile_no) : "";
 
-                $query = $Connection->table('staffs')->where('id', $id)->update([
+                $data=[
                     // 'staff_id' => $request->staff_id,
                     // 'name' => $request->name,
                     'teacher_type' => $request->teacher_type,
@@ -3563,13 +3563,33 @@ class ApiController extends BaseController
                     'passport_photo' => $passport_fileName,
                     'visa_photo' => $visa_fileName,
                     'updated_at' => date("Y-m-d H:i:s")
+                ];
+                $oldData = $Connection->table('staffs')->find($id);
+                $query = $Connection->table('staffs')->where('id', $id)->update($data); 
+                $changes = $this->getChanges($oldData, $data);
+                $table_modify=[];
+                $table_modify['type']='Staff';
+                $table_modify['id']=$id;                
+                $table_modify['name']=$request->first_name.' '.$request->last_name;                
+                $table_modify['email']=$request->email;
+
+                $Connection->table('modify_datas')->insert([
+                  
+                    'table_name' => 'Staff',
+                    'table_dbname' => 'staffs',
+                    'table_dbid' => $id,
+                    'table_id_name' => 'id', 
+                    'table_modify' => json_encode($table_modify),                  
+                    'modifydata' => json_encode($changes),
+                    'createdby_id' => $request->login_userid,
+                    'createdby_role' => $request->login_roleid
                 ]);
 
                 $success = [];
                 if (!$query) {
                     return $this->send500Error('Something went wrong.', ['error' => 'Something went wrong on Update employee']);
                 } else {
-$rid=$request->role_id;
+                    $rid=$request->role_id;
                     //$roleIds1 = $Connection->table('school_roles')->where('id', $rid)->first();
                     $roleIds1 =$Connection->table('school_menuaccess')
                         ->select('role_id')
@@ -3621,7 +3641,9 @@ $rid=$request->role_id;
                     if ($request->skip_bank_details == 1) {
                         $bankRow = $Connection->table('staff_bank_accounts')->where('staff_id', $id)->first();
                         if (isset($bankRow->id)) {
-                            $bank = $Connection->table('staff_bank_accounts')->where('staff_id', $id)->update([
+                            $oldData1 = $Connection->table('staff_bank_accounts')->where('staff_id', $id)->first();
+                            
+                            $data= [
                                 'staff_id' => $id,
                                 'bank_name' => $request->bank_name,
                                 'holder_name' => $request->holder_name,
@@ -3630,6 +3652,20 @@ $rid=$request->role_id;
                                 'ifsc_code' => $request->ifsc_code,
                                 'account_no' => $request->account_no,
                                 'updated_at' => date("Y-m-d H:i:s")
+                            ];
+                            $bank = $Connection->table('staff_bank_accounts')->where('staff_id', $id)->update($data);
+                            $changes = $this->getChanges($oldData1, $data);
+                            
+                           $Connection->table('modify_datas')->insert([
+                               
+                                'table_name'=>'Staff Bank Info',
+                                'table_dbname'=>'staff_bank_accounts',
+                                'table_dbid' => $id,
+                                'table_id_name' => 'staff_id', 
+                                'table_modify'=> json_encode($table_modify),                  
+                                'modifydata' => json_encode($changes),
+                                'createdby_id'=> $request->login_userid,
+                                'createdby_role'=> $request->login_roleid
                             ]);
                         } else {
                             $bank = $Connection->table('staff_bank_accounts')->insert([
@@ -11123,7 +11159,7 @@ $rid=$request->role_id;
                         ['academic_session_id', '=', $academic_session_id]
                     ])->first();
                     if (isset($row->id)) {
-                        $Connection->table('student_marks')->where('id', $row->id)->update([
+                        $data=[
                             'score' => $score,
 							'points' => $points,
 							'freetext' => $freetext,
@@ -11133,12 +11169,33 @@ $rid=$request->role_id;
                             'status' => $status,
                             'memo' => $memo,
                             'updated_at' => date("Y-m-d H:i:s")
-                        ]);
+                        ];
+                        $student_data=$Connection->table('students')->where('id', $value['student_id'])->first();
+                        $oldData = $Connection->table('student_marks')->where('id', $row->id)->first();
+                $query = $Connection->table('student_marks')->where('id', $row->id)->update($data); 
+                $changes = $this->getChanges($oldData, $data);
+                $table_modify=[];
+                $table_modify['type']='Student';
+                $table_modify['id']=$value['student_id'];                
+                $table_modify['name']=$student_data->first_name.' '.$student_data->last_name;                
+                 $table_modify['email']=$student_data->email;
+
+                $Connection->table('modify_datas')->insert([
+                  
+                    'table_name' => 'Student Mark',
+                    'table_dbname' => 'student_marks',
+                    'table_dbid' => $row->id,
+                    'table_id_name' => 'id', 
+                    'table_modify' => json_encode($table_modify),                  
+                    'modifydata' => json_encode($changes),
+                    'createdby_id' => $request->login_userid,
+                    'createdby_role' => $request->login_roleid
+                ]);
                     } else {
                         $Connection->table('student_marks')->insert($arrayStudentMarks);
                     }
                 } else {
-                    $Connection->table('student_marks')->where('id', $value['studentmarks_tbl_pk_id'])->update([
+                     /*$Connection->table('student_marks')->where('id', $value['studentmarks_tbl_pk_id'])->update([
                         'score' => $score,
 						'points' => $points,
 						'freetext' => $freetext,
@@ -11148,7 +11205,39 @@ $rid=$request->role_id;
                         'status' => $status,
                         'memo' => $memo,
                         'updated_at' => date("Y-m-d H:i:s")
-                    ]);
+                    ]);*/
+                    $data=[
+                        'score' => $score,
+                        'points' => $points,
+                        'freetext' => $freetext,
+                        'grade' => $grade,
+                        'ranking' => $ranking,
+                        'pass_fail' => $pass_fail,
+                        'status' => $status,
+                        'memo' => $memo,
+                        'updated_at' => date("Y-m-d H:i:s")
+                    ];
+                    $student_data=$Connection->table('students')->where('id', $value['student_id'])->first();
+                    $oldData = $Connection->table('student_marks')->where('id', $value['studentmarks_tbl_pk_id'])->first();
+            $query = $Connection->table('student_marks')->where('id', $value['studentmarks_tbl_pk_id'])->update($data); 
+            $changes = $this->getChanges($oldData, $data);
+            $table_modify=[];
+            $table_modify['type']='Student';
+            $table_modify['id']=$value['student_id'];                
+            $table_modify['name']=$student_data->first_name.' '.$student_data->last_name;                
+            $table_modify['email']=$student_data->email;
+
+            $Connection->table('modify_datas')->insert([
+              
+                'table_name' => 'Student Mark',
+                'table_dbname' => 'student_marks',
+                'table_dbid' => $value['studentmarks_tbl_pk_id'],
+                'table_id_name' => 'id', 
+                'table_modify' => json_encode($table_modify),                  
+                'modifydata' => json_encode($changes),
+                'createdby_id' => $request->login_userid,
+                'createdby_role' => $request->login_roleid
+            ]);
                 }
             }
             return $this->successResponse([], 'Student Marks added successfuly.');
@@ -13373,7 +13462,7 @@ $rid=$request->role_id;
                 $current_address = isset($request->current_address) ? Crypt::encryptString($request->current_address) : "";
                 $permanent_address = isset($request->permanent_address) ? Crypt::encryptString($request->permanent_address) : "";
 
-                $studentId = $conn->table('students')->where('id', $request->student_id)->update([
+                $data = [
                     'father_id' => $request->father_id,
                     'mother_id' => $request->mother_id,
                     'guardian_id' => $request->guardian_id,
@@ -13422,6 +13511,26 @@ $rid=$request->role_id;
                     'religion' => $request->religion,
                     'blood_group' => $request->blood_group,
                     'created_at' => date("Y-m-d H:i:s")
+                ];
+               // $oldData = $conn->table('students')->find($request->student_id);
+                $conn->table('students')->where('id', $request->student_id)->update($data);
+                $changes = $this->getChanges($oldData, $data);
+                $table_modify=[];
+                $table_modify['type']='Student';
+                $table_modify['id']=$request->student_id;                
+                $table_modify['name']=$request->first_name.' '.$request->last_name;                
+                $table_modify['email']=$request->email;
+
+                $Connection->table('modify_datas')->insert([
+                    
+                    'table_name' => 'Student',
+                    'table_dbname' => 'students',
+                    'table_dbid' => $request->student_id,
+                    'table_id_name' => 'id', 
+                    'table_modify' => json_encode($table_modify),                  
+                    'modifydata' => json_encode($changes),
+                    'createdby_id' => $request->login_userid,
+                    'createdby_role' => $request->login_roleid
                 ]);
 
                 $session_id = 0;
@@ -17852,7 +17961,7 @@ $rid=$request->role_id;
 
                 // return $att;
                 if (isset($att['id'])) {
-                    $query = $conn->table('staff_attendances')->where('id', $att['id'])->update([
+                    $data=[
                         'date' => $att['date'],
                         'check_in' => $att['check_in'],
                         'check_out' => $att['check_out'],
@@ -17863,7 +17972,27 @@ $rid=$request->role_id;
                         'staff_id' => $employee,
                         'session_id' => $session_id,
                         'updated_at' => date("Y-m-d H:i:s")
-                    ]);
+                    ];
+                        $staff_data=$Connection->table('staffs')->where('id', $employee)->first();
+                        $oldData = $Connection->table('staff_attendances')->where('id',  $att['id'])->first();
+                        $query =  $Connection->table('staff_attendances')->where('id',  $att['id'])->update($data); 
+                        $changes = $this->getChanges($oldData, $data);
+                        $table_modify=[];
+                        $table_modify['type']='Student Attentance';
+                        $table_modify['id']=$employee;                
+                        $table_modify['name']=$staff_data->first_name.' '.$staff_data->last_name;                
+                        $table_modify['email']=$staff_data->email;
+                        $Connection->table('modify_datas')->insert([
+                        
+                            'table_name' => 'Staff Attentance',
+                            'table_dbname' => 'staff_attendances',
+                            'table_dbid' => $att['id'],
+                            'table_id_name' => 'id', 
+                            'table_modify' => json_encode($table_modify),                  
+                            'modifydata' => json_encode($changes),
+                            'createdby_id' => $request->login_userid,
+                            'createdby_role' => $request->login_roleid
+                        ]);
                 } else {
 
                     if ($att['status']) {
@@ -25198,7 +25327,7 @@ $rid=$request->role_id;
             DB::raw('COUNT(CASE WHEN sa.status = "excused" then 1 ELSE NULL END) as "excusedCount"'),
         )
         // ->join('enrolls as en', 'en.student_id', '=', 'stud.id')
-        ->leftJoin('student_attendances as sa', 'sa.student_id', '=', 'stud.id')
+        ->leftJoin('student_attendances_day as sa', 'sa.student_id', '=', 'stud.id')
         ->join('enrolls as en', function ($join) {
             $join->on('stud.id', '=', 'en.student_id')
                 ->on('sa.class_id', '=', 'en.class_id')
@@ -25207,6 +25336,32 @@ $rid=$request->role_id;
         ->where('stud.id', '=', $request->student_id)
         ->whereMonth('sa.date', $year_month[0])
         ->whereYear('sa.date', $year_month[1])
+        ->get();
+        return $this->successResponse($getAttendanceCounts, 'Attendance Detatils');
+    }
+    
+    public function studentacyear_attendance(Request $request)
+    {        
+        
+        $start = date('Y-m-d', strtotime($request->start));
+        $end = date('Y-m-d', strtotime($request->end));
+        $Connection = $this->createNewConnection($request->branch_id);
+        $getAttendanceCounts = $Connection->table('students as stud')
+        ->select(
+            DB::raw('COUNT(CASE WHEN sa.status = "present" then 1 ELSE NULL END) as "presentCount"'),
+            DB::raw('COUNT(CASE WHEN sa.status = "absent" then 1 ELSE NULL END) as "absentCount"'),
+            DB::raw('COUNT(CASE WHEN sa.status = "late" then 1 ELSE NULL END) as "lateCount"'),
+            DB::raw('COUNT(CASE WHEN sa.status = "excused" then 1 ELSE NULL END) as "excusedCount"'),
+        )
+        // ->join('enrolls as en', 'en.student_id', '=', 'stud.id')
+        ->leftJoin('student_attendances_day as sa', 'sa.student_id', '=', 'stud.id')
+        ->join('enrolls as en', function ($join) {
+            $join->on('stud.id', '=', 'en.student_id')
+                ->on('sa.class_id', '=', 'en.class_id')
+                ->on('sa.section_id', '=', 'en.section_id');
+        })
+        ->where('stud.id', '=', $request->student_id)
+        ->whereRaw('sa.date between "' . $start . '" and "' . $end . '"')
         ->get();
         return $this->successResponse($getAttendanceCounts, 'Attendance Detatils');
     }
@@ -25603,4 +25758,163 @@ $rid=$request->role_id;
         }
         return $this->successResponse($success, 'Student Photo uploaded successfully');
     } 
+    private function getChanges($oldData, $newData)
+    {
+        $changes = [];
+
+        foreach ($newData as $key => $value) {
+            if($key!='updated_at')
+            {
+                if ($oldData->$key != $value) {
+                    
+                    $changes[$key] = [
+                        'field'=> $key,
+                        'old' => $oldData->$key,
+                        'new' => $value,
+                    ];
+                }
+            }
+        }
+
+        return $changes;
+    }
+    public function getlogmodifyusers(Request $request)
+    {
+        $validator = \Validator::make($request->all(), [
+            'branch_id' => 'required'
+        ]);
+        if (!$validator->passes()) {
+            return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
+        } else {
+            // create new connection
+            $branchID=$request->branch_id;
+            $Connection = $this->createNewConnection($request->branch_id);
+            $main_db = config('constants.main_db');
+            $logusers = $Connection->table('modify_datas as t1')
+            ->select('us.id', 'us.name', 'us.email')
+            ->join('' . $main_db . '.users as us', function ($join) use ($branchID) {
+                $join->on('t1.createdby_id', '=', 'us.id')
+                    ->where('us.branch_id', $branchID);
+            })
+            ->groupBy('us.id', 'us.name', 'us.email')
+            ->get();
+            
+            
+            return $this->successResponse($logusers, 'Get Log Modify Users successfully');
+        }
+    }
+    public function getlogmodifytables(Request $request)
+    {
+        $validator = \Validator::make($request->all(), [
+            'branch_id' => 'required'
+        ]);
+        if (!$validator->passes()) {
+            return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
+        } else {
+            // create new connection
+            $branchID=$request->branch_id;
+            $Connection = $this->createNewConnection($request->branch_id);
+            
+            $logusers = $Connection->table('modify_datas')
+            ->select('table_name')
+            ->distinct()
+            ->get();
+            
+            
+            return $this->successResponse($logusers, 'Get Log Modify Tables successfully');
+        }
+    }
+    public function log_modifylist(Request $request)
+    {
+        $fromDate = $request->frm_ldate . ' 00:00:00';
+        $toDate = $request->to_ldate . ' 23:59:59';
+        $branchID=$request->branch_id;
+        $Connection = $this->createNewConnection($request->branch_id);
+        $main_db = config('constants.main_db');
+        
+        if ($request->user_id == 'All' && $request->tablename == 'All') {
+            $data = $Connection->table('modify_datas as t1')
+                ->select('t1.*','us.id', 'us.name', 'us.email')
+                ->join('' . $main_db . '.users as us', function ($join) use ($branchID) {
+                    $join->on('t1.createdby_id', '=', 'us.id')
+                        ->where('us.branch_id', $branchID);
+                })
+                ->whereBetween('t1.created_at', [$fromDate, $toDate])
+                ->get();
+        } 
+        else if ($request->user_id != 'All' && $request->tablename == 'All') {
+            $data = $Connection->table('modify_datas as t1')
+                ->select('t1.*','us.id', 'us.name', 'us.email')
+                ->join('' . $main_db . '.users as us', function ($join) use ($branchID) {
+                    $join->on('t1.createdby_id', '=', 'us.id')
+                        ->where('us.branch_id', $branchID);
+                })
+                ->where('t1.createdby_id', $request->user_id)
+                ->whereBetween('t1.created_at', [$fromDate, $toDate])
+                ->get();
+        }
+        else if ($request->user_id == 'All' && $request->tablename != 'All') {
+            $data = $Connection->table('modify_datas as t1')
+                ->select('t1.*','us.id', 'us.name', 'us.email')
+                ->join('' . $main_db . '.users as us', function ($join) use ($branchID) {
+                    $join->on('t1.createdby_id', '=', 'us.id')
+                        ->where('us.branch_id', $branchID);
+                })
+                ->where('t1.table_name', $request->tablename)
+                ->whereBetween('t1.created_at', [$fromDate, $toDate])
+                ->get();
+        }  
+        else {
+           
+            $data = $Connection->table('modify_datas as t1')
+            ->select('t1.*','us.id', 'us.name', 'us.email')
+            ->join('' . $main_db . '.users as us', function ($join) use ($branchID) {
+                $join->on('t1.createdby_id', '=', 'us.id')
+                    ->where('us.branch_id', $branchID);
+            })
+            ->where('t1.createdby_id', $request->user_id)
+            ->where('t1.table_name', $request->tablename)
+            ->whereBetween('t1.created_at', [$fromDate, $toDate])
+            ->get();
+        }
+        $history = array();
+        $j=0;
+        foreach ($data as $item) {
+            $j++;
+            $table_modifydata=json_decode( $item->table_modify, true);
+            $modifydatas=json_decode( $item->modifydata, true);
+            $mdatas='';
+            $k=0;
+            foreach( $modifydatas as $val)
+            {
+                $k++;
+                $new=($val['new']!=null)?$val['new']:'-';
+                $old=($val['old']!=null)?$val['old']:'-';
+                if($val['field']=='mobile_no')
+                {
+                    $new=($val['new']!=null)?Helper::decryptStringData($val['new']):'-';
+                    $old=($val['old']!=null)?Helper::decryptStringData($val['old']):'-';
+                }
+                
+             
+                $mdatas.=$k.".".$val['field']."<br> Old : ".$old."<br> New : ".$new."<br><br>";
+            }
+            //dd($mdatas);
+            $items = array();   
+            $items['id'] = $j;         
+            $items['user_id'] = $item->id;
+            $items['user_name'] = $item->name;
+            $items['user_email'] = $item->email;
+            
+            $items['tablename'] = $item->table_name;
+            $items['user'] = "ID :".$item->createdby_id."<br>Name :".$item->name."<br>Email :".$item->email;
+           
+            $items['table_user']="ID :".$table_modifydata['id']." <br>Name :".$table_modifydata['name']."<br>Email :".$table_modifydata['email'];
+            
+            $items['modifydata'] =$mdatas;
+            $items['created_at'] = date('d-m-Y h:i:a', strtotime($item->created_at));
+            array_push($history, $items);
+        }
+        return $this->successResponse($history, 'Log Modify record fetch successfully');
+    }
 }

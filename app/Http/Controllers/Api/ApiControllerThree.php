@@ -1855,7 +1855,7 @@ class ApiControllerThree extends BaseController
                         ['student_id', '=', $value['student_id']]
                     ])->first();
                     if (isset($row->id)) {
-                        $Connection->table('student_attendances_day')->where('id', $row->id)->update([
+                        /*$Connection->table('student_attendances_day')->where('id', $row->id)->update([
                             'status' => $attStatus,
                             'remarks' => $att_remark,
                             'reasons' => $reasons,
@@ -1863,12 +1863,42 @@ class ApiControllerThree extends BaseController
                             'classroom_behaviour' => $classroom_behaviour,
                             'day_recent_flag' => "1",
                             'updated_at' => date("Y-m-d H:i:s")
+                        ]);*/
+                        $data=[
+                            'status' => $attStatus,
+                            'remarks' => $att_remark,
+                            'reasons' => $reasons,
+                            'student_behaviour' => $student_behaviour,
+                            'classroom_behaviour' => $classroom_behaviour,
+                            'day_recent_flag' => "1",
+                            'updated_at' => date("Y-m-d H:i:s")
+                        ];
+                        
+                        $student_data=$Connection->table('students')->where('id', $value['student_id'])->first();
+                        $oldData = $Connection->table('student_attendances_day')->where('id', $row->id)->first();
+                        $query =  $Connection->table('student_attendances_day')->where('id', $row->id)->update($data); 
+                        $changes = $this->getChanges($oldData, $data);
+                        $table_modify=[];
+                        $table_modify['type']='Student Attentance';
+                        $table_modify['id']=$value['student_id'];                
+                        $table_modify['name']=$student_data->first_name.' '.$student_data->last_name;                
+                        $table_modify['email']=$student_data->email;
+                        $Connection->table('modify_datas')->insert([
+                        
+                            'table_name' => 'Student Attentance',
+                            'table_dbname' => 'student_attendances',
+                            'table_dbid' => $row->id,
+                            'table_id_name' => 'id', 
+                            'table_modify' => json_encode($table_modify),                  
+                            'modifydata' => json_encode($changes),
+                            'createdby_id' => $request->login_userid,
+                            'createdby_role' => $request->login_roleid
                         ]);
                     } else {
                         $Connection->table('student_attendances_day')->insert($arrayAttendance);
                     }
                 } else {
-                    $Connection->table('student_attendances_day')->where('id', $value['attendance_id'])->update([
+                    /*$Connection->table('student_attendances_day')->where('id', $value['attendance_id'])->update([
                         'status' => $attStatus,
                         'remarks' => $att_remark,
                         'reasons' => $reasons,
@@ -1876,7 +1906,36 @@ class ApiControllerThree extends BaseController
                         'classroom_behaviour' => $classroom_behaviour,
                         'day_recent_flag' => "1",
                         'updated_at' => date("Y-m-d H:i:s")
-                    ]);
+                    ]);*/
+                    $data=[
+                        'status' => $attStatus,
+                        'remarks' => $att_remark,
+                        'reasons' => $reasons,
+                        'student_behaviour' => $student_behaviour,
+                        'classroom_behaviour' => $classroom_behaviour,
+                        'day_recent_flag' => "1",
+                        'updated_at' => date("Y-m-d H:i:s")
+                    ];
+                    $student_data=$Connection->table('students')->where('id', $value['student_id'])->first();
+                    $oldData = $Connection->table('student_attendances_day')->where('id', $value['attendance_id'])->first();
+                        $query =  $Connection->table('student_attendances_day')->where('id', $value['attendance_id'])->update($data); 
+                       $changes = $this->getChanges($oldData, $data);
+                        $table_modify=[];
+                        $table_modify['type']='Student Attentance';
+                        $table_modify['id']=$value['student_id'];                
+                        $table_modify['name']=$student_data->first_name.' '.$student_data->last_name;                
+                        $table_modify['email']=$student_data->email;
+        
+                        $Connection->table('modify_datas')->insert([                          
+                            'table_name' => 'Student Attentance',
+                            'table_dbname' => 'student_attendances',
+                            'table_dbid' => $value['attendance_id'],
+                            'table_id_name' => 'id', 
+                            'table_modify' => json_encode($table_modify),                  
+                            'modifydata' => json_encode($changes),
+                            'createdby_id' => $request->login_userid,
+                            'createdby_role' => $request->login_roleid
+                        ]);
                 }
             }
             return $this->successResponse([], 'Attendance added successfuly.');
