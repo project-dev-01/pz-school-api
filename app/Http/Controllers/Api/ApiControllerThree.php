@@ -1886,7 +1886,7 @@ class ApiControllerThree extends BaseController
                         $Connection->table('modify_datas')->insert([
                         
                             'table_name' => 'Student Attentance',
-                            'table_dbname' => 'student_attendances',
+                            'table_dbname' => 'student_attendances_day',
                             'table_dbid' => $row->id,
                             'table_id_name' => 'id', 
                             'table_modify' => json_encode($table_modify),                  
@@ -1916,10 +1916,10 @@ class ApiControllerThree extends BaseController
                         'day_recent_flag' => "1",
                         'updated_at' => date("Y-m-d H:i:s")
                     ];
-                    $student_data=$Connection->table('students')->where('id', $value['student_id'])->first();
-                    $oldData = $Connection->table('student_attendances_day')->where('id', $value['attendance_id'])->first();
+                        $student_data=$Connection->table('students')->where('id', $value['student_id'])->first();
+                        $oldData = $Connection->table('student_attendances_day')->where('id', $value['attendance_id'])->first();
                         $query =  $Connection->table('student_attendances_day')->where('id', $value['attendance_id'])->update($data); 
-                       $changes = $this->getChanges($oldData, $data);
+                        $changes = $this->getChanges($oldData, $data);
                         $table_modify=[];
                         $table_modify['type']='Student Attentance';
                         $table_modify['id']=$value['student_id'];                
@@ -1928,7 +1928,7 @@ class ApiControllerThree extends BaseController
         
                         $Connection->table('modify_datas')->insert([                          
                             'table_name' => 'Student Attentance',
-                            'table_dbname' => 'student_attendances',
+                            'table_dbname' => 'student_attendances_day',
                             'table_dbid' => $value['attendance_id'],
                             'table_id_name' => 'id', 
                             'table_modify' => json_encode($table_modify),                  
@@ -2259,5 +2259,25 @@ class ApiControllerThree extends BaseController
                 ->get();
             return $this->successResponse($attRep, 'present termination list fetch successfully');
         }
+    }
+    private function getChanges($oldData, $newData)
+    {
+        $changes = [];
+
+        foreach ($newData as $key => $value) {
+            if($key!='updated_at')
+            {
+                if ($oldData->$key != $value) {
+                    
+                    $changes[$key] = [
+                        'field'=> $key,
+                        'old' => $oldData->$key,
+                        'new' => $value,
+                    ];
+                }
+            }
+        }
+
+        return $changes;
     }
 }

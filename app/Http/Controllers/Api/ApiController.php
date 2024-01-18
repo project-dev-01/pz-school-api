@@ -1060,6 +1060,7 @@ class ApiController extends BaseController
                     'subject_color_calendor' => $request->subject_color,
                     'subject_author' => $request->subject_author,
                     'subject_type_2' => $request->subject_type_2,
+                    'pdf_report' => isset($request->pdf_report) ? $request->pdf_report : 0,
                     'times_per_week' => isset($request->times_per_week) ? $request->times_per_week : null,
                     'exam_exclude' => $request->exam_exclude,
                     'order_code' => isset($request->order_code) ? $request->order_code : null,
@@ -1134,6 +1135,7 @@ class ApiController extends BaseController
                     'subject_color_calendor' => $request->subject_color,
                     'subject_author' => $request->subject_author,
                     'subject_type_2' => $request->subject_type_2,
+                    'pdf_report' => isset($request->pdf_report) ? $request->pdf_report : 0,
                     'times_per_week' => isset($request->times_per_week) ? $request->times_per_week : null,
                     'exam_exclude' => $request->exam_exclude,
                     'order_code' => isset($request->order_code) ? $request->order_code : null,
@@ -11178,10 +11180,10 @@ class ApiController extends BaseController
                 $table_modify['type']='Student';
                 $table_modify['id']=$value['student_id'];                
                 $table_modify['name']=$student_data->first_name.' '.$student_data->last_name;                
-                 $table_modify['email']=$student_data->email;
+                $table_modify['email']=$student_data->email;
 
                 $Connection->table('modify_datas')->insert([
-                  
+                    
                     'table_name' => 'Student Mark',
                     'table_dbname' => 'student_marks',
                     'table_dbid' => $row->id,
@@ -11219,25 +11221,25 @@ class ApiController extends BaseController
                     ];
                     $student_data=$Connection->table('students')->where('id', $value['student_id'])->first();
                     $oldData = $Connection->table('student_marks')->where('id', $value['studentmarks_tbl_pk_id'])->first();
-            $query = $Connection->table('student_marks')->where('id', $value['studentmarks_tbl_pk_id'])->update($data); 
-            $changes = $this->getChanges($oldData, $data);
-            $table_modify=[];
-            $table_modify['type']='Student';
-            $table_modify['id']=$value['student_id'];                
-            $table_modify['name']=$student_data->first_name.' '.$student_data->last_name;                
-            $table_modify['email']=$student_data->email;
+                    $query = $Connection->table('student_marks')->where('id', $value['studentmarks_tbl_pk_id'])->update($data); 
+                    $changes = $this->getChanges($oldData, $data);
+                    $table_modify=[];
+                    $table_modify['type']='Student';
+                    $table_modify['id']=$value['student_id'];                
+                    $table_modify['name']=$student_data->first_name.' '.$student_data->last_name;                
+                    $table_modify['email']=$student_data->email;
 
-            $Connection->table('modify_datas')->insert([
-              
-                'table_name' => 'Student Mark',
-                'table_dbname' => 'student_marks',
-                'table_dbid' => $value['studentmarks_tbl_pk_id'],
-                'table_id_name' => 'id', 
-                'table_modify' => json_encode($table_modify),                  
-                'modifydata' => json_encode($changes),
-                'createdby_id' => $request->login_userid,
-                'createdby_role' => $request->login_roleid
-            ]);
+                    $Connection->table('modify_datas')->insert([
+                    
+                        'table_name' => 'Student Mark',
+                        'table_dbname' => 'student_marks',
+                        'table_dbid' => $value['studentmarks_tbl_pk_id'],
+                        'table_id_name' => 'id', 
+                        'table_modify' => json_encode($table_modify),                  
+                        'modifydata' => json_encode($changes),
+                        'createdby_id' => $request->login_userid,
+                        'createdby_role' => $request->login_roleid
+                    ]);
                 }
             }
             return $this->successResponse([], 'Student Marks added successfuly.');
@@ -20384,7 +20386,9 @@ class ApiController extends BaseController
                 "paper_name" => $request->paper_name,
                 "paper_type" => isset($request->paper_type) ? $request->paper_type : "",
                 "grade_category" => $request->grade_category,
-                "academic_session_id" => $request->academic_session_id,
+                "academic_session_id" => $request->academic_session_id,               
+                "score_type" => $request->score_type,             
+                'pdf_report' => isset($request->pdf_report) ? $request->pdf_report : 0,
                 "subject_weightage" => isset($request->subject_weightage) ? $request->subject_weightage : "",
                 "notes" => isset($request->notes) ? $request->notes : "",
                 "created_at" => date("Y-m-d H:i:s")
@@ -20485,7 +20489,8 @@ class ApiController extends BaseController
                 "paper_name" => $request->paper_name,
                 "paper_type" => isset($request->paper_type) ? $request->paper_type : "",
                 "grade_category" => $request->grade_category,                
-                "score_type" => $request->score_type,
+                "score_type" => $request->score_type,                             
+                'pdf_report' => isset($request->pdf_report) ? $request->pdf_report : 0,
                 "academic_session_id" => $request->academic_session_id,
                 "subject_weightage" => isset($request->subject_weightage) ? $request->subject_weightage : "",
                 "notes" => isset($request->notes) ? $request->notes : "",
@@ -25916,5 +25921,23 @@ class ApiController extends BaseController
             array_push($history, $items);
         }
         return $this->successResponse($history, 'Log Modify record fetch successfully');
-    }
+    }   
+    public function getpdf_report(Request $request)
+    {
+        $validator = \Validator::make($request->all(), [
+            'branch_id' => 'required'
+        ]);
+        if (!$validator->passes()) {
+            return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
+        } else {
+            // create new connection
+            $branchID=$request->branch_id;
+            $Connection = $this->createNewConnection($request->branch_id);
+            
+            $pdflist = $Connection->table('pdf_report')->select('id','pdf_name')->get();
+            
+            
+            return $this->successResponse($pdflist, 'Get Pdf Report successfully');
+        }
+    } 
 }

@@ -11,6 +11,7 @@ use App\Http\Controllers\Api\ChatController;
 use App\Http\Controllers\Api\ApiControllerThree;
 use App\Http\Controllers\Api\TwoFactorAuth;
 use App\Http\Controllers\Api\MenuAccessController;
+use App\Http\Controllers\Api\ExamreportController;
 /*school_roles
 |--------------------------------------------------------------------------
 | API Routes
@@ -1055,12 +1056,17 @@ Route::group(['middleware' => ['auth:api', 'throttle:limit_per_user', 'logroute'
     Route::post('termination/delete', [ApiController::class, 'deleteTermination']);
 
     // Student English Communication Result
-    Route::post('exam_result/students', [ApiController::class, 'exam_studentslist']);
-    Route::post('exam_result/papermark', [ApiController::class, 'exam_papermarks']);
+    Route::post('exam_result/students', [ExamreportController::class, 'exam_studentslist']);    
+    Route::post('exam_result/get_subjectlist', [ExamreportController::class, 'get_subjectlist']); 
+    Route::post('exam_result/get_mainsubjectlist', [ExamreportController::class, 'get_mainsubjectlist']);
+    Route::post('exam_result/getsubjecpapertlist', [ExamreportController::class, 'getsubjecpapertlist']);
+    
+    Route::post('exam_result/stuexam_marklist', [ExamreportController::class, 'stuexam_marklist']);
+    Route::post('exam_result/stuexam_avgmarklist', [ExamreportController::class, 'stuexam_avgmarklist']);
+    
+    Route::post('exam_result/papermark', [ExamreportController::class, 'exam_papermarks']);
     Route::post('importcsv/exam', [ImportController::class, 'importCsvExamMarks']);
-    Route::post('exam_result/stuexam_marklist', [ApiController::class, 'stuexam_marklist']);
     Route::post('exam_result/stuexam_spmarklist', [ApiController::class, 'stuexam_spmarklist']);
-    Route::post('exam_result/stuexam_avgmarklist', [ApiController::class, 'stuexam_avgmarklist']);
     Route::post('exam_result/studentmonthly_attendance', [ApiController::class, 'studentmonthly_attendance']);
 
     Route::get('getmonthlyholidays', [ApiController::class, 'getmonthlyholidays']);
@@ -1098,4 +1104,7 @@ Route::group(['middleware' => ['auth:api', 'throttle:limit_per_user', 'logroute'
     Route::get('getlogmodifytables', [ApiController::class, 'getlogmodifytables']);
      
     Route::get('log_modifylist', [ApiController::class, 'log_modifylist']);
-});
+    Route::get('getpdf_report', [ApiController::class, 'getpdf_report']);
+    Route::post('getacyeardates', [ExamreportController::class, 'getacyeardates']);
+    Route::post('getsem_studentattendance', [ExamreportController::class, 'getsem_studentattendance']);
+    });
