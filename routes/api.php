@@ -1066,17 +1066,11 @@ Route::group(['middleware' => ['auth:api', 'throttle:limit_per_user', 'logroute'
     
     Route::post('exam_result/papermark', [ExamreportController::class, 'exam_papermarks']);
     Route::post('importcsv/exam', [ImportController::class, 'importCsvExamMarks']);
-    Route::post('exam_result/stuexam_spmarklist', [ApiController::class, 'stuexam_spmarklist']);
-    Route::post('exam_result/studentmonthly_attendance', [ApiController::class, 'studentmonthly_attendance']);
-
-    Route::get('getmonthlyholidays', [ApiController::class, 'getmonthlyholidays']);
-    Route::post('getacyearholidays', [ApiController::class, 'getacyearholidays']);
-    Route::post('exam_result/studentacyear_attendance', [ApiController::class, 'studentacyear_attendance']);
-
-
-    Route::post('studentclasssection', [ApiController::class, 'studentclasssection']);
-    Route::post('exam_result/stuoverall_marklist', [ApiController::class, 'stuoverall_marklist']);
-    Route::post('exam_result/stuoverall_spmarklist', [ApiController::class, 'stuoverall_spmarklist']);
+       
+    Route::post('exam_result/get_overallsubjectlist', [ExamreportController::class, 'get_overallsubjectlist']); 
+    Route::post('exam_result/get_overallpaperlist', [ExamreportController::class, 'get_overallpaperlist']);
+    Route::post('exam_result/getpaperoverallmarklist', [ExamreportController::class, 'getpaperoverallmarklist']); 
+    Route::post('studentclasssection', [ExamreportController::class, 'studentclasssection']);
 
     Route::post('student/addstupicture', [ApiController::class, 'addstupicture']);
     Route::get('testrole', [ApiController::class, 'testrole']);

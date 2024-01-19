@@ -111,8 +111,11 @@ class ExamreportController extends BaseController
                     $montotaldays= trim($date->format('t').PHP_EOL);
                     $mon= trim($date->format('m').PHP_EOL);
                     
-                    $year= trim($date->format('m').PHP_EOL);
-                    
+                    $year= trim($date->format('Y').PHP_EOL);
+                    /*if($year==2024)
+                    {
+                        dd($mon,$year);
+                    }*/
                     if(intval($mon)==intval($startmonth))
                     {
                         $fromdate1= $fromdate;
@@ -165,7 +168,7 @@ class ExamreportController extends BaseController
                     ->where('sa.class_id', '=', $request->class_id)
                     ->where('sa.section_id', '=', $request->section_id)
                     ->where('sa.semester_id', '=', $semester_id)
-                    ->whereMonth('sa.date', $month)
+                    ->whereMonth('sa.date', $mon)
                     ->whereYear('sa.date', $year)
                     ->first();
                     $totalcoming= $totaldays-$suspension;
@@ -493,203 +496,89 @@ class ExamreportController extends BaseController
         
         return $this->successResponse($getSemesterMark, 'Get Mark Details');
     }
-    
-    public function stuexam_spmarklist(Request $request)
-    {        
-        $exam_id = $request->exam_id;
-        $class_id = $request->class_id;
-        $section_id = $request->section_id;
+    public function get_overallsubjectlist(Request $request)
+    { 
+        $Connection = $this->createNewConnection($request->branch_id);
+
+        $subjectdetails = $Connection->table('subject_assigns as sa')
+            ->select(
+                'sa.subject_id',
+                'sb.name',
+                'sa.teacher_id',
+                'st.first_name as teacher'
+            )
+            ->leftJoin('subjects as sb', 'sb.id', '=', 'sa.subject_id')
+            ->leftJoin('staffs as st', 'st.id', '=', 'sa.teacher_id')                    
+            ->where([
+                ['sa.department_id', '=', $request->department_id],
+                ['sb.pdf_report', '=', $request->pdf_report],
+            ])            
+            ->orderBy('order_code', 'asc')
+            ->get();
+            
+        return $this->successResponse($subjectdetails, 'Get Subject Lists');
+    }
+    public function get_overallpaperlist(Request $request)
+    { 
+        $Connection = $this->createNewConnection($request->branch_id);
+
+        $getpapers = $Connection->table('exam_papers as ep')
+        ->select(
+            'ep.id',
+            'ep.paper_name',
+            'ep.score_type',
+            'sb.name'
+        )   
+        ->leftJoin('subjects as sb', 'sb.id', '=', 'ep.subject_id')               
+        ->where([
+            ['ep.department_id', '=', $request->department_id],
+            ['ep.subject_id', '=', $request->subject_id],
+            ['ep.pdf_report', '=', $request->pdf_report]
+        ])
+        ->get();
       
-        $session_id = $request->session_id;
-        $academic_session_id = $request->academic_session_id;        
-        $student_id = $request->student_id;        
-        $subject = $request->subject;
-        $paper=$request->paper;
-
-        $semester1 = 1;
-        $semester2 = 2;
-        $semester3 = 3;
-
-
-        $Connection = $this->createNewConnection($request->branch_id);
-        $subjectrow = $Connection->table('subjects')->select('id')
-        ->where('name', '=', $subject)->first();
-        $subject_id=$subjectrow ->id;
-
-        $getSemesterMark1 = $Connection->table('exam_papers as ep')
-        ->select(
-            'ep.id',
-            'sa.freetext'
-        )   
-        ->leftJoin('student_marks as sa', function ($q) use ($class_id, $section_id, $exam_id, $subject_id, $semester1, $session_id, $academic_session_id,$student_id) {
-            $q->on('sa.paper_id', '=', 'ep.id')                
-                ->on('sa.class_id', '=', DB::raw("'$class_id'"))
-                ->on('sa.section_id', '=', DB::raw("'$section_id'"))
-                ->on('sa.semester_id', '=', DB::raw("'$semester1'"))
-                ->on('sa.session_id', '=', DB::raw("'$session_id'"))
-                ->on('sa.subject_id', '=', DB::raw("'$subject_id'"))
-                ->on('sa.student_id', '=', DB::raw("'$student_id'"))
-                ->on('sa.academic_session_id', '=', DB::raw("'$academic_session_id'"));
-        })        
-        ->where([
-            ['ep.class_id', '=', $request->class_id],
-            ['ep.subject_id', '=', $subject_id],
-            ['ep.academic_session_id', '=', $academic_session_id],
-            ['ep.paper_name', '=', $paper]
-        ])   
-        ->first();
-        $getSemesterMark2 = $Connection->table('exam_papers as ep')
-        ->select(
-            'ep.id',
-            'sa.freetext'
-        )    
-        ->leftJoin('student_marks as sa', function ($q) use ($class_id, $section_id, $exam_id, $subject_id, $semester2, $session_id, $academic_session_id,$student_id) {
-            $q->on('sa.paper_id', '=', 'ep.id')                
-                ->on('sa.class_id', '=', DB::raw("'$class_id'"))
-                ->on('sa.section_id', '=', DB::raw("'$section_id'"))
-                ->on('sa.semester_id', '=', DB::raw("'$semester2'"))
-                ->on('sa.session_id', '=', DB::raw("'$session_id'"))
-                ->on('sa.subject_id', '=', DB::raw("'$subject_id'"))
-                ->on('sa.student_id', '=', DB::raw("'$student_id'"))
-                ->on('sa.academic_session_id', '=', DB::raw("'$academic_session_id'"));
-        }) 
-        ->where([
-            ['ep.class_id', '=', $request->class_id],
-            ['ep.subject_id', '=', $subject_id],
-            ['ep.academic_session_id', '=', $academic_session_id],
-            ['ep.paper_name', '=', $paper]
-        ])   
-        ->first();
-        $getSemesterMark3 = $Connection->table('exam_papers as ep')
-        ->select(
-            'ep.id',
-            'sa.freetext'
-        )   
-        ->leftJoin('student_marks as sa', function ($q) use ($class_id, $section_id, $exam_id, $subject_id, $semester3, $session_id, $academic_session_id,$student_id) {
-            $q->on('sa.paper_id', '=', 'ep.id')                
-                ->on('sa.class_id', '=', DB::raw("'$class_id'"))
-                ->on('sa.section_id', '=', DB::raw("'$section_id'"))
-                ->on('sa.semester_id', '=', DB::raw("'$semester3'"))
-                ->on('sa.session_id', '=', DB::raw("'$session_id'"))
-                ->on('sa.subject_id', '=', DB::raw("'$subject_id'"))
-                ->on('sa.student_id', '=', DB::raw("'$student_id'"))
-                ->on('sa.academic_session_id', '=', DB::raw("'$academic_session_id'"));
-        }) 
-        ->where([
-            ['ep.class_id', '=', $request->class_id],
-            ['ep.subject_id', '=', $subject_id],
-            ['ep.academic_session_id', '=', $academic_session_id],
-            ['ep.paper_name', '=', $paper]
-        ])   
-        ->first();
-        $data=[
-            "Semester1"=> $getSemesterMark1,
-            "Semester2"=> $getSemesterMark2,
-            "Semester3"=> $getSemesterMark3
-        ];
-        
-        return $this->successResponse($data, 'Mark Detatils');
+        return $this->successResponse($getpapers, 'Get Subject Lists');
     }
-    public function studentmonthly_attendance(Request $request)
-    {        
-        
-        $date = $request->atdate;    
-        //dd($date);
-        $year_month=explode('-',$date);
+    public function getpaperoverallmarklist(Request $request)
+    { 
         $Connection = $this->createNewConnection($request->branch_id);
-        $getAttendanceCounts = $Connection->table('students as stud')
-        ->select(
-            DB::raw('COUNT(CASE WHEN sa.status = "present" then 1 ELSE NULL END) as "presentCount"'),
-            DB::raw('COUNT(CASE WHEN sa.status = "absent" then 1 ELSE NULL END) as "absentCount"'),
-            DB::raw('COUNT(CASE WHEN sa.status = "late" then 1 ELSE NULL END) as "lateCount"'),
-            DB::raw('COUNT(CASE WHEN sa.status = "excused" then 1 ELSE NULL END) as "excusedCount"'),
-        )
-        // ->join('enrolls as en', 'en.student_id', '=', 'stud.id')
-        ->leftJoin('student_attendances_day as sa', 'sa.student_id', '=', 'stud.id')
-        ->join('enrolls as en', function ($join) {
-            $join->on('stud.id', '=', 'en.student_id')
-                ->on('sa.class_id', '=', 'en.class_id')
-                ->on('sa.section_id', '=', 'en.section_id');
-        })
-        ->where('stud.id', '=', $request->student_id)
-        ->whereMonth('sa.date', $year_month[0])
-        ->whereYear('sa.date', $year_month[1])
-        ->get();
-        return $this->successResponse($getAttendanceCounts, 'Attendance Detatils');
-    }
-    
-    public function studentacyear_attendance(Request $request)
-    {        
         
-        $start = date('Y-m-d', strtotime($request->start));
-        $end = date('Y-m-d', strtotime($request->end));
-        $Connection = $this->createNewConnection($request->branch_id);
-        $getAttendanceCounts = $Connection->table('students as stud')
-        ->select(
-            DB::raw('COUNT(CASE WHEN sa.status = "present" then 1 ELSE NULL END) as "presentCount"'),
-            DB::raw('COUNT(CASE WHEN sa.status = "absent" then 1 ELSE NULL END) as "absentCount"'),
-            DB::raw('COUNT(CASE WHEN sa.status = "late" then 1 ELSE NULL END) as "lateCount"'),
-            DB::raw('COUNT(CASE WHEN sa.status = "excused" then 1 ELSE NULL END) as "excusedCount"'),
-        )
-        // ->join('enrolls as en', 'en.student_id', '=', 'stud.id')
-        ->leftJoin('student_attendances_day as sa', 'sa.student_id', '=', 'stud.id')
-        ->join('enrolls as en', function ($join) {
-            $join->on('stud.id', '=', 'en.student_id')
-                ->on('sa.class_id', '=', 'en.class_id')
-                ->on('sa.section_id', '=', 'en.section_id');
-        })
-        ->where('stud.id', '=', $request->student_id)
-        ->whereRaw('sa.date between "' . $start . '" and "' . $end . '"')
-        ->get();
-        return $this->successResponse($getAttendanceCounts, 'Attendance Detatils');
-    }
-    public function getmonthlyholidays(Request $request)
-    {
-        $validator = \Validator::make($request->all(), [
-            'branch_id' => 'required'
-        ]);
-        if (!$validator->passes()) {
-            return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
-        } else {
-            // create new connection
-            $Connection = $this->createNewConnection($request->branch_id);
-            $start = date('Y-m-d', strtotime($request->start));
-            $end = date('Y-m-d', strtotime($request->end));
-            // echo $start;
-            // echo "-----";
-            // echo $end;
-            // exit;
-            $holidays = $Connection->table('holidays as hl')
-                ->select('hl.id')
-                ->whereRaw('hl.date between "' . $start . '" and "' . $end . '"')
-                ->count();
+        $getsemester = $Connection->table('semester')->where('academic_session_id',$request->academic_session_id)->orderBy('start_date', 'asc')->get();
+            $mark=[];
+            $nsem=count($getsemester);
+            $s=0;
+            $getmark=[];
+            foreach($getsemester as $sem)
+            {
+                $s++;
+               
+                if($nsem==$s)
+                {
+                    $semester=$sem->id;
             
-            return $this->successResponse($holidays, 'Get Holidays Fetched successfully');
-        }
-    }    
-    public function getacyearholidays(Request $request)
-    {
-        $validator = \Validator::make($request->all(), [
-            'branch_id' => 'required'
-        ]);
-        if (!$validator->passes()) {
-            return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
-        } else {
-            // create new connection
-            $Connection = $this->createNewConnection($request->branch_id);
-            $start = date('Y-m-d', strtotime($request->start));
-            $end = date('Y-m-d', strtotime($request->end));
-            // echo $start;
-            // echo "-----";
-            // echo $end;
-            // exit;
-            $holidays = $Connection->table('holidays as hl')
-                ->select('hl.id')
-                ->whereRaw('hl.date between "' . $start . '" and "' . $end . '"')
-                ->count();
+                $getmark = $Connection->table('student_marks as sa')
+                ->select(
+                    'sa.score',
+                    'sa.grade',
+                    'sa.points',
+                    'sa.freetext',
+                    'gm.grade as grade_name',
+                )   
+                ->leftJoin('grade_marks as gm', 'gm.id', '=', 'sa.points')
+                ->where([
+                    ['sa.class_id', '=', $request->class_id],
+                    ['sa.section_id', '=', $request->section_id],
+                    ['sa.student_id', '=', $request->student_id],
+                    ['sa.subject_id', '=', $request->subject_id],
+                    ['sa.paper_id', '=', $request->paper_id],
+                    ['sa.semester_id', '=', $semester]
+                ])  
+                ->first();
+                }
+            }
+           
             
-            return $this->successResponse($holidays, 'Get Holidays Fetched successfully');
-        }
+        return $this->successResponse($getmark, 'Get  Paper Marks Lists');
     }
     public function studentclasssection(Request $request)
     {
@@ -785,221 +674,6 @@ class ExamreportController extends BaseController
             return $this->successResponse($result, 'Get class Section Fetched successfully');
         }
     }
-    public function stuoverall_marklist(Request $request)
-    {
-        $validator = \Validator::make($request->all(), [
-            'branch_id' => 'required'
-        ]);
-        if (!$validator->passes()) {
-            return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
-        } else {
-            // create new connection
-            $Connection = $this->createNewConnection($request->branch_id);
-            $student_id=$request->student_id;
-            $class= $Connection->table('classes as cl')
-            ->select('cl.id', 'cl.name', 'cl.short_name')
-            ->where([
-                ['cl.department_id', '=', $request->department_id],
-            ])
-            ->get();
-            $result=array();
-            foreach($class as $cls)
-            {
-            $classsec = $Connection->table('enrolls as t1')
-            ->select('t1.class_id','t1.section_id','t1.academic_session_id','t2.name_numeric', 't3.name as section', 't4.name as academic_year')
-            ->leftJoin('classes as t2', 't1.class_id', '=', 't2.id')
-            ->leftJoin('sections as t3', 't1.section_id', '=', 't3.id')
-            ->leftJoin('academic_year as t4', 't1.academic_session_id', '=', 't4.id')            
-            ->where('t1.student_id', $student_id)
-            ->where('t2.id', $cls->id)
-            ->distinct()
-            ->first();
-            
-            $class_id=(isset($classsec->class_id) && $classsec->class_id!=null)?$classsec->class_id:'';
-            $section_id=(isset($classsec->section_id) && $classsec->section_id!=null)?$classsec->section_id:'';
-            $academic_session_id=(isset($classsec->academic_session_id) && $classsec->academic_session_id!=null)?$classsec->academic_session_id:'';
-            $academic_year=(isset($classsec->academic_year) && $classsec->academic_year!=null)?$classsec->academic_year:'';
-            $studentPlace='';
-            $markscore='';$grademark=''; $markpoints='';$markfreetext=''; $printmark='';$marktype='';
-            if(isset($classsec->class_id) && $classsec->class_id!=null)
-            {
-                $subject = $request->subject;
-                $paper=$request->paper;
-
-                $semester1 = 1;
-                $semester2 = 2;
-                $semester3 = 3;
-
-
-                $Connection = $this->createNewConnection($request->branch_id);
-                $subjectrow = $Connection->table('subjects')->select('id')
-                ->where('name', '=', $subject)->first();
-                $subject_id=isset($subjectrow ->id)?$subjectrow ->id:0;
-                //dd($section_id);
-                $getSemesterMark1 = $Connection->table('exam_papers as ep')
-                ->select(           
-                    'ep.id',
-                    'ep.score_type',
-                    'sa.score',
-                    'sa.grade',
-                    'sa.points',
-                    'sa.freetext',
-                    'gm.grade as grade_name',
-                )   
-                ->leftJoin('student_marks as sa', function ($q) use ($class_id, $section_id, $subject_id, $semester3,  $academic_session_id,$student_id) {
-                    $q->on('sa.paper_id', '=', 'ep.id')                
-                        ->on('sa.class_id', '=', DB::raw("'$class_id'"))
-                        ->on('sa.section_id', '=', DB::raw("'$section_id'"))
-                        ->on('sa.semester_id', '=', DB::raw("'$semester3'"))
-                        ->on('sa.subject_id', '=', DB::raw("'$subject_id'"))                        
-                        ->on('sa.student_id', '=', DB::raw("'$student_id'"))            
-                        ->on('sa.academic_session_id', '=', DB::raw("'$academic_session_id'"));
-                }) 
-                ->leftJoin('grade_marks as gm', 'gm.id', '=', 'sa.points')      
-                ->where([
-                    ['ep.class_id', '=', $class_id],
-                    ['ep.subject_id', '=', $subject_id],
-                    ['ep.academic_session_id', '=', $academic_session_id],
-                    ['ep.paper_name', '=', $paper]
-                ])   
-                ->first();
-
-                //$markscore=$getSemesterMark1['score'];
-                //$grademark=$getSemesterMark1['grade'];
-                $markscore=(isset($getSemesterMark1->score) && $getSemesterMark1->score!=null)?$getSemesterMark1->score:'';
-            
-                $grademark=(isset($getSemesterMark1->grade) && $getSemesterMark1->grade!=null)?$getSemesterMark1->grade:'';
-                $markpoints=(isset($getSemesterMark1->points) && $getSemesterMark1->points!=null)?$getSemesterMark1->points:'';
-            
-                $markfreetext=(isset($getSemesterMark1->freetext) && $getSemesterMark1->freetext!=null)?$getSemesterMark1->freetext:'';
-                $marktype=(isset($getSemesterMark1->score_type) && $getSemesterMark1->score_type!=null)?$getSemesterMark1->score_type:'';
-                if($marktype=='Points')
-                {
-                    $printmark=$markpoints; 
-                }
-                elseif($marktype=='Freetext')
-                {
-                    $printmark=$markfreetext; 
-                }
-                elseif($marktype=='Mark')
-                {
-                    $printmark=$markscore; 
-                }
-                else
-                {
-                    $marktype=$grademark; 
-                }
-            }
-            
-            $datas=[
-                "class"=> $cls->name,
-                "class_id"=> $class_id,                
-                "markscore"=> $markscore,
-                "grademark"=> $grademark,                
-                "markpoints"=> $markpoints,
-                "markfreetext"=> $markfreetext,                
-                "printmark"=> $printmark,
-                "marktype"=> $marktype
-            ];
-            
-            array_push($result, $datas);
-            }
-            return $this->successResponse($result, 'Get over All Mark successfully');           
-        }
-    }
-    public function stuoverall_spmarklist(Request $request)
-    {
-        $validator = \Validator::make($request->all(), [
-            'branch_id' => 'required'
-        ]);
-        if (!$validator->passes()) {
-            return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
-        } else {
-            // create new connection
-            $Connection = $this->createNewConnection($request->branch_id);
-            $student_id=$request->student_id;
-            $class= $Connection->table('classes as cl')
-            ->select('cl.id', 'cl.name', 'cl.short_name')
-            ->where([
-                ['cl.department_id', '=', $request->department_id],
-            ])
-            ->get();
-            $result=array();
-           
-            foreach($class as $cls)
-            {
-                
-            $classsec = $Connection->table('enrolls as t1')
-            ->select('t1.class_id','t1.section_id','t1.academic_session_id','t2.name_numeric', 't3.name as section', 't4.name as academic_year')
-            ->leftJoin('classes as t2', 't1.class_id', '=', 't2.id')
-            ->leftJoin('sections as t3', 't1.section_id', '=', 't3.id')
-            ->leftJoin('academic_year as t4', 't1.academic_session_id', '=', 't4.id')            
-            ->where('t1.student_id', $student_id)
-            ->where('t2.id', $cls->id)
-            ->distinct()
-            ->first();
-            
-            $class_id=(isset($classsec->class_id) && $classsec->class_id!=null)?$classsec->class_id:'';
-            $section_id=(isset($classsec->section_id) && $classsec->section_id!=null)?$classsec->section_id:'';
-            $academic_session_id=(isset($classsec->academic_session_id) && $classsec->academic_session_id!=null)?$classsec->academic_session_id:'';
-            $academic_year=(isset($classsec->academic_year) && $classsec->academic_year!=null)?$classsec->academic_year:'';
-            $studentPlace='';
-            $marktext='';
-            if(isset($classsec->class_id) && $classsec->class_id!=null)
-            {
-                $subject = $request->subject;
-                $paper=$request->paper;
-
-                $semester1 = 1;
-                $semester2 = 2;
-                $semester3 = 3;
-
-
-                $Connection = $this->createNewConnection($request->branch_id);
-                $subjectrow = $Connection->table('subjects')->select('id')
-                ->where('name', '=', $subject)->first();
-                $subject_id=isset($subjectrow ->id)?$subjectrow ->id:0;
-                //dd($section_id);
-                $getSemesterMark1 = $Connection->table('exam_papers as ep')
-                ->select(
-                    'ep.id',
-                    'sa.freetext'
-                )    
-                ->leftJoin('student_marks as sa', function ($q) use ($class_id, $section_id, $subject_id, $semester3,  $academic_session_id,$student_id) {
-                    $q->on('sa.paper_id', '=', 'ep.id')                
-                        ->on('sa.class_id', '=', DB::raw("'$class_id'"))
-                        ->on('sa.section_id', '=', DB::raw("'$section_id'"))
-                        ->on('sa.semester_id', '=', DB::raw("'$semester3'"))
-                        ->on('sa.subject_id', '=', DB::raw("'$subject_id'"))                        
-                        ->on('sa.student_id', '=', DB::raw("'$student_id'"))            
-                        ->on('sa.academic_session_id', '=', DB::raw("'$academic_session_id'"));
-                })       
-                ->where([
-                    ['ep.class_id', '=', $class_id],
-                    ['ep.subject_id', '=', $subject_id],
-                    ['ep.academic_session_id', '=', $academic_session_id],
-                    ['ep.paper_name', '=', $paper]
-                ])   
-                ->first();
-                //dd($getSemesterMark1);
-                //$markscore=$getSemesterMark1['score'];
-                //$grademark=$getSemesterMark1['grade'];
-                $marktext=(isset($getSemesterMark1->freetext) && $getSemesterMark1->freetext!=null)?$getSemesterMark1->freetext:'';
-                        
-            }
-            
-            
-            $datas=[
-                "class"=> $cls->name,
-                "class_id"=> $class_id,                
-                "marktext"=> $marktext
-            ];
-            
-            array_push($result, $datas);
-            }
-            return $this->successResponse($result, 'Get over All Specail Mark successfully');
-        }
-    }
     public function getpdf_report(Request $request)
     {
         $validator = \Validator::make($request->all(), [
@@ -1017,8 +691,5 @@ class ExamreportController extends BaseController
             
             return $this->successResponse($pdflist, 'Get Pdf Report successfully');
         }
-    }
-    
-   
-   
+    }  
 }
