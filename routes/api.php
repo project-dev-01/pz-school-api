@@ -1056,20 +1056,20 @@ Route::group(['middleware' => ['auth:api', 'throttle:limit_per_user', 'logroute'
     Route::post('termination/delete', [ApiController::class, 'deleteTermination']);
 
     // Student English Communication Result
-    Route::post('exam_result/students', [ExamreportController::class, 'exam_studentslist']);    
-    Route::post('exam_result/get_subjectlist', [ExamreportController::class, 'get_subjectlist']); 
+    Route::post('exam_result/students', [ExamreportController::class, 'exam_studentslist']);
+    Route::post('exam_result/get_subjectlist', [ExamreportController::class, 'get_subjectlist']);
     Route::post('exam_result/get_mainsubjectlist', [ExamreportController::class, 'get_mainsubjectlist']);
     Route::post('exam_result/getsubjecpapertlist', [ExamreportController::class, 'getsubjecpapertlist']);
-    
+
     Route::post('exam_result/stuexam_marklist', [ExamreportController::class, 'stuexam_marklist']);
     Route::post('exam_result/stuexam_avgmarklist', [ExamreportController::class, 'stuexam_avgmarklist']);
-    
+
     Route::post('exam_result/papermark', [ExamreportController::class, 'exam_papermarks']);
     Route::post('importcsv/exam', [ImportController::class, 'importCsvExamMarks']);
-       
-    Route::post('exam_result/get_overallsubjectlist', [ExamreportController::class, 'get_overallsubjectlist']); 
+
+    Route::post('exam_result/get_overallsubjectlist', [ExamreportController::class, 'get_overallsubjectlist']);
     Route::post('exam_result/get_overallpaperlist', [ExamreportController::class, 'get_overallpaperlist']);
-    Route::post('exam_result/getpaperoverallmarklist', [ExamreportController::class, 'getpaperoverallmarklist']); 
+    Route::post('exam_result/getpaperoverallmarklist', [ExamreportController::class, 'getpaperoverallmarklist']);
     Route::post('studentclasssection', [ExamreportController::class, 'studentclasssection']);
 
     Route::post('student/addstupicture', [ApiController::class, 'addstupicture']);
@@ -1094,11 +1094,16 @@ Route::group(['middleware' => ['auth:api', 'throttle:limit_per_user', 'logroute'
     Route::post('get_settings_attendance_report', [ApiControllerThree::class, 'getAttendanceReportSetting']);
     Route::post('absent_attendance_report', [ApiControllerThree::class, 'absentAttendanceReport']);
     Route::get('present_student_termination_list', [ApiControllerThree::class, 'presentStudentTerminationList']);
-    Route::get('getlogmodifyusers', [ApiController::class, 'getlogmodifyusers']);    
+    Route::get('getlogmodifyusers', [ApiController::class, 'getlogmodifyusers']);
     Route::get('getlogmodifytables', [ApiController::class, 'getlogmodifytables']);
-     
+
     Route::get('log_modifylist', [ApiController::class, 'log_modifylist']);
     Route::get('getpdf_report', [ApiController::class, 'getpdf_report']);
     Route::post('getacyeardates', [ExamreportController::class, 'getacyeardates']);
     Route::post('getsem_studentattendance', [ExamreportController::class, 'getsem_studentattendance']);
-    });
+
+    Route::get('student_plan_to_leave', [ApiControllerThree::class, 'studentPlanToLeave']);
+    Route::get('student_transfer_list', [ApiControllerThree::class, 'studentTransferList']);
+    Route::post('hide_unhide_dashboard', [ApiControllerThree::class, 'hideUnhideSave']);
+    Route::post('get_data_hide_unhide_dashboard', [ApiControllerThree::class, 'getDataHideUnhideDashboard']);
+});

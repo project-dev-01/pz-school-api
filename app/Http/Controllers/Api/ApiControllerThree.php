@@ -1864,7 +1864,7 @@ class ApiControllerThree extends BaseController
                             'day_recent_flag' => "1",
                             'updated_at' => date("Y-m-d H:i:s")
                         ]);*/
-                        $data=[
+                        $data = [
                             'status' => $attStatus,
                             'remarks' => $att_remark,
                             'reasons' => $reasons,
@@ -1873,23 +1873,23 @@ class ApiControllerThree extends BaseController
                             'day_recent_flag' => "1",
                             'updated_at' => date("Y-m-d H:i:s")
                         ];
-                        
-                        $student_data=$Connection->table('students')->where('id', $value['student_id'])->first();
+
+                        $student_data = $Connection->table('students')->where('id', $value['student_id'])->first();
                         $oldData = $Connection->table('student_attendances_day')->where('id', $row->id)->first();
-                        $query =  $Connection->table('student_attendances_day')->where('id', $row->id)->update($data); 
+                        $query =  $Connection->table('student_attendances_day')->where('id', $row->id)->update($data);
                         $changes = $this->getChanges($oldData, $data);
-                        $table_modify=[];
-                        $table_modify['type']='Student Attentance';
-                        $table_modify['id']=$value['student_id'];                
-                        $table_modify['name']=$student_data->first_name.' '.$student_data->last_name;                
-                        $table_modify['email']=$student_data->email;
+                        $table_modify = [];
+                        $table_modify['type'] = 'Student Attentance';
+                        $table_modify['id'] = $value['student_id'];
+                        $table_modify['name'] = $student_data->first_name . ' ' . $student_data->last_name;
+                        $table_modify['email'] = $student_data->email;
                         $Connection->table('modify_datas')->insert([
-                        
+
                             'table_name' => 'Student Attentance',
                             'table_dbname' => 'student_attendances_day',
                             'table_dbid' => $row->id,
-                            'table_id_name' => 'id', 
-                            'table_modify' => json_encode($table_modify),                  
+                            'table_id_name' => 'id',
+                            'table_modify' => json_encode($table_modify),
                             'modifydata' => json_encode($changes),
                             'createdby_id' => $request->login_userid,
                             'createdby_role' => $request->login_roleid
@@ -1907,7 +1907,7 @@ class ApiControllerThree extends BaseController
                         'day_recent_flag' => "1",
                         'updated_at' => date("Y-m-d H:i:s")
                     ]);*/
-                    $data=[
+                    $data = [
                         'status' => $attStatus,
                         'remarks' => $att_remark,
                         'reasons' => $reasons,
@@ -1916,26 +1916,26 @@ class ApiControllerThree extends BaseController
                         'day_recent_flag' => "1",
                         'updated_at' => date("Y-m-d H:i:s")
                     ];
-                        $student_data=$Connection->table('students')->where('id', $value['student_id'])->first();
-                        $oldData = $Connection->table('student_attendances_day')->where('id', $value['attendance_id'])->first();
-                        $query =  $Connection->table('student_attendances_day')->where('id', $value['attendance_id'])->update($data); 
-                        $changes = $this->getChanges($oldData, $data);
-                        $table_modify=[];
-                        $table_modify['type']='Student Attentance';
-                        $table_modify['id']=$value['student_id'];                
-                        $table_modify['name']=$student_data->first_name.' '.$student_data->last_name;                
-                        $table_modify['email']=$student_data->email;
-        
-                        $Connection->table('modify_datas')->insert([                          
-                            'table_name' => 'Student Attentance',
-                            'table_dbname' => 'student_attendances_day',
-                            'table_dbid' => $value['attendance_id'],
-                            'table_id_name' => 'id', 
-                            'table_modify' => json_encode($table_modify),                  
-                            'modifydata' => json_encode($changes),
-                            'createdby_id' => $request->login_userid,
-                            'createdby_role' => $request->login_roleid
-                        ]);
+                    $student_data = $Connection->table('students')->where('id', $value['student_id'])->first();
+                    $oldData = $Connection->table('student_attendances_day')->where('id', $value['attendance_id'])->first();
+                    $query =  $Connection->table('student_attendances_day')->where('id', $value['attendance_id'])->update($data);
+                    $changes = $this->getChanges($oldData, $data);
+                    $table_modify = [];
+                    $table_modify['type'] = 'Student Attentance';
+                    $table_modify['id'] = $value['student_id'];
+                    $table_modify['name'] = $student_data->first_name . ' ' . $student_data->last_name;
+                    $table_modify['email'] = $student_data->email;
+
+                    $Connection->table('modify_datas')->insert([
+                        'table_name' => 'Student Attentance',
+                        'table_dbname' => 'student_attendances_day',
+                        'table_dbid' => $value['attendance_id'],
+                        'table_id_name' => 'id',
+                        'table_modify' => json_encode($table_modify),
+                        'modifydata' => json_encode($changes),
+                        'createdby_id' => $request->login_userid,
+                        'createdby_role' => $request->login_roleid
+                    ]);
                 }
             }
             return $this->successResponse([], 'Attendance added successfuly.');
@@ -1970,6 +1970,7 @@ class ApiControllerThree extends BaseController
                     'stud.admission_date',
                     'cl.name as class_name',
                     'sc.name as section_name',
+                    'emd.name as dept_name',
                     'stud.gender',
                     'stud.gender',
                     'stud.email'
@@ -1977,6 +1978,7 @@ class ApiControllerThree extends BaseController
                 ->join('classes as cl', 'en.class_id', '=', 'cl.id')
                 ->join('sections as sc', 'en.section_id', '=', 'sc.id')
                 ->join('students as stud', 'en.student_id', '=', 'stud.id')
+                ->leftJoin('emp_department as emd', 'en.department_id', '=', 'emd.id')
                 ->where('en.academic_session_id', $academic_session_id)
                 // Not in to other academic id to get new joinee studens
                 ->whereNotIn('en.student_id', function ($query) use ($request) {
@@ -1993,7 +1995,7 @@ class ApiControllerThree extends BaseController
                 })
                 ->groupBy("stud.id")
                 ->get();
-            return $this->successResponse($data, 'Teacher Allocation record fetch successfully');
+            return $this->successResponse($data, 'student new joining list fetch successfully');
         }
     }
     public function saveAttendanceReportSetting(Request $request)
@@ -2072,19 +2074,26 @@ class ApiControllerThree extends BaseController
         } else {
             // create new connection
             $createConnection = $this->createNewConnection($request->branch_id);
-
-            // insert data
-            $attReport = $createConnection->table('attendance_report_settings')
-                ->where('staff_id', $request->staff_id)
-                ->first();
-            $department_id = isset($attReport->department_id) ? $attReport->department_id : null;
-            $class_id = isset($attReport->class_id) ? $attReport->class_id : null;
-            $section_id = isset($attReport->section_id) ? $attReport->section_id : null;
-            // pattern is compulsory
-            $pattern = isset($attReport->pattern) ? $attReport->pattern : null;
+            if ($request->department_id || $request->class_id || $request->section_id || $request->section_id) {
+                $department_id = isset($request->department_id) ? $request->department_id : null;
+                $class_id = isset($request->class_id) ? $request->class_id : null;
+                $section_id = isset($request->section_id) ? $request->section_id : null;
+                // pattern is compulsory
+                $pattern = isset($request->pattern) ? $request->pattern : null;
+            } else {
+                $attReport = $createConnection->table('attendance_report_settings')
+                    ->where('staff_id', $request->staff_id)
+                    ->first();
+                $department_id = isset($attReport->department_id) ? $attReport->department_id : null;
+                $class_id = isset($attReport->class_id) ? $attReport->class_id : null;
+                $section_id = isset($attReport->section_id) ? $attReport->section_id : null;
+                // pattern is compulsory
+                $pattern = isset($attReport->pattern) ? $attReport->pattern : null;
+            }
             $Day = $Month = $Term = $Year = null;
             $startDate = $endDate = $endDate = $termData = $yearData =  "";
             $currentDate = date('Y-m-d');
+            $type = "";
             if ($pattern == "Day") {
                 // Day // current day
                 $Day = $pattern;
@@ -2122,6 +2131,7 @@ class ApiControllerThree extends BaseController
             }
             // dd($yearData);
             if ($department_id && $class_id === null && $section_id === null) {
+                $type = "Faculty";
                 // Department exists, Class is null, Section is null
                 $allClasses = $createConnection->table('classes')
                     ->select('id')
@@ -2161,6 +2171,7 @@ class ApiControllerThree extends BaseController
                     ->get();
                 // dd($absentCountDetails);
             } else if ($department_id && $class_id && $section_id === null) {
+                $type = "Grade";
                 // Department exists, Class exists, Section is null
                 $absentCountDetails = $createConnection->table('student_attendances_day')
                     ->select(
@@ -2189,6 +2200,7 @@ class ApiControllerThree extends BaseController
                     ->where('class_id', $class_id)
                     ->get();
             } else if ($department_id && $class_id && $section_id) {
+                $type = "Class";
                 // Department exists, Class exists, Section exists
                 $absentCountDetails = $createConnection->table('student_attendances_day')
                     ->select(
@@ -2223,10 +2235,14 @@ class ApiControllerThree extends BaseController
                 // Default scenario
                 $absentCountDetails = [];
             }
-            return $this->successResponse($absentCountDetails, 'Attendance report row fetch successfully');
+            $data = [
+                'type' => $type,
+                'absent_details' => $absentCountDetails
+            ];
+            return $this->successResponse($data, 'Attendance report row fetch successfully');
         }
     }
-    public function presentStudentTerminationList(Request $request)
+    public function studentPlanToLeave(Request $request)
     {
         $validator = \Validator::make($request->all(), [
             'branch_id' => 'required'
@@ -2240,24 +2256,167 @@ class ApiControllerThree extends BaseController
             $currentDate = date('Y-m-d');
             $attRep = $createConnection->table('termination as t')
                 ->select(
+                    'e.id as en_id',
+                    'e.class_id',
+                    'e.section_id',
                     't.*',
+                    'c.name as class_name',
+                    'sc.name as section_name',
                     'ay.name as academic_year',
                     's.gender',
                     DB::raw("CONCAT(s.first_name_english, ' ', s.last_name_english) as name_english"),
-                    DB::raw("CONCAT(s.first_name, ' ', s.last_name) as name"),
-                    'c.name as class_name',
-                    'sc.name as section_name'
+                    DB::raw("CONCAT(s.first_name, ' ', s.last_name) as name")
                 )
                 ->leftJoin('students as s', 's.id', '=', 't.student_id')
-                ->leftJoin('enrolls as e', 'e.student_id', '=', 's.id')
+                ->leftJoin('enrolls as e', function ($join) {
+                    $join->on('e.student_id', '=', 's.id')
+                        ->where('e.id', '=', function ($query) {
+                            $query->select(DB::raw('MAX(id)'))
+                                ->from('enrolls')
+                                ->whereColumn('enrolls.student_id', '=', 'e.student_id');
+                        });
+                })
+                ->leftJoin('classes as c', 'e.class_id', '=', 'c.id')
+                ->leftJoin('sections as sc', 'e.section_id', '=', 'sc.id')
+                ->leftJoin('academic_year as ay', 'e.academic_session_id', '=', 'ay.id')
+                ->where('t.termination_status', '!=', 'Approved')
+                ->where('t.date_of_termination', '<', $currentDate)
+                ->orderByDesc('e.id') // Now this will only order the results for each group
+                ->get();
+            return $this->successResponse($attRep, 'student plan to leave list fetch successfully');
+        }
+    }
+    public function studentTransferList(Request $request)
+    {
+        $validator = \Validator::make($request->all(), [
+            'branch_id' => 'required'
+        ]);
+
+        if (!$validator->passes()) {
+            return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
+        } else {
+            // create new connection
+            $createConnection = $this->createNewConnection($request->branch_id);
+            // Get the current date
+            $currentDate = Carbon::now()->toDateString();
+            // Clone the current date to avoid modifying the original object
+            $addTwoMonth = Carbon::parse($currentDate)->addMonths(2)->toDateString();
+            $attRep = $createConnection->table('termination as t')
+                ->select(
+                    'e.id as en_id',
+                    'e.class_id',
+                    'e.section_id',
+                    't.*',
+                    'c.name as class_name',
+                    'sc.name as section_name',
+                    'ay.name as academic_year',
+                    's.gender',
+                    DB::raw("CONCAT(s.first_name_english, ' ', s.last_name_english) as name_english"),
+                    DB::raw("CONCAT(s.first_name, ' ', s.last_name) as name")
+                )
+                ->leftJoin('students as s', 's.id', '=', 't.student_id')
+                ->leftJoin('enrolls as e', function ($join) {
+                    $join->on('e.student_id', '=', 's.id')
+                        ->where('e.id', '=', function ($query) {
+                            $query->select(DB::raw('MAX(id)'))
+                                ->from('enrolls')
+                                ->whereColumn('enrolls.student_id', '=', 'e.student_id');
+                        });
+                })
                 ->leftJoin('classes as c', 'e.class_id', '=', 'c.id')
                 ->leftJoin('sections as sc', 'e.section_id', '=', 'sc.id')
                 ->leftJoin('academic_year as ay', 'e.academic_session_id', '=', 'ay.id')
                 ->where('t.termination_status', '=', 'Approved')
-                ->where('t.date_of_termination', '<=', $currentDate)
-                ->groupBy("e.student_id")
+                ->whereDate('t.date_of_termination', '>=', $currentDate)
+                ->whereDate('t.date_of_termination', '<=', $addTwoMonth)
+                ->orderByDesc('e.id')
                 ->get();
-            return $this->successResponse($attRep, 'present termination list fetch successfully');
+
+            return $this->successResponse($attRep, 'transfer student list fetch successfully');
+        }
+    }
+    function hideUnhideSave(Request $request)
+    {
+        $validator = \Validator::make($request->all(), [
+            'branch_id' => 'required',
+            'staff_id' => 'required',
+            'unhide_data' => 'required',
+        ]);
+        if (!$validator->passes()) {
+            return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
+        } else {
+            // create new connection
+            $Connection = $this->createNewConnection($request->branch_id);
+
+            $unhide_data = $request->unhide_data;
+            $staff_id = $request->staff_id;
+            foreach ($unhide_data as $key => $value) {
+                $order_no = (isset($value['order_no']) ? $value['order_no'] : 0);
+                $widget_name = (isset($value['widget_name']) ? $value['widget_name'] : null);
+                $widget_value = (isset($value['widget_value']) ? $value['widget_value'] : null);
+                $visibility = (isset($value['visibility']) ? $value['visibility'] : null);
+                $department_id = (isset($value['department_id']) ? $value['department_id'] : null);
+                $class_id = (isset($value['class_id']) ? $value['class_id'] : null);
+                $section_id = (isset($value['section_id']) ? $value['section_id'] : null);
+                $pattern = (isset($value['pattern']) ? $value['pattern'] : null);
+                $hideUnhideData = array(
+                    'staff_id' => $staff_id,
+                    'order_no' => $order_no,
+                    'widget_name' => $widget_name,
+                    'widget_value' => $widget_value,
+                    'visibility' => $visibility,
+                    'department_id' => $department_id,
+                    'class_id' => $class_id,
+                    'section_id' => $section_id,
+                    'pattern' => $pattern,
+                );
+                // dd($hideUnhideData);
+                if (isset($widget_value) && isset($widget_value) && isset($staff_id) && isset($order_no)) {
+                    if ((empty($value['old_id']) || $value['old_id'] == "null")) {
+                        $row = $Connection->table('widget_hide_unhide')->select('id')->where([
+                            // ['widget_name', '=', $widget_name],
+                            ['order_no', '=', $order_no],
+                            ['staff_id', '=', $staff_id]
+                        ])->first();
+                        if (isset($row->id)) {
+
+                            $hideUnhideData['updated_by'] = $staff_id;
+                            $hideUnhideData['updated_at'] = date("Y-m-d H:i:s");
+                            $query =  $Connection->table('widget_hide_unhide')->where('id', $row->id)->update($hideUnhideData);
+                        } else {
+                            $hideUnhideData['created_by'] = $staff_id;
+                            $hideUnhideData['created_at'] = date("Y-m-d H:i:s");
+                            $query = $Connection->table('widget_hide_unhide')->insert($hideUnhideData);
+                        }
+                    } else {
+                        $hideUnhideData['updated_by'] = $staff_id;
+                        $hideUnhideData['updated_at'] = date("Y-m-d H:i:s");
+                        $query = $Connection->table('widget_hide_unhide')->where('id', $value['old_id'])->update($hideUnhideData);
+                    }
+                }
+            }
+            return $this->successResponse([], 'hide unhide data added successfuly.');
+        }
+    }
+    function getDataHideUnhideDashboard(Request $request)
+    {
+        $validator = \Validator::make($request->all(), [
+            'branch_id' => 'required',
+            'staff_id' => 'required'
+        ]);
+        if (!$validator->passes()) {
+            return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
+        } else {
+            // create new connection
+            $Connection = $this->createNewConnection($request->branch_id);
+            $whuData = $Connection->table('widget_hide_unhide as whu')
+                ->select(
+                    'whu.*'
+                )
+                ->where('whu.staff_id', $request->staff_id)
+                ->orderBy('whu.order_no', 'asc')
+                ->get();
+            return $this->successResponse($whuData, 'widget list fetch successfully');
         }
     }
     private function getChanges($oldData, $newData)
@@ -2265,12 +2424,11 @@ class ApiControllerThree extends BaseController
         $changes = [];
 
         foreach ($newData as $key => $value) {
-            if($key!='updated_at')
-            {
+            if ($key != 'updated_at') {
                 if ($oldData->$key != $value) {
-                    
+
                     $changes[$key] = [
-                        'field'=> $key,
+                        'field' => $key,
                         'old' => $oldData->$key,
                         'new' => $value,
                     ];
