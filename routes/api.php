@@ -1106,4 +1106,5 @@ Route::group(['middleware' => ['auth:api', 'throttle:limit_per_user', 'logroute'
     Route::get('student_transfer_list', [ApiControllerThree::class, 'studentTransferList']);
     Route::post('hide_unhide_dashboard', [ApiControllerThree::class, 'hideUnhideSave']);
     Route::post('get_data_hide_unhide_dashboard', [ApiControllerThree::class, 'getDataHideUnhideDashboard']);
+    Route::get('staff_leave_history_dashboard', [ApiControllerThree::class, 'staffLeaveHistoryDashboard']);
 });

@@ -2419,6 +2419,57 @@ class ApiControllerThree extends BaseController
             return $this->successResponse($whuData, 'widget list fetch successfully');
         }
     }
+    public function staffLeaveHistoryDashboard(Request $request)
+    {
+        // dd($request);
+        $validator = \Validator::make($request->all(), [
+            'branch_id' => 'required',
+            'academic_session_id' => 'required',
+        ]);
+        if (!$validator->passes()) {
+            return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
+        } else {
+            // create new connection
+            $conn = $this->createNewConnection($request->branch_id);
+            // get data
+            $currentDate = date('Y-m-d');
+            // dd($staff_id);
+            $leaveDetails = $conn->table('staff_leaves as lev')
+                ->select(
+                    'lev.id',
+                    'lev.staff_id',
+                    DB::raw('CONCAT(stf.first_name, " ", stf.last_name) as name'),
+                    DB::raw('DATE_FORMAT(lev.from_leave, "%d-%m-%Y") as from_leave'),
+                    DB::raw('DATE_FORMAT(lev.to_leave, "%d-%m-%Y") as to_leave'),
+                    DB::raw('DATE_FORMAT(lev.created_at, "%d-%m-%Y") as created_at'),
+                    'lev.total_leave',
+                    'lt.name as leave_type_name',
+                    'rs.name as reason_name',
+                    'lev.reason_id',
+                    'lev.document',
+                    'lev.status',
+                    'lev.level_one_status',
+                    'lev.level_two_status',
+                    'lev.level_three_status',
+                    'lev.leave_reject',
+                    'lev.level_one_staff_remarks',
+                    'lev.level_two_staff_remarks',
+                    'lev.level_three_staff_remarks',
+                    'lev.remarks',
+                    'lev.assiner_remarks'
+                )
+                ->join('leave_types as lt', 'lev.leave_type', '=', 'lt.id')
+                ->leftJoin('staffs as stf', 'lev.staff_id', '=', 'stf.id')
+                ->leftJoin('teacher_absent_reasons as rs', 'lev.reason_id', '=', 'rs.id')
+                ->where('lev.academic_session_id', '=', $request->academic_session_id)
+                ->where('stf.is_active', '=', '0')
+                ->where('lev.from_leave', '<=', $currentDate)
+                ->where('lev.to_leave', '>=', $currentDate)
+                ->orderBy('lev.from_leave', 'desc')
+                ->get();
+            return $this->successResponse($leaveDetails, 'Staff leave details fetch successfully');
+        }
+    }
     private function getChanges($oldData, $newData)
     {
         $changes = [];
