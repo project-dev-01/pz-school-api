@@ -47,19 +47,20 @@ class MenuAccessController extends BaseController
     //
     public function getRoles(Request $request)
     {
-        if($request->status=='All')			
-		{$data = Role::get();}
-		else
-		{$data = Role::where('status', $request->status)->get();}
-	
+        if ($request->status == 'All') {
+            $data = Role::get();
+        } else {
+            $data = Role::where('status', $request->status)->get();
+        }
+
         return $this->successResponse($data, 'Section record fetch successfully');
     }
-	 //
+    //
     public function addMenu(Request $request)
     {
 
         $validator = \Validator::make($request->all(), [
-            
+
             'menu_name' => 'required',
             'menu_type' => 'required',
             'menu_url' => 'required'
@@ -67,35 +68,33 @@ class MenuAccessController extends BaseController
         //dd('success');
         if (!$validator->passes()) {
             return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
-        } 
-        else {
-                // insert data
-                $query = Menus::insert([
-                    'role_id' => $request->role_id,
-                    'menu_name' => $request->menu_name,
-                    'menu_type' => $request->menu_type,
-                    'menu_icon' => $request->menu_icon,
-                    'menu_refid' => $request->menu_refid,
-                    'menu_url' => $request->menu_url,
-                    'menu_routename' => $request->menu_routename,
-                    'menu_status' => $request->menu_status,
-                    'menu_dropdown' => $request->menu_dropdown,
-                    'created_at' => date("Y-m-d H:i:s")
-                ]);               
-                $success = [];
-                if (!$query) {
-                    return $this->send500Error('Something went wrong.', ['error' => 'Something went wrong']);
-                } else {
-                    return $this->successResponse($success, 'New Menu has been successfully saved');
-                }
-            
+        } else {
+            // insert data
+            $query = Menus::insert([
+                'role_id' => $request->role_id,
+                'menu_name' => $request->menu_name,
+                'menu_type' => $request->menu_type,
+                'menu_icon' => $request->menu_icon,
+                'menu_refid' => $request->menu_refid,
+                'menu_url' => $request->menu_url,
+                'menu_routename' => $request->menu_routename,
+                'menu_status' => $request->menu_status,
+                'menu_dropdown' => $request->menu_dropdown,
+                'created_at' => date("Y-m-d H:i:s")
+            ]);
+            $success = [];
+            if (!$query) {
+                return $this->send500Error('Something went wrong.', ['error' => 'Something went wrong']);
+            } else {
+                return $this->successResponse($success, 'New Menu has been successfully saved');
+            }
         }
     }
     public function updateMenuDetails(Request $request)
     {
 
         $validator = \Validator::make($request->all(), [
-            
+
             'menu_name' => 'required',
             'menu_type' => 'required',
             'menu_url' => 'required'
@@ -103,11 +102,10 @@ class MenuAccessController extends BaseController
         //dd('success');
         if (!$validator->passes()) {
             return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
-        } 
-        else {
-                // Update data
-                $query =  Menus::where('menu_id', $request->menu_id)
-            ->update([
+        } else {
+            // Update data
+            $query =  Menus::where('menu_id', $request->menu_id)
+                ->update([
                     'role_id' => $request->role_id,
                     'menu_name' => $request->menu_name,
                     'menu_type' => $request->menu_type,
@@ -118,33 +116,33 @@ class MenuAccessController extends BaseController
                     'menu_status' => $request->menu_status,
                     'menu_dropdown' => $request->menu_dropdown,
                     'updated_at' => date("Y-m-d H:i:s")
-                ]); 
-            
-                 
-                $success = [];
-                if (!$query) {
-                    return $this->send500Error('Something went wrong.', ['error' => 'Something went wrong']);
-                } else {
-                    return $this->successResponse($success, 'New Menu has been successfully Updated');
-                }
-            
+                ]);
+
+
+            $success = [];
+            if (!$query) {
+                return $this->send500Error('Something went wrong.', ['error' => 'Something went wrong']);
+            } else {
+                return $this->successResponse($success, 'New Menu has been successfully Updated');
+            }
         }
     }
 
     public function getMenuList(Request $request)
     {
-        if(isset($request->type))			
-		{$data = Menus::where('menu_type', $request->type)->orderBy("role_id", "asc")->get();}
-		else
-		{$data = Menus::All();}
-	
-	
-		//dd($data);
+        if (isset($request->type)) {
+            $data = Menus::where('menu_type', $request->type)->orderBy("role_id", "asc")->get();
+        } else {
+            $data = Menus::All();
+        }
+
+
+        //dd($data);
         return $this->successResponse($data, 'Menus fetch successfully');
     }
     public function getMenuAccessList(Request $request)
     {
-        $br_id =$request->br_id;
+        $br_id = $request->br_id;
         /* $data = DB::table('menus AS t1')
         ->select('t1.*', 't2.menu_permission','t2.id as menuaccess_id')
         ->leftJoin('menuaccess AS t2', 't1.menu_id', '=', 't2.menu_id')
@@ -170,39 +168,37 @@ class MenuAccessController extends BaseController
             ->where('role_id', $request->role_id)
             ->orderBy("role_id", "asc")
             ->get();
-       // dd($data);
+        // dd($data);
         return $this->successResponse($data, 'Menus fetch successfully');
     }
     public function getmenupermission(Request $request)
     {
-        $br_id =$request->br_id;        
+        $br_id = $request->br_id;
         $role_id = $request->role_id;
-        $menu_id = $request->menu_id;        
-       /* $data = Menuaccess::select('menu_permission')
+        $menu_id = $request->menu_id;
+        /* $data = Menuaccess::select('menu_permission')
                 ->where('branch_id', $br_id)
                 ->where('role_id', $role_id)
                 ->where('menu_id', $menu_id)
                 ->first();*/
-       // dd($data);
-       $data = DB::table('menuaccess AS t1')
-    ->select('t1.menu_permission')
-    ->leftJoin('menus AS t2', 't1.menu_id', '=', 't2.menu_id')
-    ->where('t2.menu_routename', $menu_id)
-    ->where('t1.role_id', $role_id)
-    ->where('t1.branch_id', $br_id)
-    ->first();
+        // dd($data);
+        $data = DB::table('menuaccess AS t1')
+            ->select('t1.menu_permission')
+            ->leftJoin('menus AS t2', 't1.menu_id', '=', 't2.menu_id')
+            ->where('t2.menu_routename', $menu_id)
+            ->where('t1.role_id', $role_id)
+            ->where('t1.branch_id', $br_id)
+            ->first();
         return $this->successResponse($data, 'Get Menus Permission   successfully');
     }
     public function setmenupermission(Request $request)
     {
-    
+
         //dd($request->branch_id);
-         // insert data
-        foreach($request->menu_id as $menuid)
-        {
-            
-            if($request->act[$menuid]=='Insert')
-            {
+        // insert data
+        foreach ($request->menu_id as $menuid) {
+
+            if ($request->act[$menuid] == 'Insert') {
                 $query = Menuaccess::insert([
                     'role_id' => $request->role_id,
                     'branch_id' => $request->br_id,
@@ -210,16 +206,14 @@ class MenuAccessController extends BaseController
                     'menu_id' => $menuid,
                     'menu_permission' => $request->accessdenied[$menuid],
                     'created_at' => date("Y-m-d H:i:s")
-                ]); 
-            }
-            else
-            {
-                $query = Menuaccess::where('id',$request->menuaccess_id[$menuid])->update([
+                ]);
+            } else {
+                $query = Menuaccess::where('id', $request->menuaccess_id[$menuid])->update([
                     'menu_permission' => $request->accessdenied[$menuid],
                     'updated_at' => date("Y-m-d H:i:s")
                 ]);
             }
-        } 
+        }
 
         $success = [];
         if (!$query) {
@@ -227,8 +221,6 @@ class MenuAccessController extends BaseController
         } else {
             return $this->successResponse($success, 'Menu Access Permission Assigned has been successfully saved');
         }
-            
-        
     }
 
     public function getMenuDetails(Request $request)
@@ -292,17 +284,17 @@ class MenuAccessController extends BaseController
             return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
         } else {
             // create new connection
-           // $conn = $this->createNewConnection($request->branch_id);
+            // $conn = $this->createNewConnection($request->branch_id);
             // get data
             //$schoolroleDetails = $conn->table('school_roles')->get();
             $main_db = config('constants.main_db');
             // create new connection
             $conn = $this->createNewConnection($request->branch_id);
             // get data
-        $schoolroleDetails =$conn->table('school_roles as t1')
-        ->select('t1.*', 't2.role_name', DB::raw('(SELECT DISTINCT role_id FROM school_menuaccess AS t3 WHERE t3.school_roleid = t1.id LIMIT 1) AS roles'))
-        ->leftJoin($main_db.'.roles AS t2', 't1.portal_roleid', '=', 't2.id')->get();
-     
+            $schoolroleDetails = $conn->table('school_roles as t1')
+                ->select('t1.*', 't2.role_name', DB::raw('(SELECT DISTINCT role_id FROM school_menuaccess AS t3 WHERE t3.school_roleid = t1.id LIMIT 1) AS roles'))
+                ->leftJoin($main_db . '.roles AS t2', 't1.portal_roleid', '=', 't2.id')->get();
+
             return $this->successResponse($schoolroleDetails, 'School Role record fetch successfully');
         }
     }
@@ -312,21 +304,30 @@ class MenuAccessController extends BaseController
 
         $validator = \Validator::make($request->all(), [
             'id' => 'required',
-            'branch_id' => 'required',
-            'token' => 'required'
+            'branch_id' => 'required'
         ]);
 
         if (!$validator->passes()) {
             return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
         } else {
             $id = $request->id;
-          
+
             // create new connection
             $conn = $this->createNewConnection($request->branch_id);
             // get data
-       
             $schoolroleDetails = $conn->table('school_roles')->where('id', $id)->first();
-            return $this->successResponse($schoolroleDetails, 'School Role row fetch successfully');
+            $portal_roleid  = $schoolroleDetails->portal_roleid;
+            if ($portal_roleid == "3") {
+                // consider admin,staff,teacher
+                $user = Role::where(function ($q) {
+                    $q->where('id', 3)
+                        ->orWhere('id', 2)
+                        ->orWhere('id', 4);
+                })->get();
+            } else {
+                $user = Role::where('id', $portal_roleid)->get();
+            }
+            return $this->successResponse($user, 'School Role row fetch successfully');
         }
     }
     // update EventType
@@ -395,7 +396,7 @@ class MenuAccessController extends BaseController
     }
     public function getschoolmenuaccesslist(Request $request)
     {
-        
+
         /* $data = DB::table('menus AS t1')
         ->select('t1.*', 't2.menu_permission','t2.id as menuaccess_id')
         ->leftJoin('menuaccess AS t2', 't1.menu_id', '=', 't2.menu_id')
@@ -404,19 +405,19 @@ class MenuAccessController extends BaseController
         $br_id = $request->br_id;
         $scrole_id = $request->scrole_id;
         $main_db = config('constants.main_db');
-        
+
         $conn = $this->createNewConnection($request->br_id);
         // get data
         //$query = $conn->table('school_roles')->where('id', $id)->delete();
 
-        $data =  $conn->table($main_db.'.menus as ms')->select('ms.*')
+        $data =  $conn->table($main_db . '.menus as ms')->select('ms.*')
             ->selectSub(function ($query) use ($scrole_id) {
                 $query->select('read')
                     ->from('school_menuaccess')
                     ->where('school_roleid', $scrole_id)
                     ->whereColumn('ms.menu_id', 'school_menuaccess.menu_id')
                     ->limit(1);
-            }, 'menu_read')           
+            }, 'menu_read')
             ->selectSub(function ($query) use ($scrole_id) {
                 $query->select('add')
                     ->from('school_menuaccess')
@@ -430,7 +431,7 @@ class MenuAccessController extends BaseController
                     ->where('school_roleid', $scrole_id)
                     ->whereColumn('ms.menu_id', 'school_menuaccess.menu_id')
                     ->limit(1);
-            }, 'menu_update') 
+            }, 'menu_update')
             ->selectSub(function ($query) use ($scrole_id) {
                 $query->select('deletes')
                     ->from('school_menuaccess')
@@ -452,62 +453,53 @@ class MenuAccessController extends BaseController
                     ->whereColumn('ms.menu_id', 'school_menuaccess.menu_id')
                     ->limit(1);
             }, 'menuaccess_id')
-            ->leftJoin($main_db.'.menuaccess as ma', 'ma.menu_id', '=', 'ms.menu_id')
+            ->leftJoin($main_db . '.menuaccess as ma', 'ma.menu_id', '=', 'ms.menu_id')
             ->where('ma.menu_permission', 'Access')
             ->where('ma.branch_id', $br_id)
             ->where('ms.menu_type', $request->type)
-            ->where('ms.role_id', $request->role_id) 
+            ->where('ms.role_id', $request->role_id)
             ->orderBy("ms.menu_id", "asc")
             ->get();
-       // dd($data);
+        // dd($data);
         return $this->successResponse($data, 'Menus fetch successfully');
     }
     public function setschoolpermission(Request $request)
     {
-    
-        $conn = $this->createNewConnection($request->br_id);
-        
-        foreach($request->menu_id as $menuid)
-        {
-            
-            if($request->act[$menuid]=='Insert')
-            {
+        // return $request;
+        $conn = $this->createNewConnection($request->branch_id);
+
+        foreach ($request->menu_id as $menuid) {
+
+            if ($request->act[$menuid] == 'Insert') {
                 $query = $conn->table('school_menuaccess')->insert([
                     'role_id' => $request->role_id,
                     'school_roleid' => $request->school_roleid,
                     //'branch_id' => 4,
                     'menu_id' => $menuid,
-                    'read' => @$request->read[$menuid],                      
-                    'add' => @$request->add[$menuid],                  
-                    'updates' => @$request->updates[$menuid],                   
-                    'deletes' => @$request->deletes[$menuid],                    
+                    'read' => @$request->read[$menuid],
+                    'add' => @$request->add[$menuid],
+                    'updates' => @$request->updates[$menuid],
+                    'deletes' => @$request->deletes[$menuid],
                     'export' => @$request->export[$menuid],
                     'created_at' => date("Y-m-d H:i:s")
-                ]); 
-                
-            }
-            else
-            {
-                $query = $conn->table('school_menuaccess')->where('id',$request->menuaccess_id[$menuid])->update([
-                    'read' => @$request->read[$menuid],                      
-                    'add' => @$request->add[$menuid],                  
-                    'updates' => @$request->updates[$menuid],                   
-                    'deletes' => @$request->deletes[$menuid],                    
-                    'export' => @$request->export[$menuid],                    
+                ]);
+            } else {
+                $query = $conn->table('school_menuaccess')->where('id', $request->menuaccess_id[$menuid])->update([
+                    'read' => @$request->read[$menuid],
+                    'add' => @$request->add[$menuid],
+                    'updates' => @$request->updates[$menuid],
+                    'deletes' => @$request->deletes[$menuid],
+                    'export' => @$request->export[$menuid],
                     'updated_at' => date("Y-m-d H:i:s")
                 ]);
-                
             }
-
-        }         
+        }
         $success = [];
         if (!$query) {
             return $this->send500Error('Something went wrong.', ['error' => 'Something went wrong']);
         } else {
             return $this->successResponse($success, 'Menu Access Permission Assigned has been successfully saved');
         }
-            
-        
     }
     public function getschoolroleaccess(Request $request)
     {
@@ -515,14 +507,12 @@ class MenuAccessController extends BaseController
         $role_id = $request->role_id;
         $school_roleid = $request->school_roleid;
         // create new connection
-        $conn = $this->createNewConnection($request->branch_id);       
+        $conn = $this->createNewConnection($request->branch_id);
         $data = Menus::select('menu_id')->where('menu_routename', $menu_id)->where('role_id', $role_id)->first();
-        
-        $menu_id1=$data['menu_id'];
+
+        $menu_id1 = $data['menu_id'];
         //dd($menu_id1);
         $schoolroleDetails = $conn->table('school_menuaccess')->where('menu_id', $menu_id1)->where('role_id', $role_id)->where('school_roleid', $school_roleid)->first();
         return $this->successResponse($schoolroleDetails, 'School Role row fetch successfully');
-        
-    }   
-    
+    }
 }

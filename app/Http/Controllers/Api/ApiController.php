@@ -400,9 +400,9 @@ class ApiController extends BaseController
         } else {
             $success = DB::table('branches as br')
                 ->select('br.*', 'ct.name as country_name', 'st.name as state_name', 'ci.name as city_name')
-                ->join('countries as ct', 'br.country_id', '=', 'ct.id')
-                ->join('states as st', 'br.state_id', '=', 'st.id')
-                ->join('cities as ci', 'br.city_id', '=', 'ci.id')
+                ->leftJoin('countries as ct', 'br.country_id', '=', 'ct.id')
+                ->leftJoin('states as st', 'br.state_id', '=', 'st.id')
+                ->leftJoin('cities as ci', 'br.city_id', '=', 'ci.id')
                 ->when($country_id, function ($query, $country_id) {
                     return $query->where('br.country_id', $country_id);
                 })
