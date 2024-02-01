@@ -2370,11 +2370,9 @@ class ApiControllerThree extends BaseController
                     'section_id' => $section_id,
                     'pattern' => $pattern,
                 );
-                // dd($hideUnhideData);
                 if (isset($widget_value) && isset($widget_value) && isset($staff_id) && isset($order_no)) {
                     if ((empty($value['old_id']) || $value['old_id'] == "null")) {
                         $row = $Connection->table('widget_hide_unhide')->select('id')->where([
-                            // ['widget_name', '=', $widget_name],
                             ['order_no', '=', $order_no],
                             ['staff_id', '=', $staff_id]
                         ])->first();
@@ -2393,6 +2391,11 @@ class ApiControllerThree extends BaseController
                         $hideUnhideData['updated_at'] = date("Y-m-d H:i:s");
                         $query = $Connection->table('widget_hide_unhide')->where('id', $value['old_id'])->update($hideUnhideData);
                     }
+                    // Delete records not present in the current data
+                    $Connection->table('widget_hide_unhide')
+                        ->where('staff_id', $staff_id)
+                        ->whereNotIn('order_no', array_column($unhide_data, 'order_no'))
+                        ->delete();
                 }
             }
             return $this->successResponse([], 'hide unhide data added successfuly.');

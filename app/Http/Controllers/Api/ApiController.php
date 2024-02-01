@@ -3179,8 +3179,7 @@ class ApiController extends BaseController
                         $user->picture = $fileName;
                         $user->email = $request->email;
                         $user->status = $request->status;
-                        // $user->google2fa_secret_enable = $request->google2fa_secret_enable;
-                        $user->google2fa_secret_enable = isset($request->google2fa_secret_enable) ? '1' : '0';
+                        $user->google2fa_secret_enable = $request->google2fa_secret_enable;
                         $user->password_changed_at = date("Y-m-d H:i:s");
                         $user->password = bcrypt($request->password);
                         $query = $user->save();
