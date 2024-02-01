@@ -10584,29 +10584,40 @@ class ApiControllerOne extends BaseController
         } else {
             // create new connection
             $Connection = $this->createNewConnection($request->branch_id);
-            $date = $request->date;
+            $date= $request->date; 
             // get data
-            $data = $Connection->table('health_logbooks as hea')->select(
-                'hea.name',
-                'hea.gender',
-                'hea.time',
-                'hea.event_notes_c',
+            $data = $Connection->table('health_logbooks_part_c as pc')
+            ->select(
+                'hea.id',
+                'pc.student_id',
+                'st.gender',
+                'pc.time',
+                'pc.event_notes_c',
                 'hea.temp',
                 'hea.weather',
                 'hea.humidity',
                 'hea.event_notes_a',
                 'hea.event_notes_b',
                 'hea.date',
-                'hea.department_id',
-                'hea.class_id',
-                'hea.section_id',
+                'pc.id as partc_id',
+                'pc.department_id',
+                'pc.class_id',
+                'pc.section_id',
+                'pc.tab',
+                'pc.tab_details',
                 'cl.name as class_name',
-                'sc.name as section_name'
+                'sc.name as section_name',
+                'd1.name as department_name',
+                DB::raw('CONCAT(st.first_name, " ", st.last_name) as student_name')
             )
-                ->join('classes as cl', 'hea.class_id', '=', 'cl.id')
-                ->join('sections as sc', 'hea.section_id', '=', 'sc.id')
-                ->where('hea.date', '=', $date)->get();
-
+            ->join('classes as cl', 'pc.class_id', '=', 'cl.id')
+            ->join('sections as sc', 'pc.section_id', '=', 'sc.id')
+            ->leftJoin('staff_departments as d1', 'pc.department_id', '=', 'd1.id')
+            ->leftJoin('health_logbooks as hea', 'pc.health_logbooks_id','=', 'hea.id')
+            ->leftJoin('students as st', 'st.id', '=', 'pc.student_id')
+            
+            ->where('pc.date', '=', $date)
+            ->get();
             return $this->successResponse($data, 'Health logbooks fetch successfully');
         }
     }
@@ -10621,29 +10632,327 @@ class ApiControllerOne extends BaseController
         } else {
             // create new connection
             $Connection = $this->createNewConnection($request->branch_id);
-
-            $query = $Connection->table('health_logbooks')->insert([
-                'name' => $request->name,
+            
+            $query = $Connection->table('health_logbooks')->insertGetId([          
                 'temp' => $request->temp,
                 'date' => $request->date,
                 'weather' => $request->weather,
                 'humidity' => $request->humidity,
                 'event_notes_a' => $request->event_notes_a,
                 'event_notes_b' => $request->event_notes_b,
-                'department_id' => $request->department_id,
-                'class_id' => $request->grade_id,
-                'section_id' => $request->section_id,
-                'gender' => $request->gender,
-                'time' => $request->time,
-                'event_notes_c' => $request->event_notes_c,
                 'created_at' => date("Y-m-d H:i:s")
             ]);
+            if (isset($query)) {
+                $Connection->table('health_logbooks_part_c')->where([
+                    ['date', '=', $request->date]
+                ])->update([
+                    'health_logbooks_id' => $query,
+                    'updated_at' => date("Y-m-d H:i:s")
+                ]);
+            }
             $success = [];
             if (!$query) {
                 return $this->send500Error('Something went wrong.', ['error' => 'Something went wrong']);
             } else {
                 return $this->successResponse($success, 'Health logbooks has been successfully saved');
             }
+        }
+    }
+    public function addHealthLogbooksPartc(Request $request){
+        $validator = \Validator::make($request->all(), [
+            'branch_id' => 'required',
+        ]);
+
+        if (!$validator->passes()) {
+            return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
+        } else {
+            // create new connection
+            $Connection = $this->createNewConnection($request->branch_id);
+            
+            $query = $Connection->table('health_logbooks_part_c')->insert([
+                'health_logbooks_id'   =>  $request->healthlogID,
+                'date' => $request->date,
+                'student_id' => $request->student_id,
+                'department_id' => $request->department_id,
+                'class_id' => $request->grade_id,
+                'section_id' => $request->section_id,
+                'time' => $request->time,
+                'tab'  => $request->tab,
+                'tab_details' => $request->tab_details,
+                'event_notes_c' => $request->event_notes_c,
+                'injury_id' => $request->selectedInjuryName,
+                'place_id' => $request->selectedPlace,
+                'injury_treatment_id' => $request->selectedInjuryTreatment,
+                'part_id' => $request->selectedPart,
+                'illness_id' => $request->selectedIllness,
+                'illness_treatment_id' => $request->selectedIllnessTreatment,
+                'reasonTemp' => $request->selectedReasonTemp,
+                'meal_id' => $request->selectedMeal,
+                'defecation_id' => $request->selectedDefecation,
+                'target_id' => $request->selectedTarget,
+                'slept_time_id' => $request->selectedSlept_time,
+                'health_treatment_id' => $request->selectedHealth_treatment,
+                'created_at' => date("Y-m-d H:i:s")
+            ]);
+            $success = [];
+            if (!$query) {
+                return $this->send500Error('Something went wrong.', ['error' => 'Something went wrong']);
+            } else {
+                return $this->successResponse($query, 'Health logbooks has been successfully saved');
+            }
+        }
+   }
+    public function deleteHealthLogbooksPartc(Request $request){
+        
+        $id = $request->id;
+        $validator = \Validator::make($request->all(), [
+            'token' => 'required',
+            'branch_id' => 'required',
+            'id' => 'required',
+        ]);
+
+        if (!$validator->passes()) {
+            return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
+        } else {
+            // create new connection
+            $conn = $this->createNewConnection($request->branch_id);
+            // get data
+            $query = $conn->table('health_logbooks_part_c')->where('id', $id)->delete();
+
+            $success = [];
+            if ($query) {
+                return $this->successResponse($success, 'Health logBook Link have been deleted successfully');
+            } else {
+                return $this->send500Error('Something went wrong.', ['error' => 'Something went wrong']);
+            }
+        }
+
+    }
+    public function editHealthLogbooksPartc(Request $request){
+        
+        $id = $request->id;
+        $validator = \Validator::make($request->all(), [
+            'token' => 'required',
+            'branch_id' => 'required',
+            'id' => 'required',
+        ]);
+
+        if (!$validator->passes()) {
+            return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
+        } else {
+            // create new connection
+            $conn = $this->createNewConnection($request->branch_id);
+            // get data
+            $data = $conn->table('health_logbooks_part_c')->where('id', $id)->first();
+
+            return $this->successResponse($data, 'Health logbooks partc  fetch successfully');
+        }
+
+    }
+    public function updateHealthLogbooksPartc(Request $request){
+        $validator = \Validator::make($request->all(), [
+            'branch_id' => 'required',
+        ]);
+
+        if (!$validator->passes()) {
+            return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
+        } else {
+            // create new connection
+            $Connection = $this->createNewConnection($request->branch_id);
+            $id   =  $request->healthlogID;
+            $query = $Connection->table('health_logbooks_part_c')->where('id', $id)->update([
+        
+                'date' => $request->date,
+                 'student_id' => $request->student_id,
+                'department_id' => $request->department_id,
+                'class_id' => $request->grade_id,
+                'section_id' => $request->section_id,
+                'time' => $request->time,
+                'tab'  => $request->tab,
+                'tab_details' => $request->tab_details,
+                'event_notes_c' => $request->event_notes_c,
+                'injury_id' => $request->selectedInjuryName,
+                'place_id' => $request->selectedPlace,
+                'injury_treatment_id' => $request->selectedInjuryTreatment,
+                'part_id' => $request->selectedPart,
+                'illness_id' => $request->selectedIllness,
+                'illness_treatment_id' => $request->selectedIllnessTreatment,
+                'reasonTemp' => $request->selectedReasonTemp,
+                'meal_id' => $request->selectedMeal,
+                'defecation_id' => $request->selectedDefecation,
+                'target_id' => $request->selectedTarget,
+                'slept_time_id' => $request->selectedSlept_time,
+                'health_treatment_id' => $request->selectedHealth_treatment,
+                'event_notes_c' => $request->event_notes_c,
+                'updated_at' => date("Y-m-d H:i:s")
+            ]);
+            $success = [];
+            if (!$query) {
+                return $this->send500Error('Something went wrong.', ['error' => 'Something went wrong']);
+            } else {
+                return $this->successResponse($query, 'Health logbooks  has been successfully updated');
+            }
+        }
+    }
+    public function getInjuryList(Request $request){
+        $validator = \Validator::make($request->all(), [
+            'branch_id' => 'required',
+            //'token' => 'required',
+        ]);
+
+        if (!$validator->passes()) {
+            return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
+        } else {
+            // create new connection
+            $conn = $this->createNewConnection($request->branch_id);
+            // get data
+            
+            $injuryList = $conn->table('health_logbooks_injury')->get();
+            return $this->successResponse($injuryList, 'injury list record fetch successfully');
+        }
+
+    }
+    public function getIllnessList(Request $request){
+        $validator = \Validator::make($request->all(), [
+            'branch_id' => 'required',
+            //'token' => 'required',
+        ]);
+
+        if (!$validator->passes()) {
+            return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
+        } else {
+            // create new connection
+            $conn = $this->createNewConnection($request->branch_id);
+            // get data
+            $illnessList = $conn->table('health_logbooks_illness')->get();
+            return $this->successResponse($illnessList, 'illness list record fetch successfully');
+        }
+        
+    }
+    public function getHealthConsultList(Request $request){
+        $validator = \Validator::make($request->all(), [
+            'branch_id' => 'required',
+            //'token' => 'required',
+        ]);
+
+        if (!$validator->passes()) {
+            return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
+        } else {
+            // create new connection
+            $conn = $this->createNewConnection($request->branch_id);
+            // get data
+          
+            $healthConsultList = $conn->table('health_logbooks_health_consult')->get();
+            return $this->successResponse($healthConsultList, 'health consult list record fetch successfully');
+        }
+        
+    }
+    public function exportHealthLogbooks(Request $request){
+        $validator = \Validator::make($request->all(), [
+            'branch_id' => 'required',
+        ]);
+
+        if (!$validator->passes()) {
+            return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
+        } else {
+            // create new connection
+            $Connection = $this->createNewConnection($request->branch_id);
+            $date= $request->date; 
+            // get data
+            $data = $Connection->table('health_logbooks_part_c as pc')->select(
+                DB::raw('CONCAT(st.first_name, " ", st.last_name) as name'),
+                    'st.gender',
+                    'pc.time',
+                    'pc.event_notes_c',
+                    'pc.tab',
+                    'pc.tab_details',
+                    'cl.name as class_name',
+                    'sc.name as section_name',
+                    'd1.name as department_name'
+                )
+                ->leftJoin('health_logbooks as hea', 'pc.health_logbooks_id','=', 'hea.id')
+                ->leftJoin('staff_departments as d1', 'pc.department_id', '=', 'd1.id')
+                ->leftJoin('classes as cl', 'pc.class_id', '=', 'cl.id')
+                ->leftJoin('sections as sc', 'pc.section_id', '=', 'sc.id')
+                ->leftJoin('students as st', 'st.id', '=', 'pc.student_id')
+                 ->where('pc.date', '=', $date)->get();
+
+                 $data2 = $Connection->table('health_logbooks as hea')->select(
+                    'hea.temp',
+                    'hea.weather',
+                    'hea.humidity',
+                    'hea.event_notes_a',
+                    'hea.event_notes_b',
+                    'hea.date',
+                )
+                 ->where('hea.date', '=', $date)->get();
+                 $data = [
+                    'partc' => $data,
+                    'partab' => $data2
+                ];
+
+            return $this->successResponse($data, 'Health logbooks fetch successfully');
+        }
+    }
+    public function getHealthLogbooksLeaveSummary(Request $request){
+        $validator = \Validator::make($request->all(), [
+            'branch_id' => 'required',
+        ]);
+
+        if (!$validator->passes()) {
+            return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
+        } else {
+            // create new connection
+            $Connection = $this->createNewConnection($request->branch_id);
+            $date= $request->date; 
+            // get data
+            $reason_count = $Connection->table('student_leaves as st')
+            ->select(
+                'st.class_id',
+                'as.name as reasons_name',
+                'c.name',
+                DB::raw('COUNT(DISTINCT st.change_lev_type) as reasons_count')
+            )
+            ->leftJoin('classes as c', 'st.class_id', '=', 'c.id')
+            ->leftJoin('student_leave_types as as', 'st.change_lev_type', '=', 'as.id')
+            ->where('st.from_leave', '=', $date)
+            ->whereNotNull('st.change_lev_type') // Exclude rows where reasons is NULL
+            ->where('st.change_lev_type', '!=', '') // Exclude rows where reasons is an empty string
+            ->groupBy('st.class_id', 'st.change_lev_type')
+            ->get();
+
+            $class_name = $Connection->table('classes')->select('id','name')->whereIn('department_id', [1,2,3,4])->orderBy('department_id', 'asc')->get();
+           // Now organize the data in the desired format
+                $reason_count_formatted = [];
+                foreach ($reason_count as $reason) {
+                    $reason_name = $reason->reasons_name;
+                    $class_id = $reason->class_id;
+                
+                    // If the reason is not already in the result array, initialize it
+                    if (!isset($reason_count_formatted[$reason_name])) {
+                        $reason_count_formatted[$reason_name] = [
+                            'reason_name' => $reason_name,
+                            'gradecnt' => [],
+                        ];
+                    }
+                
+                    // Add class ID, class name, and count to the 'gradecnt' object
+                    $reason_count_formatted[$reason_name]['gradecnt'][] = [
+                        'class_id' => $class_id,
+                        'class_name' => $reason->name,
+                        'reasons_count' => $reason->reasons_count,
+                    ];
+                }
+                
+
+                // Convert the associative array to a numeric array for consistency
+                $reason_count_formatted = array_values($reason_count_formatted);
+            $data = [
+                'headers' => $class_name,
+                'reason_count' => $reason_count_formatted
+            ];
+
+            return $this->successResponse($data, 'Health logbooks fetch successfully');
         }
     }
     // addShortcut
