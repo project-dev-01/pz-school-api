@@ -738,6 +738,7 @@ class ImportController extends BaseController
             'branch_id' => 'required',
             'file' => 'required'
         ]);
+       
         if (!$validator->passes()) {
             return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
         } else {
@@ -749,7 +750,8 @@ class ImportController extends BaseController
             $class_id = $request->class_id;
             $section_id = $request->section_id;
             $exam_id = $request->exam_id;
-            $subject_id = $request->subject_id;
+            $subject_id = $request->subject_id;            
+            $paper_id = $request->paper_id;
             $semester_id = $request->semester_id;
             $session_id = $request->session_id;
 
@@ -800,95 +802,79 @@ class ImportController extends BaseController
 
                     $dummyInc = 1;
                     // Insert to MySQL database
+                    
                     foreach ($importData_arr as $importData) {
 
                         $dummyInc++;
 
                         $student_roll = $importData[1];
-                        $mark1 = $importData[4];
-                        $mark2 = $importData[5];
-                        $mark3 = $importData[6];
+                        $mark = $importData[5];
                         $score = "";
                         $points = "";
                         $freetext =  "";
                         $grade = "";
                         $ranking = "";
-                        $memo = "";
+                        $memo = $importData[6];
                         $pass_fail = "";
                         $status = "present";
-                        $students = $Connection->table('students')->select('id', 'first_name', 'last_name')->where('id', '=', $student_roll)->first();
+                        $students = $Connection->table('students')->select('id', 'first_name', 'last_name')->where('roll_no', '=', $student_roll)->first();
                         $student_id = $students->id;
-                        // 'Knowledge & Skills' Get Paper ID,Grade_category,Pass or Fail Start
-                        $paper1 = $Connection->table('exam_papers')->select('id', 'grade_category')->where([
-                            ['class_id', '=', $class_id],
-                            ['subject_id', '=', $subject_id],
-                            ['paper_name', '=', 'Knowledge & Skills'],
-                            ['department_id', '=', $department_id],
-                            ['academic_session_id', '=', $academic_session_id]
+                        
+                        
+                        $paper1 = $Connection->table('exam_papers')->select('id', 'grade_category','score_type')->where([
+                            ['id', '=', $paper_id]
                         ])->first();
-                        $paper_id1 = $paper1->id;
-                        $grade_category1 = $paper1->grade_category;
-                        $grade_marks1 = $Connection->table('grade_marks')->select('grade', 'status')->where([
-                            ['grade_category', '=', $grade_category1],
-                            ['min_mark', '<=', $mark1],
-                            ['max_mark', '>=', $mark1]
-                        ])->first();
-                        $grade1 = $grade_marks1->grade;
-                        $pass_fail1 = $grade_marks1->status;
-                        // 'Knowledge & Skills' Get Paper ID ,Grade_category,Pass or Fail End
-                        // 'Thinking, Judgment, and Expression' Get Paper ID,Grade_category,Pass or Fail Start
-                        $paper2 = $Connection->table('exam_papers')->select('id', 'grade_category')->where([
-                            ['class_id', '=', $class_id],
-                            ['subject_id', '=', $subject_id],
-                            ['paper_name', '=', 'Thinking, Judgment, and Expression'],
-                            ['department_id', '=', $department_id],
-                            ['academic_session_id', '=', $academic_session_id]
-                        ])->first();
-                        $paper_id2 = $paper2->id;
-                        $grade_category2 = $paper2->grade_category;
-                        $grade_marks2 = $Connection->table('grade_marks')->select('grade', 'status')->where([
-                            ['grade_category', '=', $grade_category2],
-                            ['min_mark', '<=', $mark2],
-                            ['max_mark', '>=', $mark2]
-                        ])->first();
-                        $grade2 = $grade_marks2->grade;
-                        $pass_fail2 = $grade_marks2->status;
-                        // 'Thinking, Judgment, and Expression' Get Paper ID,Grade_category,Pass or Fail End
-                        // 'Attitude to proactive learning' Get Paper ID,Grade_category,Pass or Fail Start
-                        $paper3 = $Connection->table('exam_papers')->select('id', 'grade_category')->where([
-                            ['class_id', '=', $class_id],
-                            ['subject_id', '=', $subject_id],
-                            ['paper_name', '=', 'Attitude to proactive learning'],
-                            ['department_id', '=', $department_id],
-                            ['academic_session_id', '=', $academic_session_id]
-                        ])->first();
-                        $paper_id3 = $paper3->id;
-                        $grade_category3 = $paper3->grade_category;
-                        $grade_marks3 = $Connection->table('grade_marks')->select('grade', 'status')->where([
-                            ['grade_category', '=', $grade_category3],
-                            ['min_mark', '<=', $mark3],
-                            ['max_mark', '>=', $mark3]
-                        ])->first();
-                        $grade3 = $grade_marks3->grade;
-                        $pass_fail3 = $grade_marks3->status;
-                        // 'Attitude to proactive learning' Get Paper ID,Grade_category,Pass or Fail End
+                        if($paper1!=null)
+                        {
+                            $grade_category1 = $paper1->grade_category;
+                            if($paper1->score_type=='Grade' || $paper1->score_type=='Mark')
+                            {                            
+                                $grade_marks = $Connection->table('grade_marks')->select('id','grade', 'status')->where([
+                                    ['grade_category', '=', $grade_category1],
+                                    ['min_mark', '<=', $mark],
+                                    ['max_mark', '>=', $mark]
+                                ])->first();
+                                $score= $mark;
+                                $grade = $grade_marks->grade;
+                                $pass_fail = $grade_marks->status;
 
-                        // 'Knowledge & Skills' Insert Mark Start
+                            }
+                            elseif($paper1->score_type=='Points')
+                            {
+                                $grade_marks = $Connection->table('grade_marks')->select('id','grade', 'status')->where([
+                                    ['grade_category', '=', $grade_category1],
+                                    ['grade', '=', $mark]
+                                ])->first();
+                                $points= $grade_marks->id;
+                                $grade = $grade_marks->grade;
+                                $pass_fail = $grade_marks->status;
+                            }
+                            elseif($paper1->score_type=='Freetext')
+                            {
+                                $freetext =$mark;
+                                $pass_fail = 'Pass';
+                            }
+                        }
+                        // 
+                        
+                        //  Insert Mark Start
+                        if($paper1!=null)
+                        {
                         $arrayStudentMarks1 = array(
                             'student_id' => $student_id,
                             'class_id' => $class_id,
                             'section_id' => $section_id,
                             'subject_id' => $subject_id,
                             'exam_id' => $exam_id,
-                            'paper_id' => $paper_id1,
+                            'paper_id' => $paper_id,
                             'semester_id' => $semester_id,
                             'session_id' => $session_id,
                             'grade_category' => $grade_category1,
-                            'score' => $mark1,
+                            'score' => $score,
                             'points' => $points,
                             'freetext' => $freetext,
-                            'grade' => $grade1,
-                            'pass_fail' => $pass_fail1,
+                            'grade' => $grade,
+                            'pass_fail' => $pass_fail,
                             'ranking' => $ranking,
                             'status' => $status,
                             'memo' => $memo,
@@ -904,17 +890,17 @@ class ImportController extends BaseController
                             ['exam_id', '=', $exam_id],
                             ['semester_id', '=', $semester_id],
                             ['session_id', '=', $session_id],
-                            ['paper_id', '=', $paper_id1],
+                            ['paper_id', '=', $paper_id],
                             ['academic_session_id', '=', $academic_session_id]
                         ])->first();
                         if (isset($row->id)) {
                             $Connection->table('student_marks')->where('id', $row->id)->update([
-                                'score' => $mark1,
+                                'score' => $score,
                                 'points' => $points,
                                 'freetext' => $freetext,
-                                'grade' => $grade1,
+                                'grade' => $grade,
                                 'ranking' => $ranking,
-                                'pass_fail' => $pass_fail1,
+                                'pass_fail' => $pass_fail,
                                 'status' => $status,
                                 'memo' => $memo,
                                 'updated_at' => date("Y-m-d H:i:s")
@@ -922,115 +908,15 @@ class ImportController extends BaseController
                         } else {
                             $Connection->table('student_marks')->insert($arrayStudentMarks1);
                         }
-                        // 'Knowledge & Skills' Insert Mark End
-                        // 'Thinking, Judgment, and Expression' Insert Mark Start
-                        $arrayStudentMarks2 = array(
-                            'student_id' => $student_id,
-                            'class_id' => $class_id,
-                            'section_id' => $section_id,
-                            'subject_id' => $subject_id,
-                            'exam_id' => $exam_id,
-                            'paper_id' => $paper_id2,
-                            'semester_id' => $semester_id,
-                            'session_id' => $session_id,
-                            'grade_category' => $grade_category2,
-                            'score' => $mark2,
-                            'points' => $points,
-                            'freetext' => $freetext,
-                            'grade' => $grade2,
-                            'pass_fail' => $pass_fail2,
-                            'ranking' => $ranking,
-                            'status' => $status,
-                            'memo' => $memo,
-                            'academic_session_id' => $academic_session_id,
-                            'created_at' => date("Y-m-d H:i:s")
-                        );
-
-                        $row = $Connection->table('student_marks')->select('id')->where([
-                            ['class_id', '=', $class_id],
-                            ['section_id', '=', $section_id],
-                            ['subject_id', '=', $subject_id],
-                            ['student_id', '=', $student_id],
-                            ['exam_id', '=', $exam_id],
-                            ['semester_id', '=', $semester_id],
-                            ['session_id', '=', $session_id],
-                            ['paper_id', '=', $paper_id2],
-                            ['academic_session_id', '=', $academic_session_id]
-                        ])->first();
-                        if (isset($row->id)) {
-                            $Connection->table('student_marks')->where('id', $row->id)->update([
-                                'score' => $mark1,
-                                'points' => $points,
-                                'freetext' => $freetext,
-                                'grade' => $grade2,
-                                'ranking' => $ranking,
-                                'pass_fail' => $pass_fail2,
-                                'status' => $status,
-                                'memo' => $memo,
-                                'updated_at' => date("Y-m-d H:i:s")
-                            ]);
-                        } else {
-                            $Connection->table('student_marks')->insert($arrayStudentMarks2);
-                        }
-                        // 'Thinking, Judgment, and Expression' Insert Mark End
-                        // 'Attitude to proactive learning' Insert Mark Start
-                        $arrayStudentMarks3 = array(
-                            'student_id' => $student_id,
-                            'class_id' => $class_id,
-                            'section_id' => $section_id,
-                            'subject_id' => $subject_id,
-                            'exam_id' => $exam_id,
-                            'paper_id' => $paper_id3,
-                            'semester_id' => $semester_id,
-                            'session_id' => $session_id,
-                            'grade_category' => $grade_category3,
-                            'score' => $mark3,
-                            'points' => $points,
-                            'freetext' => $freetext,
-                            'grade' => $grade3,
-                            'pass_fail' => $pass_fail3,
-                            'ranking' => $ranking,
-                            'status' => $status,
-                            'memo' => $memo,
-                            'academic_session_id' => $academic_session_id,
-                            'created_at' => date("Y-m-d H:i:s")
-                        );
-
-                        $row = $Connection->table('student_marks')->select('id')->where([
-                            ['class_id', '=', $class_id],
-                            ['section_id', '=', $section_id],
-                            ['subject_id', '=', $subject_id],
-                            ['student_id', '=', $student_id],
-                            ['exam_id', '=', $exam_id],
-                            ['semester_id', '=', $semester_id],
-                            ['session_id', '=', $session_id],
-                            ['paper_id', '=', $paper_id3],
-                            ['academic_session_id', '=', $academic_session_id]
-                        ])->first();
-                        if (isset($row->id)) {
-                            $Connection->table('student_marks')->where('id', $row->id)->update([
-                                'score' => $mark3,
-                                'points' => $points,
-                                'freetext' => $freetext,
-                                'grade' => $grade3,
-                                'ranking' => $ranking,
-                                'pass_fail' => $pass_fail3,
-                                'status' => $status,
-                                'memo' => $memo,
-                                'updated_at' => date("Y-m-d H:i:s")
-                            ]);
-                        } else {
-                            $Connection->table('student_marks')->insert($arrayStudentMarks3);
-                        }
-                        // 'Attitude to proactive learning' Insert Mark End
-
-
+                        // Insert Mark End
+                        }  
                     }
                     if (\File::exists($filepath)) {
                         \File::delete($filepath);
                     }
                     return $this->successResponse([], 'Student Marks Import Successful');
-                } else {
+                } 
+                else {
                     return $this->send422Error('Validation error.', ['error' => 'File too large. File must be less than 2MB.']);
                 }
             } else {

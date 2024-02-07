@@ -298,36 +298,102 @@ class MenuAccessController extends BaseController
             return $this->successResponse($schoolroleDetails, 'School Role record fetch successfully');
         }
     }
+    public function getschool_roleLists(Request $request)
+    {
+        $validator = \Validator::make($request->all(), [
+            'branch_id' => 'required',
+            //'token' => 'required',
+        ]);
+
+        if (!$validator->passes()) {
+            return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
+        } else {
+            // create new connection
+            // $conn = $this->createNewConnection($request->branch_id);
+            // get data
+            //$schoolroleDetails = $conn->table('school_roles')->get();
+            $main_db = config('constants.main_db');
+            // create new connection
+            $conn = $this->createNewConnection($request->branch_id);
+            // get data
+            $schoolroleDetails = $conn->table('school_roles')->get();
+            $school_array=[];
+            foreach( $schoolroleDetails as $school_role)
+            {
+              
+                        $roleIds1 =$conn->table('school_menuaccess as t1')
+                        ->select('t1.role_id','t2.role_name') 
+                        ->leftJoin($main_db . '.roles AS t2', 't1.role_id', '=', 't2.id')
+                        ->distinct()
+                        ->where('school_roleid', '=', $school_role->id)
+                        ->pluck('role_name');
+                        $roles='';
+                        foreach($roleIds1 as $role)
+                        {
+                            $roles.=$role.',';
+                        }
+                        
+                        $datas=[
+                            "id"=> $school_role->id,
+                            "fullname"=> $school_role->fullname,
+                            "shortname"=> $school_role->shortname,
+                            "portal_roleid"=> $school_role->portal_roleid,
+                            "created_at"=> $school_role->created_at,
+                            "updated_at"=> $school_role->updated_at,
+                            "flag"=> $school_role->flag,
+                            "roles"=> substr($roles, 0, -1),
+                           
+                        ];
+                        array_push($school_array, $datas);
+            }
+
+            return $this->successResponse($school_array, 'School Role record fetch successfully');
+        }
+    }
+    public function portal_roles(Request $request)
+    {
+        $validator = \Validator::make($request->all(), [
+            'branch_id' => 'required',
+            //'token' => 'required',
+        ]);
+
+        if (!$validator->passes()) {
+            return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
+        } else {
+            // create new connection
+            // $conn = $this->createNewConnection($request->branch_id);
+            // get data
+            //$schoolroleDetails = $conn->table('school_roles')->get();
+            $main_db = config('constants.main_db');
+            // create new connection
+            $conn = $this->createNewConnection($request->branch_id);
+            // get data
+            $portal_roleDetails = $conn->table('portal_role')->get();
+
+            return $this->successResponse($portal_roleDetails, 'Portal Role record fetch successfully');
+        }
+    }
     // get EventType row details
     public function getschool_roleDetails(Request $request)
     {
 
         $validator = \Validator::make($request->all(), [
             'id' => 'required',
-            'branch_id' => 'required'
+            'branch_id' => 'required',
+            'token' => 'required'
         ]);
 
         if (!$validator->passes()) {
             return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
         } else {
             $id = $request->id;
-
+          
             // create new connection
             $conn = $this->createNewConnection($request->branch_id);
             // get data
+       
             $schoolroleDetails = $conn->table('school_roles')->where('id', $id)->first();
-            $portal_roleid  = $schoolroleDetails->portal_roleid;
-            if ($portal_roleid == "3") {
-                // consider admin,staff,teacher
-                $user = Role::where(function ($q) {
-                    $q->where('id', 3)
-                        ->orWhere('id', 2)
-                        ->orWhere('id', 4);
-                })->get();
-            } else {
-                $user = Role::where('id', $portal_roleid)->get();
-            }
-            return $this->successResponse($user, 'School Role row fetch successfully');
+            return $this->successResponse($schoolroleDetails, 'School Role row fetch successfully');
         }
     }
     // update EventType
@@ -392,6 +458,30 @@ class MenuAccessController extends BaseController
             } else {
                 return $this->send500Error('Something went wrong.', ['error' => 'Something went wrong']);
             }
+        }
+    }
+    public function getschool_menuroleDetails(Request $request)
+    {
+
+        $validator = \Validator::make($request->all(), [
+            'id' => 'required',
+            'branch_id' => 'required'
+        ]);
+
+        if (!$validator->passes()) {
+            return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
+        } else {
+            $id = $request->id;
+
+            // create new connection
+            $conn = $this->createNewConnection($request->branch_id);
+            // get data
+            $schoolroleDetails = $conn->table('school_roles')->where('id', $id)->first();
+            $portal_roleid  = $schoolroleDetails->portal_roleid;
+            $roleDetails = $conn->table('portal_role')->where('id', $portal_roleid)->first();            
+            $portal_roleid  = explode(',', $roleDetails->roles);
+            $roles = Role::whereIn('id', $portal_roleid)->get();
+            return $this->successResponse($roles, 'School Role row fetch successfully');
         }
     }
     public function getschoolmenuaccesslist(Request $request)

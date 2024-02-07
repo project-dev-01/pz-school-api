@@ -1,0 +1,13 @@
+sno,student_roll_no,student_name,Subject,Paper Name,Mark,Memo
+1,900001,AAA,EC-Listening,L-1?Understands and follows instructions in class activities.,Excellent,Comments
+2,900002,BBB,EC-Listening,L-1?Understands and follows instructions in class activities.,Excellent,Comments
+,,,,,,
+,,,,,,
+,,,,,,
+,,,,,,
+,,,,,Likes,
+,,,,,Excellent,
+,,,,,Good,
+,,,,,Satisfactory,
+,,,,,Improving,
+,,,,,Fair,

@@ -990,8 +990,14 @@ Route::group(['middleware' => ['auth:api', 'throttle:limit_per_user', 'logroute'
     Route::post('school_role/update', [MenuAccessController::class, 'updateschool_role']);
     Route::post('school_role/delete', [MenuAccessController::class, 'deleteschool_role']);
 
-    // School role Permissions
+    Route::post('school_role/portal_roles', [MenuAccessController::class, 'portal_roles']);
+    
+    Route::get('school_role/lists', [MenuAccessController::class, 'getschool_roleLists']);
 
+    // School role Permissions
+    
+    Route::post('menus/getschool_menuroleDetails', [MenuAccessController::class, 'getschool_menuroleDetails']);
+    
     Route::post('menus/schoolaccesslist', [MenuAccessController::class, 'getschoolmenuaccesslist']);
     Route::post('menus/setschoolpermission', [MenuAccessController::class, 'setschoolpermission']);
     Route::post('menus/getschoolroleaccess', [MenuAccessController::class, 'getschoolroleaccess']);
