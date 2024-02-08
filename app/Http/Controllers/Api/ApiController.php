@@ -532,7 +532,7 @@ class ApiController extends BaseController
             // create new connection
             $createConnection = $this->createNewConnection($request->branch_id);
             // check exist name
-            if ($createConnection->table('classes')->where('name', '=', $request->name)->count() > 0) {
+            if ($createConnection->table('classes')->where([['name', '=', $request->name], ['department_id', '=', $request->department_id]])->count() > 0) {
                 return $this->send422Error('Name Already Exist', ['error' => 'Name Already Exist']);
             } else {
                 // insert data
@@ -612,7 +612,7 @@ class ApiController extends BaseController
             // create new connection
             $staffConn = $this->createNewConnection($request->branch_id);
             // check exist name
-            if ($staffConn->table('classes')->where([['name', '=', $request->name], ['id', '!=', $class_id]])->count() > 0) {
+            if ($staffConn->table('classes')->where([['name', '=', $request->name], ['department_id', '=', $request->department_id], ['id', '!=', $class_id]])->count() > 0) {
                 return $this->send422Error('Name Already Exist', ['error' => 'Name Already Exist']);
             } else {
                 // update data
@@ -13306,46 +13306,81 @@ class ApiController extends BaseController
     {
         $validator = \Validator::make($request->all(), [
             'branch_id' => 'required',
-            'token' => 'required',
         ]);
 
-        $class_id = $request->class_id;
-        $session_id = $request->session_id;
-        $section_id = $request->section_id;
-        $name = $request->student_name;
+        $department_id = isset($request->department_id)?$request->department_id:null;
+        $class_id = isset($request->class_id)?$request->class_id:null;
+        $session_id = isset($request->session_id)?$request->session_id:0;
+        $section_id = isset($request->section_id)?$request->section_id:null;
+        $name = isset($request->student_name)?$request->student_name:null;
         if (!$validator->passes()) {
             return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
         } else {
             // create new connection
             $con = $this->createNewConnection($request->branch_id);
-            // curren tSemester 
-            $currentDate = date('Y-m-d');
-            $semester = $con->table('semester')
-                // ->whereRaw('(now() between start_date and end_date)')
-                ->whereRaw('"' . $currentDate . '" between `start_date` and `end_date`')
-                ->first();
-            // return $semester->id;
             // get data
-            $student = $con->table('enrolls as e')->select('s.id', DB::raw('CONCAT(s.first_name, " ", s.last_name) as name'), 's.register_no', 's.roll_no', 's.mobile_no', 's.email', 's.gender', 's.photo')
+            // $student = $con->table('enrolls as e')->select('s.id', DB::raw('CONCAT(s.first_name, " ", s.last_name) as name'), 's.register_no', 's.roll_no', 's.mobile_no', 's.email', 's.gender', 's.photo')
+            //     ->leftJoin('students as s', 'e.student_id', '=', 's.id')
+            //     ->when($department_id, function ($query, $department_id) {
+            //         return $query->where('e.department_id', $department_id);
+            //     })
+            //     ->when($class_id, function ($query, $class_id) {
+            //         return $query->where('e.class_id', $class_id);
+            //     })
+            //     ->when($session_id, function ($query, $session_id) {
+            //         return $query->where('e.session_id', $session_id);
+            //     })
+            //     ->when($section_id, function ($query, $section_id) {
+            //         return $query->where('e.section_id', $section_id);
+            //     })
+            //     ->when($name, function ($query, $name) {
+            //         return $query->where('s.first_name', 'like', '%' . $name . '%')->orWhere('s.last_name', 'like', '%' . $name . '%');
+            //     })
+            //     ->where('e.academic_session_id', '=', $request->academic_session_id)
+            //     // ->where('e.active_status', '=', "0")
+            //     ->groupBy('e.student_id')
+            //     ->get()->toArray();
+            // Get data
+            $query = $con->table('enrolls as e')
+                ->select(
+                    's.id',
+                    DB::raw('CONCAT(s.first_name, " ", s.last_name) as name'),
+                    's.register_no',
+                    's.roll_no',
+                    's.mobile_no',
+                    's.email',
+                    's.gender',
+                    's.photo'
+                )
                 ->leftJoin('students as s', 'e.student_id', '=', 's.id')
-                ->when($class_id, function ($query, $class_id) {
-                    return $query->where('e.class_id', $class_id);
-                })
-                ->when($session_id, function ($query, $session_id) {
-                    return $query->where('e.session_id', $session_id);
-                })
-                ->when($section_id, function ($query, $section_id) {
-                    return $query->where('e.section_id', $section_id);
-                })
-                ->when($name, function ($query, $name) {
-                    return $query->where('s.first_name', 'like', '%' . $name . '%')->orWhere('s.last_name', 'like', '%' . $name . '%');
-                })
-                ->where('e.academic_session_id', '=', $request->academic_session_id)
-                // ->where('e.active_status', '=', "0")
-                ->groupBy('e.student_id')
-                ->get()->toArray();
+                ->where('e.academic_session_id', '=', $request->academic_session_id);
 
-            return $this->successResponse($student, 'Student record fetch successfully');
+            if (isset($request->department_id) && filled($request->department_id)) {
+                $query->where('e.department_id', $request->department_id);
+            }
+
+            if (isset($request->class_id) && filled($request->class_id)) {
+                $query->where('e.class_id', $request->class_id);
+            }
+
+            if (isset($request->session_id) && filled($request->session_id)) {
+                $query->where('e.session_id', $request->session_id);
+            }
+
+            if (isset($request->section_id) && filled($request->section_id)) {
+                $query->where('e.section_id', $request->section_id);
+            }
+
+            if (isset($request->student_name) && filled($request->student_name)) {
+                $name = $request->student_name;
+                $query->where(function ($q) use ($name) {
+                    $q->where('s.first_name', 'like', '%' . $name . '%')
+                    ->orWhere('s.last_name', 'like', '%' . $name . '%');
+                });
+            }
+
+            $students = $query->groupBy('e.student_id')->get()->toArray();
+            return $this->successResponse($students , 'Student record fetch successfully');
         }
     }
 
@@ -17321,58 +17356,69 @@ class ApiController extends BaseController
             if (isset($request->level_three_status)) {
                 $level_three_status = $request->level_three_status;
             }
+            
             $staff_id = $request->staff_id;
+            // echo $level_one_status;
+            // echo $level_two_status;
+            // echo $level_three_status;
+            // echo $staff_id;
+            // echo $request->academic_session_id;
+            // exit;
+            // dd($request);
             $leaveDetails = $conn->table('assign_leave_approval as alp')
-                ->select(
-                    'lev.id as leave_id',
-                    'alp.id',
-                    'alp.level_one_staff_id',
-                    'alp.level_one_staff_id',
-                    'alp.level_two_staff_id',
-                    'alp.level_three_staff_id',
-                    'lev.staff_id',
-                    DB::raw('CONCAT(stf.first_name, " ", stf.last_name) as name'),
-                    DB::raw('DATE_FORMAT(lev.from_leave, "%d-%m-%Y") as from_leave'),
-                    DB::raw('DATE_FORMAT(lev.to_leave, "%d-%m-%Y") as to_leave'),
-                    DB::raw('DATE_FORMAT(lev.created_at, "%d-%m-%Y") as created_at'),
-                    'lev.total_leave',
-                    DB::raw('DATEDIFF(lev.to_leave,lev.from_leave) as date_diff'),
-                    'lt.name as leave_type_name',
-                    'rs.name as reason_name',
-                    'lev.reason_id',
-                    'lev.document',
-                    'lev.status',
-                    'lev.remarks',
-                    'lev.leave_request',
-                    'lev.start_time',
-                    'lev.end_time',
-                    'lev.assiner_remarks',
-                    'lev.level_one_status',
-                    'lev.level_two_status',
-                    'lev.level_three_status',
-                    'lev.level_one_staff_remarks',
-                    'lev.level_two_staff_remarks',
-                    'lev.level_three_staff_remarks'
-                )
-                ->join('staffs as stf', 'alp.staff_id', '=', 'stf.id')
-                ->join('staff_leaves as lev', 'alp.staff_id', '=', 'lev.staff_id')
-                ->join('leave_types as lt', 'lev.leave_type', '=', 'lt.id')
-                ->leftJoin('teacher_absent_reasons as rs', 'lev.reason_id', '=', 'rs.id')
-                ->when($level_one_status != "All", function ($insone)  use ($level_one_status) {
-                    $insone->whereNotNull('alp.level_one_staff_id')->where('lev.level_one_status', $level_one_status);
-                })
-                ->when($level_two_status != "All", function ($insone)  use ($level_two_status) {
-                    $insone->whereNotNull('alp.level_two_staff_id')->where('lev.level_two_status', $level_two_status);
-                })
-                ->when($level_three_status != "All", function ($insone)  use ($level_three_status) {
-                    $insone->whereNotNull('alp.level_three_staff_id')->where('lev.level_three_status', $level_three_status);
-                })
-                ->where('alp.level_one_staff_id', $staff_id)
-                ->orWhere('alp.level_two_staff_id', $staff_id)
-                ->orWhere('alp.level_three_staff_id', $staff_id)
-                ->where('lev.academic_session_id', '=', $request->academic_session_id)
-                // ->orderBy('lev.from_leave', 'desc')
-                ->get();
+                    ->select(
+                        'lev.id as leave_id',
+                        'alp.id',
+                        'alp.level_one_staff_id',
+                        'alp.level_one_staff_id',
+                        'alp.level_two_staff_id',
+                        'alp.level_three_staff_id',
+                        'lev.staff_id',
+                        DB::raw('CONCAT(stf.first_name, " ", stf.last_name) as name'),
+                        DB::raw('DATE_FORMAT(lev.from_leave, "%d-%m-%Y") as from_leave'),
+                        DB::raw('DATE_FORMAT(lev.to_leave, "%d-%m-%Y") as to_leave'),
+                        DB::raw('DATE_FORMAT(lev.created_at, "%d-%m-%Y") as created_at'),
+                        'lev.total_leave',
+                        DB::raw('DATEDIFF(lev.to_leave,lev.from_leave) as date_diff'),
+                        'lt.name as leave_type_name',
+                        'rs.name as reason_name',
+                        'lev.reason_id',
+                        'lev.document',
+                        'lev.status',
+                        'lev.remarks',
+                        'lev.leave_request',
+                        'lev.start_time',
+                        'lev.end_time',
+                        'lev.assiner_remarks',
+                        'lev.level_one_status',
+                        'lev.level_two_status',
+                        'lev.level_three_status',
+                        'lev.level_one_staff_remarks',
+                        'lev.level_two_staff_remarks',
+                        'lev.level_three_staff_remarks'
+                    )
+                    ->leftJoin('staffs as stf', 'alp.staff_id', '=', 'stf.id')
+                    ->leftJoin('staff_leaves as lev', 'alp.staff_id', '=', 'lev.staff_id')
+                    ->leftJoin('leave_types as lt', 'lev.leave_type', '=', 'lt.id')
+                    ->leftJoin('teacher_absent_reasons as rs', 'lev.reason_id', '=', 'rs.id')
+                    ->where(function($query) use ($staff_id) {
+                        $query->where('alp.level_one_staff_id', $staff_id)
+                            ->orWhere('alp.level_two_staff_id', $staff_id)
+                            ->orWhere('alp.level_three_staff_id', $staff_id);
+                    })
+                    ->where('lev.academic_session_id', '=', $request->academic_session_id)
+                    ->when($level_one_status != "All", function ($query) use ($level_one_status) {
+                        $query->where('lev.level_one_status', $level_one_status);
+                    })
+                    ->when($level_two_status != "All", function ($query) use ($level_two_status) {
+                        $query->where('lev.level_two_status', $level_two_status);
+                    })
+                    ->when($level_three_status != "All", function ($query) use ($level_three_status) {
+                        $query->where('lev.level_three_status', $level_three_status);
+                    })
+                    ->orderBy('lev.from_leave', 'desc')
+                    ->get();
+            // dd($leaveDetails);
             $levelToShowArray = [];
             if (!empty($leaveDetails)) {
                 foreach ($leaveDetails as $val) {
