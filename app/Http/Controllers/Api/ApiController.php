@@ -3220,6 +3220,7 @@ class ApiController extends BaseController
             ->leftJoin("staff_designations as ds", DB::raw("FIND_IN_SET(ds.id,s.designation_id)"), ">", DB::raw("'0'"))
             ->leftJoin('stream_types as stp', 's.stream_type_id', '=', 'stp.id')
             ->where('s.is_active', '=', '0')
+            ->whereNull('s.deleted_at')
             ->orderBy('stp.name', 'desc')
             ->orderBy('s.salary_grade', 'desc')
             ->groupBy("s.id")
@@ -3259,6 +3260,7 @@ class ApiController extends BaseController
                     's.stream_type_id',
                     's.race',
                     's.joining_date',
+                    's.releive_date',
                     's.birthday',
                     's.gender',
                     's.religion',
@@ -3502,7 +3504,11 @@ class ApiController extends BaseController
                 $nric_number = isset($request->nric_number) ? Crypt::encryptString($request->nric_number) : "";
                 $passport = isset($request->passport) ? Crypt::encryptString($request->passport) : "";
                 $mobile_no = isset($request->mobile_no) ? Crypt::encryptString($request->mobile_no) : "";
-
+                if (isset($request->relieving_date)) {
+                    $working_status = '1';
+                } else {
+                    $working_status = '0';
+                }
                 $data=[
                     // 'staff_id' => $request->staff_id,
                     // 'name' => $request->name,
@@ -3517,6 +3523,8 @@ class ApiController extends BaseController
                     'stream_type_id' => $request->stream_type_id,
                     'race' => $request->race,
                     'joining_date' => $request->joining_date,
+                    'relieving_date' => $request->relieving_date,
+                    'working_status' => $working_status,
                     // 'birthday' => date("Y-m-d", strtotime($request->birthday)),
                     'birthday' => $request->birthday,
                     'gender' => $request->gender,
@@ -3708,10 +3716,15 @@ class ApiController extends BaseController
             // create new connection
             $staffConn = $this->createNewConnection($request->branch_id);
             // get data
-            $query = $staffConn->table('staffs')->where('id', $id)->delete();
-            $query = $staffConn->table('staff_bank_accounts')->where('staff_id', $id)->delete();
-            $query = User::where('user_id', $id)->where('branch_id', $request->branch_id)->delete();
-
+            $query = $staffConn->table('staffs')->where('id', $id)->update([
+                'deleted_by' => $request->deleted_by,
+                'deleted_at' => date("Y-m-d H:i:s")
+            ]);
+            //$query = $staffConn->table('staff_bank_accounts')->where('staff_id', $id)->delete();
+            $query = User::where('user_id', $id)->where('branch_id', $request->branch_id)->update([
+                'is_active' => '1',
+                'status' => '1'
+            ]);
             $success = [];
             if ($query) {
                 return $this->successResponse($success, 'Employee have been deleted successfully');

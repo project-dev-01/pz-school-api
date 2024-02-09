@@ -1122,4 +1122,7 @@ Route::group(['middleware' => ['auth:api', 'throttle:limit_per_user', 'logroute'
     Route::post('hide_unhide_dashboard', [ApiControllerThree::class, 'hideUnhideSave']);
     Route::post('get_data_hide_unhide_dashboard', [ApiControllerThree::class, 'getDataHideUnhideDashboard']);
     Route::get('staff_leave_history_dashboard', [ApiControllerThree::class, 'staffLeaveHistoryDashboard']);
+    ///student interview notes
+    Route::post('student_interview_list', [ApiControllerOne::class, 'getStudentInterviewList']);
+    Route::post('student_interview_add', [ApiControllerOne::class, 'addStudentInterview']);
 });

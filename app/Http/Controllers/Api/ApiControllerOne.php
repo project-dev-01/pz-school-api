@@ -11106,5 +11106,112 @@ class ApiControllerOne extends BaseController
                 ->get();
             return $this->successResponse($buletinDetails, 'Bulletin record fetch successfully');
         }
+       
+    }
+    public function getStudentInterviewList(Request $request){
+        $validator = \Validator::make($request->all(), [
+            // 'token' => 'required',
+            'branch_id' => 'required',
+        ]);
+
+        if (!$validator->passes()) {
+            return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
+        } else {
+            $department_id = $request->department_id;
+            $class_id = $request->class_id;
+            $section_id = $request->section_id;
+            $student_id  = $request->student_id;
+            // create new connection
+            $conn = $this->createNewConnection($request->branch_id);
+            if(empty($department_id))
+            {
+                $class_id = $request->class_id;
+                $id =  $conn->table('classes')->select("department_id")->where("id", $class_id)->first();
+                $department_id = $id->department_id;
+            }
+            $studentInterviewDetails = $conn->table('student_interview as si')
+            ->select('d1.name as department_name', 
+            'se.name as section_name', 
+            'cl.name as class_name', 
+            DB::raw('CONCAT(st.first_name, " ", st.last_name) as student_name'), 
+            DB::raw('MAX(sin.type) as latest_type'), 
+            'sin.type',
+            'sin.comment', 
+            'sin.title',
+            'sin.id')
+            ->leftJoin('students as s', 'si.student_id', '=', 's.id')
+            ->leftJoin('staff_departments as d1', 'si.department_id', '=', 'd1.id')
+            ->leftJoin('sections as se', 'si.section_id', '=', 'se.id')
+            ->leftJoin('classes as cl', 'si.class_id', '=', 'cl.id')
+            ->leftJoin('student_interview_notes as sin', 'si.id', '=', 'sin.student_interview_id')
+            ->where('si.class_id', $class_id)
+            ->where('si.section_id', $section_id)
+            ->where('si.department_id', $department_id)
+            ->where('si.student_id', $student_id)
+            ->groupBy('d1.name', 'se.name', 'cl.name', 'name', 'sin.comment', 'sin.title')
+            ->get();
+
+
+        
+            return $this->successResponse($studentInterviewDetails, 'Student interview list record fetch successfully');
+        }
+
+    }
+    public function addStudentInterview(Request $request){
+        
+        $validator = \Validator::make($request->all(), [
+            // 'token' => 'required',
+            'branch_id' => 'required',
+        ]);
+
+        //    return $request;
+        if (!$validator->passes()) {
+            return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
+        } else {
+
+            // create new connection
+            $conn = $this->createNewConnection($request->branch_id);
+            if (isset($request->file)) {
+                $now = now();
+                $name = strtotime($now);
+                $extension = $request->file_extension;
+                $fileName = $name . "." . $extension;
+                $path = '/public/' . $request->branch_id . '/admin-documents/student_interview/';
+                $base64 = base64_decode($request->file);
+                File::ensureDirectoryExists(base_path() . $path);
+                $file = base_path() . $path . $fileName;
+                $picture = file_put_contents($file, $base64);
+            } else {
+                $fileName = null;
+            }
+            $class_id = $request->class_id;
+            $dept_id =  $conn->table('classes')->select("department_id")->where("id", $class_id)->first();
+
+            $interviewId  = $conn->table('student_interview')->insertGetId([
+                'title' => $request->title,
+                'type' =>  $request->type,
+                'attachment' => $fileName,
+                'class_id' => $request->class_id,
+                'section_id' => $request->section_id,
+                'student_id' => $request->student_id,
+                'department_id'=> $dept_id->department_id,
+                'created_by' => $request->created_by,
+                'created_at' => date("Y-m-d H:i:s")
+            ]);
+            if (isset($interviewId)) {
+                $conn->table('student_interview_notes')->insert([
+                    'student_interview_id' => $interviewId,
+                    'type' => $request->type,
+                    'comment' => $request->comment,
+                    'created_at' => date("Y-m-d H:i:s")
+                ]);
+            }
+            $success = [];
+            if (!$interviewId) {
+                return $this->send500Error('Something went wrong.', ['error' => 'Something went wrong']);
+            } else {
+                return $this->successResponse($success, 'Student interview  has been successfully saved');
+            }
+        }
     }
 }
