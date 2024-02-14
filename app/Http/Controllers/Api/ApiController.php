@@ -3523,7 +3523,7 @@ class ApiController extends BaseController
                     'stream_type_id' => $request->stream_type_id,
                     'race' => $request->race,
                     'joining_date' => $request->joining_date,
-                    'relieving_date' => $request->relieving_date,
+                    'releive_date' => $request->relieving_date,
                     'working_status' => $working_status,
                     // 'birthday' => date("Y-m-d", strtotime($request->birthday)),
                     'birthday' => $request->birthday,
@@ -3717,6 +3717,8 @@ class ApiController extends BaseController
             $staffConn = $this->createNewConnection($request->branch_id);
             // get data
             $query = $staffConn->table('staffs')->where('id', $id)->update([
+                'working_status' => '1',
+                'releive_date'=>  date("Y-m-d"),
                 'deleted_by' => $request->deleted_by,
                 'deleted_at' => date("Y-m-d H:i:s")
             ]);
