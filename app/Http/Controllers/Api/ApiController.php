@@ -3504,7 +3504,7 @@ class ApiController extends BaseController
                 $nric_number = isset($request->nric_number) ? Crypt::encryptString($request->nric_number) : "";
                 $passport = isset($request->passport) ? Crypt::encryptString($request->passport) : "";
                 $mobile_no = isset($request->mobile_no) ? Crypt::encryptString($request->mobile_no) : "";
-                if (isset($request->relieving_date)) {
+                if (isset($request->releive_date)) {
                     $working_status = '1';
                 } else {
                     $working_status = '0';
@@ -3523,7 +3523,7 @@ class ApiController extends BaseController
                     'stream_type_id' => $request->stream_type_id,
                     'race' => $request->race,
                     'joining_date' => $request->joining_date,
-                    'releive_date' => $request->relieving_date,
+                    'releive_date' => isset($request->releive_date)?$request->releive_date:null,
                     'working_status' => $working_status,
                     // 'birthday' => date("Y-m-d", strtotime($request->birthday)),
                     'birthday' => $request->birthday,
@@ -13978,10 +13978,11 @@ class ApiController extends BaseController
             // create new connection
             $conn = $this->createNewConnection($request->branch_id);
             // get data
+            $parent_id = $request->parent_id;
             $parentDetails = $conn->table('parent_change_info as pi')->select("p.email", "pi.status_parent", "p.id as parent_id", "pi.id", "p.occupation", DB::raw("CONCAT(p.first_name, ' ', p.last_name) as name"))
-                ->leftJoin('parent as p', 'pi.parent_id', '=', 'p.id')->where('pi.status', $request->status)->get()->toArray();
+                ->leftJoin('parent as p', 'pi.parent_id', '=', 'p.id')->where('pi.parent_id', $parent_id)->where('pi.status', $request->status)->get()->toArray();
             $studentDetails = $conn->table('student_change_info as si')->select("s.email", "si.status_parent", "s.id as student_id", 'si.id', "s.roll_no", DB::raw("CONCAT(s.first_name, ' ', s.last_name) as name"))
-                ->leftJoin('students as s', 'si.student_id', '=', 's.id')->where('si.status', $request->status)->get()->toArray();
+                ->leftJoin('students as s', 'si.student_id', '=', 's.id')->where('si.parent_id', $parent_id)->where('si.status', $request->status)->get()->toArray();
             $details = array_merge($parentDetails, $studentDetails);
             return $this->successResponse($details, 'Parent record fetch successfully');
         }
