@@ -12368,6 +12368,8 @@ class ApiController extends BaseController
                     'last_name_english' => isset($request->last_name_english) ? $request->last_name_english : "",
                     'first_name_furigana' => isset($request->first_name_furigana) ? $request->first_name_furigana : "",
                     'last_name_furigana' => isset($request->last_name_furigana) ? $request->last_name_furigana : "",
+                    'first_name_common' => isset($request->first_name_common) ? $request->first_name_common : "",
+                    'last_name_common' => isset($request->last_name_common) ? $request->last_name_common : "",
                     'passport_expiry_date' => $request->passport_expiry_date,
                     'visa_number' => $request->visa_number,
                     'visa_expiry_date' => $request->visa_expiry_date,
@@ -13360,6 +13362,7 @@ class ApiController extends BaseController
                 ->select(
                     's.id',
                     DB::raw('CONCAT(s.first_name, " ", s.last_name) as name'),
+                    DB::raw('CONCAT(s.first_name_common, " ", s.last_name_common) as name_common'),
                     's.register_no',
                     's.roll_no',
                     's.mobile_no',
@@ -13552,6 +13555,8 @@ class ApiController extends BaseController
                     'last_name_english' => isset($request->last_name_english) ? $request->last_name_english : "",
                     'first_name_furigana' => isset($request->first_name_furigana) ? $request->first_name_furigana : "",
                     'last_name_furigana' => isset($request->last_name_furigana) ? $request->last_name_furigana : "",
+                    'first_name_common' => isset($request->first_name_common) ? $request->first_name_common : "",
+                    'last_name_common' => isset($request->last_name_common) ? $request->last_name_common : "",
                     'passport_expiry_date' => $request->passport_expiry_date,
                     'visa_number' => $request->visa_number,
                     'visa_expiry_date' => $request->visa_expiry_date,
@@ -13603,9 +13608,9 @@ class ApiController extends BaseController
                 ]);
 
 
+                $studentId = $request->student_id;
                 $studentName = $request->first_name . ' ' . $request->last_name;
 
-                // return
             }
 
             if (!$studentId) {
@@ -14377,7 +14382,11 @@ class ApiController extends BaseController
                                 if (Helper::decryptStringData($old->$key) != $request->$key) {
                                     $insertArr[$key] = Crypt::encryptString($request->$key);
                                 }
-                            } else {
+                            } else if ($key == "passport_photo") {
+                                    $insertArr[$key] = $passport_fileName;
+                            } else if ($key == "visa_photo") {
+                                    $insertArr[$key] = $visa_fileName;
+                            }  else {
                                 if ($old->$key != $request->$key) {
                                     $insertArr[$key] = $request->$key;
                                 }
@@ -21726,6 +21735,8 @@ class ApiController extends BaseController
                     'last_name_english' => isset($request->last_name_english) ? $request->last_name_english : "",
                     'first_name_furigana' => isset($request->first_name_furigana) ? $request->first_name_furigana : "",
                     'last_name_furigana' => isset($request->last_name_furigana) ? $request->last_name_furigana : "",
+                    'first_name_common' => isset($request->first_name_common) ? $request->first_name_common : "",
+                    'last_name_common' => isset($request->last_name_common) ? $request->last_name_common : "",
                     'race' => $request->race,
                     'religion' => $request->religion,
                     'blood_group' => $request->blood_group,
@@ -21891,7 +21902,8 @@ class ApiController extends BaseController
                     's.*',
                     DB::raw("CONCAT(s.first_name, ' ', s.last_name) as name"),
                     DB::raw("CONCAT(s.first_name_english, ' ', s.last_name_english) as name_english"),
-                    DB::raw("CONCAT(s.first_name_furigana, ' ', s.last_name) as name_furigana"),
+                    DB::raw("CONCAT(s.first_name_furigana, ' ', s.last_name_furigana) as name_furigana"),
+                    DB::raw("CONCAT(s.first_name_common, ' ', s.last_name_common) as name_common"),
                     'academic_cl.name as academic_grade',
                     'ay.name as academic_year',
                 )
@@ -22051,7 +22063,8 @@ class ApiController extends BaseController
                 if ($request->status == "Approved" || $request->phase_2_status == "Approved") {
 
 
-                    $assignedNumber = "9" . substr(str_shuffle("0123456789"), 0, 5);
+                    $current_year = date('y');
+                    $assignedNumber = "9" .$current_year. sprintf("%05d", $request->id);
                     $reverse_number  = array_reverse(array_map('intval', str_split($assignedNumber)));
                     // dd(array_reverse($reverse_number));
 
@@ -22063,7 +22076,7 @@ class ApiController extends BaseController
                         if ($key == 0) {
                             $multiply = $value * $evenNumber;
                         } else {
-                            if ($value % 2 == 1) {
+                            if ($key % 2 == 1) {
                                 $multiply = $value * $oddNumber;
                             } else {
                                 $multiply = $value * $evenNumber;
@@ -22130,6 +22143,8 @@ class ApiController extends BaseController
                 'last_name_english' => isset($request->last_name_english) ? $request->last_name_english : "",
                 'first_name_furigana' => isset($request->first_name_furigana) ? $request->first_name_furigana : "",
                 'last_name_furigana' => isset($request->last_name_furigana) ? $request->last_name_furigana : "",
+                'first_name_common' => isset($request->first_name_common) ? $request->first_name_common : "",
+                'last_name_common' => isset($request->last_name_common) ? $request->last_name_common : "",
                 'race' => $request->race,
                 'religion' => $request->religion,
                 'blood_group' => $request->blood_group,
@@ -24545,7 +24560,7 @@ class ApiController extends BaseController
 
                         $new = $conn->table('parent_change_info')->where('id', '=', $id)->first();
                         $old = $conn->table('parent')->where('id', '=', $parent_id)->first();
-
+                        $remarks = $new->remarks;
                         // dd(${$key});
                         if ($suc) {
                             // dd($key);
@@ -24571,8 +24586,11 @@ class ApiController extends BaseController
                         }
                     }
                 }
+                $output = [];
+                $output['remarks'] = $remarks;
+                $output['data'] = $parentObj;
 
-                return $this->successResponse($parentObj, 'Parent row fetch successfully');
+                return $this->successResponse($output, 'Parent row fetch successfully');
             } else if ($type == "Student") {
                 // get data
                 $getstudentDetails = $conn->table('student_change_info as sci')
@@ -24618,6 +24636,7 @@ class ApiController extends BaseController
                             ->leftJoin('classes as c', 'e.class_id', '=', 'c.id')
                             ->leftJoin('sections as sc', 'e.section_id', '=', 'sc.id')
                             ->where('s.id', '=', $student_id)->first();
+                        $remarks = $new->remarks;
                         // dd($old);
                         // dd(${$key});
                         if ($suc) {
@@ -24645,7 +24664,10 @@ class ApiController extends BaseController
                     }
                 }
 
-                return $this->successResponse($studentObj, 'Student row fetch successfully');
+                $output = [];
+                $output['remarks'] = $remarks;
+                $output['data'] = $studentObj;
+                return $this->successResponse($output, 'Student row fetch successfully');
             }
         }
     }
@@ -25207,4 +25229,42 @@ class ApiController extends BaseController
             return $this->successResponse($pdflist, 'Get Pdf Report successfully');
         }
     } 
+    // getChildHealthList
+    public function getChildHealthList(Request $request)
+    {
+        $validator = \Validator::make($request->all(), [
+            'branch_id' => 'required',
+            'token' => 'required',
+        ]);
+
+        if (!$validator->passes()) {
+            return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
+        } else {
+            // create new connection
+            $conn = $this->createNewConnection($request->branch_id);
+            // get data
+            $ChildHealthDetails = $conn->table('child_health')->get();
+            return $this->successResponse($ChildHealthDetails, 'Child Health record fetch successfully');
+        }
+    }
+    // get ChildHealth row details
+    public function getChildHealthDetails(Request $request)
+    {
+        $validator = \Validator::make($request->all(), [
+            'id' => 'required',
+            'branch_id' => 'required',
+            'token' => 'required'
+        ]);
+
+        if (!$validator->passes()) {
+            return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
+        } else {
+            $id = $request->id;
+            // create new connection
+            $conn = $this->createNewConnection($request->branch_id);
+            // get data
+            $ChildHealthDetails = $conn->table('child_health')->where('id', $id)->first();
+            return $this->successResponse($ChildHealthDetails, 'Child Health row fetch successfully');
+        }
+    }
 }

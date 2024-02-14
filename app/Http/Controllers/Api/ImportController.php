@@ -793,6 +793,33 @@ class ImportController extends BaseController
         }
         return $response;
     }
+    
+    // getLikeColumnName
+    public function getLikeColumnNameImport($request)
+    {
+        // return $request;
+        // create new connection
+        $conn = $this->createNewConnection($request['branch_id']);
+        // get dat
+        $table_name = $request['table_name'];
+        $name = explode(',', $request['name']);
+        if ($request['table_name'] == "role") {
+            $data = DB::table('roles')->select(DB::raw("group_concat(id) as id"))->whereIn('role_name', $name)->get();
+        } else if ($request['table_name'] == "parent") {
+            $data = $conn->table($table_name)->select("id")->whereIn('first_name', $name)->orWhereIn('last_name', $name)->get();
+        } else {
+            $data = $conn->table($table_name)->select(DB::raw("group_concat(id) as id"))->whereIn('name', $name)->get();
+        }
+
+        // return $data;
+        $response = "";
+        if (!$data->isEmpty()) {
+            if ($data[0]->id != null) {
+                $response = $data[0]->id;
+            }
+        }
+        return $response;
+    }
     public function importCsvExamMarks(Request $request)
     {
 
@@ -1271,5 +1298,578 @@ class ImportController extends BaseController
                 return $this->send422Error('Validation error.', ['error' => 'Invalid File Extension']);
             }
         }
+    }
+    // import Csv Students
+    public function importCsvChildHealth(Request $request)
+    {
+        // return 1;
+        // date('Y-m-d H:i:s', strtotime($old_date));
+        $date_month = date('m', strtotime($request->date));
+        $month = round($date_month) . "";
+        // dd($month);
+        $fileArray = [1, 2, 3, 4, 5, 6, 7];
+        $fileName = ["Basic", "Eyesight", "Hearing", "Internal", "Urine", "Ophthalmology", "Otorhinolaryngology"];
+        $fileCombine = [];
+        $fileConfirmation = [];
+        // Japanese header file format for validation 
+        // $fileCheck = [
+        //     '1' => [
+        //         "Grade",
+        //         "Class",
+        //         "Attendance No",
+        //         "Name",
+        //         "Gender",
+        //         "Height April",
+        //         "",
+        //         "Weight April",
+        //         "",
+        //         "Rohrer index  April",
+        //         "BMI  April",
+        //         "rate of obesity  April",
+        //         "standard weight  April",
+        //         "\nObese thin  April",
+        //         "nutritional status  April"
+        //     ],
+        //     '2' => [
+        //         "Grade",
+        //         "Class",
+        //         "Attendance No",
+        //         "Name",
+        //         "Gender",
+        //         "１Naked Eye Right",
+        //         "１Naked Eye Left",
+        //         "１Correction Right",
+        //         "１Correction Left",
+        //         "１One Eye",
+        //         "１Glasses, etc",
+        //         "Findings (eyesight 1)"
+        //     ],
+
+        //     "3" => [
+        //         "Grade",
+        //         "Class",
+        //         "Attendance No",
+        //         "Name",
+        //         "Gender",
+        //         "Right Hearing",
+        //         "Right1000Hz",
+        //         "Right4000Hz",
+        //         "Left Hearing",
+        //         "Left1000Hz",
+        //         "Left4000Hz",
+        //         "Findings(Hearing)"
+        //     ],
+
+        //     "4" => [
+        //         "Grade",
+        //         "Class",
+        //         "Attendance No",
+        //         "Name",
+        //         "Gender",
+        //         "\nNutritional status April",
+        //         "\nMedical examination results",
+        //         "Spine",
+        //         "Findings(Spine)",
+        //         "Chest",
+        //         "Findings(Chest)",
+        //         "\nlimb condition",
+        //         "Findings(limb condition)",
+        //         "disturbance of motility",
+        //         "\nskin diseases",
+        //         "Findings(skin diseases)",
+        //         "\nGuidance category (tuberculosis)",
+        //         "electrocardiogram findings",
+        //         "Findings(Heart primary)",
+        //         "\nheart disease",
+        //         "Instruction category",
+        //         "Other diseases",
+        //         "Other",
+        //         "Remark",
+        //         "Date of consultation (skin)"
+        //     ],
+
+        //     "5" => [
+        //         "Grade",
+        //         "Class",
+        //         "Attendance No",
+        //         "Name",
+        //         "Gender",
+        //         "\nUrine protein primary",
+        //         " urine glucose primary",
+        //         "urine occult blood primary",
+        //         "findings(Urine)",
+        //         "kidney disease"
+        //     ],
+
+        //     "6" => [
+        //         "Grade",
+        //         "Class",
+        //         "Attendance No",
+        //         "Name",
+        //         "Gender",
+        //         "\ninfectious eye diseases",
+        //         "Other eye diseases",
+        //         "\nFindings (ophthalmology)",
+        //         "color blindness"
+        //     ],
+
+        //     '7' => [
+        //         "Grade",
+        //         "Class",
+        //         "Attendance No",
+        //         "Name",
+        //         "Gender",
+        //         "\near disease",
+        //         "nose disease",
+        //         "Pharyngeal disease",
+        //         "\nFindings (ear/nose)"
+        //     ],
+        // ];
+        // Japanese header file format for validation 
+        $fileCheck = [
+            '1' => [
+                "学年",
+                "学級",
+                "番号",
+                "氏名",
+                "性別",
+                "身長" . $month . "月",
+                "",
+                "体重" . $month . "月",
+                "",
+                "ローレル指数 " . $month . "月",
+                "ＢＭＩ " . $month . "月",
+                "肥満度 " . $month . "月",
+                "標準体重 " . $month . "月",
+                "肥満やせ " . $month . "月",
+                "栄養状態 " . $month . "月"
+            ],
+            '2' => [
+                "学年",
+                "学級",
+                "番号",
+                "氏名",
+                "性別",
+                "１裸眼右",
+                "１裸眼左",
+                "１矯正右",
+                "１矯正左",
+                "１片眼",
+                "１メガネ等",
+                "所見（視力1）"
+            ],
+
+            "3" => [
+                "学年",
+                "学級",
+                "番号",
+                "氏名",
+                "性別",
+                "右聴力",
+                "右1000Hz",
+                "右4000Hz",
+                "左聴力",
+                "左1000Hz",
+                "左4000Hz",
+                "所見（聴力）"
+            ],
+
+            "4" => [
+                "学年",
+                "学級",
+                "番号",
+                "氏名",
+                "性別",
+                "栄養状態 " . $month . "月",
+                "検診結果",
+                "脊柱",
+                "所見（脊柱）",
+                "胸郭",
+                "所見（胸郭）",
+                "四肢の状態",
+                "所見（四肢の状態）",
+                "運動機能障害",
+                "皮膚疾患",
+                "所見（皮膚）",
+                "指導区分（結核）",
+                "心電図所見",
+                "所見（心臓一次）",
+                "心臓疾病",
+                "指導区分",
+                "その他の疾病",
+                "その他",
+                "備考",
+                "受診日（皮膚）"
+            ],
+
+            "5" => [
+                "学年",
+                "学級",
+                "番号",
+                "氏名",
+                "性別",
+                "尿蛋白 １次",
+                "尿糖 １次",
+                "尿潜血 １次",
+                "所見（尿）",
+                "腎臓疾患"
+            ],
+
+            "6" => [
+                "学年",
+                "学級",
+                "番号",
+                "氏名",
+                "性別",
+                "伝染性眼疾患",
+                "その他の眼疾",
+                "所見（眼科）",
+                "色覚異常"
+            ],
+
+            '7' => [
+                "学年",
+                "学級",
+                "番号",
+                "氏名",
+                "性別",
+                "耳疾",
+                "鼻疾",
+                "咽頭",
+                "所見（耳鼻）"
+            ],
+        ];
+        foreach ($request->file as $fik => $files) {
+            $filename = $files['fileName'];
+            $extension = $files['extension'];
+            $fileSize = $files['fileSize'];
+            // header('Content-type: text/plain; charset=utf-8');
+
+            // return $request;
+            // Valid File Extensions
+            $valid_extension = array("csv");
+            // 2MB in Bytes
+            $maxFileSize = 2097152;
+            // Check file extension
+            if (in_array(strtolower($extension), $valid_extension)) {
+                // Check file size
+
+                // return $extension;
+                if ($fileSize <= $maxFileSize) {
+
+                    // return $filename;
+                    // File upload location
+                    $path = base_path() . '/public/' . $request->branch_id . '/uploads/';
+                    // return $files;
+                    $base64 = base64_decode($files['base64']);
+                    File::ensureDirectoryExists($path);
+                    $file = $path . $filename;
+                    $picture = file_put_contents($file, $base64);
+
+                    // return $picture;
+                    // Upload file
+                    // Import CSV to Database
+                    $filepath = $path . $filename;
+                    // Reading file
+                    $file = fopen($filepath, "r");
+                    // dd(fgets($file))
+                    $importData_arr = array();
+                    $i = 0;
+                    $rowcheck = 0;
+                    while (($filedata = fgetcsv($file, 1000, ",")) !== FALSE) {
+                        $num = count($filedata);
+                        // Skip first row (Remove below comment if you want to skip the first row)
+                        // if ($i <= $rowcheck) {
+                        //     $i++;
+                        //     continue;
+                        // }
+                        // $i++;
+                        for ($c = 0; $c < $num; $c++) {
+                            // return $filedata[1];
+                            // if ($filedata[0] == "Grade") {
+                            if ($filedata[0] == "学年") {
+                                $rowcheck = $i;
+                            }
+                            if ($rowcheck > 0 && $i >= $rowcheck) {
+                                $importData_arr[$i][] = $filedata[$c];
+                            }
+                        }
+                        $i++;
+                    }
+
+                    //to get file validation cloumn name
+                    // if ($fik == 6) {
+                    //     return $importData_arr;
+                    // }
+                    //
+                    fclose($file);
+                    $dummyInc = 1;
+                    // return $importData_arr;
+                    // Insert to MySQL database
+                    foreach ($importData_arr as $importData) {
+                        if ($dummyInc == 1) {
+                            foreach ($fileCheck as $key => $check) {
+
+                                // Normalize characters in both arrays
+                                $fileCheckNormalized = $this->normalizeJapaneseArray($check);
+                                $fileDynamicNormalized = $this->normalizeJapaneseArray($importData);
+
+                                // Compare arrays and check for differences
+                                $differences = array_diff($fileCheckNormalized, $fileDynamicNormalized);
+
+                                if (empty($differences)) {
+                                    // echo "The arrays are the same.";
+                                    array_push($fileConfirmation, $key);
+                                    $fileCombine[$key] = $importData_arr;
+                                }
+                            }
+                        }
+                        $dummyInc;
+                    }
+                    
+                    // return 1;
+                } else {
+                    return $this->send422Error('Validation error.', ['error' => ['File too large. File must be less than 2MB.']]);
+                }
+            } else {
+                return $this->send422Error('Validation error.', ['error' => ["Extension" => ['Invalid File Extension']]]);
+            }
+        }
+        $diff = array_diff($fileArray, $fileConfirmation);
+        $tags = [];
+        foreach ($diff as $dif) {
+            $f_name = $fileName[$dif - 1];
+            array_push($tags, $f_name);
+        }
+        $missingFile = implode(',', $tags);
+        $request['missing_file'] = $missingFile;
+
+        // dd($fileConfirmation);
+        $validator = \Validator::make($request->all(), [
+            'branch_id' => 'required',
+            'file' => 'min:7|max:7',
+            'missing_file' => 'max:0'
+        ], [
+            'file.min' => '7 Files Required',
+            'file.max' => '7 Files Required',
+            'missing_file.max' => $missingFile,
+        ]);
+
+        if (!$validator->passes()) {
+            return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
+        } else {
+            // create new connection
+            $combine_array = collect($fileCombine)->reverse()->toArray();
+
+            $inc = 1;
+            // Insert to MySQL database
+            foreach ($combine_array as $key => $combineData) {
+
+                // dd($key);
+                foreach ($combineData as $importData) {
+                    
+                    $roll_no = $importData[2];
+                    $gender = $importData[4];
+
+                    $dynamic_row = [
+                        ['table_name' => 'classes', 'number' => '0'],
+                        ['table_name' => 'sections', 'number' => '1'],
+                    ];
+
+                    $dynamic_data = [];
+                    foreach ($dynamic_row as $row) {
+                        $number = $row['number'];
+                        $column = [
+                            // 'token' => $request->token,
+                            'branch_id' => $request->branch_id,
+                            'name' => $importData[$number],
+                            'table_name' => $row['table_name']
+                        ];
+                        // dd($column);
+                        // return $column;
+                        $row = $this->getLikeColumnNameImport($column);
+                        $dynamic_data[$number] = $row;
+                    }
+                    
+                    // return 1;
+                    // create new connection
+                    $conn = $this->createNewConnection($request->branch_id);
+                    $student = $conn->table('enrolls')->where([
+                        'class_id' => $dynamic_data[0],
+                        'section_id' => $dynamic_data[1],
+                        'roll' => $roll_no,
+                        'active_status' => "0"
+                    ])->first();
+                    if (isset($student->student_id)) {
+
+                        $student_id = $student->student_id;
+                        $student_data = [
+                            'class' => $dynamic_data[0],
+                            'section' => $dynamic_data[1],
+                            'student_id' => $student_id,
+                            'roll_no' => $roll_no,
+                            'gender' => $gender,
+                            'created_at' => date("Y-m-d H:i:s")
+                        ];
+                        if ($key == 1) {
+                            $height = $importData[5];
+                            $weight = $importData[7];
+                            $health_data = [
+                                'height' => $height,
+                                'weight' => $weight,
+                            ];
+                        } else if ($key == 2) {
+                            $eye_sight_right = "(" . $importData[5] . " " . $importData[7] . ")";
+                            $eye_sight_left = "(" . $importData[6] . " " . $importData[8] . ")";
+                            $health_data = [
+                                'eye_sight_right' => $eye_sight_right,
+                                'eye_sight_left' => $eye_sight_left,
+                            ];
+                        } else if ($key == 3) {
+                            
+                            $hearing_right = "";
+                            if($importData[5]=="異常なし"){
+                                $hearing_right = "/";
+                            }else if($importData[5]=="未健診"){
+                                $hearing_right = "未検診";
+                            }else if($importData[5]=="要受診"){
+                                if($importData[6]<=30 && $importData[7]<=25 ){
+                                    $hearing_right = "/";
+                                }else if($importData[6] > 30 && $importData[7]<=25 ){
+                                    $hearing_right = "1000Hz";
+                                }else if($importData[6]>30 && $importData[7]>25 ){
+                                    $hearing_right = "1000Hz, 4000Hz";
+                                }else if($importData[6]<=30 && $importData[7]>25 ){
+                                    $hearing_right = "4000Hz";
+                                }
+                            }
+                            $hearing_left = "";
+                            if($importData[8]=="異常なし"){
+                                $hearing_left = "/";
+                            }else if($importData[8]=="未健診"){
+                                $hearing_left = "未検診";
+                            }else if($importData[8]=="要受診"){
+                                if($importData[9]<=30 && $importData[10]<=25 ){
+                                    $hearing_left = "/";
+                                }else if($importData[9] > 30 && $importData[10]<=25 ){
+                                    $hearing_left = "1000Hz";
+                                }else if($importData[9]>30 && $importData[10]>25 ){
+                                    $hearing_left = "1000Hz, 4000Hz";
+                                }else if($importData[9]<=30 && $importData[10]>25 ){
+                                    $hearing_left = "4000Hz";
+                                }
+                            }
+                            // $hearing_right = "(" . $importData[6] . " " . $importData[7] . ")";
+                            // $hearing_left = "(" . $importData[9] . " " . $importData[10] . ")";
+                            $health_data = [
+                                'hearing_right' => $hearing_right,
+                                'hearing_left' => $hearing_left,
+                            ];
+                        } else if ($key == 4) {
+                            $nutritional_status = $importData[5];
+                            if($importData[7]=="異常なし" && $importData[8]=="異常なし" && $importData[9]=="異常なし"){
+                                $spine_chest_limb = "/";
+                            }else{
+                                $spine = ($importData[7] == "異常なし") ? "" :  $importData[7].",";
+                                $chest = ($importData[8] == "異常なし") ? "" :  $importData[8].",";
+                                $limb = ($importData[9] == "異常なし") ? "" :  $importData[9];
+                                $spine_chest_limb = $spine.$chest.$limb;
+                            }
+                            // $spine_chest_limb = $importData[7];
+                            $skin_diseases = $importData[14];
+                            $heart_clinical_medical_examination = $importData[17];
+                            
+                            if(($importData[19]=="正常範囲" || $importData[19]=="管理不要") && ($importData[20]=="正常範囲" || $importData[20]=="管理不要")){
+                                $heart_diseases_abnormalities = "/";
+                            }else{
+                                $hda1 = ($importData[19] == "正常範囲" || "管理不要") ? "" :  $importData[19].",";
+                                $hda2 = ($importData[20] == "正常範囲" || "管理不要") ? "" :  $importData[20];
+                                $heart_diseases_abnormalities = $hda1.$hda2;
+                            }
+                            // $heart_diseases_abnormalities = $importData[19];
+                            $school_doctors_date = $importData[24];
+                            $remarks = $importData[23];
+                            $health_data = [
+                                'nutritional_status' => $nutritional_status,
+                                'spine_chest_limb' => $spine_chest_limb,
+                                'skin_diseases' => $skin_diseases,
+                                'heart_clinical_medical_examination' => $heart_clinical_medical_examination,
+                                'heart_diseases_abnormalities' => $heart_diseases_abnormalities,
+                                'school_doctors_date' => $school_doctors_date,
+                                'remarks' => $remarks,
+                            ];
+                        } else if ($key == 5) {
+                            $urine_protein = $importData[5];
+                            $urine_glucose = $importData[6];
+                            $urine = $importData[7];
+                            $follow_up_treatments = $importData[8];
+                            $other_diseases_abnormalities = $importData[9];
+                            $health_data = [
+                                'urine_protein' => $urine_protein,
+                                'urine_glucose' => $urine_glucose,
+                                'urine' => $urine,
+                                'follow_up_treatments' => $follow_up_treatments,
+                                'other_diseases_abnormalities' => $other_diseases_abnormalities,
+                            ];
+                        } else if ($key == 6) {
+                            
+                            if($importData[5]=="異常なし" && $importData[6]=="異常なし"){
+                                $eye_diseases_abnormalities = "/";
+                            }else{
+                                $eda1 = ($importData[5] == "異常なし") ? "" :  $importData[5].",";
+                                $eda2 = ($importData[6] == "異常なし") ? "" :  $importData[6];
+                                $eye_diseases_abnormalities = $eda1.$eda2;
+                            }
+                            // $eye_diseases_abnormalities = $importData[5];
+                            $health_data = [
+                                'eye_diseases_abnormalities' => $eye_diseases_abnormalities,
+                            ];
+                        } else if ($key == 7) {
+                            
+                            if($importData[5]=="異常なし" && $importData[6]=="異常なし" && $importData[7]=="異常なし"){
+                                $otorhinolaryngopathy = "/";
+                            }else{
+                                $ear = ($importData[5] == "異常なし") ? "" :  $importData[5].",";
+                                $nose = ($importData[6] == "異常なし") ? "" :  $importData[6].",";
+                                $pharyngeal = ($importData[7] == "異常なし") ? "" :  $importData[7];
+                                $otorhinolaryngopathy = $ear.$nose.$pharyngeal;
+                            }
+                            // $otorhinolaryngopathy = $importData[5];
+                            $health_data = [
+                                'otorhinolaryngopathy' => $otorhinolaryngopathy,
+                            ];
+                        }
+
+                        if ($conn->table('child_health')->where([['class', '=', $dynamic_data[0]], ['section', '=', $dynamic_data[1]], ['student_id', '=', $student_id]])->count() < 1) {
+                            $conn->table('child_health')->insert($student_data);
+                        }
+                        $conn->table('child_health')->where([['class', '=', $dynamic_data[0]], ['section', '=', $dynamic_data[1]], ['student_id', '=', $student_id]])->update($health_data);
+                    }
+
+                    // $inc++;
+                }
+            }
+
+            // return 1;
+            // if (\File::exists($filepath)) {
+            //     \File::delete($filepath);
+            // }
+            return $this->successResponse([], 'Import Successful');
+        }
+    }
+    private function normalizeJapaneseArray($array)
+    {
+        return array_map(function ($string) {
+            // Remove leading and trailing whitespaces, as well as non-printable characters
+            $trimmed = preg_replace('/[^\p{L}\p{N}\s]/u', '', $string);
+
+            // Convert to lowercase
+            $lowercase = mb_strtolower($trimmed, 'UTF-8');
+
+            // Convert full-width numerals to half-width
+            $normalized = mb_convert_kana($lowercase, 'n');
+
+            return $normalized;
+        }, $array);
     }
 }

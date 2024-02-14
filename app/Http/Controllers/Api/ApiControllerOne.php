@@ -11214,4 +11214,161 @@ class ApiControllerOne extends BaseController
             }
         }
     }
+    
+
+    public function childHealthExport(Request $request)
+    {
+        // return 1;
+        $validator = \Validator::make($request->all(), [
+            'branch_id' => 'required',
+            // 'token' => 'required',
+            // 'student_id' => 'required',
+        ]);
+        if (!$validator->passes()) {
+            return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
+        } else {
+            $conn = $this->createNewConnection($request->branch_id);
+
+            $department_id = isset($request->department_id)?$request->department_id:null;
+            $class_id = isset($request->class_id)?$request->class_id:null;
+            $session_id = isset($request->session_id)?$request->session_id:0;
+            $section_id = isset($request->section_id)?$request->section_id:null;
+            $name = isset($request->student_name)?$request->student_name:null;
+            if($request->student_id){
+                $studentData = $conn->table('students as s')
+                ->select(
+                    's.id',
+                    DB::raw('CONCAT(s.first_name, " ", s.last_name) as name'),
+                    's.email',
+                    's.photo',
+                    's.roll_no',
+                    's.gender',
+                )
+                ->whereIn('s.id', $request->student_id)
+                ->get()->toArray();
+            }else{
+
+                $query = $conn->table('enrolls as e')
+                ->select(
+                    's.id',
+                    DB::raw('CONCAT(s.first_name, " ", s.last_name) as name'),
+                    's.email',
+                    's.photo',
+                    's.gender',
+                    's.roll_no',
+                )
+                ->leftJoin('students as s', 'e.student_id', '=', 's.id')
+                ->where('e.academic_session_id', '=', $request->academic_session_id);
+
+            // if (isset($request->department_id) && filled($request->department_id)) {
+            //     $query->where('e.department_id', $request->department_id);
+            // }
+
+            if (isset($request->class_id) && filled($request->class_id)) {
+                $query->where('e.class_id', $request->class_id);
+            }
+
+            if (isset($request->session_id) && filled($request->session_id)) {
+                $query->where('e.session_id', $request->session_id);
+            }
+
+            if (isset($request->section_id) && filled($request->section_id)) {
+                $query->where('e.section_id', $request->section_id);
+            }
+
+            if (isset($request->student_name) && filled($request->student_name)) {
+                $name = $request->student_name;
+                $query->where(function ($q) use ($name) {
+                    $q->where('s.first_name', 'like', '%' . $name . '%')
+                    ->orWhere('s.last_name', 'like', '%' . $name . '%');
+                });
+            }
+
+            $studentData = $query->groupBy('e.student_id')->get()->toArray();
+            
+            // return 1;
+            }
+            // dd($studentData);
+                // return $studentData;
+                $col_array = [ 
+                    0 => "class",
+                    1 => "section",
+                    2 => "height",
+                    3 => "weight",
+                    4 => "nutritional_status",
+                    5 => "spine_chest_limb",
+                    6 => "eye_sight_right",
+                    7 => "eye_sight_left",
+                    8 => "eye_diseases_abnormalities",
+                    9 => "hearing_right",
+                    10 => "hearing_left",
+                    11 => "otorhinolaryngopathy",
+                    12 => "skin_diseases",
+                    13 => "heart_clinical_medical_examination",
+                    14 => "heart_diseases_abnormalities",
+                    15 => "urine_protein",
+                    16 => "urine_glucose",
+                    17 => "urine",
+                    18 => "other_diseases_abnormalities",
+                    19 => "school_doctors_date",
+                    20 => "follow_up_treatments",
+                    21 => "remarks"
+                ];
+            $count = 0;
+            $detail = [];
+            // dd($studentData);
+            if (!empty($studentData)) {
+                foreach ($studentData as $key => $value) {
+
+                    $health = $conn->table('child_health as ch')
+                    ->select(
+                        'ch.*',
+                        DB::raw('CONCAT(st.first_name, " ", st.last_name) as name'),
+                        'st.email',
+                        'st.photo',
+                        'st.roll_no',
+                        'c.name as class',
+                        's.name as section'
+                    )
+                    // ->join('enrolls as en', 'en.student_id', '=', 'fa.student_id')
+                    ->leftJoin('students as st', 'ch.student_id', '=', 'st.id')
+                    ->leftJoin('classes as c', 'ch.class', '=', 'c.id')
+                    ->leftJoin('sections as s', 'ch.section', '=', 's.id')
+                    ->where([
+                        ['ch.student_id', '=', $value->id]
+                    ])
+                    ->orderBy('ch.department', 'asc')
+                    ->orderBy('c.name', 'desc')
+                    ->orderBy('s.name', 'desc')
+                    ->get()->toArray();
+                    $arrData = [];
+                    $grade = [];
+                    foreach($health as $he){
+                        $grade[] = $he->class;
+                        foreach($col_array as $ca){
+                            $arrData[$ca][$he->class] = $he->$ca;
+                        }
+                    }
+                
+                    // if($value->id==2){
+                    //     dd($arrData);
+                    // }
+                    $details[$count]['grade'] = $grade;
+                    $details[$count]['details'] = $value;
+                    $details[$count]['child_health'] = $arrData;
+                    $count++;
+                }
+            }
+            // dd($details);
+            // $details['grade'] = $grade;
+            // $details['child_health'] = $arrData;
+            $output['department'] = $conn->table('classes as c')->select('sd.id','sd.name',DB::raw('COUNT(c.department_id) as "count"'))
+            ->leftJoin('staff_departments as sd', 'c.department_id', '=', 'sd.id')->where('c.department_id','!=',0)->groupBy('sd.id')->get();
+            
+            $output['grade'] = $conn->table('classes as c')->select('c.name','c.id','c.department_id','c.name_numeric')
+            ->orderBy('c.department_id', 'asc')->whereNotNull('c.department_id')->where('c.department_id','!=',0)->get();
+            $output['student'] = $details;
+            return $this->successResponse($output, 'Child Health record fetch successfully');
+        }
+    }
 }

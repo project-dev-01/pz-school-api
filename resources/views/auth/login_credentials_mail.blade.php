@@ -5,6 +5,6 @@
 	<h4>Login Details:</h4>
 	<h2>Link : {{ $link }}</h2>
 	<h2>Email : {{ $email }}</h2>
-	<h2>Password {{ $password }}</h2>
+	<h2>Password : {{ $password }}</h2>
 </p>
 </div>

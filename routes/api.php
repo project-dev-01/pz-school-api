@@ -676,6 +676,7 @@ Route::group(['middleware' => ['auth:api', 'throttle:limit_per_user', 'logroute'
     Route::post('importcsv/exam_timetable', [ApiControllerOne::class, 'addExamTimetable']);
     //import expense details in csv
     Route::post('importcsv/expense', [ImportController::class, 'importCsvExpense']);
+    Route::post('importcsv/child_health', [ImportController::class, 'importCsvChildHealth']);
 
     // exam results routes
     // by class
@@ -864,6 +865,7 @@ Route::group(['middleware' => ['auth:api', 'throttle:limit_per_user', 'logroute'
     Route::post('fees/get_pay_mode_id', [ApiControllerOne::class, 'getPayModeID']);
     // fees 
     Route::post('fees/expense/export', [ApiControllerOne::class, 'feesExpenseExport']);
+    Route::post('child/health/export', [ApiControllerOne::class, 'childHealthExport']);
     Route::post('fees/get_fees_expense_students', [ApiControllerOne::class, 'getFeesExpenseStudents']);
     Route::post('fees/expense/update', [ApiControllerOne::class, 'feesExpenseUpdate']);
     Route::post('fees/get_fees_allocated_students', [ApiControllerOne::class, 'getFeesAllocatedStudents']);
@@ -1125,4 +1127,7 @@ Route::group(['middleware' => ['auth:api', 'throttle:limit_per_user', 'logroute'
     ///student interview notes
     Route::post('student_interview_list', [ApiControllerOne::class, 'getStudentInterviewList']);
     Route::post('student_interview_add', [ApiControllerOne::class, 'addStudentInterview']);
+    Route::get('child_health/list', [ApiControllerOne::class, 'getChildHealthList']);
+    Route::post('child_health/child_health-details', [ApiControllerOne::class, 'getChildHealthDetails']);
+
 });
