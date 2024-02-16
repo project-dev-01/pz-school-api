@@ -30,6 +30,7 @@ Route::post('indexing_migrate', [CommonController::class, 'indexingMigrate']);
 
 Route::post('login', [AuthController::class, 'authenticate']);
 Route::post('loginSA', [AuthController::class, 'authenticateSA']);
+Route::post('login_guest', [AuthController::class, 'authenticateGuest']);
 Route::post('login_branch', [AuthController::class, 'authenticateWithBranch']);
 Route::post('reset_password', [AuthController::class, 'resetPassword']);
 Route::post('reset_password_validation', [AuthController::class, 'resetPasswordValidation']);

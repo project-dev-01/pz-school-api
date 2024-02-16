@@ -183,6 +183,162 @@ class AuthController extends BaseController
             // dd($getUser);
             // $getUser = User::where('email', $request->email)->first();
             $login_attempt = isset($getUser->login_attempt) ? $getUser->login_attempt : null;
+            if (isset($login_attempt)) {
+                if ($login_attempt <= 2) {
+                    $login_attempt = ($login_attempt + 1);
+                    $user = User::find($getUser->id);
+                    $user->login_attempt = $login_attempt;
+                    if ($login_attempt > 2) {
+                        $user->status = '1';
+                    }
+                    $user->save();
+                    $left = (3 - $login_attempt);
+                    if ($left == 0) {
+                        return $this->send401Error("Your account has been locked because your password is incorrect. Please contact the admin", ["error" => "Your account has been locked because your password is incorrect. Please contact the admin"]);
+                    } else {
+                        return $this->send401Error("The password is incorrect and you only have $left attempts left", ["error" => "The password is incorrect and you only have $left attempts left"]);
+                    }
+                } else {
+                    return $this->send500Error('Your account has been locked after more than 3 attempts. Please contact the admin', ['error' => 'Your account has been locked after more than 3 attempts. Please contact the admin']);
+                }
+            } else {
+                return $this->send401Error('Unauthorised.', ['error' => 'Unauthorised']);
+            }
+        }
+    }
+    public function authenticateGuest(Request $request)
+    {
+        // return 1;
+        $credentials = $request->only('email', 'password', 'branch_id');
+        //valid credential
+        $validator = Validator::make($credentials, [
+            'email' => 'required|email',
+            'password' => 'required|string|min:6|max:50',
+            'branch_id' => 'required'
+        ]);
+        //Send failed response if request is not valid
+        if ($validator->fails()) {
+            return $this->send422Error('Validation error.', ['error' => $validator->messages()]);
+        }
+        // dd(Session::getId());
+        // check auth
+        if (Auth::attempt(['email' => $request->email,'role_id'=>$request->role_id, 'password' => $request->password, 'branch_id' => $request->branch_id])) {
+            // after auth login
+            $user = Auth::user();
+            $token =  $user->createToken('paxsuzen')->accessToken;
+
+            // return $user;
+            // $success['name'] =  $user->name;
+            // return $this->successResponse($success, 'User signed in successfully');
+            // $user = auth()->user();
+            // User::where('id', $user->id)->update(['remember_token' => $token]);
+            // Auth::logoutOtherDevices($request->password);
+            if ($user->status == 0) {
+                
+                // update left to 0
+                $getUser = User::where(['email' => $request->email,'role_id'=>$request->role_id, 'branch_id' => $request->branch_id])->first();
+                $user = User::find($getUser->id);
+                $user->login_attempt = 0;
+                $user->session_id = $token;
+                $user->save();
+                // dd($user->id);
+                // return 1;
+                //User::where('id', $user->id)->update(['session_id', \Session::getId()]);
+                $country = "";
+                $country_code = "";
+                $ip_info = "";
+                $ipAddress = \Request::getClientIp(true);
+                // $ipAddress = "162.216.140.3";
+                // Get the client's IP address
+                if ($ipAddress != '::1' || $ipAddress != '127.0.0.1') {
+                    try {
+                        $url = "http://ip-api.com/json/{$ipAddress}";
+
+                        $response = Http::get($url);
+
+                        $ip_info = $response->json();
+
+                        $country = $ip_info['country'] ?? 'Unknown';
+                        $country_code = $ip_info['countryCode'] ?? 'Unknown';
+                    } catch (Exception $e) {
+
+                        $country = 'Unknown';
+                        $country_code = 'Unknown';
+                    }
+                }
+                //dd($ip_info);
+                $data = [
+                    'login_id' => $user->id,
+                    'user_id' => $user->user_id,
+                    'role_id' => $user->role_id,
+                    'branch_id' => $user->branch_id,
+                    'ip_address' => \Request::getClientIp(true),
+                    'device' => isset($request->user_device) ? $request->user_device : "other",
+                    'browser' => isset($request->user_browser) ? $request->user_browser : "other",
+                    'os' => isset($request->user_os) ? $request->user_os : "other",
+                    'country' => isset($country) ? $country : 'Unknown',
+                    'countrycode' => isset($country_code) ? $country_code : 'Unknown',
+                    'ip_info' => json_encode($ip_info),
+                    'login_time' => date("Y-m-d H:i:s"),
+                    'created_at' => date("Y-m-d H:i:s")
+                ];
+                
+                //$query = $staffConn->table('staff_leaves')->insert($data);
+                $query = Log_history::insert($data);
+
+                $success['token'] = $token;
+                $success['user'] = $user;
+                $success['role_name'] = $user->role->role_name;
+                $success['subsDetails'] = $user->subsDetails;
+                if ($user->role->id == 5) {
+                    $branch_id = $user->subsDetails->id;
+                    $Connection = $this->createNewConnection($branch_id);
+                    $StudentID = $Connection->table('students')
+                        ->select(
+                            'id',
+                            DB::raw("CONCAT(first_name, ' ', last_name) as name")
+                        )
+                        ->where('father_id', '=', $user->user_id)
+                        ->orWhere('mother_id', '=', $user->user_id)
+                        ->orWhere('guardian_id', '=', $user->user_id)
+                        ->get();
+                    $success['StudentID'] = $StudentID;
+                }
+                if (isset($user->subsDetails->id)) {
+                    $branch_id = $user->subsDetails->id;
+                    $Connection = $this->createNewConnection($branch_id);
+                    $academicSession = $Connection->table('global_settings as glo')
+                        ->select(
+                            'glo.year_id',
+                            'lan.name as language_name',
+                            'glo.footer_text'
+                        )
+                        ->leftJoin('language as lan', 'lan.id', '=', 'glo.language_id')
+                        ->first();
+                    $checkInOutTime = $Connection->table('check_in_out_time as ct')
+                        ->select(
+                            'ct.check_in',
+                            'ct.check_out',
+                        )->first();
+                    $hiddenWeekends = $Connection->table('work_weeks')
+                        ->where('status', '=', '1')
+                        ->select('day_value')
+                        ->pluck('day_value')
+                        ->toArray();
+                    $success['academicSession'] = $academicSession;
+                    $success['checkInOutTime'] = $checkInOutTime;
+                    $success['hiddenWeekends'] = $hiddenWeekends;
+                }
+                return $this->successResponse($success, 'User signed in successfully');
+            } else {
+                return $this->send500Error('You have been locked out of your account, please contact the admin', ['error' => 'You have been locked out of your account, please contact the admin']);
+            }
+        } else {
+            
+            $getUser = User::where([['email', '=', $request->email], ['branch_id', '=', $request->branch_id]])->first();
+            // dd($getUser);
+            // $getUser = User::where('email', $request->email)->first();
+            $login_attempt = isset($getUser->login_attempt) ? $getUser->login_attempt : null;
             // dd($login_attempt);
             if (isset($login_attempt)) {
                 if ($login_attempt <= 2) {
