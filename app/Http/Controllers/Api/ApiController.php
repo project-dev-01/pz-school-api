@@ -25267,4 +25267,150 @@ class ApiController extends BaseController
             return $this->successResponse($ChildHealthDetails, 'Child Health row fetch successfully');
         }
     }
+    public function personalinterviewstore(Request $request)
+    {
+
+        $validator = \Validator::make($request->all(), [
+            
+            'branch_id' => 'required',
+            'token' => 'required',
+        ]);
+
+        if (!$validator->passes()) {
+            return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
+        } else {
+            // create new connection
+            $conn = $this->createNewConnection($request->branch_id);
+            // check exist name
+            $record=$conn->table('student_interview')->where([['academic_year', '=', $request->academic_year],['department_id', '=', $request->department_id],['class_id', '=', $request->class_id],['section_id', '=', $request->section_id],['student_id', '=', $request->student_id],['semester_id', '=', $request->semester_id]])->first();
+            if($record!=null)
+            {
+                $id=$record->id;
+                $query = $conn->table('student_interview')->where('id', $id)->update([                      
+                    'interview_date' => $request->interview_date,
+                    'question_situation' => $request->question_situation,
+                    'question_improved' => $request->question_improved,
+                    'question_tried' => $request->question_tried,
+                    'question_future' => $request->question_future,
+                    'question_parent' => $request->question_parent,
+                    'question_feedback' => $request->question_feedback,
+                    'updated_by' => $request->staff_id,
+                    'updated_at' => date("Y-m-d H:i:s")
+                ]);
+            } 
+            else
+            {
+                // insert data
+                $query = $conn->table('student_interview')->insert([
+                    'academic_year' => $request->academic_year,
+                    'department_id' => $request->department_id,
+                    'class_id' => $request->class_id,
+                    'section_id' => $request->section_id,
+                    'semester_id' => $request->semester_id,
+                    'interview_date' => $request->interview_date,
+                    'student_id' => $request->student_id,
+                    'question_situation' => $request->question_situation,
+                    'question_improved' => $request->question_improved,
+                    'question_tried' => $request->question_improved,
+                    'question_future' => $request->question_future,
+                    'question_parent' => $request->question_parent,
+                    'question_feedback' => $request->question_feedback,
+                    'created_by' => $request->staff_id,
+                    'created_at' => date("Y-m-d H:i:s")
+                ]);
+            }
+            $success = [];
+            if (!$query) {
+                return $this->send500Error('Something went wrong.', ['error' => 'Something went wrong']);
+            } else {
+                return $this->successResponse($success, 'Student Persoanl Interview updated Successfully.');
+            }
+            
+        }
+    }
+    // getEventTypeList
+    public function personalinterviewdata(Request $request)
+    {
+        $validator = \Validator::make($request->all(), [
+            'branch_id' => 'required',
+            //'token' => 'required',
+        ]);     
+        $conn = $this->createNewConnection($request->branch_id);
+        $record=$conn->table('student_interview')->where([['academic_year', '=', $request->academic_year],['department_id', '=', $request->department_id],['class_id', '=', $request->class_id],['section_id', '=', $request->section_id],['student_id', '=', $request->student_id],['semester_id', '=', $request->semester_id]])->first();
+        if($record!=null)
+        {
+            return $this->successResponse($record, 'Personal Interview Information Already Exists.');
+        }
+        else
+        {
+            
+            return $this->successResponse([1], 'No Record Found');
+        }
+
+        
+    }
+    public function personalinterviewlist(Request $request)
+    {
+        $validator = \Validator::make($request->all(), [
+            'branch_id' => 'required',
+            //'token' => 'required',
+        ]);     
+        $conn = $this->createNewConnection($request->branch_id);        
+        $record=$conn->table('student_interview as int')
+        ->select('int.id','int.interview_date','int.student_id','s.first_name as name','s.roll_no', 's.email')
+        ->leftjoin("students as s", 's.id', '=', 'int.student_id')
+        ->where([['int.academic_year', '=', $request->academic_year],['int.department_id', '=', $request->department_id],['int.class_id', '=', $request->class_id],['int.section_id', '=', $request->section_id],['int.semester_id', '=', $request->semester_id]])->get();
+        return $this->successResponse($record, 'Personal Interview Informations get Successfully');
+        
+    }
+    public function personalinterview_individual(Request $request)
+    {
+        $validator = \Validator::make($request->all(), [
+            'branch_id' => 'required',
+            //'token' => 'required',
+        ]);     
+        $conn = $this->createNewConnection($request->branch_id);        
+        
+        $record = $conn->table('student_interview as inter')
+        ->select('inter.*', 's.first_name as name', 's.roll_no', 's.email', 'sem.name as semester_name',
+        $conn->raw('(SELECT t2.first_name FROM subject_assigns as t1 
+                    LEFT JOIN staffs as t2 ON t1.teacher_id = t2.id 
+                    WHERE t2.first_name != "" AND t2.teacher_type IS NULL 
+                    AND inter.academic_year = t1.academic_session_id 
+                    AND inter.class_id = t1.class_id 
+                    AND inter.section_id = t1.section_id 
+                    AND inter.department_id = t1.department_id 
+                    LIMIT 1) as home_teacher')
+            )
+        ->leftJoin('students as s', 's.id', '=', 'inter.student_id')  
+        ->leftJoin('semester as sem', 'sem.id', '=', 'inter.semester_id')
+        ->where('inter.id', '=', $request->id)
+        ->first();        
+        return $this->successResponse($record, 'Personal Interview Informations get Successfully');
+        
+    }
+    public function personalinterview_overall(Request $request)
+    {
+        $validator = \Validator::make($request->all(), [
+            'branch_id' => 'required',
+            //'token' => 'required',
+        ]);     
+        $conn = $this->createNewConnection($request->branch_id);        
+        $record = $conn->table('student_interview as inter')
+        ->select('inter.*', 's.first_name as name', 's.roll_no', 's.email', 'sem.name as semester_name',
+        $conn->raw('(SELECT t2.first_name FROM subject_assigns as t1 
+                    LEFT JOIN staffs as t2 ON t1.teacher_id = t2.id 
+                    WHERE t2.first_name != "" AND t2.teacher_type IS NULL 
+                    AND inter.academic_year = t1.academic_session_id 
+                    AND inter.class_id = t1.class_id 
+                    AND inter.section_id = t1.section_id 
+                    AND inter.department_id = t1.department_id 
+                    LIMIT 1) as home_teacher')
+        )
+        ->leftjoin("students as s", 's.id', '=', 'inter.student_id')
+        ->leftjoin("semester as sem", 'sem.id', '=', 'inter.semester_id')
+        ->where([['inter.academic_year', '=', $request->academic_year],['inter.department_id', '=', $request->department_id],['int.class_id', '=', $request->class_id],['inter.section_id', '=', $request->section_id],['inter.semester_id', '=', $request->semester_id]])->get();
+        return $this->successResponse($record, 'Personal Interview Informations get Successfully');
+        
+    }  
 }

@@ -1003,6 +1003,7 @@ Route::group(['middleware' => ['auth:api', 'throttle:limit_per_user', 'logroute'
     
     Route::post('menus/schoolaccesslist', [MenuAccessController::class, 'getschoolmenuaccesslist']);
     Route::post('menus/setschoolpermission', [MenuAccessController::class, 'setschoolpermission']);
+    Route::post('menus/deleteschoolpermission', [MenuAccessController::class, 'deleteschoolpermission']);
     Route::post('menus/getschoolroleaccess', [MenuAccessController::class, 'getschoolroleaccess']);
 
     Route::get('job_title/list', [ApiControllerOne::class, 'jobTitleList']);
@@ -1130,5 +1131,10 @@ Route::group(['middleware' => ['auth:api', 'throttle:limit_per_user', 'logroute'
     Route::post('student_interview_add', [ApiControllerOne::class, 'addStudentInterview']);
     Route::get('child_health/list', [ApiControllerOne::class, 'getChildHealthList']);
     Route::post('child_health/child_health-details', [ApiControllerOne::class, 'getChildHealthDetails']);
-
+    Route::post('personalinterview/store', [ApiController::class, 'personalinterviewstore']);
+    Route::post('personalinterview/data', [ApiController::class, 'personalinterviewdata']);
+    Route::post('personalinterview/list', [ApiController::class, 'personalinterviewlist']);
+    Route::post('personalinterview/individual', [ApiController::class, 'personalinterview_individual']);
+    Route::post('personalinterview/overall', [ApiController::class, 'personalinterview_overall']);
+    
 });

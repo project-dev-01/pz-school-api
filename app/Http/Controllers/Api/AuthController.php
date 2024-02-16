@@ -175,7 +175,13 @@ class AuthController extends BaseController
                     $success['hiddenWeekends'] = $hiddenWeekends;
                 }
                 return $this->successResponse($success, 'User signed in successfully');
-            } else {
+            } 
+            else if($user->status == 2) 
+            {
+                return $this->send500Error('Your School Role Deleted, please contact the admin', ['error' => 'You have been locked out of your account, please contact the admin']);
+           
+            }
+            else {
                 return $this->send500Error('You have been locked out of your account, please contact the admin', ['error' => 'You have been locked out of your account, please contact the admin']);
             }
         } else {
