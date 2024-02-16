@@ -1097,8 +1097,8 @@ class ApiControllerOne extends BaseController
         } else {
             // create new connection
             $createConnection = $this->createNewConnection($request->branch_id);
-            $class_id = $request->class_id;
-            $teacher_id = $request->teacher_id;
+            $class_id = isset($request->class_id) ? $request->class_id : null;
+            $teacher_id = isset($request->teacher_id) ? $request->teacher_id : null;
             $success = $createConnection->table('subject_assigns as sa')
                 ->select(
                     'sc.id as section_id',
@@ -10584,40 +10584,40 @@ class ApiControllerOne extends BaseController
         } else {
             // create new connection
             $Connection = $this->createNewConnection($request->branch_id);
-            $date= $request->date; 
+            $date = $request->date;
             // get data
             $data = $Connection->table('health_logbooks_part_c as pc')
-            ->select(
-                'hea.id',
-                'pc.student_id',
-                'st.gender',
-                'pc.time',
-                'pc.event_notes_c',
-                'hea.temp',
-                'hea.weather',
-                'hea.humidity',
-                'hea.event_notes_a',
-                'hea.event_notes_b',
-                'hea.date',
-                'pc.id as partc_id',
-                'pc.department_id',
-                'pc.class_id',
-                'pc.section_id',
-                'pc.tab',
-                'pc.tab_details',
-                'cl.name as class_name',
-                'sc.name as section_name',
-                'd1.name as department_name',
-                DB::raw('CONCAT(st.first_name, " ", st.last_name) as student_name')
-            )
-            ->join('classes as cl', 'pc.class_id', '=', 'cl.id')
-            ->join('sections as sc', 'pc.section_id', '=', 'sc.id')
-            ->leftJoin('staff_departments as d1', 'pc.department_id', '=', 'd1.id')
-            ->leftJoin('health_logbooks as hea', 'pc.health_logbooks_id','=', 'hea.id')
-            ->leftJoin('students as st', 'st.id', '=', 'pc.student_id')
-            
-            ->where('pc.date', '=', $date)
-            ->get();
+                ->select(
+                    'hea.id',
+                    'pc.student_id',
+                    'st.gender',
+                    'pc.time',
+                    'pc.event_notes_c',
+                    'hea.temp',
+                    'hea.weather',
+                    'hea.humidity',
+                    'hea.event_notes_a',
+                    'hea.event_notes_b',
+                    'hea.date',
+                    'pc.id as partc_id',
+                    'pc.department_id',
+                    'pc.class_id',
+                    'pc.section_id',
+                    'pc.tab',
+                    'pc.tab_details',
+                    'cl.name as class_name',
+                    'sc.name as section_name',
+                    'd1.name as department_name',
+                    DB::raw('CONCAT(st.first_name, " ", st.last_name) as student_name')
+                )
+                ->join('classes as cl', 'pc.class_id', '=', 'cl.id')
+                ->join('sections as sc', 'pc.section_id', '=', 'sc.id')
+                ->leftJoin('staff_departments as d1', 'pc.department_id', '=', 'd1.id')
+                ->leftJoin('health_logbooks as hea', 'pc.health_logbooks_id', '=', 'hea.id')
+                ->leftJoin('students as st', 'st.id', '=', 'pc.student_id')
+
+                ->where('pc.date', '=', $date)
+                ->get();
             return $this->successResponse($data, 'Health logbooks fetch successfully');
         }
     }
@@ -10632,8 +10632,8 @@ class ApiControllerOne extends BaseController
         } else {
             // create new connection
             $Connection = $this->createNewConnection($request->branch_id);
-            
-            $query = $Connection->table('health_logbooks')->insertGetId([          
+
+            $query = $Connection->table('health_logbooks')->insertGetId([
                 'temp' => $request->temp,
                 'date' => $request->date,
                 'weather' => $request->weather,
@@ -10658,7 +10658,8 @@ class ApiControllerOne extends BaseController
             }
         }
     }
-    public function addHealthLogbooksPartc(Request $request){
+    public function addHealthLogbooksPartc(Request $request)
+    {
         $validator = \Validator::make($request->all(), [
             'branch_id' => 'required',
         ]);
@@ -10668,7 +10669,7 @@ class ApiControllerOne extends BaseController
         } else {
             // create new connection
             $Connection = $this->createNewConnection($request->branch_id);
-            
+
             $query = $Connection->table('health_logbooks_part_c')->insert([
                 'health_logbooks_id'   =>  $request->healthlogID,
                 'date' => $request->date,
@@ -10701,9 +10702,10 @@ class ApiControllerOne extends BaseController
                 return $this->successResponse($query, 'Health logbooks has been successfully saved');
             }
         }
-   }
-    public function deleteHealthLogbooksPartc(Request $request){
-        
+    }
+    public function deleteHealthLogbooksPartc(Request $request)
+    {
+
         $id = $request->id;
         $validator = \Validator::make($request->all(), [
             'token' => 'required',
@@ -10726,10 +10728,10 @@ class ApiControllerOne extends BaseController
                 return $this->send500Error('Something went wrong.', ['error' => 'Something went wrong']);
             }
         }
-
     }
-    public function editHealthLogbooksPartc(Request $request){
-        
+    public function editHealthLogbooksPartc(Request $request)
+    {
+
         $id = $request->id;
         $validator = \Validator::make($request->all(), [
             'token' => 'required',
@@ -10747,9 +10749,9 @@ class ApiControllerOne extends BaseController
 
             return $this->successResponse($data, 'Health logbooks partc  fetch successfully');
         }
-
     }
-    public function updateHealthLogbooksPartc(Request $request){
+    public function updateHealthLogbooksPartc(Request $request)
+    {
         $validator = \Validator::make($request->all(), [
             'branch_id' => 'required',
         ]);
@@ -10761,9 +10763,9 @@ class ApiControllerOne extends BaseController
             $Connection = $this->createNewConnection($request->branch_id);
             $id   =  $request->healthlogID;
             $query = $Connection->table('health_logbooks_part_c')->where('id', $id)->update([
-        
+
                 'date' => $request->date,
-                 'student_id' => $request->student_id,
+                'student_id' => $request->student_id,
                 'department_id' => $request->department_id,
                 'class_id' => $request->grade_id,
                 'section_id' => $request->section_id,
@@ -10794,7 +10796,8 @@ class ApiControllerOne extends BaseController
             }
         }
     }
-    public function getInjuryList(Request $request){
+    public function getInjuryList(Request $request)
+    {
         $validator = \Validator::make($request->all(), [
             'branch_id' => 'required',
             //'token' => 'required',
@@ -10806,13 +10809,13 @@ class ApiControllerOne extends BaseController
             // create new connection
             $conn = $this->createNewConnection($request->branch_id);
             // get data
-            
+
             $injuryList = $conn->table('health_logbooks_injury')->get();
             return $this->successResponse($injuryList, 'injury list record fetch successfully');
         }
-
     }
-    public function getIllnessList(Request $request){
+    public function getIllnessList(Request $request)
+    {
         $validator = \Validator::make($request->all(), [
             'branch_id' => 'required',
             //'token' => 'required',
@@ -10827,9 +10830,9 @@ class ApiControllerOne extends BaseController
             $illnessList = $conn->table('health_logbooks_illness')->get();
             return $this->successResponse($illnessList, 'illness list record fetch successfully');
         }
-        
     }
-    public function getHealthConsultList(Request $request){
+    public function getHealthConsultList(Request $request)
+    {
         $validator = \Validator::make($request->all(), [
             'branch_id' => 'required',
             //'token' => 'required',
@@ -10841,13 +10844,13 @@ class ApiControllerOne extends BaseController
             // create new connection
             $conn = $this->createNewConnection($request->branch_id);
             // get data
-          
+
             $healthConsultList = $conn->table('health_logbooks_health_consult')->get();
             return $this->successResponse($healthConsultList, 'health consult list record fetch successfully');
         }
-        
     }
-    public function exportHealthLogbooks(Request $request){
+    public function exportHealthLogbooks(Request $request)
+    {
         $validator = \Validator::make($request->all(), [
             'branch_id' => 'required',
         ]);
@@ -10857,44 +10860,45 @@ class ApiControllerOne extends BaseController
         } else {
             // create new connection
             $Connection = $this->createNewConnection($request->branch_id);
-            $date= $request->date; 
+            $date = $request->date;
             // get data
             $data = $Connection->table('health_logbooks_part_c as pc')->select(
                 DB::raw('CONCAT(st.first_name, " ", st.last_name) as name'),
-                    'st.gender',
-                    'pc.time',
-                    'pc.event_notes_c',
-                    'pc.tab',
-                    'pc.tab_details',
-                    'cl.name as class_name',
-                    'sc.name as section_name',
-                    'd1.name as department_name'
-                )
-                ->leftJoin('health_logbooks as hea', 'pc.health_logbooks_id','=', 'hea.id')
+                'st.gender',
+                'pc.time',
+                'pc.event_notes_c',
+                'pc.tab',
+                'pc.tab_details',
+                'cl.name as class_name',
+                'sc.name as section_name',
+                'd1.name as department_name'
+            )
+                ->leftJoin('health_logbooks as hea', 'pc.health_logbooks_id', '=', 'hea.id')
                 ->leftJoin('staff_departments as d1', 'pc.department_id', '=', 'd1.id')
                 ->leftJoin('classes as cl', 'pc.class_id', '=', 'cl.id')
                 ->leftJoin('sections as sc', 'pc.section_id', '=', 'sc.id')
                 ->leftJoin('students as st', 'st.id', '=', 'pc.student_id')
-                 ->where('pc.date', '=', $date)->get();
+                ->where('pc.date', '=', $date)->get();
 
-                 $data2 = $Connection->table('health_logbooks as hea')->select(
-                    'hea.temp',
-                    'hea.weather',
-                    'hea.humidity',
-                    'hea.event_notes_a',
-                    'hea.event_notes_b',
-                    'hea.date',
-                )
-                 ->where('hea.date', '=', $date)->get();
-                 $data = [
-                    'partc' => $data,
-                    'partab' => $data2
-                ];
+            $data2 = $Connection->table('health_logbooks as hea')->select(
+                'hea.temp',
+                'hea.weather',
+                'hea.humidity',
+                'hea.event_notes_a',
+                'hea.event_notes_b',
+                'hea.date',
+            )
+                ->where('hea.date', '=', $date)->get();
+            $data = [
+                'partc' => $data,
+                'partab' => $data2
+            ];
 
             return $this->successResponse($data, 'Health logbooks fetch successfully');
         }
     }
-    public function getHealthLogbooksLeaveSummary(Request $request){
+    public function getHealthLogbooksLeaveSummary(Request $request)
+    {
         $validator = \Validator::make($request->all(), [
             'branch_id' => 'required',
         ]);
@@ -10904,49 +10908,49 @@ class ApiControllerOne extends BaseController
         } else {
             // create new connection
             $Connection = $this->createNewConnection($request->branch_id);
-            $date= $request->date; 
+            $date = $request->date;
             // get data
             $reason_count = $Connection->table('student_leaves as st')
-            ->select(
-                'st.class_id',
-                'as.name as reasons_name',
-                'c.name',
-                DB::raw('COUNT(DISTINCT st.change_lev_type) as reasons_count')
-            )
-            ->leftJoin('classes as c', 'st.class_id', '=', 'c.id')
-            ->leftJoin('student_leave_types as as', 'st.change_lev_type', '=', 'as.id')
-            ->where('st.from_leave', '=', $date)
-            ->whereNotNull('st.change_lev_type') // Exclude rows where reasons is NULL
-            ->where('st.change_lev_type', '!=', '') // Exclude rows where reasons is an empty string
-            ->groupBy('st.class_id', 'st.change_lev_type')
-            ->get();
+                ->select(
+                    'st.class_id',
+                    'as.name as reasons_name',
+                    'c.name',
+                    DB::raw('COUNT(DISTINCT st.change_lev_type) as reasons_count')
+                )
+                ->leftJoin('classes as c', 'st.class_id', '=', 'c.id')
+                ->leftJoin('student_leave_types as as', 'st.change_lev_type', '=', 'as.id')
+                ->where('st.from_leave', '=', $date)
+                ->whereNotNull('st.change_lev_type') // Exclude rows where reasons is NULL
+                ->where('st.change_lev_type', '!=', '') // Exclude rows where reasons is an empty string
+                ->groupBy('st.class_id', 'st.change_lev_type')
+                ->get();
 
-            $class_name = $Connection->table('classes')->select('id','name')->whereIn('department_id', [1,2,3,4])->orderBy('department_id', 'asc')->get();
-           // Now organize the data in the desired format
-                $reason_count_formatted = [];
-                foreach ($reason_count as $reason) {
-                    $reason_name = $reason->reasons_name;
-                    $class_id = $reason->class_id;
-                
-                    // If the reason is not already in the result array, initialize it
-                    if (!isset($reason_count_formatted[$reason_name])) {
-                        $reason_count_formatted[$reason_name] = [
-                            'reason_name' => $reason_name,
-                            'gradecnt' => [],
-                        ];
-                    }
-                
-                    // Add class ID, class name, and count to the 'gradecnt' object
-                    $reason_count_formatted[$reason_name]['gradecnt'][] = [
-                        'class_id' => $class_id,
-                        'class_name' => $reason->name,
-                        'reasons_count' => $reason->reasons_count,
+            $class_name = $Connection->table('classes')->select('id', 'name')->whereIn('department_id', [1, 2, 3, 4])->orderBy('department_id', 'asc')->get();
+            // Now organize the data in the desired format
+            $reason_count_formatted = [];
+            foreach ($reason_count as $reason) {
+                $reason_name = $reason->reasons_name;
+                $class_id = $reason->class_id;
+
+                // If the reason is not already in the result array, initialize it
+                if (!isset($reason_count_formatted[$reason_name])) {
+                    $reason_count_formatted[$reason_name] = [
+                        'reason_name' => $reason_name,
+                        'gradecnt' => [],
                     ];
                 }
-                
 
-                // Convert the associative array to a numeric array for consistency
-                $reason_count_formatted = array_values($reason_count_formatted);
+                // Add class ID, class name, and count to the 'gradecnt' object
+                $reason_count_formatted[$reason_name]['gradecnt'][] = [
+                    'class_id' => $class_id,
+                    'class_name' => $reason->name,
+                    'reasons_count' => $reason->reasons_count,
+                ];
+            }
+
+
+            // Convert the associative array to a numeric array for consistency
+            $reason_count_formatted = array_values($reason_count_formatted);
             $data = [
                 'headers' => $class_name,
                 'reason_count' => $reason_count_formatted
@@ -11106,9 +11110,9 @@ class ApiControllerOne extends BaseController
                 ->get();
             return $this->successResponse($buletinDetails, 'Bulletin record fetch successfully');
         }
-       
     }
-    public function getStudentInterviewList(Request $request){
+    public function getStudentInterviewList(Request $request)
+    {
         $validator = \Validator::make($request->all(), [
             // 'token' => 'required',
             'branch_id' => 'required',
@@ -11123,42 +11127,43 @@ class ApiControllerOne extends BaseController
             $student_id  = $request->student_id;
             // create new connection
             $conn = $this->createNewConnection($request->branch_id);
-            if(empty($department_id))
-            {
+            if (empty($department_id)) {
                 $class_id = $request->class_id;
                 $id =  $conn->table('classes')->select("department_id")->where("id", $class_id)->first();
                 $department_id = $id->department_id;
             }
             $studentInterviewDetails = $conn->table('student_interview as si')
-            ->select('d1.name as department_name', 
-            'se.name as section_name', 
-            'cl.name as class_name', 
-            DB::raw('CONCAT(st.first_name, " ", st.last_name) as student_name'), 
-            DB::raw('MAX(sin.type) as latest_type'), 
-            'sin.type',
-            'sin.comment', 
-            'sin.title',
-            'sin.id')
-            ->leftJoin('students as s', 'si.student_id', '=', 's.id')
-            ->leftJoin('staff_departments as d1', 'si.department_id', '=', 'd1.id')
-            ->leftJoin('sections as se', 'si.section_id', '=', 'se.id')
-            ->leftJoin('classes as cl', 'si.class_id', '=', 'cl.id')
-            ->leftJoin('student_interview_notes as sin', 'si.id', '=', 'sin.student_interview_id')
-            ->where('si.class_id', $class_id)
-            ->where('si.section_id', $section_id)
-            ->where('si.department_id', $department_id)
-            ->where('si.student_id', $student_id)
-            ->groupBy('d1.name', 'se.name', 'cl.name', 'name', 'sin.comment', 'sin.title')
-            ->get();
+                ->select(
+                    'd1.name as department_name',
+                    'se.name as section_name',
+                    'cl.name as class_name',
+                    DB::raw('CONCAT(st.first_name, " ", st.last_name) as student_name'),
+                    DB::raw('MAX(sin.type) as latest_type'),
+                    'sin.type',
+                    'sin.comment',
+                    'sin.title',
+                    'sin.id'
+                )
+                ->leftJoin('students as s', 'si.student_id', '=', 's.id')
+                ->leftJoin('staff_departments as d1', 'si.department_id', '=', 'd1.id')
+                ->leftJoin('sections as se', 'si.section_id', '=', 'se.id')
+                ->leftJoin('classes as cl', 'si.class_id', '=', 'cl.id')
+                ->leftJoin('student_interview_notes as sin', 'si.id', '=', 'sin.student_interview_id')
+                ->where('si.class_id', $class_id)
+                ->where('si.section_id', $section_id)
+                ->where('si.department_id', $department_id)
+                ->where('si.student_id', $student_id)
+                ->groupBy('d1.name', 'se.name', 'cl.name', 'name', 'sin.comment', 'sin.title')
+                ->get();
 
 
-        
+
             return $this->successResponse($studentInterviewDetails, 'Student interview list record fetch successfully');
         }
-
     }
-    public function addStudentInterview(Request $request){
-        
+    public function addStudentInterview(Request $request)
+    {
+
         $validator = \Validator::make($request->all(), [
             // 'token' => 'required',
             'branch_id' => 'required',
@@ -11194,7 +11199,7 @@ class ApiControllerOne extends BaseController
                 'class_id' => $request->class_id,
                 'section_id' => $request->section_id,
                 'student_id' => $request->student_id,
-                'department_id'=> $dept_id->department_id,
+                'department_id' => $dept_id->department_id,
                 'created_by' => $request->created_by,
                 'created_at' => date("Y-m-d H:i:s")
             ]);
@@ -11214,7 +11219,7 @@ class ApiControllerOne extends BaseController
             }
         }
     }
-    
+
 
     public function childHealthExport(Request $request)
     {
@@ -11229,91 +11234,91 @@ class ApiControllerOne extends BaseController
         } else {
             $conn = $this->createNewConnection($request->branch_id);
 
-            $department_id = isset($request->department_id)?$request->department_id:null;
-            $class_id = isset($request->class_id)?$request->class_id:null;
-            $session_id = isset($request->session_id)?$request->session_id:0;
-            $section_id = isset($request->section_id)?$request->section_id:null;
-            $name = isset($request->student_name)?$request->student_name:null;
-            if($request->student_id){
+            $department_id = isset($request->department_id) ? $request->department_id : null;
+            $class_id = isset($request->class_id) ? $request->class_id : null;
+            $session_id = isset($request->session_id) ? $request->session_id : 0;
+            $section_id = isset($request->section_id) ? $request->section_id : null;
+            $name = isset($request->student_name) ? $request->student_name : null;
+            if ($request->student_id) {
                 $studentData = $conn->table('students as s')
-                ->select(
-                    's.id',
-                    DB::raw('CONCAT(s.first_name, " ", s.last_name) as name'),
-                    's.email',
-                    's.photo',
-                    's.roll_no',
-                    's.gender',
-                )
-                ->whereIn('s.id', $request->student_id)
-                ->get()->toArray();
-            }else{
+                    ->select(
+                        's.id',
+                        DB::raw('CONCAT(s.first_name, " ", s.last_name) as name'),
+                        's.email',
+                        's.photo',
+                        's.roll_no',
+                        's.gender',
+                    )
+                    ->whereIn('s.id', $request->student_id)
+                    ->get()->toArray();
+            } else {
 
                 $query = $conn->table('enrolls as e')
-                ->select(
-                    's.id',
-                    DB::raw('CONCAT(s.first_name, " ", s.last_name) as name'),
-                    's.email',
-                    's.photo',
-                    's.gender',
-                    's.roll_no',
-                )
-                ->leftJoin('students as s', 'e.student_id', '=', 's.id')
-                ->where('e.academic_session_id', '=', $request->academic_session_id);
+                    ->select(
+                        's.id',
+                        DB::raw('CONCAT(s.first_name, " ", s.last_name) as name'),
+                        's.email',
+                        's.photo',
+                        's.gender',
+                        's.roll_no',
+                    )
+                    ->leftJoin('students as s', 'e.student_id', '=', 's.id')
+                    ->where('e.academic_session_id', '=', $request->academic_session_id);
 
-            // if (isset($request->department_id) && filled($request->department_id)) {
-            //     $query->where('e.department_id', $request->department_id);
-            // }
+                // if (isset($request->department_id) && filled($request->department_id)) {
+                //     $query->where('e.department_id', $request->department_id);
+                // }
 
-            if (isset($request->class_id) && filled($request->class_id)) {
-                $query->where('e.class_id', $request->class_id);
-            }
+                if (isset($request->class_id) && filled($request->class_id)) {
+                    $query->where('e.class_id', $request->class_id);
+                }
 
-            if (isset($request->session_id) && filled($request->session_id)) {
-                $query->where('e.session_id', $request->session_id);
-            }
+                if (isset($request->session_id) && filled($request->session_id)) {
+                    $query->where('e.session_id', $request->session_id);
+                }
 
-            if (isset($request->section_id) && filled($request->section_id)) {
-                $query->where('e.section_id', $request->section_id);
-            }
+                if (isset($request->section_id) && filled($request->section_id)) {
+                    $query->where('e.section_id', $request->section_id);
+                }
 
-            if (isset($request->student_name) && filled($request->student_name)) {
-                $name = $request->student_name;
-                $query->where(function ($q) use ($name) {
-                    $q->where('s.first_name', 'like', '%' . $name . '%')
-                    ->orWhere('s.last_name', 'like', '%' . $name . '%');
-                });
-            }
+                if (isset($request->student_name) && filled($request->student_name)) {
+                    $name = $request->student_name;
+                    $query->where(function ($q) use ($name) {
+                        $q->where('s.first_name', 'like', '%' . $name . '%')
+                            ->orWhere('s.last_name', 'like', '%' . $name . '%');
+                    });
+                }
 
-            $studentData = $query->groupBy('e.student_id')->get()->toArray();
-            
-            // return 1;
+                $studentData = $query->groupBy('e.student_id')->get()->toArray();
+
+                // return 1;
             }
             // dd($studentData);
-                // return $studentData;
-                $col_array = [ 
-                    0 => "class",
-                    1 => "section",
-                    2 => "height",
-                    3 => "weight",
-                    4 => "nutritional_status",
-                    5 => "spine_chest_limb",
-                    6 => "eye_sight_right",
-                    7 => "eye_sight_left",
-                    8 => "eye_diseases_abnormalities",
-                    9 => "hearing_right",
-                    10 => "hearing_left",
-                    11 => "otorhinolaryngopathy",
-                    12 => "skin_diseases",
-                    13 => "heart_clinical_medical_examination",
-                    14 => "heart_diseases_abnormalities",
-                    15 => "urine_protein",
-                    16 => "urine_glucose",
-                    17 => "urine",
-                    18 => "other_diseases_abnormalities",
-                    19 => "school_doctors_date",
-                    20 => "follow_up_treatments",
-                    21 => "remarks"
-                ];
+            // return $studentData;
+            $col_array = [
+                0 => "class",
+                1 => "section",
+                2 => "height",
+                3 => "weight",
+                4 => "nutritional_status",
+                5 => "spine_chest_limb",
+                6 => "eye_sight_right",
+                7 => "eye_sight_left",
+                8 => "eye_diseases_abnormalities",
+                9 => "hearing_right",
+                10 => "hearing_left",
+                11 => "otorhinolaryngopathy",
+                12 => "skin_diseases",
+                13 => "heart_clinical_medical_examination",
+                14 => "heart_diseases_abnormalities",
+                15 => "urine_protein",
+                16 => "urine_glucose",
+                17 => "urine",
+                18 => "other_diseases_abnormalities",
+                19 => "school_doctors_date",
+                20 => "follow_up_treatments",
+                21 => "remarks"
+            ];
             $count = 0;
             $detail = [];
             // dd($studentData);
@@ -11321,35 +11326,35 @@ class ApiControllerOne extends BaseController
                 foreach ($studentData as $key => $value) {
 
                     $health = $conn->table('child_health as ch')
-                    ->select(
-                        'ch.*',
-                        DB::raw('CONCAT(st.first_name, " ", st.last_name) as name'),
-                        'st.email',
-                        'st.photo',
-                        'st.roll_no',
-                        'c.name as class',
-                        's.name as section'
-                    )
-                    // ->join('enrolls as en', 'en.student_id', '=', 'fa.student_id')
-                    ->leftJoin('students as st', 'ch.student_id', '=', 'st.id')
-                    ->leftJoin('classes as c', 'ch.class', '=', 'c.id')
-                    ->leftJoin('sections as s', 'ch.section', '=', 's.id')
-                    ->where([
-                        ['ch.student_id', '=', $value->id]
-                    ])
-                    ->orderBy('ch.department', 'asc')
-                    ->orderBy('c.name', 'desc')
-                    ->orderBy('s.name', 'desc')
-                    ->get()->toArray();
+                        ->select(
+                            'ch.*',
+                            DB::raw('CONCAT(st.first_name, " ", st.last_name) as name'),
+                            'st.email',
+                            'st.photo',
+                            'st.roll_no',
+                            'c.name as class',
+                            's.name as section'
+                        )
+                        // ->join('enrolls as en', 'en.student_id', '=', 'fa.student_id')
+                        ->leftJoin('students as st', 'ch.student_id', '=', 'st.id')
+                        ->leftJoin('classes as c', 'ch.class', '=', 'c.id')
+                        ->leftJoin('sections as s', 'ch.section', '=', 's.id')
+                        ->where([
+                            ['ch.student_id', '=', $value->id]
+                        ])
+                        ->orderBy('ch.department', 'asc')
+                        ->orderBy('c.name', 'desc')
+                        ->orderBy('s.name', 'desc')
+                        ->get()->toArray();
                     $arrData = [];
                     $grade = [];
-                    foreach($health as $he){
+                    foreach ($health as $he) {
                         $grade[] = $he->class;
-                        foreach($col_array as $ca){
+                        foreach ($col_array as $ca) {
                             $arrData[$ca][$he->class] = $he->$ca;
                         }
                     }
-                
+
                     // if($value->id==2){
                     //     dd($arrData);
                     // }
@@ -11362,11 +11367,11 @@ class ApiControllerOne extends BaseController
             // dd($details);
             // $details['grade'] = $grade;
             // $details['child_health'] = $arrData;
-            $output['department'] = $conn->table('classes as c')->select('sd.id','sd.name',DB::raw('COUNT(c.department_id) as "count"'))
-            ->leftJoin('staff_departments as sd', 'c.department_id', '=', 'sd.id')->where('c.department_id','!=',0)->groupBy('sd.id')->get();
-            
-            $output['grade'] = $conn->table('classes as c')->select('c.name','c.id','c.department_id','c.name_numeric')
-            ->orderBy('c.department_id', 'asc')->whereNotNull('c.department_id')->where('c.department_id','!=',0)->get();
+            $output['department'] = $conn->table('classes as c')->select('sd.id', 'sd.name', DB::raw('COUNT(c.department_id) as "count"'))
+                ->leftJoin('staff_departments as sd', 'c.department_id', '=', 'sd.id')->where('c.department_id', '!=', 0)->groupBy('sd.id')->get();
+
+            $output['grade'] = $conn->table('classes as c')->select('c.name', 'c.id', 'c.department_id', 'c.name_numeric')
+                ->orderBy('c.department_id', 'asc')->whereNotNull('c.department_id')->where('c.department_id', '!=', 0)->get();
             $output['student'] = $details;
             return $this->successResponse($output, 'Child Health record fetch successfully');
         }

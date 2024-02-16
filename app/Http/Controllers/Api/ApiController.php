@@ -10665,12 +10665,12 @@ class ApiController extends BaseController
                         'time_start' => $exam['time_start'],
                         'time_end' => $exam['time_end'],
                         'hall_id' => $exam['hall_id'],
-                        "distributor_type" => $exam['distributor_type'],
+                        "distributor_type" => isset($exam['distributor_type'])?$exam['distributor_type']:null,
                         "distributor" => $distributor,
-                        "distributor_id" => $exam['distributor'],
+                        "distributor_id" => isset($exam['distributor'])?$exam['distributor']:null,
                         'exam_date' => $exam['exam_date'],
                         'academic_session_id' => $request->academic_session_id,
-                        'created_at' => date("Y-m-d H:i:s")
+                        'updated_at' => date("Y-m-d H:i:s")
                     ]);
                 } else {
 
@@ -10943,7 +10943,6 @@ class ApiController extends BaseController
     public function subject_vs_marks(Request $request)
     {
         $validator = \Validator::make($request->all(), [
-            'token' => 'required',
             'branch_id' => 'required',
             'class_id' => 'required',
             'section_id' => 'required',
@@ -10976,7 +10975,6 @@ class ApiController extends BaseController
                     ['academic_session_id', '=', $academic_session_id]
                 ])
                 ->count();
-            // dd($examResultexist);
             if ($examResultexist == 0) {
                 return $this->send422Error('Timetables for exams will not be available', ['error' => 'Timetables for exams will not be available']);
             } else {
@@ -11011,11 +11009,12 @@ class ApiController extends BaseController
                     ->where([
                         ['en.class_id', '=', $request->class_id],
                         ['en.section_id', '=', $request->section_id],
-                        ['en.semester_id', '=', $request->semester_id],
-                        ['en.session_id', '=', $request->session_id],
+                        // ['en.semester_id', '=', $request->semester_id],
+                        // ['en.session_id', '=', $request->session_id],
                         ['en.academic_session_id', '=', $academic_session_id]
                     ])
                     // ->orderBy('sa.score', 'desc')
+                    ->groupBy('en.student_id')
                     ->orderBy('name', 'asc')
                     ->get();
                     $exampaper = $Connection->table('exam_papers')
@@ -13568,7 +13567,7 @@ class ApiController extends BaseController
                     'blood_group' => $request->blood_group,
                     'created_at' => date("Y-m-d H:i:s")
                 ];
-               // $oldData = $conn->table('students')->find($request->student_id);
+               $oldData = $conn->table('students')->find($request->student_id);
                 $conn->table('students')->where('id', $request->student_id)->update($data);
                 $changes = $this->getChanges($oldData, $data);
                 $table_modify=[];
@@ -13577,7 +13576,7 @@ class ApiController extends BaseController
                 $table_modify['name']=$request->first_name.' '.$request->last_name;                
                 $table_modify['email']=$request->email;
 
-                $Connection->table('modify_datas')->insert([
+                $conn->table('modify_datas')->insert([
                     
                     'table_name' => 'Student',
                     'table_dbname' => 'students',
@@ -21887,8 +21886,7 @@ class ApiController extends BaseController
     {
 
         $validator = \Validator::make($request->all(), [
-            'branch_id' => 'required',
-            'token' => 'required'
+            'branch_id' => 'required'
         ]);
         if (!$validator->passes()) {
             return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
@@ -21897,57 +21895,95 @@ class ApiController extends BaseController
             $conn = $this->createNewConnection($request->branch_id);
             // get data
 
-            $application = $conn->table('student_applications as s')
-                ->select(
-                    's.*',
-                    DB::raw("CONCAT(s.first_name, ' ', s.last_name) as name"),
-                    DB::raw("CONCAT(s.first_name_english, ' ', s.last_name_english) as name_english"),
-                    DB::raw("CONCAT(s.first_name_furigana, ' ', s.last_name_furigana) as name_furigana"),
-                    DB::raw("CONCAT(s.first_name_common, ' ', s.last_name_common) as name_common"),
-                    'academic_cl.name as academic_grade',
-                    'ay.name as academic_year',
-                )
+            // $application = $conn->table('student_applications as s')
+            //     ->select(
+            //         's.*',
+            //         DB::raw("CONCAT(s.first_name, ' ', s.last_name) as name"),
+            //         DB::raw("CONCAT(s.first_name_english, ' ', s.last_name_english) as name_english"),
+            //         DB::raw("CONCAT(s.first_name_furigana, ' ', s.last_name_furigana) as name_furigana"),
+            //         DB::raw("CONCAT(s.first_name_common, ' ', s.last_name_common) as name_common"),
+            //         'academic_cl.name as academic_grade',
+            //         'ay.name as academic_year',
+            //     )
 
-                ->leftJoin('academic_year as ay', 's.academic_year', '=', 'ay.id')
-                ->leftJoin('classes as academic_cl', 's.academic_grade', '=', 'academic_cl.id')
-                ->when($request->admission == 1, function ($query) {
-                    return $query->where('s.status', '=', 'Approved')->where('s.phase_2_status', '=', 'Approved');
-                })
-                ->when($request->academic_year, function ($query) use ($request) {
-                    return $query->where('s.academic_year', '=', $request->academic_year);
-                })
-                ->when($request->academic_grade, function ($query)  use ($request) {
-                    return $query->where('s.academic_grade', '=', $request->academic_grade);
-                })
-                ->when($request->created_by, function ($query)  use ($request) {
-                    return $query->where('s.created_by', '=', $request->created_by)->where('s.created_by_role', '=', $request->role);
-                })
-                // ->when("s.created_by_role" == "5", function ($query) {
-                //     return $query->leftJoin('parent as p', 's.created_by', '=', 'p.id');
-                // })
-                ->get();
+            //     ->leftJoin('academic_year as ay', 's.academic_year', '=', 'ay.id')
+            //     ->leftJoin('classes as academic_cl', 's.academic_grade', '=', 'academic_cl.id')
+            //     ->when($request->admission == 1, function ($query) {
+            //         return $query->where('s.status', '=', 'Approved')->where('s.phase_2_status', '=', 'Approved');
+            //     })
+            //     ->when($request->academic_year, function ($query) use ($request) {
+            //         return $query->where('s.academic_year', '=', $request->academic_year);
+            //     })
+            //     ->when($request->academic_grade, function ($query)  use ($request) {
+            //         return $query->where('s.academic_grade', '=', $request->academic_grade);
+            //     })
+            //     ->when($request->created_by, function ($query)  use ($request) {
+            //         return $query->where('s.created_by', '=', $request->created_by)->where('s.created_by_role', '=', $request->role);
+            //     })
+            //     // ->when("s.created_by_role" == "5", function ($query) {
+            //     //     return $query->leftJoin('parent as p', 's.created_by', '=', 'p.id');
+            //     // })
+            //     ->get();
 
             // $data = new \stdClass();
-            foreach ($application as $key => $app) {
+            // foreach ($application as $key => $app) {
+            //     $created_by = "Public";
+            //     if ($app->created_by_role == "5") {
+            //         $name = $conn->table('parent')->select(DB::raw("CONCAT(first_name, ' ', last_name) as name"))->where('id', $app->created_by)->first();
+            //         $created_by = $name->name . " (Parent)";
+            //     } else if ($app->created_by_role == "2") {
+            //         $name = $conn->table('staffs')->select(DB::raw("CONCAT(first_name, ' ', last_name) as name"))->where('id', $app->created_by)->first();
+            //         $created_by = $name->name . " (Admin)";
+            //     }
+            //     // else if($app->created_by_role == "7"){
+            //     //     $name = $conn->table('guest')->select("name")->where('id',$app->created_by)->first();
+            //     //     $created_by = $name->name. " (Guest)";
+            //     // }
+            //     // dd($created_by);
+            //     $application[$key]->created_by = $created_by;
+            //     // $data = $app;
+            //     // $application = $app;
+            // }
+            // Fetch application data
+            $applications = $conn->table('student_applications as s')
+            ->select(
+                's.*',
+                DB::raw("CONCAT(s.first_name, ' ', s.last_name) as name"),
+                DB::raw("CONCAT(s.first_name_english, ' ', s.last_name_english) as name_english"),
+                DB::raw("CONCAT(s.first_name_furigana, ' ', s.last_name_furigana) as name_furigana"),
+                DB::raw("CONCAT(s.first_name_common, ' ', s.last_name_common) as name_common"),
+                'academic_cl.name as academic_grade',
+                'ay.name as academic_year',
+            )
+            ->leftJoin('academic_year as ay', 's.academic_year', '=', 'ay.id')
+            ->leftJoin('classes as academic_cl', 's.academic_grade', '=', 'academic_cl.id')
+            ->when($request->admission == 1, function ($query) {
+                return $query->where('s.status', '=', 'Approved')->where('s.phase_2_status', '=', 'Approved');
+            })
+            ->when($request->academic_year, function ($query) use ($request) {
+                return $query->where('s.academic_year', '=', $request->academic_year);
+            })
+            ->when($request->academic_grade, function ($query) use ($request) {
+                return $query->where('s.academic_grade', '=', $request->academic_grade);
+            })
+            ->when($request->created_by, function ($query) use ($request) {
+                return $query->where('s.created_by', '=', $request->created_by)->where('s.created_by_role', '=', $request->role);
+            })
+            ->get();
+            // dd($applications);
+            foreach ($applications as $application) {
                 $created_by = "Public";
-                if ($app->created_by_role == "5") {
-                    $name = $conn->table('parent')->select(DB::raw("CONCAT(first_name, ' ', last_name) as name"))->where('id', $app->created_by)->first();
-                    $created_by = $name->name . " (Parent)";
-                } else if ($app->created_by_role == "2") {
-                    $name = $conn->table('staffs')->select(DB::raw("CONCAT(first_name, ' ', last_name) as name"))->where('id', $app->created_by)->first();
-                    $created_by = $name->name . " (Admin)";
+                if ($application->created_by_role == "5") {
+                    $parent = $conn->table('parent')->select(DB::raw("CONCAT(first_name, ' ', last_name) as name"))->where('id', $application->created_by)->first();
+                    $created_by = isset($parent->name)?$parent->name:"-" . " (Parent)";
+                } elseif ($application->created_by_role == "2") {
+                    $staff = $conn->table('staffs')->select(DB::raw("CONCAT(first_name, ' ', last_name) as name"))->where('id', $application->created_by)->first();
+                    $created_by = isset($staff->name)?$staff->name:"-" . " (Admin)";
                 }
-                // else if($app->created_by_role == "7"){
-                //     $name = $conn->table('guest')->select("name")->where('id',$app->created_by)->first();
-                //     $created_by = $name->name. " (Guest)";
-                // }
-                // dd($created_by);
-                $application[$key]->created_by = $created_by;
-                // $data = $app;
-                // $application = $app;
+                $application->created_by = $created_by;
             }
 
-            return $this->successResponse($application, 'Application record fetch successfully');
+            return $this->successResponse($applications, 'Application record fetch successfully');
         }
     }
 
