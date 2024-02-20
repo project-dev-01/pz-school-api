@@ -4358,10 +4358,16 @@ class ApiController extends BaseController
 
             // calendor data populate
             $getObjRow = $staffConn->table('semester as s')
-                ->select('start_date', 'end_date')
-                ->where('id', $request->semester_id)
-                ->first();
-            // dd($getObjRow);
+                    ->select('start_date', 'end_date')
+                    ->where('id', $request->semester_id)
+                    ->get();
+            if (!empty($getObjRow)) {
+                // Use the $yearData as needed
+                $getObjRow = $staffConn->table('semester as sm')
+                    ->select('sm.start_date', 'sm.end_date')
+                    ->where('sm.academic_session_id', '=', $request->academic_session_id)
+                    ->get();
+            }
             $timetable = $request->timetable;
             $oldest = $staffConn->table('timetable_class')->where([['class_id', $request->class_id], ['section_id', $request->section_id], ['semester_id', $request->semester_id], ['session_id', $request->session_id], ['day', $request->day], ['academic_session_id', $request->academic_session_id]])->WhereNull('bulk_id')->get()->toArray();
 
@@ -4501,10 +4507,16 @@ class ApiController extends BaseController
 
             // calendor data populate
             $getObjRow = $staffConn->table('semester as s')
-                ->select('start_date', 'end_date')
-                ->where('id', $request->semester_id)
-                ->first();
-            // dd($getObjRow);
+                    ->select('start_date', 'end_date')
+                    ->where('id', $request->semester_id)
+                    ->get();
+            if (!empty($getObjRow)) {
+                // Use the $yearData as needed
+                $getObjRow = $staffConn->table('semester as sm')
+                    ->select('sm.start_date', 'sm.end_date')
+                    ->where('sm.academic_session_id', '=', $request->academic_session_id)
+                    ->get();
+            }
             $timetable = $request->timetable;
             $oldest = $staffConn->table('timetable_class')->where([['class_id', $request->class_id], ['section_id', $request->section_id], ['semester_id', $request->semester_id], ['session_id', $request->session_id], ['day', $request->day], ['academic_session_id', $request->academic_session_id]])->WhereNull('bulk_id')->get()->toArray();
 
@@ -4646,9 +4658,16 @@ class ApiController extends BaseController
 
             // calendor data populate
             $getObjRow = $staffConn->table('semester as s')
-                ->select('start_date', 'end_date')
-                ->where('id', $request->semester_id)
-                ->first();
+                    ->select('start_date', 'end_date')
+                    ->where('id', $request->semester_id)
+                    ->get();
+            if (!empty($getObjRow)) {
+                // Use the $yearData as needed
+                $getObjRow = $staffConn->table('semester as sm')
+                    ->select('sm.start_date', 'sm.end_date')
+                    ->where('sm.academic_session_id', '=', $request->academic_session_id)
+                    ->get();
+            }
             $timetable = $request->timetable;
             $oldest = $staffConn->table('timetable_bulk')->where([['class_id', $request->class_id], ['semester_id', $request->semester_id], ['session_id', $request->session_id], ['day', $request->day], ['academic_session_id', $request->academic_session_id]])->get()->toArray();
 
@@ -4985,10 +5004,16 @@ class ApiController extends BaseController
             $timetable = $request->timetable;
             // calendor data populate
             $getObjRow = $staffConn->table('semester as s')
-                ->select('start_date', 'end_date')
-                ->where('id', $request->semester_id)
-                ->first();
-            // return $getObjRow;
+                    ->select('start_date', 'end_date')
+                    ->where('id', $request->semester_id)
+                    ->get();
+            if (!empty($getObjRow)) {
+                // Use the $yearData as needed
+                $getObjRow = $staffConn->table('semester as sm')
+                    ->select('sm.start_date', 'sm.end_date')
+                    ->where('sm.academic_session_id', '=', $request->academic_session_id)
+                    ->get();
+            }
             $oldest = $staffConn->table('timetable_class')
                 ->where([
                     ['timetable_class.day', $request->day],
@@ -6022,25 +6047,42 @@ class ApiController extends BaseController
     // class room teacher_class
     function getTeachersClassName(Request $request)
     {
-
         $validator = \Validator::make($request->all(), [
-           // 'token' => 'required',
             'branch_id' => 'required',
-            'teacher_id' => 'required',
+            'teacher_id' => 'required'
         ]);
         if (!$validator->passes()) {
             return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
         } else {
             // create new connection
             $Connection = $this->createNewConnection($request->branch_id);
+            // $getTeachersClassName = $Connection->table('subject_assigns as sa')
+            //     ->select('sa.class_id', 'sa.teacher_id', 'c.name as class_name')
+            //     ->join('classes as c', 'sa.class_id', '=', 'c.id')
+            //     ->join("staffs as sf", \DB::raw("FIND_IN_SET(sf.department_id,sa.department_id)"), ">", \DB::raw("'0'"))
+            //     ->where('sa.teacher_id', $request->teacher_id)
+            //     ->groupBy("sa.class_id")
+            //     ->get();
+            $getDeptList = $Connection->table('staffs as sf')
+                ->select('sf.department_id')
+                ->where('sf.id', $request->teacher_id)
+                ->first();
+            $departmentIDs = isset($getDeptList->department_id) ? $getDeptList->department_id : null;
             $getTeachersClassName = $Connection->table('subject_assigns as sa')
-                ->select('sa.class_id', 'sa.teacher_id', 'c.name as class_name')
-                ->join('classes as c', 'sa.class_id', '=', 'c.id')
-                ->join("staffs as sf", \DB::raw("FIND_IN_SET(sf.department_id,sa.department_id)"), ">", \DB::raw("'0'"))
-               // ->join('staffs as sf', 'sa.department_id', '=', 'sf.department_id')
-                ->where('sa.teacher_id', $request->teacher_id)
-                ->groupBy("sa.class_id")
-                ->get();
+                    ->select('sa.class_id', 'sa.teacher_id', 'c.name as class_name')
+                    ->join('classes as c', 'sa.class_id', '=', 'c.id')
+                    ->where('sa.teacher_id', $request->teacher_id)
+                    ->where(function ($query) use ($departmentIDs) {
+                        // Explode departmentIDs string to an array
+                        $departmentIDsArray = explode(",", $departmentIDs);
+                        // Iterate over departmentIDs array to add conditions
+                        foreach ($departmentIDsArray as $departmentID) {
+                            // Add condition for each department ID using FIND_IN_SET
+                            $query->orWhereRaw("FIND_IN_SET('$departmentID', sa.department_id) > 0");
+                        }
+                    })
+                    ->groupBy("sa.class_id")
+                    ->get();
             return $this->successResponse($getTeachersClassName, 'Teachers Class Name record fetch successfully');
         }
     }
@@ -10034,36 +10076,37 @@ class ApiController extends BaseController
     // function addCalendorTimetable(Request $request)
     function addCalendorTimetable($request, $row, $getObjRow, $insertOrUpdateID, $bulkID)
     {
-
-        if ($getObjRow) {
-            $start = $getObjRow->start_date;
-            $end = $getObjRow->end_date;
-            //
-            $startDate = new DateTime($start);
-            $endDate = new DateTime($end);
-            // sunday=0,monday=1,tuesday=2,wednesday=3,thursday=4
-            //friday =5,saturday=6
-            if (isset($request->day)) {
-                if ($request->day == "monday") {
-                    $day = 1;
-                }
-                if ($request->day == "tuesday") {
-                    $day = 2;
-                }
-                if ($request->day == "wednesday") {
-                    $day = 3;
-                }
-                if ($request->day == "thursday") {
-                    $day = 4;
-                }
-                if ($request->day == "friday") {
-                    $day = 5;
-                }
-                if ($request->day == "saturday") {
-                    $day = 6;
-                }
-                if (isset($day)) {
-                    $this->addTimetableCalendor($request, $startDate, $endDate, $day, $row, $insertOrUpdateID, $bulkID);
+        if(!empty($getObjRow)){
+            foreach($getObjRow as $ke => $val){
+                $start = $val->start_date;
+                $end = $val->end_date;
+                //
+                $startDate = new DateTime($start);
+                $endDate = new DateTime($end);
+                // sunday=0,monday=1,tuesday=2,wednesday=3,thursday=4
+                //friday =5,saturday=6
+                if (isset($request->day)) {
+                    if ($request->day == "monday") {
+                        $day = 1;
+                    }
+                    if ($request->day == "tuesday") {
+                        $day = 2;
+                    }
+                    if ($request->day == "wednesday") {
+                        $day = 3;
+                    }
+                    if ($request->day == "thursday") {
+                        $day = 4;
+                    }
+                    if ($request->day == "friday") {
+                        $day = 5;
+                    }
+                    if ($request->day == "saturday") {
+                        $day = 6;
+                    }
+                    if (isset($day)) {
+                        $this->addTimetableCalendor($request, $startDate, $endDate, $day, $row, $insertOrUpdateID, $bulkID);
+                    }
                 }
             }
         }
