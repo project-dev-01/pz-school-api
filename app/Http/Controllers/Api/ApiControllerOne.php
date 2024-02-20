@@ -11208,6 +11208,7 @@ class ApiControllerOne extends BaseController
                     'student_interview_id' => $interviewId,
                     'type' => $request->type,
                     'comment' => $request->comment,
+                    'created_by' => $request->created_by,
                     'created_at' => date("Y-m-d H:i:s")
                 ]);
             }
@@ -11217,6 +11218,41 @@ class ApiControllerOne extends BaseController
             } else {
                 return $this->successResponse($success, 'Student interview  has been successfully saved');
             }
+        }
+    }
+    public function editStudentInterview(Request $request){
+        $validator = \Validator::make($request->all(), [
+            // 'token' => 'required',
+            'branch_id' => 'required',
+        ]);
+
+        //    return $request;
+        if (!$validator->passes()) {
+            return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
+        } else {
+
+            $id = $request->id;
+            // create new connection
+            $conn = $this->createNewConnection($request->branch_id);
+            // get data
+            $studentInterviewListDetails = $conn->table('student_interview_notes as sin')
+            ->select(
+                'sin.id',
+                'sin.student_interview_id',
+                'sin.type',
+                'sin.comment',
+                DB::raw('DATE(sin.created_at) as created_date'),
+                DB::raw('CONCAT(cre.first_name, " ", cre.last_name) as register_name'),
+                DB::raw('DATE(sin.updated_at) as updated_date'),
+                DB::raw('CONCAT(upd.first_name, " ", upd.last_name) as updated_name'),
+                'sin.created_by'
+            )
+            ->leftJoin('staffs as cre', 'sin.created_by', '=', 'cre.id')
+            ->leftJoin('staffs as upd', 'sin.updated_by', '=', 'upd.id')
+            ->where('sin.student_interview_id', $id)
+            ->get();
+        
+            return $this->successResponse($studentInterviewListDetails, 'Student Interview Notes row fetch successfully');
         }
     }
 
