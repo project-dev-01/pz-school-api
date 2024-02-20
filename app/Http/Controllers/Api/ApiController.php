@@ -10987,6 +10987,8 @@ class ApiController extends BaseController
                         'sa.id as att_id',
                         'sa.score',
                         'sa.grade',
+                        'sa.points',
+                        'sa.freetext',
                         'sa.ranking',
                         'sa.memo',
                         'sa.pass_fail',
@@ -20447,8 +20449,16 @@ class ApiController extends BaseController
             // create new connection
             $Connection = $this->createNewConnection($request->branch_id);
             // check exist name
-            // insert data
-            $data = [
+                $record = $Connection->table('exam_papers')->where([['department_id', $request->department_id],['class_id', $request->class_id],['subject_id', $request->subject_id],['paper_name', $request->paper_name]])->first();
+                if($record!=null)
+                {
+                    return $this->send422Error('Exam Paper Already Exist.', ['error' => "Exam Paper Already Exist."]);
+                    
+                }
+                else
+                {
+                     // insert data
+                $data = [
                 "department_id" =>$request->department_id,
                 "class_id" => $request->class_id,
                 "subject_id" => $request->subject_id,
@@ -20469,6 +20479,7 @@ class ApiController extends BaseController
             } else {
                 return $this->successResponse($success, 'Exam Paper has been successfully saved');
             }
+        }
         }
     }
     // get Exam Paper List
@@ -25445,7 +25456,7 @@ class ApiController extends BaseController
         )
         ->leftjoin("students as s", 's.id', '=', 'inter.student_id')
         ->leftjoin("semester as sem", 'sem.id', '=', 'inter.semester_id')
-        ->where([['inter.academic_year', '=', $request->academic_year],['inter.department_id', '=', $request->department_id],['int.class_id', '=', $request->class_id],['inter.section_id', '=', $request->section_id],['inter.semester_id', '=', $request->semester_id]])->get();
+        ->where([['inter.academic_year', '=', $request->academic_year],['inter.department_id', '=', $request->department_id],['inter.class_id', '=', $request->class_id],['inter.section_id', '=', $request->section_id],['inter.semester_id', '=', $request->semester_id]])->get();
         return $this->successResponse($record, 'Personal Interview Informations get Successfully');
         
     }  
