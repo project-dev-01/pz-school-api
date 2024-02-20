@@ -12427,7 +12427,7 @@ class ApiController extends BaseController
                         return $this->send500Error('Something went wrong.', ['error' => 'Something went wrong']);
                     } else {
                         if ($request->sudent_application_id) {
-                            $student_application = $conn->table('student_applications')->where('id', '=', $request->sudent_application_id)->update(['enrolled_status' => "Enrolled",'enrolled_date' => date("Y-m-d H:i:s")]);
+                            $student_application = $conn->table('student_applications')->where('id', '=', $request->sudent_application_id)->update(['enrolled_status' => "Enrolled",'enrolled_date' => date("Y-m-d")]);
                         }
                         return $this->successResponse($success, 'Student has been successfully saved');
                     }
@@ -21664,7 +21664,6 @@ class ApiController extends BaseController
         $validator = \Validator::make($request->all(), [
             'first_name' => 'required',
             'mobile_no' => 'required',
-            'mobile_no' => 'required',
             'address_1' => 'required',
             'country' => 'required',
             'city' => 'required',
@@ -21969,7 +21968,7 @@ class ApiController extends BaseController
             ->leftJoin('academic_year as ay', 's.academic_year', '=', 'ay.id')
             ->leftJoin('classes as academic_cl', 's.academic_grade', '=', 'academic_cl.id')
             ->when($request->admission == 1, function ($query) {
-                return $query->where('s.status', '=', 'Approved')->where('s.phase_2_status', '=', 'Approved');
+                return $query->where('s.status', '=', 'Approved')->where('s.phase_2_status', '=', 'Approved')->where('s.phase_2_status', '=', 'Approved')->where('s.enrolled_status', '=', 'Not Enrolled');
             })
             ->when($request->academic_year, function ($query) use ($request) {
                 return $query->where('s.academic_year', '=', $request->academic_year);
@@ -21980,6 +21979,7 @@ class ApiController extends BaseController
             ->when($request->created_by, function ($query) use ($request) {
                 return $query->where('s.created_by', '=', $request->created_by)->where('s.created_by_role', '=', $request->role);
             })
+            ->orderBy('id','desc')
             ->get();
             // dd($applications);
             foreach ($applications as $application) {
