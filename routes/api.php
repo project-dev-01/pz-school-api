@@ -59,7 +59,6 @@ Route::post('basesixfour', [CommonController::class, 'basesixfour']);
 Route::post('application/relation/list', [ApiController::class, 'getApplicationRelationList']);
 Route::post('application/academic_year/list', [ApiController::class, 'applicationAcademicYearList']);
 Route::post('application/grade/list', [ApiController::class, 'getApplicationGradeList']);
-Route::post('application/add', [ApiController::class, 'addApplication']);
 Route::post('application/email/', [ApiController::class, 'emailApplication']);
 Route::post('application/verify', [ApiController::class, 'verifyApplication']);
 Route::post('register_number', [ApiController::class, 'registerNumber']);

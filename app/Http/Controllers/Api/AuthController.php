@@ -69,7 +69,13 @@ class AuthController extends BaseController
         }
         // dd(Session::getId());
         // check auth
-        if (Auth::attempt(['email' => $request->email, 'password' => $request->password, 'branch_id' => $request->branch_id])) {
+        if (Auth::attempt(['email' => $request->email,
+        'password' => $request->password,
+         'branch_id' => $request->branch_id,
+         'role_id' => function ($query) {
+               $query->where('role_id', '!=', '7');
+          }
+        ])) {
             // after auth login
             // return $request;
             $user = Auth::user();
@@ -83,12 +89,15 @@ class AuthController extends BaseController
             // Auth::logoutOtherDevices($request->password);
             if ($user->status == 0) {
                 // update left to 0
-                $getUser = User::where(['email' => $request->email, 'branch_id' => $request->branch_id])->first();
+                // $getUser = User::where(['email' => $request->email,'role_id' => ['!=', 7],'branch_id' => $request->branch_id])->first();
+                $getUser = User::where('email', $request->email)
+                ->where('role_id', '!=', 7)
+                ->where('branch_id', $request->branch_id)
+                ->first();
                 $user = User::find($getUser->id);
                 $user->login_attempt = 0;
                 $user->session_id = $token;
                 $user->save();
-                // dd($user->id);
                 //User::where('id', $user->id)->update(['session_id', \Session::getId()]);
                 $country = "";
                 $country_code = "";
@@ -185,9 +194,13 @@ class AuthController extends BaseController
                 return $this->send500Error('You have been locked out of your account, please contact the admin', ['error' => 'You have been locked out of your account, please contact the admin']);
             }
         } else {
-            $getUser = User::where([['email', '=', $request->email], ['branch_id', '=', $request->branch_id]])->first();
+            // $getUser = User::where([['email', '=', $request->email],['role_id','!=','7'], ['branch_id', '=', $request->branch_id]])->first();
             // dd($getUser);
             // $getUser = User::where('email', $request->email)->first();
+            $getUser = User::where('email', $request->email)
+                // ->where('role_id', '!=', 7)
+                ->where('branch_id', $request->branch_id)
+                ->first();
             $login_attempt = isset($getUser->login_attempt) ? $getUser->login_attempt : null;
             if (isset($login_attempt)) {
                 if ($login_attempt <= 2) {
@@ -341,7 +354,7 @@ class AuthController extends BaseController
             }
         } else {
             
-            $getUser = User::where([['email', '=', $request->email], ['branch_id', '=', $request->branch_id]])->first();
+            $getUser = User::where([['email', '=', $request->email],['role_id', '=',$request->role_id], ['branch_id', '=', $request->branch_id]])->first();
             // dd($getUser);
             // $getUser = User::where('email', $request->email)->first();
             $login_attempt = isset($getUser->login_attempt) ? $getUser->login_attempt : null;

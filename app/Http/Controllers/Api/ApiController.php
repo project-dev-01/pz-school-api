@@ -13414,7 +13414,7 @@ class ApiController extends BaseController
                     's.gender',
                     's.photo'
                 )
-                ->leftJoin('students as s', 'e.student_id', '=', 's.id')
+                ->join('students as s', 'e.student_id', '=', 's.id')
                 ->where('e.academic_session_id', '=', $request->academic_session_id);
 
             if (isset($request->department_id) && filled($request->department_id)) {
@@ -21725,7 +21725,6 @@ class ApiController extends BaseController
 
             'branch_id' => 'required',
         ]);
-
 
         if (!$validator->passes()) {
             return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
