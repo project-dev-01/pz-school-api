@@ -499,8 +499,12 @@ class ApiControllerThree extends BaseController
                 ->select(
                     'stf.id',
                     DB::raw('CONCAT(stf.first_name, " ", stf.last_name) as emp_name'),
+                    'stf.email',
+                    'stf.gender',
                     'stf.employment_status',
                     'stf.birthday',
+                    'stf.nationality',
+                   'stf.mobile_no',
                     DB::raw('GROUP_CONCAT(ds.name) as designation_name'),
                     'dp.name as department_name',
                     DB::raw("stf.designation_start_date as designation_start_date"),
@@ -508,7 +512,11 @@ class ApiControllerThree extends BaseController
                     'stf.joining_date',
                     'stf.releive_date',
                     'stf.updated_at',
-                    'em.name'
+                    'em.name',
+                    'stf.present_address',
+                    'stf.permanent_address',
+                    'stf.nric_number',
+                    'stf.passport',
                 )
                 ->leftJoin("staff_departments as dp", DB::raw("FIND_IN_SET(dp.id, stf.department_id)"), ">", DB::raw("'0'"))
                 ->leftJoin("staff_designations as ds", DB::raw("FIND_IN_SET(ds.id, stf.designation_id)"), ">", DB::raw("'0'"))
@@ -518,7 +526,21 @@ class ApiControllerThree extends BaseController
                 ->groupBy('stf.id')
                 ->orderBy('stf.created_at', 'asc');
             // Group by the formatted date
-            $studentData = $student->get()->toArray();
+            $staffArray = [];
+             $getEmpDetails = $student->get();
+             $staffObj = new \stdClass();
+            if (!empty($getEmpDetails)) {
+                foreach ($getEmpDetails as $suc) {
+                    $staffObj = $suc;
+                    $staffObj->present_address = Helper::decryptStringData($suc->present_address);
+                    $staffObj->permanent_address = Helper::decryptStringData($suc->permanent_address);
+                    $staffObj->mobile_no = Helper::decryptStringData($suc->mobile_no);
+                    $staffObj->nric_number = Helper::decryptStringData($suc->nric_number);
+                    $staffObj->passport = Helper::decryptStringData($suc->passport);
+                    $staffArray[] = $staffObj;
+                }
+            }
+            $studentData['staff'] = $staffArray;
             // dd($studentData);
             return $this->successResponse($studentData, 'Employee record fetch successfully');
         }
