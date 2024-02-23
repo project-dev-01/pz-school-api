@@ -410,6 +410,8 @@ Route::group(['middleware' => ['auth:api', 'throttle:limit_per_user', 'logroute'
     Route::post('get_attendance_list', [ApiController::class, 'getAttendanceList']);
     Route::post('get_child_subjects', [ApiController::class, 'getChildSubjects']);
     Route::post('get_attendance_list_teacher', [ApiController::class, 'getAttendanceListTeacher']);
+    Route::post('get_attendance_list_teacher_by_subject', [ApiController::class, 'getAttendanceListTeacherBySubject']);
+
     Route::post('get_attendance_list_parent', [ApiController::class, 'getAttendanceListParent']);
     Route::post('get_reasons_by_student', [ApiController::class, 'getReasonsByStudent']);
     // get calendor data by teacher
