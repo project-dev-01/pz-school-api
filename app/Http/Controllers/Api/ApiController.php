@@ -829,6 +829,7 @@ class ApiController extends BaseController
                 $old = $createConnection->table('teacher_allocations')
                     ->where(
                         [
+                            ['department_id', $request->department_id],
                             ['section_id', $request->section_id],
                             ['class_id', $request->class_id],
                             ['academic_session_id', $request->academic_session_id],
@@ -972,6 +973,7 @@ class ApiController extends BaseController
                 $getCount = $createConnection->table('teacher_allocations')
                     ->where(
                         [
+                            ['department_id', $request->department_id],
                             ['section_id', $request->section_id],
                             ['class_id', $request->class_id],
                             ['type', $request->type],
