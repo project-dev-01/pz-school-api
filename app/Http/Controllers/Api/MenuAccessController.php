@@ -79,6 +79,7 @@ class MenuAccessController extends BaseController
                 'menu_url' => $request->menu_url,
                 'menu_routename' => $request->menu_routename,
                 'menu_status' => $request->menu_status,
+                'menu_order' => $request->menu_order,
                 'menu_dropdown' => $request->menu_dropdown,
                 'created_at' => date("Y-m-d H:i:s")
             ]);
@@ -86,7 +87,7 @@ class MenuAccessController extends BaseController
             if (!$query) {
                 return $this->send500Error('Something went wrong.', ['error' => 'Something went wrong']);
             } else {
-                return $this->successResponse($success, 'New Menu has been successfully saved');
+                return $this->successResponse($success, 'New Menu Information has been successfully saved');
             }
         }
     }
@@ -114,6 +115,7 @@ class MenuAccessController extends BaseController
                     'menu_url' => $request->menu_url,
                     'menu_routename' => $request->menu_routename,
                     'menu_status' => $request->menu_status,
+                    'menu_order' => $request->menu_order,
                     'menu_dropdown' => $request->menu_dropdown,
                     'updated_at' => date("Y-m-d H:i:s")
                 ]);
@@ -123,7 +125,7 @@ class MenuAccessController extends BaseController
             if (!$query) {
                 return $this->send500Error('Something went wrong.', ['error' => 'Something went wrong']);
             } else {
-                return $this->successResponse($success, 'New Menu has been successfully Updated');
+                return $this->successResponse($success, 'Menu Information has been Updated successfully ');
             }
         }
     }
@@ -138,7 +140,7 @@ class MenuAccessController extends BaseController
 
 
         //dd($data);
-        return $this->successResponse($data, 'Menus fetch successfully');
+        return $this->successResponse($data, 'Menu Informations get successfully');
     }
     public function getMenuAccessList(Request $request)
     {
@@ -166,7 +168,7 @@ class MenuAccessController extends BaseController
             }, 'menuaccess_id')
             ->where('menu_type', $request->type)
             ->where('role_id', $request->role_id)
-            ->orderBy("role_id", "asc")
+            ->orderBy("menu_order", "asc")
             ->get();
         // dd($data);
         return $this->successResponse($data, 'Menus fetch successfully');
@@ -219,7 +221,7 @@ class MenuAccessController extends BaseController
         if (!$query) {
             return $this->send500Error('Something went wrong.', ['error' => 'Something went wrong']);
         } else {
-            return $this->successResponse($success, 'Menu Access Permission Assigned has been successfully saved');
+            return $this->successResponse($success, 'Menu Access Permission Assigned has been Updated successfully ');
         }
     }
 
@@ -554,7 +556,7 @@ class MenuAccessController extends BaseController
             ->where('ma.branch_id', $br_id)
             ->where('ms.menu_type', $request->type)
             ->where('ms.role_id', $request->role_id)
-            ->orderBy("ms.menu_id", "asc")
+            ->orderBy("ms.menu_order", "asc")
             ->get();
         // dd($data);
         return $this->successResponse($data, 'Menus fetch successfully');
