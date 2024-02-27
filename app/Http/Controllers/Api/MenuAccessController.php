@@ -594,24 +594,27 @@ class MenuAccessController extends BaseController
             }
         }
         $sid=$request->school_roleid;
-        $roleIds1 =$conn->table('school_menuaccess as t1')
-        ->select('t1.role_id','t2.role_name') 
-        ->leftJoin($main_db . '.roles AS t2', 't1.role_id', '=', 't2.id')
-        ->distinct()
-        ->where('school_roleid', '=', $request->school_roleid)
-        ->pluck('role_id');
-        
-        $roles='';
-        foreach($roleIds1 as $role)
+        if($sid!='' || $sid!=null)
         {
-            $roles.=$role.',';
+            $roleIds1 =$conn->table('school_menuaccess as t1')
+            ->select('t1.role_id','t2.role_name') 
+            ->leftJoin($main_db . '.roles AS t2', 't1.role_id', '=', 't2.id')
+            ->distinct()
+            ->where('school_roleid', '=', $request->school_roleid)
+            ->pluck('role_id');
+            
+            $roles='';
+            foreach($roleIds1 as $role)
+            {
+                $roles.=$role.',';
+            }
+            $roles= substr($roles, 0, -1);        
+            User::where([['school_roleid', '=', $request->school_roleid], ['branch_id', '=', $request->branch_id]])->update([
+                    
+                'role_id' => $roles,
+                'updated_at' => date("Y-m-d H:i:s")
+            ]);
         }
-        $roles= substr($roles, 0, -1);        
-        User::where([['school_roleid', '=', $request->school_roleid], ['branch_id', '=', $request->branch_id]])->update([
-                
-            'role_id' => $roles,
-            'updated_at' => date("Y-m-d H:i:s")
-        ]);
         $success = [];
         if (!$query) {
             return $this->send500Error('Something went wrong.', ['error' => 'Something went wrong']);
@@ -627,24 +630,27 @@ class MenuAccessController extends BaseController
         $query = $conn->table('school_menuaccess')->where([['school_roleid', '=', $request->school_roleid], ['role_id', '=', $request->role_id]])->delete();
         
         $sid=$request->school_roleid;
-        $roleIds1 =$conn->table('school_menuaccess as t1')
-        ->select('t1.role_id','t2.role_name') 
-        ->leftJoin($main_db . '.roles AS t2', 't1.role_id', '=', 't2.id')
-        ->distinct()
-        ->where('school_roleid', '=', $request->school_roleid)
-        ->pluck('role_id');
-        
-        $roles='';
-        foreach($roleIds1 as $role)
+        if($sid!='' || $sid!=null)
         {
-            $roles.=$role.',';
+            $roleIds1 =$conn->table('school_menuaccess as t1')
+            ->select('t1.role_id','t2.role_name') 
+            ->leftJoin($main_db . '.roles AS t2', 't1.role_id', '=', 't2.id')
+            ->distinct()
+            ->where('school_roleid', '=', $request->school_roleid)
+            ->pluck('role_id');
+            
+            $roles='';
+            foreach($roleIds1 as $role)
+            {
+                $roles.=$role.',';
+            }
+            $roles= substr($roles, 0, -1);        
+            User::where([['school_roleid', '=', $request->school_roleid], ['branch_id', '=', $request->branch_id]])->update([
+                    
+                'role_id' => $roles,
+                'updated_at' => date("Y-m-d H:i:s")
+            ]);
         }
-        $roles= substr($roles, 0, -1);        
-        User::where([['school_roleid', '=', $request->school_roleid], ['branch_id', '=', $request->branch_id]])->update([
-                
-            'role_id' => $roles,
-            'updated_at' => date("Y-m-d H:i:s")
-        ]);
         $success = [];
         if (!$query) {
             return $this->send500Error('Something went wrong.', ['error' => 'Something went wrong']);
