@@ -823,6 +823,7 @@ Route::group(['middleware' => ['auth:api', 'throttle:limit_per_user', 'logroute'
     Route::post('exam_timetable/list/download', [ApiControllerOne::class, 'getExamTimetableDown']);
     Route::post('staff_attendance/export', [ApiControllerOne::class, 'staffAttendanceReport']);
     Route::post('student_attendance/export', [ApiControllerOne::class, 'studentAttendanceReport']);
+    Route::post('student_attendance/export/subject', [ApiControllerOne::class, 'studentAttendanceReportSubject']);
 
 
 

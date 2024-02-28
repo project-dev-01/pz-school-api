@@ -9134,6 +9134,402 @@ class ApiControllerOne extends BaseController
 
 
             $Connection = $this->createNewConnection($branch);
+            $excel = [];
+            if ($request->pattern == "Day") {
+
+                $date = $request->date;
+                $excel = $Connection->table('student_attendances_day as sa')
+                    ->select(
+                        'sa.student_id',
+                        \DB::raw("CONCAT(stud.first_name, ' ', stud.last_name) as name"),
+                        DB::raw("CONCAT(stud.first_name_english, ' ', stud.last_name_english) as name_english"),
+                        'c.name as class_name',
+                        's.name as section_name',
+                        'sa.status',
+                        'sa.remarks',
+
+                    )
+                    // ->join('enrolls as en', 'sa.student_id', '=', 'en.student_id')
+                    ->join('students as stud', 'sa.student_id', '=', 'stud.id')
+                    ->join('enrolls as en', function ($join) {
+                        $join->on('stud.id', '=', 'en.student_id')
+                            ->on('sa.class_id', '=', 'en.class_id')
+                            ->on('sa.section_id', '=', 'en.section_id');
+                    })
+                    ->leftJoin('classes as c', 'en.class_id', '=', 'c.id')
+                    ->leftJoin('sections as s', 'en.section_id', '=', 's.id')
+                    ->where([
+                        ['sa.class_id', '=', $class],
+                        ['sa.section_id', '=', $section],
+                        // ['sa.subject_id', '=', $subject],
+                    ])
+                    ->where('sa.date', $date)
+                    ->groupBy('sa.student_id')
+                    ->get();
+                if (!empty($excel)) {
+
+                    foreach ($excel as $key => $li) {
+                        $excel[$key]->student_id = $key + 1;
+
+                        $status = "";
+                        if ($li->status == "present") {
+                            $status = "Present";
+                        } else if ($li->status == "absent") {
+                            $status = "Absent";
+                        }
+                        $excel[$key]->status = $status;
+                    }
+                }
+                // dd($excel);
+
+            } else if ($request->pattern == "Month") {
+
+                $date = $request->date;
+
+
+                $month_year = explode("-", $date);
+
+                $m = $month_year[0];
+                $y = $month_year[1];
+
+
+
+                $start = $y . '-' . $m . '-01';
+                $end = date('Y-m-t', strtotime($start));
+                //
+                $startDate = new DateTime($start);
+                $endDate = new DateTime($end);
+
+                $date = '';
+                $tot = [];
+                while ($startDate <= $endDate) {
+
+                    $dat = $startDate->format('Y-m-d');
+                    array_push($tot, $dat);
+                    $date .= $dat . ',';
+                    $startDate->modify('+1 day');
+                }
+                // dd($date);
+                $trimdate = rtrim($date, ",");
+                $attend = \DB::raw($trimdate);
+
+                if ($student) {
+                    $excel = $Connection->table('student_attendances_day as sa')
+                        ->select(
+                            'sa.student_id',
+                            \DB::raw("CONCAT(stud.first_name, ' ', stud.last_name) as name"),
+                            $attend,
+                            DB::raw('COUNT(CASE WHEN sa.status = "present" then 1 ELSE NULL END) as "presentCount"'),
+                            DB::raw('COUNT(CASE WHEN sa.status = "absent" then 1 ELSE NULL END) as "absentCount"'),
+                            DB::raw('COUNT(CASE WHEN sa.status = "late" then 1 ELSE NULL END) as "lateCount"'),
+
+                        )
+                        ->join('enrolls as en', 'sa.student_id', '=', 'en.student_id')
+                        ->join('students as stud', 'sa.student_id', '=', 'stud.id')
+                        ->where([
+                            ['sa.student_id', '=', $student],
+                            // ['sa.subject_id', '=', $subject],
+                        ])
+                        ->whereMonth('sa.date', $m)
+                        ->whereYear('sa.date', $y)
+                        ->groupBy('sa.student_id')
+                        ->get();
+                } else {
+                    $excel = $Connection->table('student_attendances_day as sa')
+                        ->select(
+                            'sa.student_id',
+                            \DB::raw("CONCAT(stud.first_name, ' ', stud.last_name) as name"),
+                            $attend,
+                            DB::raw('COUNT(CASE WHEN sa.status = "present" then 1 ELSE NULL END) as "presentCount"'),
+                            DB::raw('COUNT(CASE WHEN sa.status = "absent" then 1 ELSE NULL END) as "absentCount"'),
+                            DB::raw('COUNT(CASE WHEN sa.status = "late" then 1 ELSE NULL END) as "lateCount"'),
+
+                        )
+                        ->join('enrolls as en', 'sa.student_id', '=', 'en.student_id')
+                        ->join('students as stud', 'sa.student_id', '=', 'stud.id')
+                        ->where([
+                            ['sa.class_id', '=', $class],
+                            ['sa.section_id', '=', $section],
+                            // ['sa.subject_id', '=', $subject],
+                        ])
+                        ->whereMonth('sa.date', $m)
+                        ->whereYear('sa.date', $y)
+                        ->groupBy('sa.student_id')
+                        ->get();
+                }
+
+
+                if (!empty($excel)) {
+
+                    foreach ($excel as $key => $li) {
+                        $student_id = $li->student_id;
+                        foreach ($tot as $t) {
+                            if ($student) {
+                                $in_date = $Connection->table('student_attendances_day as sa')
+                                    ->where('sa.student_id', $student_id)
+                                    // ->where('sa.subject_id', $subject)
+                                    ->where('sa.date', $t)
+                                    ->first();
+                            } else {
+                                $in_date = $Connection->table('student_attendances_day as sa')
+                                    ->where('sa.student_id', $student_id)
+                                    // ->where('sa.subject_id', $subject)
+                                    ->where('sa.date', $t)
+                                    ->first();
+                            }
+
+
+                            if ($in_date) {
+                                if ($in_date->status == "present") {
+                                    $li->$t = "P";
+                                } else if ($in_date->status == "absent") {
+                                    $li->$t = "X";
+                                } else if ($in_date->status == "late") {
+                                    $li->$t = "L";
+                                } else {
+                                    $li->$t = 0;
+                                }
+                            } else {
+                                $li->$t = 0;
+                            }
+                        }
+                        $excel[$key] = $li;
+                    }
+                }
+            } else if ($request->pattern == "Term") {
+
+                $date = $request->date;
+
+                $semester = $Connection->table('semester as s')
+                    ->select('start_date', 'end_date', 'name')
+                    ->where('id', $request->date)
+                    ->first();
+                $start = $semester->start_date;
+                $end = $semester->end_date;
+
+                $start_date = Carbon::parse($semester->start_date);
+                $end_date = Carbon::parse($semester->end_date);
+                $school_days = $end_date->diffInWeekDays($start_date);
+
+                $holiday = $Connection->table('holidays as h')
+                    ->where('date', '>=', $start)
+                    ->where('date', '<=', $end)
+                    ->whereNull('deleted_at')
+                    ->get();
+
+                $holiday_count = $holiday->count();
+                $weekend_holiday = 0;
+                foreach ($holiday as $holi) {
+
+                    if (Carbon::parse($holi->date)->isWeekend()) {
+                        $weekend_holiday++;
+                    }
+                }
+                $total_holidays = $holiday_count - $weekend_holiday;
+                $total_school_days = $school_days - $total_holidays;
+
+
+                $excel = $Connection->table('students as stud')
+                    ->select(
+                        'sa.student_id',
+                        \DB::raw("CONCAT(stud.first_name, ' ', stud.last_name) as name"),
+                        DB::raw("CONCAT(stud.first_name_english, ' ', stud.last_name_english) as name_english"),
+                        'c.name as class_name',
+                        's.name as section_name',
+                        's.name as semester_name',
+                        DB::raw('COUNT(CASE WHEN sa.status = "present" then 1 ELSE NULL END) as "presentCount"'),
+                        DB::raw('COUNT(CASE WHEN sa.status = "absent" then 1 ELSE NULL END) as "absentCount"'),
+                        DB::raw('COUNT(CASE WHEN sa.status = "late" then 1 ELSE NULL END) as "lateCount"'),
+                        'sa.remarks',
+                    )
+                    ->leftJoin('student_attendances_day as sa', 'sa.student_id', '=', 'stud.id')
+                    ->join('enrolls as en', function ($join) {
+                        $join->on('stud.id', '=', 'en.student_id')
+                            ->on('sa.class_id', '=', 'en.class_id')
+                            ->on('sa.section_id', '=', 'en.section_id');
+                    })
+                    ->leftJoin('classes as c', 'en.class_id', '=', 'c.id')
+                    ->leftJoin('sections as s', 'en.section_id', '=', 's.id')
+                    ->where([
+                        // ['stud.id', '=', $request->student_id],
+                        ['sa.class_id', '=', $request->class_id],
+                        ['sa.section_id', '=', $request->section_id],
+                        ['en.academic_session_id', '=', $request->academic_session_id],
+                        // ['en.active_status', '=', "0"],
+                    ])
+                    ->whereBetween(DB::raw('date(date)'), [$start, $end])
+                    ->groupBy('sa.student_id')
+                    ->get();
+
+                // dd($excel);
+                if (!empty($excel)) {
+
+                    foreach ($excel as $key => $li) {
+                        $student_id = $li->student_id;
+                        $excel[$key]->student_id = $key + 1;
+                        $excel[$key]->semester_name = $semester->name;
+
+                        $getstudentcount = $Connection->table('student_attendances_day as sa')
+                            ->select(
+                                'sa.student_id',
+                                'sa.status'
+                            )
+                            ->whereBetween(DB::raw('date(sa.date)'), [$start, $end])->where('student_id', '=', $student_id)
+                            ->groupBy('sa.date')->get();
+                        $presentCount = 0;
+                        $absentCount = 0;
+                        $lateCount = 0;
+                        foreach ($getstudentcount as $stucount) {
+                            if ($stucount->status == "present") {
+                                $presentCount++;
+                            } else if ($stucount->status == "absent") {
+                                $absentCount++;
+                            } else if ($stucount->status == "late") {
+                                $lateCount++;
+                            }
+                        }
+                        $excel[$key]->presentCount = $presentCount;
+                        $excel[$key]->absentCount = $absentCount;
+                        $excel[$key]->lateCount = $lateCount;
+                        // $excel[$key]->status= $status;
+                    }
+                }
+                // dd($excel);
+
+            } else if ($request->pattern == "Year") {
+
+                $date = $request->date;
+
+                $yearData = $Connection->table('semester as sm')
+                ->select(DB::raw('MIN(sm.start_date) AS year_start_date, MAX(sm.end_date) AS year_end_date'))
+                ->where([
+                    ['sm.academic_session_id', '=', $request->academic_session_id],
+                ])
+                ->get();
+                        
+                // $start_end = explode('-', $academic_year->name);
+                // dd($yearData);
+                
+                $start = $yearData[0]->year_start_date;
+                $end = $yearData[0]->year_end_date;
+
+                $start_date = Carbon::parse($start);
+                $end_date = Carbon::parse($end);
+                $school_days = $end_date->diffInWeekDays($start_date);
+
+                $holiday = $Connection->table('holidays as h')
+                    ->where('date', '>=', $start)
+                    ->where('date', '<=', $end)
+                    ->whereNull('deleted_at')
+                    ->get();
+
+                $holiday_count = $holiday->count();
+                $weekend_holiday = 0;
+                foreach ($holiday as $holi) {
+
+                    if (Carbon::parse($holi->date)->isWeekend()) {
+                        $weekend_holiday++;
+                    }
+                }
+                $total_holidays = $holiday_count - $weekend_holiday;
+                $total_school_days = $school_days - $total_holidays;
+
+
+                $excel = $Connection->table('students as stud')
+                    ->select(
+                        'sa.student_id',
+                        \DB::raw("CONCAT(stud.first_name, ' ', stud.last_name) as name"),
+                        DB::raw("CONCAT(stud.first_name_english, ' ', stud.last_name_english) as name_english"),
+                        'c.name as class_name',
+                        's.name as section_name',
+                        DB::raw('COUNT(CASE WHEN sa.status = "present" then 1 ELSE NULL END) as "presentCount"'),
+                        DB::raw('COUNT(CASE WHEN sa.status = "absent" then 1 ELSE NULL END) as "absentCount"'),
+                        DB::raw('COUNT(CASE WHEN sa.status = "late" then 1 ELSE NULL END) as "lateCount"'),
+                        'sa.remarks',
+                    )
+                    ->leftJoin('student_attendances_day as sa', 'sa.student_id', '=', 'stud.id')
+                    ->join('enrolls as en', function ($join) {
+                        $join->on('stud.id', '=', 'en.student_id')
+                            ->on('sa.class_id', '=', 'en.class_id')
+                            ->on('sa.section_id', '=', 'en.section_id');
+                    })
+                    ->leftJoin('classes as c', 'en.class_id', '=', 'c.id')
+                    ->leftJoin('sections as s', 'en.section_id', '=', 's.id')
+                    ->where([
+                        // ['stud.id', '=', $request->student_id],
+                        ['sa.class_id', '=', $request->class_id],
+                        ['sa.section_id', '=', $request->section_id],
+                        ['en.academic_session_id', '=', $request->academic_session_id],
+                        // ['en.active_status', '=', "0"],
+                    ])
+                    ->whereBetween(DB::raw('date(date)'), [$start, $end])
+                    ->groupBy('sa.student_id')
+                    ->get();
+
+                // dd($excel);
+                if (!empty($excel)) {
+
+                    foreach ($excel as $key => $li) {
+                        $student_id = $li->student_id;
+                        $excel[$key]->student_id = $key + 1;
+
+                        $getstudentcount = $Connection->table('student_attendances_day as sa')
+                            ->select(
+                                'sa.student_id',
+                                'sa.status'
+                            )
+                            ->whereBetween(DB::raw('date(sa.date)'), [$start, $end])->where('student_id', '=', $student_id)
+                            ->groupBy('sa.date')->get();
+                        $presentCount = 0;
+                        $absentCount = 0;
+                        $lateCount = 0;
+                        foreach ($getstudentcount as $stucount) {
+                            if ($stucount->status == "present") {
+                                $presentCount++;
+                            } else if ($stucount->status == "absent") {
+                                $absentCount++;
+                            } else if ($stucount->status == "late") {
+                                $lateCount++;
+                            }
+                        }
+                        $excel[$key]->presentCount = $presentCount;
+                        $excel[$key]->absentCount = $absentCount;
+                        $excel[$key]->lateCount = $lateCount;
+                        // $excel[$key]->status= $status;
+                    }
+                }
+                // dd($excel);
+
+            }
+            $details['attendance'] = $excel;
+            return $this->successResponse($details, 'Student Attendance record fetch successfully');
+        }
+    }
+    
+    public function studentAttendanceReportSubject(Request $request)
+    {
+        $validator = \Validator::make($request->all(), [
+            'branch_id' => 'required',
+            'token' => 'required',
+            'date' => 'required',
+        ]);
+
+        if (!$validator->passes()) {
+            return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
+        } else {
+            // create new connection
+            $con = $this->createNewConnection($request->branch_id);
+            // get data
+            $branch = $request->branch_id;
+            $class = $request->class_id;
+            $student = $request->student_id;
+            $section = $request->section_id;
+            $subject = $request->subject_id;
+            $academic_session_id = $request->academic_session_id;
+
+
+            $Connection = $this->createNewConnection($branch);
+            $excel = [];
             if ($request->pattern == "Day") {
 
                 $date = $request->date;
@@ -9160,7 +9556,7 @@ class ApiControllerOne extends BaseController
                     ->where([
                         ['sa.class_id', '=', $class],
                         ['sa.section_id', '=', $section],
-                        ['sa.subject_id', '=', $subject],
+                        // ['sa.subject_id', '=', $subject],
                     ])
                     ->where('sa.date', $date)
                     ->groupBy('sa.student_id')
@@ -9227,7 +9623,7 @@ class ApiControllerOne extends BaseController
                         ->join('students as stud', 'sa.student_id', '=', 'stud.id')
                         ->where([
                             ['sa.student_id', '=', $student],
-                            ['sa.subject_id', '=', $subject],
+                            // ['sa.subject_id', '=', $subject],
                         ])
                         ->whereMonth('sa.date', $m)
                         ->whereYear('sa.date', $y)
@@ -9249,7 +9645,7 @@ class ApiControllerOne extends BaseController
                         ->where([
                             ['sa.class_id', '=', $class],
                             ['sa.section_id', '=', $section],
-                            ['sa.subject_id', '=', $subject],
+                            // ['sa.subject_id', '=', $subject],
                         ])
                         ->whereMonth('sa.date', $m)
                         ->whereYear('sa.date', $y)
@@ -9266,13 +9662,13 @@ class ApiControllerOne extends BaseController
                             if ($student) {
                                 $in_date = $Connection->table('student_attendances as sa')
                                     ->where('sa.student_id', $student_id)
-                                    ->where('sa.subject_id', $subject)
+                                    // ->where('sa.subject_id', $subject)
                                     ->where('sa.date', $t)
                                     ->first();
                             } else {
                                 $in_date = $Connection->table('student_attendances as sa')
                                     ->where('sa.student_id', $student_id)
-                                    ->where('sa.subject_id', $subject)
+                                    // ->where('sa.subject_id', $subject)
                                     ->where('sa.date', $t)
                                     ->first();
                             }
@@ -9354,7 +9750,7 @@ class ApiControllerOne extends BaseController
                         ['sa.class_id', '=', $request->class_id],
                         ['sa.section_id', '=', $request->section_id],
                         ['en.academic_session_id', '=', $request->academic_session_id],
-                        ['en.active_status', '=', "0"],
+                        // ['en.active_status', '=', "0"],
                     ])
                     ->whereBetween(DB::raw('date(date)'), [$start, $end])
                     ->groupBy('sa.student_id')
@@ -9399,14 +9795,18 @@ class ApiControllerOne extends BaseController
 
                 $date = $request->date;
 
-                $academic_year = $Connection->table('academic_year as ay')
-                    ->select('id', 'name')
-                    ->where('id', $request->date)
-                    ->first();
-                $start_end = explode('-', $academic_year->name);
-                // dd($start_end);
-                $start = $start_end[0] . '-05-01';
-                $end = $start_end[1] . '-04-30';
+                $yearData = $Connection->table('semester as sm')
+                ->select(DB::raw('MIN(sm.start_date) AS year_start_date, MAX(sm.end_date) AS year_end_date'))
+                ->where([
+                    ['sm.academic_session_id', '=', $request->academic_session_id],
+                ])
+                ->get();
+                        
+                // $start_end = explode('-', $academic_year->name);
+                // dd($yearData);
+                
+                $start = $yearData[0]->year_start_date;
+                $end = $yearData[0]->year_end_date;
 
                 $start_date = Carbon::parse($start);
                 $end_date = Carbon::parse($end);
@@ -9455,7 +9855,7 @@ class ApiControllerOne extends BaseController
                         ['sa.class_id', '=', $request->class_id],
                         ['sa.section_id', '=', $request->section_id],
                         ['en.academic_session_id', '=', $request->academic_session_id],
-                        ['en.active_status', '=', "0"],
+                        // ['en.active_status', '=', "0"],
                     ])
                     ->whereBetween(DB::raw('date(date)'), [$start, $end])
                     ->groupBy('sa.student_id')
