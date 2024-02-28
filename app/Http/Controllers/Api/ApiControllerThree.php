@@ -278,6 +278,7 @@ class ApiControllerThree extends BaseController
             $success = DB::table('roles')->select('id', 'role_name as name')
                 ->where('id', '!=', 1)
                 ->where('id', '!=', 3)
+                ->where('id', '!=', 7)
                 ->where('id', '!=', $request->user_id)
                 ->get();
             //   $success = Category::all();
@@ -339,7 +340,8 @@ class ApiControllerThree extends BaseController
                     DB::raw("GROUP_CONCAT(DISTINCT  c.name) as grade_name"),
                     DB::raw("GROUP_CONCAT(DISTINCT  s.name) as section_name"),
                     DB::raw("GROUP_CONCAT(DISTINCT  d.name) as department_name"),
-                    DB::raw('CONCAT(p.first_name, " ", p.last_name) as parent_name')
+                    DB::raw('CONCAT(p.first_name, " ", p.last_name) as parent_name'),
+                    DB::raw('CONCAT(st.first_name, " ", st.last_name) as student_name')
                 )
                 ->leftJoin('' . $main_db . '.roles as rol', function ($join) {
                     $join->on(\DB::raw("FIND_IN_SET(rol.id,b.target_user)"), ">", \DB::raw("'0'"));
@@ -355,6 +357,9 @@ class ApiControllerThree extends BaseController
                 })
                 ->leftjoin('parent as p', function ($join) {
                     $join->on(\DB::raw("FIND_IN_SET(p.id,b.parent_id)"), ">", \DB::raw("'0'"));
+                })
+                ->leftjoin('students as st', function ($join) {
+                    $join->on(\DB::raw("FIND_IN_SET(st.id,b.student_id)"), ">", \DB::raw("'0'"));
                 })
                 ->groupBy("b.id")
                 ->orderBy('b.id', 'desc')
@@ -434,13 +439,15 @@ class ApiControllerThree extends BaseController
             // get data
             $student = $con->table('enrolls as e')->select('s.id', DB::raw('CONCAT(s.first_name, " ", s.last_name) as name'), 's.register_no', 's.roll_no', 's.mobile_no', 's.email', 's.gender', 's.photo')
                 ->leftJoin('students as s', 'e.student_id', '=', 's.id')
-                ->when($class_id, function ($query, $class_id) {
-                    return $query->where('e.class_id', $class_id);
-                })
-                ->when($section_id, function ($query, $section_id) {
-                    return $query->where('e.section_id', $section_id);
-                })
-                // ->where('e.active_status', '=', "0")
+                // ->when($class_id, function ($query, $class_id) {
+                //     return $query->where('e.class_id', $class_id);
+                // })
+                // ->when($section_id, function ($query, $section_id) {
+                //     return $query->where('e.section_id', $section_id);
+                // })
+                ->where('e.class_id', '=', $class_id)
+                ->where('e.section_id','=', $section_id)
+                ->where('e.active_status', '=', "0")
                 ->groupBy('e.student_id')
                 ->get()->toArray();
 
@@ -451,7 +458,7 @@ class ApiControllerThree extends BaseController
     {
         $validator = \Validator::make($request->all(), [
             'branch_id' => 'required',
-            'token' => 'required',
+           // 'token' => 'required',
         ]);
 
         $class_id = $request->class_id;
@@ -462,20 +469,22 @@ class ApiControllerThree extends BaseController
             $con = $this->createNewConnection($request->branch_id);
             // get data
             $parent = $con->table('enrolls as e')->select('p.id', DB::raw('CONCAT(p.first_name, " ", p.last_name) as parent_name'))
-                ->leftJoin('students as s', 'e.student_id', '=', 's.id')
-                ->leftjoin('parent as p', function ($join) {
+                ->join('students as s', 'e.student_id', '=', 's.id')
+                ->join('parent as p', function ($join) {
                     $join->on('s.father_id', '=', 'p.id');
                     $join->orOn('s.mother_id', '=', 'p.id');
                     $join->orOn('s.guardian_id', '=', 'p.id');
                 })
-                ->when($class_id, function ($query, $class_id) {
-                    return $query->where('e.class_id', $class_id);
-                })
-                ->when($section_id, function ($query, $section_id) {
-                    return $query->where('e.section_id', $section_id);
-                })
+                // ->when($class_id, function ($query, $class_id) {
+                //     return $query->where('e.class_id', $class_id);
+                // })
+                // ->when($section_id, function ($query, $section_id) {
+                //     return $query->where('e.section_id', $section_id);
+                // })
+                ->where('e.class_id', '=', $class_id)
+                ->where('e.section_id','=', $section_id)
                 ->where('e.active_status', '=', "0")
-                ->groupBy('p.id')
+                ->groupBy('e.student_id')
                 ->get()->toArray();
             return $this->successResponse($parent, 'Parent record fetch successfully');
         }
@@ -487,8 +496,6 @@ class ApiControllerThree extends BaseController
             'branch_id' => 'required',
 
         ]);
-
-        $working_status = $request->working_status;
         if (!$validator->passes()) {
             return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
         } else {
@@ -499,12 +506,26 @@ class ApiControllerThree extends BaseController
                 ->select(
                     'stf.id',
                     DB::raw('CONCAT(stf.first_name, " ", stf.last_name) as emp_name'),
+                    DB::raw('CONCAT(stf.first_name_english, " ", stf.last_name_english) as english_emp_name'),
+                    DB::raw('CONCAT(stf.first_name_furigana, " ", stf.last_name_furigana) as furigana_emp_name'),
                     'stf.email',
                     'stf.gender',
+                    'stf.height',
+                    'stf.weight',
+                    'stf.allergy',
+                    'stf.blood_group',
                     'stf.employment_status',
+                    'stp.name as staff_position_name',
+                    'stc.name as staff_category_name',
                     'stf.birthday',
                     'stf.nationality',
-                   'stf.mobile_no',
+                    're.name as religion_name',
+                    'stf.mobile_no',
+                    'stf.city',
+                    'stf.state',
+                    'stf.country',
+                    'stf.post_code',
+                    'stf.visa_number',
                     DB::raw('GROUP_CONCAT(ds.name) as designation_name'),
                     'dp.name as department_name',
                     DB::raw("stf.designation_start_date as designation_start_date"),
@@ -521,7 +542,10 @@ class ApiControllerThree extends BaseController
                 ->leftJoin("staff_departments as dp", DB::raw("FIND_IN_SET(dp.id, stf.department_id)"), ">", DB::raw("'0'"))
                 ->leftJoin("staff_designations as ds", DB::raw("FIND_IN_SET(ds.id, stf.designation_id)"), ">", DB::raw("'0'"))
                 ->leftJoin("employee_types as em", DB::raw("FIND_IN_SET(em.id, stf.employee_type_id)"), ">", DB::raw("'0'"))
-                ->where('stf.working_status', '=', $working_status)
+                ->leftJoin('religions as re', 'stf.religion', '=', 're.id')
+                ->leftJoin('staff_categories as stc', 'stf.staff_category', '=', 'stc.id')
+                ->leftJoin('staff_positions as stp', 'stf.staff_position', '=', 'stp.id')
+                ->where('stf.working_status', '=', '1')
                 ->where('stf.is_active', '=', '0')
                 ->groupBy('stf.id')
                 ->orderBy('stf.created_at', 'asc');
@@ -593,7 +617,11 @@ class ApiControllerThree extends BaseController
                     $join->on('b.id', '=', 'bi.bulletin_id');
                     $join->where('bi.user_id', '=', $parent_id);
                 })
-                ->where('b.class_id', $class_id)
+                ->where(function ($query) use ($class_id) {
+                    $query->where('b.class_id', $class_id)
+                        ->orWhereNull('b.class_id');
+                })
+                //->where('b.class_id', $class_id)
                 ->where(function ($query) use ($section_id) {
                     $query->where('b.section_id', $section_id)
                         ->orWhereNull('b.section_id');
@@ -711,7 +739,11 @@ class ApiControllerThree extends BaseController
                     $join->on('b.id', '=', 'bi.bulletin_id');
                     $join->where('bi.user_id', '=', $parent_id);
                 })
-                ->where('b.class_id', $class_id)
+                ->where(function ($query) use ($class_id) {
+                    $query->where('b.class_id', $class_id)
+                        ->orWhereNull('b.class_id');
+                })
+                //->where('b.class_id', $class_id)
                 ->where(function ($query) use ($section_id) {
                     $query->where('b.section_id', $section_id)
                         ->orWhereNull('b.section_id');
@@ -778,7 +810,11 @@ class ApiControllerThree extends BaseController
                     $join->on('b.id', '=', 'bi.bulletin_id');
                     $join->where('bi.user_id', '=', $student_id);
                 })
-                ->where('b.class_id', $class_id)
+                ->where(function ($query) use ($class_id) {
+                    $query->where('b.class_id', $class_id)
+                        ->orWhereNull('b.class_id');
+                })
+                //->where('b.class_id', $class_id)
                 ->where(function ($query) use ($section_id) {
                     $query->where('b.section_id', $section_id)
                         ->orWhereNull('b.section_id');
@@ -889,7 +925,11 @@ class ApiControllerThree extends BaseController
                     $join->on('b.id', '=', 'bi.bulletin_id');
                     $join->where('bi.user_id', '=', $student_id);
                 })
-                ->where('b.class_id', $class_id)
+                ->where(function ($query) use ($class_id) {
+                    $query->where('b.class_id', $class_id)
+                        ->orWhereNull('b.class_id');
+                })
+               // ->where('b.class_id', $class_id)
                 ->where(function ($query) use ($section_id) {
                     $query->where('b.section_id', $section_id)
                         ->orWhereNull('b.section_id');

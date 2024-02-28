@@ -1032,7 +1032,7 @@ Route::group(['middleware' => ['auth:api', 'throttle:limit_per_user', 'logroute'
     Route::get('buletin_board/imp_list/teacher', [ApiControllerThree::class, 'getBulletinImpTeacher']);
     Route::post('bulletin_board/bulletin_star_teacher', [ApiControllerThree::class, 'bulletinTeacherStar']);
     // retired routes
-    Route::post('retired/list', [ApiControllerThree::class, 'getRetiredList']);
+    Route::get('retired/list', [ApiControllerThree::class, 'getRetiredList']);
 
 
     // Email Type routes
