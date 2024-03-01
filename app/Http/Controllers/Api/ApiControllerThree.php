@@ -446,7 +446,7 @@ class ApiControllerThree extends BaseController
                 //     return $query->where('e.section_id', $section_id);
                 // })
                 ->where('e.class_id', '=', $class_id)
-                ->where('e.section_id','=', $section_id)
+                ->where('e.section_id', '=', $section_id)
                 ->where('e.active_status', '=', "0")
                 ->groupBy('e.student_id')
                 ->get()->toArray();
@@ -458,7 +458,7 @@ class ApiControllerThree extends BaseController
     {
         $validator = \Validator::make($request->all(), [
             'branch_id' => 'required',
-           // 'token' => 'required',
+            // 'token' => 'required',
         ]);
 
         $class_id = $request->class_id;
@@ -482,7 +482,7 @@ class ApiControllerThree extends BaseController
                 //     return $query->where('e.section_id', $section_id);
                 // })
                 ->where('e.class_id', '=', $class_id)
-                ->where('e.section_id','=', $section_id)
+                ->where('e.section_id', '=', $section_id)
                 ->where('e.active_status', '=', "0")
                 ->groupBy('e.student_id')
                 ->get()->toArray();
@@ -551,8 +551,8 @@ class ApiControllerThree extends BaseController
                 ->orderBy('stf.created_at', 'asc');
             // Group by the formatted date
             $staffArray = [];
-             $getEmpDetails = $student->get();
-             $staffObj = new \stdClass();
+            $getEmpDetails = $student->get();
+            $staffObj = new \stdClass();
             if (!empty($getEmpDetails)) {
                 foreach ($getEmpDetails as $suc) {
                     $staffObj = $suc;
@@ -929,7 +929,7 @@ class ApiControllerThree extends BaseController
                     $query->where('b.class_id', $class_id)
                         ->orWhereNull('b.class_id');
                 })
-               // ->where('b.class_id', $class_id)
+                // ->where('b.class_id', $class_id)
                 ->where(function ($query) use ($section_id) {
                     $query->where('b.section_id', $section_id)
                         ->orWhereNull('b.section_id');
@@ -1778,16 +1778,12 @@ class ApiControllerThree extends BaseController
                 ->join('students as st', 'st.id', '=', 'en.student_id')
                 ->leftJoin('student_attendances_day as sa', function ($q) use ($date, $semester_id, $session_id) {
                     $q->on('sa.student_id', '=', 'st.id')
-                        ->on('sa.date', '=', DB::raw("'$date'"))
-                        ->on('sa.semester_id', '=', DB::raw("'$semester_id'"))
-                        ->on('sa.session_id', '=', DB::raw("'$session_id'"));
+                        ->on('sa.date', '=', DB::raw("'$date'"));
                 })
                 // if already take attendance for the date
                 ->leftJoin('student_attendances_day as sapre', function ($q) use ($date, $semester_id, $session_id) {
                     $q->on('sapre.student_id', '=', 'st.id')
                         ->on('sapre.date', '=', DB::raw("'$date'"))
-                        ->on('sapre.semester_id', '=', DB::raw("'$semester_id'"))
-                        ->on('sapre.session_id', '=', DB::raw("'$session_id'"))
                         ->on('sapre.day_recent_flag', '=', DB::raw("'1'"));
                 })
                 ->leftJoin('student_leaves as stu_lev', function ($q) use ($date) {
@@ -1804,18 +1800,15 @@ class ApiControllerThree extends BaseController
                 ])
                 ->groupBy('en.student_id')
                 ->get();
-            // dd($getStudentAttendence);
             $taken_attentance_status = $Connection->table('enrolls as en')
                 ->select(
                     'sa.status'
                 )
                 ->join('students as st', 'st.id', '=', 'en.student_id')
                 // if already take attendance for the date and subjects
-                ->leftJoin('student_attendances as sa', function ($q) use ($date, $semester_id, $session_id) {
+                ->leftJoin('student_attendances_day as sa', function ($q) use ($date, $semester_id, $session_id) {
                     $q->on('sa.student_id', '=', 'st.id')
-                        ->on('sa.date', '=', DB::raw("'$date'"))
-                        ->on('sa.semester_id', '=', DB::raw("'$semester_id'"))
-                        ->on('sa.session_id', '=', DB::raw("'$session_id'"));
+                        ->on('sa.date', '=', DB::raw("'$date'"));
                 })
                 ->where([
                     ['en.class_id', '=', $request->class_id],
@@ -1849,7 +1842,6 @@ class ApiControllerThree extends BaseController
             $Connection = $this->createNewConnection($request->branch_id);
 
             $attendance = $request->attendance;
-            $date = $request->date;
             $class_id = $request->class_id;
             $section_id = $request->section_id;
             $semester_id = $request->semester_id;
@@ -2553,5 +2545,23 @@ class ApiControllerThree extends BaseController
         }
 
         return $changes;
+    }
+    public function encryptVariable(Request $request)
+    {
+        $validator = \Validator::make($request->all(), [
+            'name' => 'required'
+        ]);
+        if (!$validator->passes()) {
+            return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
+        } else {
+            // create new connection
+            $encrypt_name = Crypt::encryptString($request->name);
+            $decrypt_name = Helper::decryptStringData($encrypt_name);
+            $data = [
+                "encrypt_name" => $encrypt_name,
+                "decrypt_name" => $decrypt_name
+            ];
+            return $this->successResponse($data, 'encrypt and decrypt values');
+        }
     }
 }

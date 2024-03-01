@@ -1140,5 +1140,6 @@ Route::group(['middleware' => ['auth:api', 'throttle:limit_per_user', 'logroute'
     Route::post('personalinterview/list', [ApiController::class, 'personalinterviewlist']);
     Route::post('personalinterview/individual', [ApiController::class, 'personalinterview_individual']);
     Route::post('personalinterview/overall', [ApiController::class, 'personalinterview_overall']);
-    
+    Route::post('encrypt/variable', [ApiControllerThree::class, 'encryptVariable']);
+
 });
