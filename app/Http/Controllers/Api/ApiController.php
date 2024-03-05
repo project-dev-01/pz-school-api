@@ -4348,7 +4348,6 @@ class ApiController extends BaseController
         // dd($request);
         $validator = \Validator::make($request->all(), [
             'branch_id' => 'required',
-            'token' => 'required',
             'class_id' => 'required',
             'section_id' => 'required',
             'day' => 'required',
@@ -4368,7 +4367,7 @@ class ApiController extends BaseController
                     ->select('start_date', 'end_date')
                     ->where('id', $request->semester_id)
                     ->get();
-            if (!empty($getObjRow)) {
+            if (count($getObjRow) == 0) {
                 // Use the $yearData as needed
                 $getObjRow = $staffConn->table('semester as sm')
                     ->select('sm.start_date', 'sm.end_date')
@@ -4517,7 +4516,7 @@ class ApiController extends BaseController
                     ->select('start_date', 'end_date')
                     ->where('id', $request->semester_id)
                     ->get();
-            if (!empty($getObjRow)) {
+            if (count($getObjRow) == 0) {
                 // Use the $yearData as needed
                 $getObjRow = $staffConn->table('semester as sm')
                     ->select('sm.start_date', 'sm.end_date')
@@ -4668,7 +4667,7 @@ class ApiController extends BaseController
                     ->select('start_date', 'end_date')
                     ->where('id', $request->semester_id)
                     ->get();
-            if (!empty($getObjRow)) {
+            if (count($getObjRow) == 0) {
                 // Use the $yearData as needed
                 $getObjRow = $staffConn->table('semester as sm')
                     ->select('sm.start_date', 'sm.end_date')
@@ -5014,7 +5013,7 @@ class ApiController extends BaseController
                     ->select('start_date', 'end_date')
                     ->where('id', $request->semester_id)
                     ->get();
-            if (!empty($getObjRow)) {
+            if (count($getObjRow) == 0) {
                 // Use the $yearData as needed
                 $getObjRow = $staffConn->table('semester as sm')
                     ->select('sm.start_date', 'sm.end_date')
@@ -10347,118 +10346,86 @@ class ApiController extends BaseController
             return $this->successResponse($success, 'student calendor data get successfully');
         }
     }
-    // addCalendorTimetable
-    // function addCalendorTimetable(Request $request)
     function addCalendorTimetable($request, $row, $getObjRow, $insertOrUpdateID, $bulkID)
     {
-        if(!empty($getObjRow)){
-            foreach($getObjRow as $ke => $val){
-                $start = $val->start_date;
-                $end = $val->end_date;
-                //
-                $startDate = new DateTime($start);
-                $endDate = new DateTime($end);
-                // sunday=0,monday=1,tuesday=2,wednesday=3,thursday=4
-                //friday =5,saturday=6
-                if (isset($request->day)) {
-                    if ($request->day == "monday") {
-                        $day = 1;
-                    }
-                    if ($request->day == "tuesday") {
-                        $day = 2;
-                    }
-                    if ($request->day == "wednesday") {
-                        $day = 3;
-                    }
-                    if ($request->day == "thursday") {
-                        $day = 4;
-                    }
-                    if ($request->day == "friday") {
-                        $day = 5;
-                    }
-                    if ($request->day == "saturday") {
-                        $day = 6;
-                    }
-                    if (isset($day)) {
-                        $this->addTimetableCalendor($request, $startDate, $endDate, $day, $row, $insertOrUpdateID, $bulkID);
-                    }
+        // Create new connection
+        $Connection = $this->createNewConnection($request->branch_id);
+        
+        // Delete existing calendar data
+        $calendarsCount = $Connection->table('calendors')->where('time_table_id', $insertOrUpdateID)->where('sem_id', $request->semester_id)->count();
+        if ($calendarsCount > 0) {
+            $Connection->table('calendors')->where('time_table_id', $insertOrUpdateID)->where('sem_id', $request->semester_id)->delete();
+        }
+        if (!empty($getObjRow) && isset($request->day)) {
+            // Determine the day of the week
+            $day = null;
+            switch ($request->day) {
+                case "monday":
+                    $day = 1;
+                    break;
+                case "tuesday":
+                    $day = 2;
+                    break;
+                case "wednesday":
+                    $day = 3;
+                    break;
+                case "thursday":
+                    $day = 4;
+                    break;
+                case "friday":
+                    $day = 5;
+                    break;
+                case "saturday":
+                    $day = 6;
+                    break;
+            }
+
+            // If day is set
+            if ($day !== null) {
+                // Loop through each combination of elements from $getObjRow
+                foreach ($getObjRow as $val) {
+                    $start = new DateTime($val->start_date);
+                    $end = new DateTime($val->end_date);
+
+                    // Call addTimetableCalendor function for each combination of elements
+                    $this->addTimetableCalendor($request, $start, $end, $day, $row, $insertOrUpdateID, $bulkID);
                 }
             }
         }
     }
-    // addTimetableCalendor
+
     function addTimetableCalendor($request, $startDate, $endDate, $day, $row, $insertOrUpdateID, $bulkID)
     {
-        // create new connection
+        // Create new connection
         $Connection = $this->createNewConnection($request->branch_id);
-        // delete existing calendor data
-        $calendors = $Connection->table('calendors')->where([
-            ['time_table_id', '=', $insertOrUpdateID]
-        ])->count();
-        if ($calendors > 0) {
-            $Connection->table('calendors')->where('time_table_id', $insertOrUpdateID)->delete();
-            // $Connection->table('calendors')->where('id', $calendors->id)->update([
-            //     "subject_id" => $row['subject'],
-            //     "teacher_id" => $row['teacher'],
-            //     "sem_id" => $request['semester_id'],
-            //     "start" => $start,
-            //     "end" => $end,
-            //     'updated_at' => date("Y-m-d H:i:s")
-            // ]);
-        }
+        // Loop through each date in the range
+        while ($startDate <= $endDate) {
+            // Check if the current date matches the desired day of the week
+            if ($startDate->format('w') == $day) {
+                $start = $startDate->format('Y-m-d') . " " . $row['time_start'];
+                $end = $startDate->format('Y-m-d') . " " . $row['time_end'];
 
-        // dd($request);
-        if (isset($row['subject']) && isset($row['teacher'])) {
-            while ($startDate <= $endDate) {
-                if ($startDate->format('w') == $day) {
-                    $start = $startDate->format('Y-m-d') . " " . $row['time_start'];
-                    $end = $startDate->format('Y-m-d') . " " . $row['time_end'];
-                    $arrayInsert = [
-                        "title" => "timetable",
-                        "class_id" => $request['class_id'],
-                        "section_id" => $request['section_id'],
-                        "sem_id" => $request['semester_id'],
-                        "session_id" => $request['session_id'],
-                        "subject_id" => $row['subject'],
-                        // "teacher_id" => $row['teacher'],
-                        "teacher_id" => implode(",", $row['teacher']),
-                        "start" => $start,
-                        "end" => $end,
-                        "time_table_id" => $insertOrUpdateID,
-                        "academic_session_id" => $request['academic_session_id'],
-                        'created_at' => date("Y-m-d H:i:s")
-                    ];
-                    // return $arrayInsert;
+                // Construct the data to insert into the calendar table
+                $arrayInsert = [
+                    "title" => "timetable",
+                    "class_id" => $request['class_id'],
+                    "section_id" => $request['section_id'],
+                    "sem_id" => $request['semester_id'],
+                    "session_id" => $request['session_id'],
+                    "subject_id" => $row['subject'],
+                    "teacher_id" => implode(",", $row['teacher']),
+                    "start" => $start,
+                    "end" => $end,
+                    "time_table_id" => $insertOrUpdateID,
+                    "academic_session_id" => $request['academic_session_id'],
+                    'created_at' => date("Y-m-d H:i:s")
+                ];
 
-                    $Connection->table('calendors')->insert($arrayInsert);
-                }
-                $startDate->modify('+1 day');
+                // Insert the data into the calendar table
+                $Connection->table('calendors')->insert($arrayInsert);
             }
-        }
-        if (isset($row['teacher']) && !isset($row['break']) && isset($bulkID)) {
-            while ($startDate <= $endDate) {
-                if ($startDate->format('w') == $day) {
-                    $start = $startDate->format('Y-m-d') . " " . $row['time_start'];
-                    $end = $startDate->format('Y-m-d') . " " . $row['time_end'];
-                    $arrayInsert = [
-                        "title" =>  $row['break_type'],
-                        "class_id" => $request['class_id'],
-                        "section_id" => $request['section_id'],
-                        "sem_id" => $request['semester_id'],
-                        "session_id" => $request['session_id'],
-                        // "teacher_id" => $row['teacher'],
-                        "teacher_id" => implode(",", $row['teacher']),
-                        "start" => $start,
-                        "end" => $end,
-                        "time_table_id" => $insertOrUpdateID,
-                        "bulk_id" => $bulkID,
-                        'created_at' => date("Y-m-d H:i:s")
-                    ];
-                    // return $arrayInsert;
-                    $check = $Connection->table('calendors')->insert($arrayInsert);
-                }
-                $startDate->modify('+1 day');
-            }
+            // Move to the next date
+            $startDate->modify('+1 day');
         }
     }
     // get semester 
