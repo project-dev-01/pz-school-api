@@ -588,7 +588,8 @@ class AuthController extends BaseController
 
             DB::table('password_resets')->where(['email' => $request->email])->delete();
 
-            return $this->successResponse('success', 'Your password has been changed!');
+            $user = User::where('email', '=', $request->email)->first();
+            return $this->successResponse($user, 'Your password has been changed!');
         } else {
             return $this->send500Error('Invalid token!', ['error' => 'Invalid token!']);
         }

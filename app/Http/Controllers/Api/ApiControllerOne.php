@@ -2784,14 +2784,14 @@ class ApiControllerOne extends BaseController
                             'semester_id' => $request->promote_semester_id,
                             'session_id' => $request->promote_session_id,
                             'active_status' => 0,
-                            'roll' => $roll_no
+                            'attendance_no' => $roll_no
                         );
                         $row = $Connection->table('enrolls')
                             ->select(
                                 'id',
                                 'class_id',
                                 'section_id',
-                                'roll',
+                                'attendance_no as roll',
                                 'session_id',
                                 'semester_id'
                             )->where([

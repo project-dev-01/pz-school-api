@@ -3014,19 +3014,19 @@ class ApiController extends BaseController
                 $existUser = $this->existUser($request->email);
                 if ($existUser) {
                     // add bank details validation
-                    if ($request->skip_bank_details == 1) {
-                        $validator = \Validator::make($request->all(), [
-                            'bank_name' => 'required',
-                            'holder_name' => 'required',
-                            'bank_branch' => 'required',
-                            'bank_address' => 'required',
-                            'ifsc_code' => 'required',
-                            'account_no' => 'required',
-                        ]);
-                        if (!$validator->passes()) {
-                            return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
-                        }
-                    }
+                    // if ($request->skip_bank_details == 1) {
+                    //     $validator = \Validator::make($request->all(), [
+                    //         'bank_name' => 'required',
+                    //         'holder_name' => 'required',
+                    //         'bank_branch' => 'required',
+                    //         'bank_address' => 'required',
+                    //         'ifsc_code' => 'required',
+                    //         'account_no' => 'required',
+                    //     ]);
+                    //     if (!$validator->passes()) {
+                    //         return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
+                    //     }
+                    // }
 
                     if (isset($request->photo)) {
                         $now = now();
@@ -3149,7 +3149,7 @@ class ApiController extends BaseController
                         return $this->send500Error('Something went wrong.', ['error' => 'Something went wrong add employee']);
                     } else {
                         // add bank details
-                        if ($request->skip_bank_details == 1) {
+                        // if ($request->skip_bank_details == 1) {
                             $bank = $Connection->table('staff_bank_accounts')->insert([
                                 'staff_id' => $Staffid,
                                 'bank_name' => $request->bank_name,
@@ -3160,7 +3160,7 @@ class ApiController extends BaseController
                                 'account_no' => $request->account_no,
                                 'created_at' => date("Y-m-d H:i:s")
                             ]);
-                        }
+                        // }
 
                         $rid=$request->role_id;
                         $roleIds1 =$Connection->table('school_menuaccess')
@@ -3425,19 +3425,19 @@ class ApiController extends BaseController
 
                 // dd($request);
                 // add bank details validation
-                if ($request->skip_bank_details == 1) {
-                    $validator = \Validator::make($request->all(), [
-                        'bank_name' => 'required',
-                        'holder_name' => 'required',
-                        'bank_branch' => 'required',
-                        'bank_address' => 'required',
-                        'ifsc_code' => 'required',
-                        'account_no' => 'required',
-                    ]);
-                    if (!$validator->passes()) {
-                        return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
-                    }
-                }
+                // if ($request->skip_bank_details == 1) {
+                //     $validator = \Validator::make($request->all(), [
+                //         'bank_name' => 'required',
+                //         'holder_name' => 'required',
+                //         'bank_branch' => 'required',
+                //         'bank_address' => 'required',
+                //         'ifsc_code' => 'required',
+                //         'account_no' => 'required',
+                //     ]);
+                //     if (!$validator->passes()) {
+                //         return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
+                //     }
+                // }
 
                 if (isset($request->old_photo) && empty($request->photo)) {
                     $fileName = $request->old_photo;
@@ -3654,7 +3654,7 @@ class ApiController extends BaseController
                         $updateUser = $user->save();
                     }
                     // add bank details
-                    if ($request->skip_bank_details == 1) {
+                    // if ($request->skip_bank_details == 1) {
                         $bankRow = $Connection->table('staff_bank_accounts')->where('staff_id', $id)->first();
                         if (isset($bankRow->id)) {
                             $oldData1 = $Connection->table('staff_bank_accounts')->where('staff_id', $id)->first();
@@ -3695,7 +3695,7 @@ class ApiController extends BaseController
                                 'created_at' => date("Y-m-d H:i:s")
                             ]);
                         }
-                    }
+                    // }
                     $success = [];
                     if (!$query) {
                         return $this->send500Error('Something went wrong.', ['error' => 'Something went wrong']);
@@ -6432,7 +6432,8 @@ class ApiController extends BaseController
                 ->where([
                     ['en.class_id', '=', $request->class_id],
                     ['en.section_id', '=', $request->section_id],
-                    ['en.academic_session_id', '=', $request->academic_session_id]
+                    ['en.academic_session_id', '=', $request->academic_session_id],
+                    ['en.active_status', '=', "0"],
                     // ['en.semester_id', '=', $request->semester_id],
                     // ['en.session_id', '=', $request->session_id]
                 ])
@@ -12398,7 +12399,7 @@ class ApiController extends BaseController
     {
         $validator = \Validator::make($request->all(), [
             'year' => 'required',
-            'register_no' => 'required',
+            // 'register_no' => 'required',
             'roll_no' => 'required',
             'admission_date' => 'required',
             // 'category_id' => 'required',
@@ -12614,7 +12615,13 @@ class ApiController extends BaseController
                     $mother_id = $request->mother_id;
                     $guardian_id = $request->guardian_id;
                 }
-                // return $request;
+                
+                $regData = [
+                    'branch_id' => $request->branch_id,
+                    'academic_year' => $request->year
+                ];
+                // return $regData['branch_id'];
+                $registerNumber = $this->registerNumber($regData);
                 $studentId = $conn->table('students')->insertGetId([
                     'year' => $request->year,
                     'father_id' => $father_id,
@@ -12623,7 +12630,7 @@ class ApiController extends BaseController
                     'passport' => $passport,
                     'nric' => $nric,
                     'relation' => $request->relation,
-                    'register_no' => $request->register_no,
+                    'register_no' => $registerNumber,
                     'roll_no' => $request->roll_no,
                     'admission_date' => $request->admission_date,
                     'category_id' => $request->category_id,
@@ -12680,7 +12687,7 @@ class ApiController extends BaseController
                     'department_id' => $request->department_id,
                     'class_id' => $request->class_id,
                     'section_id' => $request->section_id,
-                    'roll' => $request->roll_no,
+                    'attendance_no' => $request->roll_no,
                     'session_id' => $session_id,
                     'semester_id' => $semester_id,
                 ]);
@@ -13615,6 +13622,7 @@ class ApiController extends BaseController
         $class_id = isset($request->class_id)?$request->class_id:null;
         $session_id = isset($request->session_id)?$request->session_id:0;
         $section_id = isset($request->section_id)?$request->section_id:null;
+        $status = isset($request->status)?$request->status:null;
         $name = isset($request->student_name)?$request->student_name:null;
         if (!$validator->passes()) {
             return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
@@ -13673,6 +13681,9 @@ class ApiController extends BaseController
 
             if (isset($request->section_id) && filled($request->section_id)) {
                 $query->where('e.section_id', $request->section_id);
+            }
+            if (isset($request->status) && filled($request->status)) {
+                $query->where('e.active_status', $request->status);
             }
 
             if (isset($request->student_name) && filled($request->student_name)) {
@@ -13888,7 +13899,7 @@ class ApiController extends BaseController
                     'department_id' => $request->department_id,
                     'class_id' => $request->class_id,
                     'section_id' => $request->section_id,
-                    'roll' => $request->roll_no,
+                    'attendance_no' => $request->roll_no,
                     'session_id' => $session_id,
                     'semester_id' => $semester_id,
                 ]);
@@ -22389,42 +22400,21 @@ class ApiController extends BaseController
                 $passport_file = base_path() . $passport_path . $passport_fileName;
                 $passport_suc = file_put_contents($passport_file, $passport_base64);
             }
-            $registerNumber = null;
-            if ($request->role_id == "2") {
-                if ($request->status == "Approved" || $request->phase_2_status == "Approved") {
+            
+            $regData = [
+                'branch_id' => $request->branch_id,
+                'academic_year' => $request->academic_year
+            ];
+            if($request->register_number){
 
-
-                    $current_year = date('y');
-                    $assignedNumber = "9" .$current_year. sprintf("%05d", $request->id);
-                    $reverse_number  = array_reverse(array_map('intval', str_split($assignedNumber)));
-                    // dd(array_reverse($reverse_number));
-
-                    $oddNumber = 1;
-                    $evenNumber = 2;
-
-                    $modifiedNumber = array();
-                    foreach ($reverse_number as $key => $value) {
-                        if ($key == 0) {
-                            $multiply = $value * $evenNumber;
-                        } else {
-                            if ($key % 2 == 1) {
-                                $multiply = $value * $oddNumber;
-                            } else {
-                                $multiply = $value * $evenNumber;
-                            }
-                        }
-                        if ($multiply > 10) {
-                            $multiply  = 1 + ($multiply % 10);
-                        }
-                        $modifiedNumber[] = $multiply;
+                $registerNumber = $request->register_number;
+            }else{
+                
+                $registerNumber = null;
+                if ($request->role_id == "2") {
+                    if ($request->status == "Approved" || $request->phase_2_status == "Approved") {
+                        $registerNumber = $this->registerNumber($regData);
                     }
-                    $totalNumber = array_sum($modifiedNumber);
-                    if ($totalNumber % 10 == 0) {
-                        $generatedNumber = 0;
-                    } else {
-                        $generatedNumber = 10 - ($totalNumber % 10);
-                    }
-                    $registerNumber = $assignedNumber . $generatedNumber;
                 }
             }
 
@@ -24790,12 +24780,32 @@ class ApiController extends BaseController
             }
         }
     }
-    public function registerNumber(Request $request)
-    {
+    public function registerNumber($request)
+    {        
+        $conn = $this->createNewConnection($request['branch_id']);
+        $academic_year = $conn->table('academic_year')->where('id', $request['academic_year'])->first();
+        $start_end = explode('-', $academic_year->name);
+                
+        $current_year = $start_end[0];
+        $yearStart = "9" .substr($current_year, 2);
+        $application = $conn->table('student_applications')->where("register_number", 'LIKE', $yearStart.'%')->max("register_number");
+        $admission = $conn->table('students')->where("register_no", 'LIKE', $yearStart.'%')->max("register_no");
+        $prevNumber = 0;
+        if($application != Null && $admission != Null){
 
-        // $assignedNumber = "9" . substr(str_shuffle("0123456789"), 0, 5);
+            if($application >= $admission){
+                $lastRemove = substr($application,0,-1);
+                
+            }else{
+                $lastRemove = substr($admission,0,-1);
+            }
+            $prevNumber = substr($lastRemove, 3);
+        }
+        // $prevNumber = substr("92300002", 3); // Output: "000"
 
-        $assignedNumber = $request->register_number;
+        // $prevNumber = trim("92300002", "923");
+        $applicationNumber = $prevNumber+1;
+        $assignedNumber = $yearStart. sprintf("%05d", $applicationNumber);
         $reverse_number  = array_reverse(array_map('intval', str_split($assignedNumber)));
         // dd(array_reverse($reverse_number));
 
@@ -24807,7 +24817,7 @@ class ApiController extends BaseController
             if ($key == 0) {
                 $multiply = $value * $evenNumber;
             } else {
-                if ($value % 2 == 1) {
+                if ($key % 2 == 1) {
                     $multiply = $value * $oddNumber;
                 } else {
                     $multiply = $value * $evenNumber;
@@ -24825,7 +24835,6 @@ class ApiController extends BaseController
             $generatedNumber = 10 - ($totalNumber % 10);
         }
         $registerNumber = $assignedNumber . $generatedNumber;
-
         return $registerNumber;
     }
     // get Parent update view details

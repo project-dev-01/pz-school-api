@@ -706,7 +706,7 @@ class ImportController extends BaseController
                             'class_id' => $dynamic_data[25],
                             'section_id' => $dynamic_data[26],
                             'academic_session_id' => $dynamic_data[20],
-                            'roll' => $roll_no,
+                            'attendance_no' => $roll_no,
                             'session_id' => isset($dynamic_data[27]) ? $dynamic_data[27] : 0,
                             'semester_id' => isset($dynamic_data[28]) ? $dynamic_data[28] : 0,
                         ];
@@ -1698,8 +1698,8 @@ class ImportController extends BaseController
                     $student = $conn->table('enrolls')->where([
                         'class_id' => $dynamic_data[0],
                         'section_id' => $dynamic_data[1],
-                        'roll' => $roll_no,
-                        'active_status' => "0"
+                        'attendance_no' => $roll_no,
+                        // 'active_status' => "0"
                     ])->first();
                     if (isset($student->student_id)) {
 

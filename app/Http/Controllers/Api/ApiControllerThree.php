@@ -1796,7 +1796,8 @@ class ApiControllerThree extends BaseController
                 ->where([
                     ['en.class_id', '=', $request->class_id],
                     ['en.section_id', '=', $request->section_id],
-                    ['en.academic_session_id', '=', $request->academic_session_id]
+                    ['en.academic_session_id', '=', $request->academic_session_id],
+                    ['en.active_status', '=', "0"]
                 ])
                 ->groupBy('en.student_id')
                 ->get();
