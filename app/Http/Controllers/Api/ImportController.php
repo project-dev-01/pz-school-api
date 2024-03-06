@@ -1065,9 +1065,10 @@ class ImportController extends BaseController
                     $dummyInc = 1;
 
                     // Insert to MySQL database
+                    //return $importData_arr;
                     foreach ($importData_arr as $importData) {
                         $dummyInc++;
-                        //  dd($importData);
+                        
                         $student_name = $importData[1];
                         $student_number = $importData[2];
                         $current_attendance_no = $importData[3];
@@ -1079,14 +1080,14 @@ class ImportController extends BaseController
                             ['table_name' => 'academic_year', 'number' => '4'],
                             ['table_name' => 'classes', 'number' => '6'],
                             ['table_name' => 'sections', 'number' => '7'],
-                            ['table_name' => 'session', 'number' => '9'],
-                            ['table_name' => 'semester', 'number' => '8'],
-                            ['table_name' => 'staff_departments', 'number' => '11'],
-                            ['table_name' => 'academic_year', 'number' => '10'],
-                            ['table_name' => 'classes', 'number' => '12'],
-                            ['table_name' => 'sections', 'number' => '13'],
-                            ['table_name' => 'session', 'number' => '15'],
-                            ['table_name' => 'semester', 'number' => '14'],
+                            // ['table_name' => 'session', 'number' => '9'],
+                            // ['table_name' => 'semester', 'number' => '8'],
+                            ['table_name' => 'staff_departments', 'number' => '9'],
+                            ['table_name' => 'academic_year', 'number' => '8'],
+                            ['table_name' => 'classes', 'number' => '10'],
+                            ['table_name' => 'sections', 'number' => '11'],
+                            // ['table_name' => 'session', 'number' => '15'],
+                            // ['table_name' => 'semester', 'number' => '14'],
                         ];
 
                         $dynamic_data = [];
@@ -1098,12 +1099,12 @@ class ImportController extends BaseController
                                 'name' => $importData[$number],
                                 'table_name' => $row['table_name']
                             ];
-                            // return $column;
-                            $row = $this->getLikeColumnName($column);
+                             //return $column;
+                            $row = $this->getLikeColumnNameImport($column);
                             $dynamic_data[$number] = $row;
                         }
-                        //return $dynamic_data;
-                        $studentId = $Connection->table('students')->select('id')->where('roll_no', '=', $student_number)->first();
+                       // return $dynamic_data;
+                        $studentId = $Connection->table('students')->select('id')->where('register_no', '=', $student_number)->first();
 
                         if (!empty($studentId)) {
                             // Delete existing record
@@ -1114,16 +1115,16 @@ class ImportController extends BaseController
                                 'class_id' => $dynamic_data[6],
                                 'section_id' => $dynamic_data[7],
                                 'academic_session_id' => $dynamic_data[4],
-                                'session_id' => isset($dynamic_data[9]) ? $dynamic_data[9] : 0,
-                                'semester_id' => isset($dynamic_data[8]) ? $dynamic_data[8] : 0,
+                                // 'session_id' => isset($dynamic_data[9]) ? $dynamic_data[9] : 0,
+                                // 'semester_id' => isset($dynamic_data[8]) ? $dynamic_data[8] : 0,
                                 'attendance_no' => $current_attendance_no,
-                                'promoted_department_id' => $dynamic_data[11],
-                                'promoted_class_id' => $dynamic_data[12],
-                                'promoted_section_id' => $dynamic_data[13],
-                                'promoted_academic_session_id' => $dynamic_data[10],
-                                'roll' => $student_number,
-                                'promoted_session_id' => isset($dynamic_data[15]) ? $dynamic_data[15] : 0,
-                                'promoted_semester_id' => isset($dynamic_data[14]) ? $dynamic_data[14] : 0,
+                                'promoted_department_id' => $dynamic_data[9],
+                                'promoted_class_id' => $dynamic_data[10],
+                                'promoted_section_id' => $dynamic_data[11],
+                                'promoted_academic_session_id' => $dynamic_data[8],
+                                'register_no' => $student_number,
+                                // 'promoted_session_id' => isset($dynamic_data[15]) ? $dynamic_data[15] : 0,
+                                // 'promoted_semester_id' => isset($dynamic_data[14]) ? $dynamic_data[14] : 0,
                                 'status' => 1
                             ];
 

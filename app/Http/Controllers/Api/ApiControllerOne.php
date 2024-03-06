@@ -2872,10 +2872,6 @@ class ApiControllerOne extends BaseController
                 )
                 ->where('ta.teacher_id', $request->teacher_id)
                 ->first();
-            $department_id = "All";
-            if (isset($request->department_id)) {
-                $department_id = $request->department_id;
-            }
             $grade_id =  $allocation->class_id;
             if (isset($request->grade_id)) {
                 $grade_id = $request->grade_id;
@@ -2895,7 +2891,7 @@ class ApiControllerOne extends BaseController
                         "tp.id",
                         "tp.attendance_no",
                         DB::raw("CONCAT(st1.first_name, ' ', st1.last_name) as name"),
-                        "tp.roll",
+                        "tp.register_no",
                         "d1.name as deptName",
                         "c1.name as className",
                         "s1.name as sectionName",
@@ -2911,12 +2907,11 @@ class ApiControllerOne extends BaseController
                     ->leftJoin('staff_departments as d1', 'd1.id', '=', 'tp.department_id')
                     ->leftJoin('staff_departments as d2', 'd2.id', '=', 'tp.promoted_department_id')
                     ->leftJoin('students as st1', 'st1.id', '=', 'tp.student_id')
-                    ->where('tp.department_id', '=', $department_id)
                     ->where('tp.class_id', '=', $grade_id)
                     ->when(!empty($section_id), function ($query) use ($section_id) {
                         return $query->where('tp.section_id', '=', $section_id);
                     })
-                    ->whereIn('tp.status', [1, 2, 3])
+                    ->whereIn('tp.status', [1, 2, 3 ,4])
                     ->orderBy('tp.section_id', 'asc')
                     ->get();
             } elseif ($sort_id == 2) {
@@ -2925,7 +2920,7 @@ class ApiControllerOne extends BaseController
                         "tp.id",
                         "tp.attendance_no",
                         DB::raw("CONCAT(st1.first_name, ' ', st1.last_name) as name"),
-                        "tp.roll",
+                        "tp.register_no",
                         "d1.name as deptName",
                         "c1.name as className",
                         "s1.name as sectionName",
@@ -2941,12 +2936,11 @@ class ApiControllerOne extends BaseController
                     ->leftJoin('staff_departments as d1', 'd1.id', '=', 'tp.department_id')
                     ->leftJoin('staff_departments as d2', 'd2.id', '=', 'tp.promoted_department_id')
                     ->leftJoin('students as st1', 'st1.id', '=', 'tp.student_id')
-                    ->where('tp.department_id', '=', $department_id)
                     ->where('tp.class_id', '=', $grade_id)
                     ->when(!empty($section_id), function ($query) use ($section_id) {
                         return $query->where('tp.section_id', '=', $section_id);
                     })
-                    ->whereIn('tp.status', [1, 2, 3])
+                    ->whereIn('tp.status', [1, 2, 3, 4])
                     ->orderBy('tp.promoted_section_id', 'asc')
                     ->get();
             } else {
@@ -2955,7 +2949,7 @@ class ApiControllerOne extends BaseController
                         "tp.id",
                         "tp.attendance_no",
                         DB::raw("CONCAT(st1.first_name, ' ', st1.last_name) as name"),
-                        "tp.roll",
+                        "tp.register_no",
                         "d1.name as deptName",
                         "c1.name as className",
                         "s1.name as sectionName",
@@ -2973,9 +2967,6 @@ class ApiControllerOne extends BaseController
                     ->leftJoin('staff_departments as d2', 'd2.id', '=', 'tp.promoted_department_id')
                     ->leftJoin('students as st1', 'st1.id', '=', 'tp.student_id')
                     ->leftJoin('termination as te1', 'te1.student_id', '=', 'tp.student_id')
-                    ->when($department_id == 'All', function ($query) use ($allocation) {
-                        return $query->where('tp.department_id', '=', $allocation->department_id);
-                    })
                     ->when($grade_id == 'All', function ($query) use ($allocation) {
                         return $query->where('tp.class_id', '=', $allocation->class_id);
                     })
@@ -2999,10 +2990,6 @@ class ApiControllerOne extends BaseController
             return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
         } else {
             $conn = $this->createNewConnection($request->branch_id);
-            $department_id = "All";
-            if (isset($request->department_id)) {
-                $department_id = $request->department_id;
-            }
             $grade_id = "All";
             if (isset($request->grade_id)) {
                 $grade_id = $request->grade_id;
@@ -3016,7 +3003,7 @@ class ApiControllerOne extends BaseController
                     "tp.attendance_no",
                     DB::raw("CONCAT(st1.first_name, ' ', st1.last_name) as name"),
                     "st1.admission_date",
-                    "tp.roll",
+                    "tp.register_no",
                     "d1.name as deptName",
                     "c1.name as className",
                     "s1.name as sectionName",
@@ -3031,10 +3018,7 @@ class ApiControllerOne extends BaseController
                 ->whereNotExists(function ($query) {
                     $query->select(DB::raw(1))
                         ->from('enrolls')
-                        ->whereRaw('enrolls.roll = tp.roll');
-                })
-                ->when($department_id != "All", function ($query) use ($department_id) {
-                    return $query->where('tp.department_id', '=', $department_id);
+                        ->whereRaw('enrolls.student_id = tp.student_id');
                 })
                 ->when($grade_id != "All", function ($query) use ($grade_id) {
                     return $query->where('tp.class_id', '=', $grade_id);
@@ -3042,7 +3026,7 @@ class ApiControllerOne extends BaseController
                 ->when($section_id != "All", function ($query) use ($section_id) {
                     return $query->where('tp.section_id', '=', $section_id);
                 })
-                ->whereIn('tp.status', [1, 2, 3])
+                ->whereIn('tp.status', [1, 2, 3, 4])
                 ->get();
 
             return $this->successResponse($promotion_data_not_in_enroll, 'Data successfully added');
@@ -3064,7 +3048,7 @@ class ApiControllerOne extends BaseController
                     "tp.attendance_no",
                     DB::raw("CONCAT(st1.first_name, ' ', st1.last_name) as name"),
                     "st1.admission_date",
-                    "tp.roll",
+                    "tp.register_no",
                     "d1.name as deptName",
                     "c1.name as className",
                     "s1.name as sectionName",
@@ -3079,9 +3063,9 @@ class ApiControllerOne extends BaseController
                 ->whereNotExists(function ($query) {
                     $query->select(DB::raw(1))
                         ->from('enrolls')
-                        ->whereRaw('enrolls.roll = tp.roll');
+                        ->whereRaw('enrolls.student_id = tp.student_id');
                 })
-                ->whereIn('tp.status', [1, 2, 3])
+                ->whereIn('tp.status', [1, 2, 3, 4])
                 ->get();
 
             return $this->successResponse($promotion_data_not_in_enroll, 'Data successfully added');
@@ -3099,10 +3083,7 @@ class ApiControllerOne extends BaseController
         } else {
 
             $conn = $this->createNewConnection($request->branch_id);
-            $department_id = "All";
-            if (isset($request->department_id)) {
-                $department_id = $request->department_id;
-            }
+           
             $grade_id = "All";
             if (isset($request->grade_id)) {
                 $grade_id = $request->grade_id;
@@ -3115,8 +3096,9 @@ class ApiControllerOne extends BaseController
                 ->select(
                     "tp.attendance_no",
                     DB::raw("CONCAT(st1.first_name, ' ', st1.last_name) as name"),
+                    "st1.admission_date",
                     "te1.date_of_termination",
-                    "tp.roll",
+                    "tp.register_no",
                     "d1.name as deptName",
                     "c1.name as className",
                     "s1.name as sectionName"
@@ -3126,16 +3108,13 @@ class ApiControllerOne extends BaseController
                 ->leftJoin('staff_departments as d1', 'd1.id', '=', 'tp.department_id')
                 ->leftJoin('students as st1', 'st1.id', '=', 'tp.student_id')
                 ->leftJoin('termination as te1', 'te1.student_id', '=', 'tp.student_id')
-                ->when($department_id != "All", function ($query) use ($department_id) {
-                    return $query->where('tp.department_id', '=', $department_id);
-                })
                 ->when($grade_id != "All", function ($query) use ($grade_id) {
                     return $query->where('tp.class_id', '=', $grade_id);
                 })
                 ->when($section_id != "All", function ($query) use ($section_id) {
                     return $query->where('tp.section_id', '=', $section_id);
                 })
-                ->whereIn('tp.status', [1, 2, 3])
+                ->whereIn('tp.status', [1, 2, 3,4])
                 ->whereNotNull('te1.date_of_termination')
                 ->get();
 
@@ -3189,7 +3168,7 @@ class ApiControllerOne extends BaseController
                 ->when($status != "All", function ($query) use ($status) {
                     return $query->where('tp.status', '=', $status);
                 })
-                ->whereIn('tp.status', [1, 2, 3])
+                ->whereIn('tp.status', [1, 2, 3, 4])
                 //->groupBy('c1.name')
                 ->get();
 
@@ -3238,23 +3217,22 @@ class ApiControllerOne extends BaseController
                         ->where('student_id', '=', $promotion_final[0]->student_id)
                         ->update(['active_status' => 1]);
                     // Insert data into the 'enrolls' table
-                    $enrollData = [
-                        'student_id' => $promotion_final[0]->student_id,
-                        'attendance_no' => $promotion_final[0]->attendance_no,
-                        'department_id' => $promotion_final[0]->department_id,
-                        'class_id'  => $promotion_final[0]->class_id,
-                        'section_id'  => $promotion_final[0]->section_id,
-                        'roll'  => $promotion_final[0]->roll,
-                        'academic_session_id'  => $promotion_final[0]->academic_session_id,
-                        'semester_id'  => $promotion_final[0]->semester_id,
-                        'session_id'  => $promotion_final[0]->session_id,
-                        'active_status' => 1
-                    ];
-                    $enrollId = $conn->table('enrolls')->insertGetId($enrollData);
+                    // $enrollData = [
+                    //     'student_id' => $promotion_final[0]->student_id,
+                    //     'attendance_no' => $promotion_final[0]->attendance_no,
+                    //     'department_id' => $promotion_final[0]->department_id,
+                    //     'class_id'  => $promotion_final[0]->class_id,
+                    //     'section_id'  => $promotion_final[0]->section_id,
+                    //     'roll'  => $promotion_final[0]->roll,
+                    //     'academic_session_id'  => $promotion_final[0]->academic_session_id,
+                    //     'semester_id'  => $promotion_final[0]->semester_id,
+                    //     'session_id'  => $promotion_final[0]->session_id,
+                    //     'active_status' => 1
+                    // ];
+                    // $enrollId = $conn->table('enrolls')->insertGetId($enrollData);
                     $enrollData2 = [
                         'student_id' => $promotion_final[0]->student_id,
                         'attendance_no' => $promotion_final[0]->attendance_no,
-                        'roll'  => $promotion_final[0]->roll,
                         'department_id' => $promotion_final[0]->promoted_department_id,
                         'class_id'  => $promotion_final[0]->promoted_class_id,
                         'section_id'  => $promotion_final[0]->promoted_section_id,
@@ -3264,14 +3242,14 @@ class ApiControllerOne extends BaseController
                     ];
                     $enrollId2 = $conn->table('enrolls')->insertGetId($enrollData2);
 
-                    if ($enrollId &&  $enrollId2) {
+                    if ( $enrollId2) {
                         // If the insertion was successful, delete from 'temp_promotion'
                         $conn->table('temp_promotion')->where('id', $rowData['id'])->delete();
                     }
                 }
             }
 
-            return $this->successResponse($promotion_data, 'Data successfully added');
+            return $this->successResponse($promotion_data, 'All Student promoted successfully');
         }
     }
     public function downloadPromotionData(Request $request)
@@ -3284,19 +3262,37 @@ class ApiControllerOne extends BaseController
             return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
         } else {
             $conn = $this->createNewConnection($request->branch_id);
-            $department_id = $request->department_id;
             $class_id = $request->class_id;
             $section_id = $request->section_id;
-            $download_data = $conn->table('section_allocations as sa')->select('d.name', 'cl.name as class_name', 's.name as section_name')
-                ->leftJoin('staff_departments as d', 'sa.department_id', '=', 'd.id')
-                ->leftJoin('classes as cl', 'sa.class_id', '=', 'cl.id')
-                ->join('sections as s', 'sa.section_id', '=', 's.id')
-                ->where('sa.department_id', $department_id)
-                ->where('sa.class_id', $class_id)
-                ->when($section_id, function ($query, $section_id) {
-                    return $query->where('sa.section_id', $section_id);
-                })
-                ->get();
+            $download_data = $conn->table('enrolls as en')->select( DB::raw('CONCAT(s.first_name, " ", s.last_name) as student_name'),
+            'd.name',
+            'cl.name as class_name', 
+            'se.name as section_name',
+            's.register_no',
+            'en.attendance_no',
+            'ay.name as academic_year'
+            )
+            ->leftJoin('students as s', 'en.student_id', '=', 's.id')
+            ->leftJoin('staff_departments as d', 'en.department_id', '=', 'd.id')
+            ->leftJoin('classes as cl', 'en.class_id', '=', 'cl.id')
+            ->leftJoin('sections as se', 'en.section_id', '=', 'se.id')
+            ->leftJoin('academic_year as ay', 'en.academic_session_id', '=', 'ay.id')
+            ->where('en.class_id', $class_id)
+            ->when($section_id, function ($query, $section_id) {
+                    return $query->where('en.section_id', $section_id);
+            })
+            ->where('en.active_status', '=', '0')
+            ->get();
+
+            // $download_data = $conn->table('section_allocations as sa')->select('d.name', 'cl.name as class_name', 's.name as section_name')
+            //     ->leftJoin('staff_departments as d', 'sa.department_id', '=', 'd.id')
+            //     ->leftJoin('classes as cl', 'sa.class_id', '=', 'cl.id')
+            //     ->join('sections as s', 'sa.section_id', '=', 's.id')
+            //     ->where('sa.class_id', $class_id)
+            //     ->when($section_id, function ($query, $section_id) {
+            //         return $query->where('sa.section_id', $section_id);
+            //     })
+            //     ->get();
 
             return $this->successResponse($download_data, 'Data successfully added');
         }
@@ -11185,14 +11181,13 @@ class ApiControllerOne extends BaseController
                 'target_id' => $request->selectedTarget,
                 'slept_time_id' => $request->selectedSlept_time,
                 'health_treatment_id' => $request->selectedHealth_treatment,
-                'event_notes_c' => $request->event_notes_c,
                 'updated_at' => date("Y-m-d H:i:s")
             ]);
             $success = [];
-            if (!$query) {
-                return $this->send500Error('Something went wrong.', ['error' => 'Something went wrong']);
+            if ($query) {
+                return $this->successResponse($success, 'Health logbooks  has been successfully updated');
             } else {
-                return $this->successResponse($query, 'Health logbooks  has been successfully updated');
+                return $this->send500Error('Something went wrong.', ['error' => 'Something went wrong']);
             }
         }
     }
