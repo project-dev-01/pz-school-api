@@ -1752,7 +1752,7 @@ class ApiControllerThree extends BaseController
         } else {
             // create new connection
             // get attendance details query
-            $date = $request->date;
+            $date = date('Y-m-d', strtotime($request->date));
             $leave_date = date('Y-m-d', strtotime($request->date));
             $semester_id = $request->semester_id;
             $session_id = $request->session_id;
