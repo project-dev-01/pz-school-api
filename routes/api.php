@@ -1140,6 +1140,13 @@ Route::group(['middleware' => ['auth:api', 'throttle:limit_per_user', 'logroute'
     Route::post('personalinterview/list', [ApiController::class, 'personalinterviewlist']);
     Route::post('personalinterview/individual', [ApiController::class, 'personalinterview_individual']);
     Route::post('personalinterview/overall', [ApiController::class, 'personalinterview_overall']);
+    Route::post('exam_result/getec_marks', [ExamreportController::class, 'getec_marks']);
+    Route::post('exam_result/getec_teacher', [ExamreportController::class, 'getec_teacher']);
+    Route::post('exam_result/getsubjectpapermark', [ExamreportController::class, 'getsubjectpapermark']);
+    Route::post('exam_result/stuexam_ppmarklist', [ExamreportController::class, 'stuexam_ppmarklist']);
+    Route::post('exam_result/stuexam_ppavgmarklist', [ExamreportController::class, 'stuexam_ppavgmarklist']);
+    Route::post('exam_result/classteacher_principal', [ExamreportController::class, 'classteacher_principal']);
+    Route::post('exam_result/getpaperoverallmarklist1', [ExamreportController::class, 'getpaperoverallmarklist1']);
     Route::post('encrypt/variable', [ApiControllerThree::class, 'encryptVariable']);
 
 });

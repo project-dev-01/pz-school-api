@@ -47,6 +47,380 @@ use App\Models\Menuaccess;
 class ExamreportController extends BaseController
 {
     
+    public function getec_marks(Request $request)
+    {
+        $exam_id = $request->exam_id;
+        $class_id = $request->class_id;
+        $department_id = $request->department_id;
+        $section_id = $request->section_id;
+        //$subject_id = $request->subject_id;
+        $semester_id = $request->semester_id;
+        $session_id = $request->session_id;
+        $academic_session_id = $request->academic_session_id;        
+        $student_id = $request->student_id;
+        $paper_name= $request->paper_name;
+        $Connection = $this->createNewConnection($request->branch_id);
+        $getsubject = $Connection->table('subjects as sb')
+        ->select(
+            'sb.id as subject_id',
+            'sb.name'
+        )       
+        ->where('sb.name', '=', 'EC')
+        ->orWhere('sb.name', '=', 'English Comminication')
+        ->first();
+        $subject_id = $getsubject->subject_id;
+        $getSubjectMarks = $Connection->table('exam_papers as ep')        
+        ->select(           
+            'ep.id',
+            'ep.paper_name',
+            'ep.score_type',
+            'sa.score',
+            'sa.grade',
+            'sa.points',
+            'sa.freetext',
+            'sa.memo',
+            'gm.grade as grade_name',
+        )   
+        ->leftJoin('student_marks as sa', function ($q) use ($class_id, $section_id, $exam_id, $subject_id, $semester_id, $session_id, $academic_session_id,$student_id,$department_id) {
+            $q->on('sa.paper_id', '=', 'ep.id')
+                ->on('sa.exam_id', '=', DB::raw("'$exam_id'"))
+                ->on('sa.class_id', '=', DB::raw("'$class_id'"))
+                ->on('sa.section_id', '=', DB::raw("'$section_id'"))
+                ->on('sa.semester_id', '=', DB::raw("'$semester_id'"))
+                ->on('sa.session_id', '=', DB::raw("'$session_id'"))
+                ->on('sa.subject_id', '=', DB::raw("'$subject_id'"))
+                ->on('sa.student_id', '=', DB::raw("'$student_id'"))
+                ->on('sa.academic_session_id', '=', DB::raw("'$academic_session_id'"));
+        }) 
+        ->leftJoin('grade_marks as gm', 'gm.id', '=', 'sa.points')
+        ->where([
+            ['ep.class_id', '=', $request->class_id],
+            ['ep.subject_id', '=', $subject_id],
+            ['ep.academic_session_id', '=', $academic_session_id],
+            ['ep.department_id', '=', $department_id],
+            ['ep.paper_name', 'like', $paper_name]
+        ])   
+        ->first();
+        
+        
+        return $this->successResponse($getSubjectMarks, 'Get EC Mark Detatils');
+    }
+    public function getec_teacher(Request $request)
+    {
+        $class_id = $request->class_id;
+        $department_id = $request->department_id;
+        $section_id = $request->section_id;
+        //$subject_id = $request->subject_id;
+        $semester_id = $request->semester_id;
+        $session_id = $request->session_id;
+        $academic_session_id = $request->academic_session_id;        
+        $student_id = $request->student_id;
+        $paper_name= $request->paper_name;
+        $Connection = $this->createNewConnection($request->branch_id);
+        $getsubject = $Connection->table('subjects as sb')
+        ->select(
+            'sb.id as subject_id',
+            'sb.name'
+        )       
+        ->where('sb.name', '=', 'EC')
+        ->orWhere('sb.name', '=', 'English Comminication')
+        ->first();
+        $subject_id = $getsubject->subject_id;
+        $getSubjectMarks = $Connection->table('subject_assigns as sa')        
+        ->select(           
+            'st.id',         
+            'st.first_name',         
+            'st.last_name',
+            
+        ) 
+        ->leftJoin('staffs as st', 'st.id', '=', 'sa.teacher_id')
+        ->where([
+            ['sa.class_id', '=', $request->class_id],
+            ['sa.subject_id', '=', $subject_id],
+            ['sa.section_id', '=', $section_id],
+            ['sa.academic_session_id', '=', $academic_session_id],
+            ['sa.department_id', '=', $department_id]
+        ])   
+        ->first();
+        
+        
+        return $this->successResponse($getSubjectMarks, 'Get EC Teacher Name Detatils');
+    }
+    public function getsubjectpapermark(Request $request)
+    { 
+        $Connection = $this->createNewConnection($request->branch_id);
+        $getsubject = $Connection->table('subjects as sb')
+        ->select(
+            'sb.id as subject_id',
+            'sb.name'
+        )       
+        ->where('sb.name', 'like', $request->subject)        
+        ->first();
+        $subject_id = $getsubject->subject_id;
+        
+        $paper_list=[];
+        foreach($request->papers as $paper)
+        {
+            $getpapers = $Connection->table('exam_papers as ep')
+        ->select(
+            'ep.id',
+            'ep.paper_name',
+            'ep.score_type',
+            'sb.name'
+        )   
+        ->leftJoin('subjects as sb', 'sb.id', '=', 'ep.subject_id')               
+        ->where([
+            ['ep.department_id', '=', $request->department_id],
+            ['ep.class_id', '=', $request->class_id],
+            ['ep.subject_id', '=', $subject_id],
+            ['ep.academic_session_id', '=', $request->academic_session_id],
+            ['ep.paper_name', 'like', $paper]
+        ])
+        ->first();
+        $getsemester = $Connection->table('semester')->where('academic_session_id',$request->academic_session_id)->orderBy('start_date', 'asc')->get();
+            $mark=['','',''];
+            if(!empty($getpapers))
+            {
+                $mark=[];
+                foreach($getsemester as $sem)
+                {
+                    $semester=$sem->id;
+                    $paper_id=$getpapers->id;
+                    
+                    $getmark = $Connection->table('student_marks as sa')
+                    ->select(
+                        'sa.score',
+                        'sa.grade',
+                        'sa.points',
+                        'sa.freetext',
+                        'gm.grade as grade_name',
+                    )   
+                    ->leftJoin('grade_marks as gm', 'gm.id', '=', 'sa.points')
+                    ->where([
+                        ['sa.class_id', '=', $request->class_id],
+                        ['sa.section_id', '=', $request->section_id],
+                        ['sa.student_id', '=', $request->student_id],
+                        ['sa.subject_id', '=', $subject_id],
+                        ['sa.paper_id', '=', $paper_id],
+                        ['sa.semester_id', '=', $semester]
+                    ])  
+                    ->first();
+                    array_push($mark,$getmark);
+                }
+            }
+            $data=[
+                "papers"=> $paper,               
+                "marks"=> $mark
+            ];
+            
+            array_push($paper_list, $data);
+        }
+            
+        return $this->successResponse($paper_list, 'Get Subject Paper Lists');
+    }
+    public function classteacher_principal(Request $request)
+    {        
+        
+        $class_id = $request->class_id;
+        $section_id = $request->section_id;
+        $academic_session_id = $request->academic_session_id;
+        $Connection = $this->createNewConnection($request->branch_id);
+        $principaldata =$Connection->table('staffs')
+            ->select('first_name', 'last_name')
+            ->where('designation_id', '1')
+            ->first();
+        $teacherdata =$Connection->table('teacher_allocations as t1')
+            ->select('t1.teacher_id', 't2.first_name', 't2.last_name')
+            ->leftJoin('staffs as t2', 't1.teacher_id', '=', 't2.id')
+            ->where('t1.class_id', $class_id)
+            ->where('t1.section_id', $section_id)
+            ->where('t1.academic_session_id', $academic_session_id)
+            ->first();
+        $pfirst_name=(isset($principaldata->first_name) && $principaldata->first_name!=null)?$principaldata->first_name:'';
+        $plast_name=(isset($principaldata->last_name) && $principaldata->last_name!=null)?$principaldata->last_name:'';
+        $tfirst_name=(isset($teacherdata->first_name) && $teacherdata->first_name!=null)?$teacherdata->first_name:'';
+        $tlast_name=(isset($teacherdata->last_name) && $teacherdata->last_name!=null)?$teacherdata->last_name:'';
+
+        $principal=$pfirst_name.' '.$plast_name;
+        $teacher=$tfirst_name.' '.$tlast_name;
+
+        $datas=[
+        
+            "class_id"=> $class_id,
+        
+            "section_id"=> $section_id,
+            "academic_session_id"=> $academic_session_id,
+            
+            "principal"=> $principal,
+            "teacher"=> $teacher
+        ];
+        return $this->successResponse($datas, 'Get Class Teacher & Principal Details Successfully.');
+    }
+    public function stuexam_ppmarklist(Request $request)
+    {        
+        $exam_id = $request->exam_id;
+        $class_id = $request->class_id;
+        $section_id = $request->section_id;
+        $subject_id= $request->subject_id;
+        $session_id = $request->session_id;
+        $academic_session_id = $request->academic_session_id;        
+        $semester_id = $request->semester_id;  
+        $student_id = $request->student_id;    
+        $paper = $request->paper;
+
+        $Connection = $this->createNewConnection($request->branch_id);
+        
+        $getsubject = $Connection->table('subjects as sb')
+        ->select(
+            'sb.id as subject_id',
+            'sb.name'
+        )       
+        ->where('sb.name', 'like', $request->subject)        
+        ->first();
+        $subject_id = $getsubject->subject_id;
+        $getSemesterMark = $Connection->table('exam_papers as ep')
+        ->select(
+            'ep.id',
+            'sa.score',
+            'sa.grade',
+            
+        )   
+        ->leftJoin('student_marks as sa', function ($q) use ($class_id, $section_id, $exam_id, $subject_id, $semester_id, $session_id, $academic_session_id,$student_id) {
+            $q->on('sa.paper_id', '=', 'ep.id')                
+                ->on('sa.class_id', '=', DB::raw("'$class_id'"))
+                ->on('sa.section_id', '=', DB::raw("'$section_id'"))
+                ->on('sa.semester_id', '=', DB::raw("'$semester_id'"))
+                ->on('sa.session_id', '=', DB::raw("'$session_id'"))
+                ->on('sa.subject_id', '=', DB::raw("'$subject_id'"))
+                ->on('sa.student_id', '=', DB::raw("'$student_id'"))
+                ->on('sa.academic_session_id', '=', DB::raw("'$academic_session_id'"));
+        })        
+        ->where([
+            ['ep.class_id', '=', $request->class_id],
+            ['ep.subject_id', '=', $subject_id],
+            ['ep.academic_session_id', '=', $academic_session_id],
+            ['ep.paper_name', 'like', $paper]
+        ])   
+        ->first();      
+        
+        return $this->successResponse($getSemesterMark, 'Get Personal Point Mark Details Successfully.');
+    }
+    public function stuexam_ppavgmarklist(Request $request)
+    {        
+        $exam_id = $request->exam_id;
+        $class_id = $request->class_id;
+        $section_id = $request->section_id;
+        $subject_id= $request->subject_id;
+        $session_id = $request->session_id;
+        $academic_session_id = $request->academic_session_id;        
+        $semester_id = $request->semester_id;  
+        $student_id = $request->student_id;      
+        $paper = $request->paper;  
+
+        
+        $Connection = $this->createNewConnection($request->branch_id);      
+        $getsubject = $Connection->table('subjects as sb')
+        ->select(
+            'sb.id as subject_id',
+            'sb.name'
+        )       
+        ->where('sb.name', 'like', $request->subject)        
+        ->first();
+        $subject_id = $getsubject->subject_id;
+        $getSemesterMark = $Connection->table('exam_papers as ep')
+        ->select(
+            'ep.id',
+            'sa.score',
+            'sa.grade',
+            DB::raw('AVG(score) as avg'),
+        )   
+        ->leftJoin('student_marks as sa', function ($q) use ($class_id, $section_id, $exam_id, $subject_id, $semester_id, $session_id, $academic_session_id,$student_id) {
+            $q->on('sa.paper_id', '=', 'ep.id')                
+                ->on('sa.class_id', '=', DB::raw("'$class_id'"))
+                ->on('sa.section_id', '=', DB::raw("'$section_id'"))
+                ->on('sa.semester_id', '=', DB::raw("'$semester_id'"))
+                ->on('sa.session_id', '=', DB::raw("'$session_id'"))
+                ->on('sa.subject_id', '=', DB::raw("'$subject_id'"))
+                //->on('sa.student_id', '=', DB::raw("'$student_id'"))
+                ->on('sa.academic_session_id', '=', DB::raw("'$academic_session_id'"));
+        }) 
+        ->leftJoin('grade_marks as gm', 'gm.id', '=', 'sa.points')
+        ->where([
+            ['ep.class_id', '=', $request->class_id],
+            ['ep.subject_id', '=', $subject_id],
+            ['ep.academic_session_id', '=', $academic_session_id],
+            ['ep.paper_name', 'like', $paper]
+        ])   
+        ->first();      
+        
+        return $this->successResponse($getSemesterMark, 'Get Personal Point Avg Mark Details Successfully');
+    }
+    public function getpaperoverallmarklist1(Request $request)
+    { 
+        $exam_id = $request->exam_id;
+        $class_id = $request->class_id;
+        $section_id = $request->section_id;
+        $subject_id= $request->subject_id;
+        $session_id = $request->session_id;
+        $academic_session_id = $request->academic_session_id;        
+        $semester_id = $request->semester_id;  
+        $student_id = $request->student_id;      
+        $paper = $request->paper;  
+        $Connection = $this->createNewConnection($request->branch_id);
+        $getsubject = $Connection->table('subjects as sb')
+        ->select(
+            'sb.id as subject_id',
+            'sb.name'
+        )       
+        ->where('sb.name', 'like', $request->subject)        
+        ->first();
+        $subject_id = $getsubject->subject_id;
+        $getsemester = $Connection->table('semester')->where('academic_session_id',$request->academic_session_id)->orderBy('start_date', 'asc')->get();
+            $mark=[];
+            $nsem=count($getsemester);
+            $s=0;
+            $getmark=[];
+            foreach($getsemester as $sem)
+            {
+                $s++;
+               
+                if($nsem==$s)
+                {
+                    $semester=$sem->id;
+            
+                
+                $getmark = $Connection->table('exam_papers as ep')
+                ->select(
+                    'sa.score',
+                    'sa.grade',
+                    'sa.points',
+                    'sa.freetext',
+                    'gm.grade as grade_name',
+                    'ep.score_type',
+                )    
+                ->leftJoin('student_marks as sa', function ($q) use ($class_id, $section_id, $exam_id, $subject_id, $semester, $session_id, $academic_session_id,$student_id) {
+                    $q->on('sa.paper_id', '=', 'ep.id')                
+                        ->on('sa.class_id', '=', DB::raw("'$class_id'"))
+                        ->on('sa.section_id', '=', DB::raw("'$section_id'"))
+                        ->on('sa.semester_id', '=', DB::raw("'$semester'"))
+                        ->on('sa.subject_id', '=', DB::raw("'$subject_id'"))
+                        ->on('sa.student_id', '=', DB::raw("'$student_id'"))
+                        ->on('sa.academic_session_id', '=', DB::raw("'$academic_session_id'"));
+                }) 
+                ->leftJoin('grade_marks as gm', 'gm.id', '=', 'sa.points')
+                ->where([
+                    ['ep.class_id', '=', $class_id],
+                    ['ep.subject_id', '=', $subject_id],
+                    ['ep.academic_session_id', '=', $academic_session_id],
+                    ['ep.paper_name', 'like', $paper]
+                ])   
+                ->first(); 
+                }
+            }
+           
+            
+        return $this->successResponse($getmark, 'Get  Paper Marks Lists');
+    }
     public function getacyeardates(Request $request)
     {
         $validator = \Validator::make($request->all(), [
@@ -180,7 +554,7 @@ class ExamreportController extends BaseController
                                 
                                 $totexc=$getAttendance->excusedCount;
                     $data=[
-                        "month"=>$month,
+                        "month"=>$mon,
                         "no_schooldays"=>$totaldays,
                         "suspension"=>$suspension,
                         "totalcoming"=>$totalcoming,
@@ -406,6 +780,7 @@ class ExamreportController extends BaseController
             
         return $this->successResponse($paper_list, 'Get Subject Paper Lists');
     }
+
     public function stuexam_marklist(Request $request)
     {        
         $exam_id = $request->exam_id;
@@ -592,7 +967,7 @@ class ExamreportController extends BaseController
             $Connection = $this->createNewConnection($request->branch_id);
             $studentId=$request->id;
             $class= $Connection->table('classes as cl')
-            ->select('cl.id', 'cl.name', 'cl.short_name')
+            ->select('cl.id', 'cl.name', 'cl.short_name','cl.name_numeric')
             ->where([
                 ['cl.department_id', '=', $request->department_id],
             ])
@@ -659,6 +1034,7 @@ class ExamreportController extends BaseController
             }
             $datas=[
                 "class"=> $cls->name,
+                "class_numeric"=> $cls->name_numeric,
                 "class_id"=> $class_id,
                 "section"=> (isset($classsec->section) && $classsec->section!=null)?$classsec->section:'',
                 "section_id"=> $section_id,

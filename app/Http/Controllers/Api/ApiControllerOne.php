@@ -10884,7 +10884,7 @@ class ApiControllerOne extends BaseController
             // create new connection
             $createConnection = $this->createNewConnection($request->branch_id);
             $success = $createConnection->table('classes as cl')
-                ->select('cl.id', 'cl.name', 'cl.short_name')
+                ->select('cl.id', 'cl.name', 'cl.short_name','cl.name_numeric')
                 ->where([
                     ['cl.department_id', '=', $request->department_id],
                 ])

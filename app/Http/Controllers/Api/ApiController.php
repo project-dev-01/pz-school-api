@@ -13865,7 +13865,7 @@ class ApiController extends BaseController
                     'blood_group' => $request->blood_group,
                     'created_at' => date("Y-m-d H:i:s")
                 ];
-               $oldData = $conn->table('students')->find($request->student_id);
+                $oldData = $conn->table('students')->find($request->student_id);
                 $conn->table('students')->where('id', $request->student_id)->update($data);
                 $changes = $this->getChanges($oldData, $data);
                 $table_modify=[];
@@ -25387,7 +25387,7 @@ class ApiController extends BaseController
         } 
         else
         {  
-            return $this->send422Error('Student Roll no Not', ['error' => 'Student Roll no Not Exist']);
+            return $this->send422Error('Student RollNo Not Exist', ['error' => 'Student RollNo Not Exist']);
             
         }
         return $this->successResponse($success, 'Student Photo uploaded successfully');
