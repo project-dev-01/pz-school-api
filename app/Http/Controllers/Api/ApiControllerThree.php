@@ -1238,8 +1238,10 @@ class ApiControllerThree extends BaseController
             // create new connection
             $conn = $this->createNewConnection($request->branch_id);
             $results = $conn->select("
-    SELECT 
+            SELECT 
+            lt.id AS leave_type_id,
         lt.name AS leave_type,
+        CONCAT('[', GROUP_CONCAT(JSON_OBJECT('id', r.id)), ']') as id,
         CONCAT('[', GROUP_CONCAT(JSON_OBJECT('reason', r.name)), ']') AS reasons
     FROM 
         student_leave_types lt
