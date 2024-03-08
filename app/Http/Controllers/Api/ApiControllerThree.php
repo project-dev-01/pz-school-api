@@ -1366,11 +1366,27 @@ class ApiControllerThree extends BaseController
         } else {
             // create new connection
             $classConn = $this->createNewConnection($request->branch_id);
+
+            $getDeptList = $classConn->table('staffs as sf')
+                ->select('sf.department_id')
+                ->where('sf.id', $request->teacher_id)
+                ->first();
+            $departmentIDs = isset($getDeptList->department_id) ? $getDeptList->department_id : null;
+            // dd($departmentIDs);
             $class = $classConn->table('classes as cl')
                 ->select('cl.id', 'cl.name', 'cl.short_name', 'cl.name_numeric', 'cl.department_id', 'stf_dp.name as department_name')
                 ->join('staff_departments as stf_dp', 'cl.department_id', '=', 'stf_dp.id')
-                ->join("staffs as sf", \DB::raw("FIND_IN_SET(sf.department_id,cl.department_id)"), ">", \DB::raw("'0'"))
-                ->where('sf.id', '=', $request->teacher_id)
+                // ->join("staffs as sf", \DB::raw("FIND_IN_SET(sf.department_id,cl.department_id)"), ">", \DB::raw("'0'"))
+                // ->where('sf.id', '=', $request->teacher_id)
+                ->where(function ($query) use ($departmentIDs) {
+                    // Explode departmentIDs string to an array
+                    $departmentIDsArray = explode(",", $departmentIDs);
+                    // Iterate over departmentIDs array to add conditions
+                    foreach ($departmentIDsArray as $departmentID) {
+                        // Add condition for each department ID using FIND_IN_SET
+                        $query->orWhereRaw("FIND_IN_SET('$departmentID', cl.department_id) > 0");
+                    }
+                })
                 ->orderBy('cl.department_id', 'desc')
                 ->get();
             return $this->successResponse($class, 'class by department record fetch successfully');
@@ -1395,9 +1411,9 @@ class ApiControllerThree extends BaseController
             // $gradeAndClasses = $request->gradeAndClasses ? 1 : 0;
             // $attendance = $request->attendance ? 1 : 0;
             // $testResult = $request->testResult ? 1 : 0;
-            $gardeClassAcademic = $request->gardeClassAcademic;
-            $attendanceAcademic = $request->attendanceAcademic;
-            $testResultAcademic = $request->testResultAcademic;
+            // $gardeClassAcademic = $request->gardeClassAcademic;
+            // $attendanceAcademic = $request->attendanceAcademic;
+            // $testResultAcademic = $request->testResultAcademic;
             $staff_id = $request->staff_id;
 
             $old = $conn->table('student_info_download_settings')
@@ -1407,13 +1423,13 @@ class ApiControllerThree extends BaseController
                 'student_info' => !empty($request->studentDetails == "true") ? "1" : "0",
                 'parent_info' =>  !empty($request->parentDetails == "true") ? "1" : "0",
                 'school_info' =>  !empty($request->schoolDetails == "true") ? "1" : "0",
-                'academic_info' =>  !empty($request->academicDetails == "true") ? "1" : "0",
-                'grade_class_info' =>  !empty($request->gradeAndClasses == "true") ? "1" : "0",
-                'grade_class_academic_year' => $gardeClassAcademic,
-                'attendance_info' =>  !empty($request->attendance == "true") ? "1" : "0",
-                'attendance_academic_year' => $attendanceAcademic,
-                'test_result_info' =>  !empty($request->testResult == "true") ? "1" : "0",
-                'test_result_academic_year' => $testResultAcademic,
+                // 'academic_info' =>  !empty($request->academicDetails == "true") ? "1" : "0",
+                // 'grade_class_info' =>  !empty($request->gradeAndClasses == "true") ? "1" : "0",
+                // 'grade_class_academic_year' => $gardeClassAcademic,
+                // 'attendance_info' =>  !empty($request->attendance == "true") ? "1" : "0",
+                // 'attendance_academic_year' => $attendanceAcademic,
+                // 'test_result_info' =>  !empty($request->testResult == "true") ? "1" : "0",
+                // 'test_result_academic_year' => $testResultAcademic,
                 'staff_id' => $staff_id,
                 'created_by' => $staff_id
             );
@@ -1471,8 +1487,13 @@ class ApiControllerThree extends BaseController
             $session_id = isset($request->session_id) ? $request->session_id : null;
             $class_id = isset($request->class_id) ? $request->class_id : null;
             $section_id = isset($request->section_id) ? $request->section_id : null;
+            $academic_year = isset($request->academic_year) ? $request->academic_year : null;
+
+            // student parent school info
             $enableStudentInfo = isset($info->student_info) ? $info->student_info : null;
             $enableParentInfo = isset($info->parent_info) ? $info->parent_info : null;
+            $enableSchoolInfo = isset($info->school_info) ? $info->school_info : null;
+
             $enableAcademicInfo = isset($info->academic_info) ? $info->academic_info : null;
             // academic years
             $grade_class_info = isset($info->grade_class_info) ? $info->grade_class_info : null;
@@ -1488,6 +1509,7 @@ class ApiControllerThree extends BaseController
             $getParentInfo = [];
             $gradeClassInfo = [];
             $attendanceInfo = [];
+            $SchoolInfo = [];
             $studentMarkDetails = [];
             if ($enableStudentInfo == "1") {
                 // get student informations
@@ -1506,6 +1528,14 @@ class ApiControllerThree extends BaseController
                         'st.gender',
                         'st.birthday',
                         'st.email',
+                        'st.register_no',
+                        'st.passport',
+                        'st.nric',
+                        'st.admission_date',
+                        'st.nationality',
+                        'st.current_address',
+                        'st.permanent_address',
+                        'st.mobile_no',
                         // 'cl.name as class_name',
                         // 'sc.name as section_name',
                         // 'emp.name as department_name'
@@ -1526,9 +1556,19 @@ class ApiControllerThree extends BaseController
                     ->when($student_name, function ($query, $student_name) {
                         return $query->where('st.first_name', 'like', '%' . $student_name . '%')->orWhere('st.last_name', 'like', '%' . $student_name . '%');
                     })
-                    ->where('en.active_status', '=', '0')
+                    // ->where('en.active_status', '=', '0')
+                    ->where('en.academic_session_id', '=', $academic_year)
                     ->groupBy('en.student_id')
-                    ->get()->toArray();
+                    ->get();
+                // Decrypt sensitive data if exists
+                $getStudentInfo->transform(function ($student) {
+                    $student->passport = Helper::decryptStringData($student->passport);
+                    $student->nric = Helper::decryptStringData($student->nric);
+                    $student->mobile_no = Helper::decryptStringData($student->mobile_no);
+                    $student->current_address = Helper::decryptStringData($student->current_address);
+                    $student->permanent_address = Helper::decryptStringData($student->permanent_address);
+                    return $student;
+                });
             }
             // parent information
             if ($enableParentInfo == "1") {
@@ -1545,11 +1585,15 @@ class ApiControllerThree extends BaseController
                         DB::raw("CONCAT(p.first_name, ' ', p.last_name) as parent_name"),
                         DB::raw("CONCAT(p.first_name_english, ' ', p.last_name_english) as parent_eng_name"),
                         DB::raw("CONCAT(p.first_name_furigana, ' ', p.last_name_furigana) as parent_fur_name"),
-                        'p.nationality',
+                        'p.nationality as parent_nationality',
                         'p.gender as parent_gender',
                         'p.date_of_birth as parent_dob',
                         'p.education as parent_education',
                         'p.email as parent_email',
+                        'p.occupation as parent_occupation',
+                        'p.mobile_no as parent_mobile_no',
+                        'p.passport as parent_passport',
+                        'p.nric as parent_nric',
                         // 'st.birthday',
                         // 'st.email',
                     )
@@ -1571,143 +1615,137 @@ class ApiControllerThree extends BaseController
                     ->when($student_name, function ($query, $student_name) {
                         return $query->where('st.first_name', 'like', '%' . $student_name . '%')->orWhere('st.last_name', 'like', '%' . $student_name . '%');
                     })
-                    ->where('en.active_status', '=', '0')
-                    ->groupBy('en.student_id')
-                    ->get()->toArray();
-            }
-            // grade and class information
-            if ($grade_class_info == "1") {
-                $gradeClassInfo = $Connection->table('enrolls as en')
-                    ->select(
-                        'en.student_id',
-                        'cl.name as class_name',
-                        'sc.name as section_name',
-                        'emp.name as department_name'
-                    )
-                    ->leftJoin('emp_department as emp', 'en.department_id', '=', 'emp.id')
-                    ->leftJoin('classes as cl', 'en.class_id', '=', 'cl.id')
-                    ->leftJoin('sections as sc', 'en.section_id', '=', 'sc.id')
-                    ->join('students as st', 'en.student_id', '=', 'st.id')
-                    ->when($class_id, function ($q)  use ($class_id) {
-                        $q->where('en.class_id', $class_id);
-                    })
-                    ->when($section_id, function ($q)  use ($section_id) {
-                        $q->where('en.section_id', $section_id);
-                    })
-                    ->when($session_id, function ($query, $session_id) {
-                        return $query->where('en.session_id', $session_id);
-                    })
-                    ->when($student_name, function ($query, $student_name) {
-                        return $query->where('st.first_name', 'like', '%' . $student_name . '%')->orWhere('st.last_name', 'like', '%' . $student_name . '%');
-                    })
-                    ->where('en.academic_session_id', '=', $grade_class_academic_year)
                     // ->where('en.active_status', '=', '0')
+                    ->where('en.academic_session_id', '=', $academic_year)
                     ->groupBy('en.student_id')
-                    ->get()->toArray();
-            }
-            // attendance information
-            if ($attendance_info == "1") {
-                $attendanceInfo = $Connection->table('enrolls as en')
-                    ->select(
-                        'en.student_id',
-                        'en.class_id',
-                        'en.section_id',
-                        'en.academic_session_id',
-                        'en.active_status',
-                        DB::raw('COUNT(*) as "no_of_days_attendance"'),
-                        DB::raw('COUNT(CASE WHEN sad.status = "present" then 1 ELSE NULL END) as "presentCount"'),
-                        DB::raw('COUNT(CASE WHEN sad.status = "absent" then 1 ELSE NULL END) as "absentCount"'),
-                        DB::raw('COUNT(CASE WHEN sad.status = "late" then 1 ELSE NULL END) as "lateCount"'),
-                        DB::raw('COUNT(CASE WHEN sad.status = "excused" then 1 ELSE NULL END) as "excusedCount"'),
-                    )
-                    ->join('students as st', 'en.student_id', '=', 'st.id')
-                    ->leftJoin('student_attendances_day as sad', function ($q) {
-                        $q->on('sad.student_id', '=', 'en.student_id')
-                            ->on('sad.class_id', '=', 'en.class_id')
-                            ->on('sad.section_id', '=', 'en.section_id');
-                    })
-                    ->when($class_id, function ($q)  use ($class_id) {
-                        $q->where('en.class_id', $class_id);
-                    })
-                    ->when($section_id, function ($q)  use ($section_id) {
-                        $q->where('en.section_id', $section_id);
-                    })
-                    ->when($session_id, function ($query, $session_id) {
-                        return $query->where('en.session_id', $session_id);
-                    })
-                    ->when($student_name, function ($query, $student_name) {
-                        return $query->where('st.first_name', 'like', '%' . $student_name . '%')->orWhere('st.last_name', 'like', '%' . $student_name . '%');
-                    })
-                    ->where('en.academic_session_id', '=', $attendance_academic_year)
-                    ->groupBy('en.student_id')
-                    ->get()->toArray();
-            }
-            if ($test_result_info == "1") {
-                $studentMarks = $Connection->table('enrolls as en')
-                    ->select(
-                        'sm.id',
-                        'en.student_id',
-                        'cl.name as class_name',
-                        'sc.name as section_name',
-                        'sb.name as subject_name',
-                        'exp.paper_name',
-                        'sm.score',
-                        'sm.pass_fail',
-                        'sm.status',
-                        'sm.grade',
-                        'sm.points',
-                        'sm.freetext',
-                        'sm.ranking',
-                        'exp.score_type',
-                        'sm.subject_id',
-                        'sm.paper_id',
-                        'sm.grade_category',
-                        'sm.semester_id',
-                        'sm.session_id',
-                        'sm.exam_id',
-                        'en.class_id',
-                        'en.section_id',
-                        'ay.name as academic_session_name'
-                    )
-                    ->join('students as st', 'en.student_id', '=', 'st.id')
-                    ->leftJoin('classes as cl', 'en.class_id', '=', 'cl.id')
-                    ->leftJoin('sections as sc', 'en.section_id', '=', 'sc.id')
-                    ->leftJoin('student_marks as sm', function ($q) {
-                        $q->on('sm.student_id', '=', 'en.student_id')
-                            ->on('sm.class_id', '=', 'en.class_id')
-                            ->on('sm.section_id', '=', 'en.section_id')
-                            ->on('sm.academic_session_id', '=', 'en.academic_session_id');
-                    })
-                    ->leftJoin('exam_papers as exp', function ($qs) {
-                        $qs->on('exp.class_id', '=', 'sm.class_id')
-                            ->on('sm.subject_id', '=', 'sm.subject_id')
-                            ->on('exp.id', '=', 'sm.paper_id')
-                            ->on('sm.academic_session_id', '=', 'en.academic_session_id');
-                    })
-                    ->leftJoin('subjects as sb', 'sm.subject_id', '=', 'sb.id')
-                    ->leftJoin('academic_year as ay', 'en.academic_session_id', '=', 'ay.id')
-                    ->when($class_id, function ($q)  use ($class_id) {
-                        $q->where('en.class_id', $class_id);
-                    })
-                    ->when($section_id, function ($q)  use ($section_id) {
-                        $q->where('en.section_id', $section_id);
-                    })
-                    ->when($session_id, function ($query, $session_id) {
-                        return $query->where('en.session_id', $session_id);
-                    })
-                    ->when($student_name, function ($query, $student_name) {
-                        return $query->where('st.first_name', 'like', '%' . $student_name . '%')->orWhere('st.last_name', 'like', '%' . $student_name . '%');
-                    })
-                    ->where('en.academic_session_id', '=', $test_result_academic_year)
-                    ->get()->groupBy('student_id');
-                // $studentMarkDetails = array();
-                foreach ($studentMarks as $studentId => $marks) {
-                    $object = new \stdClass();
-                    $object->student_id = $studentId;
-                    $object->all_marks = $marks;
-                    array_push($studentMarkDetails, $object);
+                    ->get();
+                // Decrypt sensitive data if exists
+                // $getParentInfo->transform(function ($student) {
+                //     $student->parent_mobile_no = Helper::decryptStringData($student->parent_mobile_no);
+                //     $student->parent_passport = Helper::decryptStringData($student->parent_passport);
+                //     $student->parent_nric = Helper::decryptStringData($student->parent_nric);
+                //     return $student;
+                // });
+                // Decrypt sensitive data if exists
+                foreach ($getParentInfo as $parent) {
+                    $parent->parent_mobile_no = Helper::decryptStringData($parent->parent_mobile_no);
+                    $parent->parent_passport = Helper::decryptStringData($parent->parent_passport);
+                    $parent->parent_nric = Helper::decryptStringData($parent->parent_nric);
                 }
             }
+            // enableSchoolInfo
+            if ($enableSchoolInfo == "1") {
+                $SchoolInfo = $Connection->table('global_settings')
+                    ->select(
+                        'address as school_address',
+                        'mobile_no as school_mobile_no',
+                        'email as school_email'
+                    )
+                    ->first();
+            }
+            // attendance information
+            // if ($attendance_info == "1") {
+            //     $attendanceInfo = $Connection->table('enrolls as en')
+            //         ->select(
+            //             'en.student_id',
+            //             'en.class_id',
+            //             'en.section_id',
+            //             'en.academic_session_id',
+            //             'en.active_status',
+            //             DB::raw('COUNT(*) as "no_of_days_attendance"'),
+            //             DB::raw('COUNT(CASE WHEN sad.status = "present" then 1 ELSE NULL END) as "presentCount"'),
+            //             DB::raw('COUNT(CASE WHEN sad.status = "absent" then 1 ELSE NULL END) as "absentCount"'),
+            //             DB::raw('COUNT(CASE WHEN sad.status = "late" then 1 ELSE NULL END) as "lateCount"'),
+            //             DB::raw('COUNT(CASE WHEN sad.status = "excused" then 1 ELSE NULL END) as "excusedCount"'),
+            //         )
+            //         ->join('students as st', 'en.student_id', '=', 'st.id')
+            //         ->leftJoin('student_attendances_day as sad', function ($q) {
+            //             $q->on('sad.student_id', '=', 'en.student_id')
+            //                 ->on('sad.class_id', '=', 'en.class_id')
+            //                 ->on('sad.section_id', '=', 'en.section_id');
+            //         })
+            //         ->when($class_id, function ($q)  use ($class_id) {
+            //             $q->where('en.class_id', $class_id);
+            //         })
+            //         ->when($section_id, function ($q)  use ($section_id) {
+            //             $q->where('en.section_id', $section_id);
+            //         })
+            //         ->when($session_id, function ($query, $session_id) {
+            //             return $query->where('en.session_id', $session_id);
+            //         })
+            //         ->when($student_name, function ($query, $student_name) {
+            //             return $query->where('st.first_name', 'like', '%' . $student_name . '%')->orWhere('st.last_name', 'like', '%' . $student_name . '%');
+            //         })
+            //         ->where('en.academic_session_id', '=', $attendance_academic_year)
+            //         ->groupBy('en.student_id')
+            //         ->get()->toArray();
+            // }
+            // if ($test_result_info == "1") {
+            //     $studentMarks = $Connection->table('enrolls as en')
+            //         ->select(
+            //             'sm.id',
+            //             'en.student_id',
+            //             'cl.name as class_name',
+            //             'sc.name as section_name',
+            //             'sb.name as subject_name',
+            //             'exp.paper_name',
+            //             'sm.score',
+            //             'sm.pass_fail',
+            //             'sm.status',
+            //             'sm.grade',
+            //             'sm.points',
+            //             'sm.freetext',
+            //             'sm.ranking',
+            //             'exp.score_type',
+            //             'sm.subject_id',
+            //             'sm.paper_id',
+            //             'sm.grade_category',
+            //             'sm.semester_id',
+            //             'sm.session_id',
+            //             'sm.exam_id',
+            //             'en.class_id',
+            //             'en.section_id',
+            //             'ay.name as academic_session_name'
+            //         )
+            //         ->join('students as st', 'en.student_id', '=', 'st.id')
+            //         ->leftJoin('classes as cl', 'en.class_id', '=', 'cl.id')
+            //         ->leftJoin('sections as sc', 'en.section_id', '=', 'sc.id')
+            //         ->leftJoin('student_marks as sm', function ($q) {
+            //             $q->on('sm.student_id', '=', 'en.student_id')
+            //                 ->on('sm.class_id', '=', 'en.class_id')
+            //                 ->on('sm.section_id', '=', 'en.section_id')
+            //                 ->on('sm.academic_session_id', '=', 'en.academic_session_id');
+            //         })
+            //         ->leftJoin('exam_papers as exp', function ($qs) {
+            //             $qs->on('exp.class_id', '=', 'sm.class_id')
+            //                 ->on('sm.subject_id', '=', 'sm.subject_id')
+            //                 ->on('exp.id', '=', 'sm.paper_id')
+            //                 ->on('sm.academic_session_id', '=', 'en.academic_session_id');
+            //         })
+            //         ->leftJoin('subjects as sb', 'sm.subject_id', '=', 'sb.id')
+            //         ->leftJoin('academic_year as ay', 'en.academic_session_id', '=', 'ay.id')
+            //         ->when($class_id, function ($q)  use ($class_id) {
+            //             $q->where('en.class_id', $class_id);
+            //         })
+            //         ->when($section_id, function ($q)  use ($section_id) {
+            //             $q->where('en.section_id', $section_id);
+            //         })
+            //         ->when($session_id, function ($query, $session_id) {
+            //             return $query->where('en.session_id', $session_id);
+            //         })
+            //         ->when($student_name, function ($query, $student_name) {
+            //             return $query->where('st.first_name', 'like', '%' . $student_name . '%')->orWhere('st.last_name', 'like', '%' . $student_name . '%');
+            //         })
+            //         ->where('en.academic_session_id', '=', $test_result_academic_year)
+            //         ->get()->groupBy('student_id');
+            //     // $studentMarkDetails = array();
+            //     foreach ($studentMarks as $studentId => $marks) {
+            //         $object = new \stdClass();
+            //         $object->student_id = $studentId;
+            //         $object->all_marks = $marks;
+            //         array_push($studentMarkDetails, $object);
+            //     }
+            // }
             // dd($getStudentInfo);
             // dd($getParentInfo);
             // dd($gradeClassInfo);
@@ -1718,21 +1756,24 @@ class ApiControllerThree extends BaseController
             $collection3 = collect($gradeClassInfo);
             $collection4 = collect($attendanceInfo);
             $collection5 = collect($studentMarkDetails);
+            $collection6 = collect($SchoolInfo);
             // Merge collections based on 'student_id'
-            $merged = $collection1->reduce(function ($carry, $item) use ($collection2, $collection3, $collection4, $collection5) {
+            $merged = $collection1->reduce(function ($carry, $item) use ($collection2, $collection3, $collection4, $collection5, $collection6) {
 
                 $matchingItem2 = $collection2->firstWhere('student_id', $item->student_id);
                 $matchingItem3 = $collection3->firstWhere('student_id', $item->student_id);
                 $matchingItem4 = $collection4->firstWhere('student_id', $item->student_id);
                 $matchingItem5 = $collection5->firstWhere('student_id', $item->student_id);
+                $matchingItem6 = $collection6;
 
                 $itemArray = json_decode(json_encode($item), true);
                 $matchingItem2Array = ($matchingItem2) ? json_decode(json_encode($matchingItem2), true) : [];
                 $matchingItem3Array = ($matchingItem3) ? json_decode(json_encode($matchingItem3), true) : [];
                 $matchingItem4Array = ($matchingItem4) ? json_decode(json_encode($matchingItem4), true) : [];
                 $matchingItem5Array = ($matchingItem5) ? json_decode(json_encode($matchingItem5), true) : [];
+                $matchingItem6Array = ($matchingItem6) ? json_decode(json_encode($matchingItem6), true) : [];
 
-                $mergedItem = array_merge($itemArray, $matchingItem2Array, $matchingItem3Array, $matchingItem4Array, $matchingItem5Array);
+                $mergedItem = array_merge($itemArray, $matchingItem2Array, $matchingItem3Array, $matchingItem4Array, $matchingItem5Array, $matchingItem6Array);
                 $carry[] = $mergedItem;
                 return $carry;
             }, []);
