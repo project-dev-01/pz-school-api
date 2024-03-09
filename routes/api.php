@@ -156,6 +156,7 @@ Route::group(['middleware' => ['auth:api', 'throttle:limit_per_user', 'logroute'
     Route::post('event_type/event_type-details', [ApiController::class, 'getEventTypeDetails']);
     Route::post('event_type/update', [ApiController::class, 'updateEventType']);
     Route::post('event_type/delete', [ApiController::class, 'deleteEventType']);
+    Route::get('event_type/holidays_list_event', [ApiControllerOne::class, 'getHolidaysEventList']);
 
     // Event routes
     Route::post('event/add', [ApiController::class, 'addEvent']);

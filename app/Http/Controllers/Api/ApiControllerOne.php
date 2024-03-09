@@ -11807,4 +11807,24 @@ class ApiControllerOne extends BaseController
             return $this->successResponse($output, 'Child Health record fetch successfully');
         }
     }
+    public function getHolidaysEventList(Request $request){
+
+        $validator = \Validator::make($request->all(), [
+            'branch_id' => 'required'
+        ]);
+        if (!$validator->passes()) {
+            return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
+        } else {
+            // create new connection
+            $secConn = $this->createNewConnection($request->branch_id);
+            // get data
+            $section = $secConn->table('events')
+            ->select('start_date')
+            ->where('holiday', '=', '1')
+            ->orderBy('start_date', 'DESC')
+            ->get();
+        
+            return $this->successResponse($section, 'Event Holidays record fetch successfully');
+        }
+    }
 }
