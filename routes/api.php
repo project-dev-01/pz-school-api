@@ -926,6 +926,7 @@ Route::group(['middleware' => ['auth:api', 'throttle:limit_per_user', 'logroute'
     Route::get('application/list', [ApiController::class, 'getApplicationList']);
     Route::post('application/add', [ApiController::class, 'addApplication']);
     Route::post('application/application-details', [ApiController::class, 'getApplicationDetails']);
+    Route::post('get_application_guardian_details', [ApiController::class, 'getApplicationGuardianDetails']);
     Route::post('application/approve', [ApiController::class, 'approveApplication']);
     Route::post('application/update', [ApiController::class, 'updateApplication']);
     Route::post('application/delete', [ApiController::class, 'deleteApplication']);

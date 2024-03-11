@@ -21959,22 +21959,22 @@ class ApiController extends BaseController
     {
         $validator = \Validator::make($request->all(), [
             'first_name' => 'required',
-            'mobile_no' => 'required',
-            'address_1' => 'required',
-            'country' => 'required',
-            'city' => 'required',
-            'state' => 'required',
-            'postal_code' => 'required',
-            'academic_grade' => 'required',
-            'academic_year' => 'required',
-            'grade' => 'required',
-            'school_year' => 'required',
-            'school_last_attended' => 'required',
-            'school_address_1' => 'required',
-            'school_country' => 'required',
-            'school_city' => 'required',
-            'school_state' => 'required',
-            'school_postal_code' => 'required',
+            // 'mobile_no' => 'required',
+            // 'address_1' => 'required',
+            // 'country' => 'required',
+            // 'city' => 'required',
+            // 'state' => 'required',
+            // 'postal_code' => 'required',
+            // 'academic_grade' => 'required',
+            // 'academic_year' => 'required',
+            // 'grade' => 'required',
+            // 'school_year' => 'required',
+            // 'school_last_attended' => 'required',
+            // 'school_address_1' => 'required',
+            // 'school_country' => 'required',
+            // 'school_city' => 'required',
+            // 'school_state' => 'required',
+            // 'school_postal_code' => 'required',
 
             'branch_id' => 'required',
         ]);
@@ -21986,9 +21986,9 @@ class ApiController extends BaseController
             $conn = $this->createNewConnection($request->branch_id);
             // insert data
 
-            if ($conn->table('student_applications')->where('email', '=', $request->email)->count() > 0) {
-                return $this->send422Error('Student Email Already Exist', ['error' => 'Student Email Already Exist']);
-            } else {
+            // if ($conn->table('student_applications')->where('email', '=', $request->email)->count() > 0) {
+            //     return $this->send422Error('Student Email Already Exist', ['error' => 'Student Email Already Exist']);
+            // } else {
                 $email_token = Str::random(60);
                 // return $request;
                 $query = $conn->table('student_applications')->insert([
@@ -21996,21 +21996,21 @@ class ApiController extends BaseController
                     'last_name' => isset($request->last_name) ? $request->last_name : "",
                     'gender' => $request->gender,
                     'date_of_birth' => $request->date_of_birth,
-                    'mobile_no' => $request->mobile_no,
-                    'email' => $request->email,
-                    'address_1' => $request->address_1,
-                    'address_2' => $request->address_2,
+                    // 'mobile_no' => $request->mobile_no,
+                    // 'email' => $request->email,
+                    // 'address_1' => $request->address_1,
+                    // 'address_2' => $request->address_2,
                     'country' => $request->country,
                     'city' => $request->city,
                     'state' => $request->state,
                     'postal_code' => $request->postal_code,
                     'academic_grade' => $request->academic_grade,
                     'academic_year' => $request->academic_year,
-                    'grade' => $request->grade,
-                    'school_year' => $request->school_year,
+                    // 'grade' => $request->grade,
+                    // 'school_year' => $request->school_year,
                     'school_last_attended' => $request->school_last_attended,
-                    'school_address_1' => $request->school_address_1,
-                    'school_address_2' => $request->school_address_2,
+                    // 'school_address_1' => $request->school_address_1,
+                    // 'school_address_2' => $request->school_address_2,
                     'school_country' => $request->school_country,
                     'school_city' => $request->school_city,
                     'school_state' => $request->school_state,
@@ -22033,7 +22033,7 @@ class ApiController extends BaseController
                     'guardian_email' => $request->guardian_email,
                     'created_by' => $request->created_by,
                     'created_by_role' => isset($request->created_by_role) ? $request->created_by_role : "",
-                    'email_token' => $email_token,
+                    // 'email_token' => $email_token,
                     'status' => "Applied",
                     'first_name_english' => isset($request->first_name_english) ? $request->first_name_english : "",
                     'last_name_english' => isset($request->last_name_english) ? $request->last_name_english : "",
@@ -22047,6 +22047,44 @@ class ApiController extends BaseController
                     'nationality' => $request->nationality,
                     'type' => $request->type,
                     'last_date_of_withdrawal' => $request->last_date_of_withdrawal,
+
+                    "middle_name" => $request->middle_name,
+                    "middle_name_english" => $request->middle_name_english,
+                    "middle_name_furigana" => $request->middle_name_furigana,
+                    "dual_nationality" => $request->dual_nationality,
+                    "school_enrollment_status" => $request->school_enrollment_status,
+                    "school_enrollment_status_tendency" => $request->school_enrollment_status_tendency,
+                    "mother_middle_name" => $request->mother_middle_name,
+                    "mother_last_name_furigana" => $request->mother_last_name_furigana,
+                    "mother_middle_name_furigana" => $request->mother_middle_name_furigana,
+                    "mother_first_name_furigana" => $request->mother_first_name_furigana,
+                    "mother_last_name_english" => $request->mother_last_name_english,
+                    "mother_middle_name_english" => $request->mother_middle_name_english,
+                    "mother_first_name_english" => $request->mother_first_name_english,
+                    "mother_nationality" => $request->mother_nationality,
+                    "father_middle_name" => $request->father_middle_name,
+                    "father_last_name_furigana" => $request->father_last_name_furigana,
+                    "father_middle_name_furigana" => $request->father_middle_name_furigana,
+                    "father_first_name_furigana" => $request->father_first_name_furigana,
+                    "father_last_name_english" => $request->father_last_name_english,
+                    "father_middle_name_english" => $request->father_middle_name_english,
+                    "father_first_name_english" => $request->father_first_name_english,
+                    "father_nationality" => $request->father_nationality,
+                    "guardian_middle_name" => $request->guardian_middle_name,
+                    "guardian_last_name_furigana" => $request->guardian_last_name_furigana,
+                    "guardian_middle_name_furigana" => $request->guardian_middle_name_furigana,
+                    "guardian_first_name_furigana" => $request->guardian_first_name_furigana,
+                    "guardian_last_name_english" => $request->guardian_last_name_english,
+                    "guardian_middle_name_english" => $request->guardian_middle_name_english,
+                    "guardian_first_name_english" => $request->guardian_first_name_english,
+                    "guardian_company_name_japan" => $request->guardian_company_name_japan,
+                    "guardian_company_name_local" => $request->guardian_company_name_local,
+                    "guardian_company_phone_number" => $request->guardian_company_phone_number,
+                    "guardian_employment_status" => $request->guardian_employment_status,
+                    "expected_academic_year" => $request->expected_academic_year,
+                    "expected_grade" => $request->expected_grade,
+                    "expected_enroll_date" => $request->expected_enroll_date,
+                    "remarks" => $request->remarks,
                     'created_at' => date("Y-m-d H:i:s")
                 ]);
 
@@ -22056,7 +22094,7 @@ class ApiController extends BaseController
                 } else {
                     return $this->successResponse($success, 'Application has been successfully saved');
                 }
-            }
+            // }
 
             // return $request;
         }
@@ -22260,16 +22298,16 @@ class ApiController extends BaseController
                 'academic_cl.name as academic_grade',
                 'ay.name as academic_year',
             )
-            ->leftJoin('academic_year as ay', 's.academic_year', '=', 'ay.id')
-            ->leftJoin('classes as academic_cl', 's.academic_grade', '=', 'academic_cl.id')
+            ->leftJoin('academic_year as ay', 's.enrolled_academic_year', '=', 'ay.id')
+            ->leftJoin('classes as academic_cl', 's.enrolled_grade', '=', 'academic_cl.id')
             ->when($request->admission == 1, function ($query) {
                 return $query->where('s.status', '=', 'Approved')->where('s.phase_2_status', '=', 'Approved')->where('s.phase_2_status', '=', 'Approved')->where('s.enrolled_status', '=', 'Not Enrolled');
             })
             ->when($request->academic_year, function ($query) use ($request) {
-                return $query->where('s.academic_year', '=', $request->academic_year);
+                return $query->where('s.enrolled_academic_year', '=', $request->academic_year);
             })
             ->when($request->academic_grade, function ($query) use ($request) {
-                return $query->where('s.academic_grade', '=', $request->academic_grade);
+                return $query->where('s.enrolled_grade', '=', $request->academic_grade);
             })
             ->when($request->created_by, function ($query) use ($request) {
                 return $query->where('s.created_by', '=', $request->created_by)->where('s.created_by_role', '=', $request->role);
@@ -22312,49 +22350,60 @@ class ApiController extends BaseController
             $getstudentDetails = $conn->table('student_applications as s')
                 ->select(
                     's.*',
-                    // 'academic_cl.name as academic_grade',
-                    // 'school_cl.name as grade',
-                    // 'r.name as guardian_relation',
-                    // 'ay.name as academic_year',
-                    // 'sy.name as school_year',
-                    DB::raw("CONCAT(s.first_name, ' ', s.last_name) as name"),
-                    DB::raw("CONCAT(s.first_name_english, ' ', s.last_name) as name_english"),
-                    DB::raw("CONCAT(s.first_name_furigana, ' ', s.last_name) as name_furigana")
                 )
-                ->leftJoin('classes as academic_cl', 's.academic_grade', '=', 'academic_cl.id')
-                ->leftJoin('classes as school_cl', 's.grade', '=', 'school_cl.id')
-                ->leftJoin('academic_year as ay', 's.academic_year', '=', 'ay.id')
-                ->leftJoin('academic_year as sy', 's.school_year', '=', 'sy.id')
-                ->leftJoin('relations as r', 's.guardian_relation', '=', 'r.id')
                 ->where('s.id', $id)
                 ->first();
             return $this->successResponse($getstudentDetails, 'Student row fetch successfully');
         }
     }
+    
+    // student Application
+    public function getApplicationGuardianDetails(Request $request)
+    {
+        $validator = \Validator::make($request->all(), [
+            'email' => 'required',
+            'branch_id' => 'required',
+            'token' => 'required'
+        ]);
 
+        if (!$validator->passes()) {
+            return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
+        } else {
+            // create new connection
+            $conn = $this->createNewConnection($request->branch_id);
+            // get data
+            $getstudentDetails = $conn->table('student_applications as s')
+                ->select(
+                    's.*',
+                )
+                ->where('s.guardian_email', $request->email)
+                ->first();
+            return $this->successResponse($getstudentDetails, 'Guardian Details Fetched Successfully');
+        }
+    }
     // update Application
     public function updateApplication(Request $request)
     {
         // return $request;
         $validator = \Validator::make($request->all(), [
-            'first_name' => 'required',
-            'mobile_no' => 'required',
-            'mobile_no' => 'required',
-            'address_1' => 'required',
-            'country' => 'required',
-            'city' => 'required',
-            'state' => 'required',
-            'postal_code' => 'required',
-            'academic_grade' => 'required',
-            'academic_year' => 'required',
-            'grade' => 'required',
-            'school_year' => 'required',
-            'school_last_attended' => 'required',
-            'school_address_1' => 'required',
-            'school_country' => 'required',
-            'school_city' => 'required',
-            'school_state' => 'required',
-            'school_postal_code' => 'required',
+            // 'first_name' => 'required',
+            // 'mobile_no' => 'required',
+            // 'mobile_no' => 'required',
+            // 'address_1' => 'required',
+            // 'country' => 'required',
+            // 'city' => 'required',
+            // 'state' => 'required',
+            // 'postal_code' => 'required',
+            // 'academic_grade' => 'required',
+            // 'academic_year' => 'required',
+            // 'grade' => 'required',
+            // 'school_year' => 'required',
+            // 'school_last_attended' => 'required',
+            // 'school_address_1' => 'required',
+            // 'school_country' => 'required',
+            // 'school_city' => 'required',
+            // 'school_state' => 'required',
+            // 'school_postal_code' => 'required',
 
             'branch_id' => 'required',
             'token' => 'required',
@@ -22367,14 +22416,17 @@ class ApiController extends BaseController
         } else {
             // create new connection
             $conn = $this->createNewConnection($request->branch_id);
-            $visa_fileName = null;
+            
+
+
+            $visa_fileName = $request->visa_old_photo;
             if ($request->visa_photo) {
 
                 $visa_now = now();
                 $visa_name = strtotime($visa_now);
                 $visa_extension = $request->visa_file_extension;
 
-                $visa_fileName = $visa_name . '.' . $visa_extension;
+                $visa_fileName = "visa_".$visa_name . '.' . $visa_extension;
 
                 // return $fileName;
                 $visa_path = '/public/' . $request->branch_id . '/users/images/';
@@ -22382,16 +22434,21 @@ class ApiController extends BaseController
                 File::ensureDirectoryExists(base_path() . $visa_path);
                 $visa_file = base_path() . $visa_path . $visa_fileName;
                 $visa_suc = file_put_contents($visa_file, $visa_base64);
+                if ($request->visa_old_photo) {
+                    if (\File::exists(base_path($visa_path . $request->visa_old_photo))) {
+                        \File::delete(base_path($visa_path . $request->visa_old_photo));
+                    }
+                }
             }
 
-            $passport_fileName = null;
+            $passport_fileName = $request->passport_old_photo;
             if ($request->passport_photo) {
 
                 $passport_now = now();
                 $passport_name = strtotime($passport_now);
                 $passport_extension = $request->passport_file_extension;
 
-                $passport_fileName = $passport_name . '.' . $passport_extension;
+                $passport_fileName = "passport_".$passport_name . '.' . $passport_extension;
 
                 // return $fileName;
                 $passport_path = '/public/' . $request->branch_id . '/users/images/';
@@ -22399,11 +22456,171 @@ class ApiController extends BaseController
                 File::ensureDirectoryExists(base_path() . $passport_path);
                 $passport_file = base_path() . $passport_path . $passport_fileName;
                 $passport_suc = file_put_contents($passport_file, $passport_base64);
+                if ($request->passport_old_photo) {
+                    if (\File::exists(base_path($passport_path . $request->passport_old_photo))) {
+                        \File::delete(base_path($passport_path . $request->passport_old_photo));
+                    }
+                }
+            }
+
+            $nric_fileName = $request->nric_old_photo;
+            if ($request->nric_photo) {
+
+                $nric_now = now();
+                $nric_name = strtotime($nric_now);
+                $nric_extension = $request->nric_file_extension;
+
+                $nric_fileName = "nric_".$nric_name . '.' . $nric_extension;
+
+                // return $fileName;
+                $nric_path = '/public/' . $request->branch_id . '/users/images/';
+                $nric_base64 = base64_decode($request->nric_photo);
+                File::ensureDirectoryExists(base_path() . $nric_path);
+                $nric_file = base_path() . $nric_path . $nric_fileName;
+                $nric_suc = file_put_contents($nric_file, $nric_base64);
+                if ($request->nric_old_photo) {
+                    if (\File::exists(base_path($nric_path . $request->nric_old_photo))) {
+                        \File::delete(base_path($nric_path . $request->nric_old_photo));
+                    }
+                }
+            }
+
+            $image_principal_fileName = $request->image_principal_old_photo;
+            if ($request->image_principal_photo) {
+
+                $image_principal_now = now();
+                $image_principal_name = strtotime($image_principal_now);
+                $image_principal_extension = "principal_".$request->image_principal_file_extension;
+
+                $image_principal_fileName = $image_principal_name . '.' . $image_principal_extension;
+
+                // return $fileName;
+                $image_principal_path = '/public/' . $request->branch_id . '/users/images/';
+                $image_principal_base64 = base64_decode($request->image_principal_photo);
+                File::ensureDirectoryExists(base_path() . $image_principal_path);
+                $image_principal_file = base_path() . $image_principal_path . $image_principal_fileName;
+                $image_principal_suc = file_put_contents($image_principal_file, $image_principal_base64);
+                if ($request->image_principal_old_photo) {
+                    if (\File::exists(base_path($nric_path . $request->image_principal_old_photo))) {
+                        \File::delete(base_path($nric_path . $request->image_principal_old_photo));
+                    }
+                }
+            }
+
+            $image_supplimental_fileName = $request->image_supplimental_old_photo;
+            if ($request->image_supplimental_photo) {
+
+                $image_supplimental_now = now();
+                $image_supplimental_name = strtotime($image_supplimental_now);
+                $image_supplimental_extension = "supplimental_".$request->image_supplimental_file_extension;
+
+                $image_supplimental_fileName = $image_supplimental_name . '.' . $image_supplimental_extension;
+
+                // return $fileName;
+                $image_supplimental_path = '/public/' . $request->branch_id . '/users/images/';
+                $image_supplimental_base64 = base64_decode($request->image_supplimental_photo);
+                File::ensureDirectoryExists(base_path() . $image_supplimental_path);
+                $image_supplimental_file = base_path() . $image_supplimental_path . $image_supplimental_fileName;
+                $image_supplimental_suc = file_put_contents($image_supplimental_file, $image_supplimental_base64);
+                if ($request->image_supplimental_old_photo) {
+                    if (\File::exists(base_path($nric_path . $request->image_supplimental_old_photo))) {
+                        \File::delete(base_path($nric_path . $request->image_supplimental_old_photo));
+                    }
+                }
+            }
+
+            $visa_father_fileName = $request->visa_father_old_photo;
+            if ($request->visa_father_photo) {
+
+                $visa_father_now = now();
+                $visa_father_name = strtotime($visa_father_now);
+                $visa_father_extension = $request->visa_father_file_extension;
+
+                $visa_father_fileName = "visa_father_".$visa_father_name . '.' . $visa_father_extension;
+
+                // return $fileName;
+                $visa_father_path = '/public/' . $request->branch_id . '/users/images/';
+                $visa_father_base64 = base64_decode($request->visa_father_photo);
+                File::ensureDirectoryExists(base_path() . $visa_father_path);
+                $visa_father_file = base_path() . $visa_father_path . $visa_father_fileName;
+                $visa_father_suc = file_put_contents($visa_father_file, $visa_father_base64);
+                if ($request->visa_father_old_photo) {
+                    if (\File::exists(base_path($visa_father_path . $request->visa_father_old_photo))) {
+                        \File::delete(base_path($visa_father_path . $request->visa_father_old_photo));
+                    }
+                }
+            }
+
+            $visa_mother_fileName = $request->visa_mother_old_photo;
+            if ($request->visa_mother_photo) {
+
+                $visa_mother_now = now();
+                $visa_mother_name = strtotime($visa_mother_now);
+                $visa_mother_extension = $request->visa_mother_file_extension;
+
+                $visa_mother_fileName = "visa_mother_".$visa_mother_name . '.' . $visa_mother_extension;
+
+                // return $fileName;
+                $visa_mother_path = '/public/' . $request->branch_id . '/users/images/';
+                $visa_mother_base64 = base64_decode($request->visa_mother_photo);
+                File::ensureDirectoryExists(base_path() . $visa_mother_path);
+                $visa_mother_file = base_path() . $visa_mother_path . $visa_mother_fileName;
+                $visa_mother_suc = file_put_contents($visa_mother_file, $visa_mother_base64);
+                if ($request->visa_mother_old_photo) {
+                    if (\File::exists(base_path($visa_mother_path . $request->visa_mother_old_photo))) {
+                        \File::delete(base_path($visa_mother_path . $request->visa_mother_old_photo));
+                    }
+                }
+            }
+
+            $passport_mother_fileName = $request->passport_mother_old_photo;
+            if ($request->passport_mother_photo) {
+
+                $passport_mother_now = now();
+                $passport_mother_name = strtotime($passport_mother_now);
+                $passport_mother_extension = $request->passport_mother_file_extension;
+
+                $passport_mother_fileName = "passport_mother_".$passport_mother_name . '.' . $passport_mother_extension;
+
+                // return $fileName;
+                $passport_mother_path = '/public/' . $request->branch_id . '/users/images/';
+                $passport_mother_base64 = base64_decode($request->passport_mother_photo);
+                File::ensureDirectoryExists(base_path() . $passport_mother_path);
+                $passport_mother_file = base_path() . $passport_mother_path . $passport_mother_fileName;
+                $passport_mother_suc = file_put_contents($passport_mother_file, $passport_mother_base64);
+                if ($request->passport_mother_old_photo) {
+                    if (\File::exists(base_path($passport_mother_path . $request->passport_mother_old_photo))) {
+                        \File::delete(base_path($passport_mother_path . $request->passport_mother_old_photo));
+                    }
+                }
+            }
+
+            $passport_father_fileName = $request->passport_father_old_photo;
+            if ($request->passport_father_photo) {
+
+                $passport_father_now = now();
+                $passport_father_name = strtotime($passport_father_now);
+                $passport_father_extension = $request->passport_father_file_extension;
+
+                $passport_father_fileName = "passport_father_".$passport_father_name . '.' . $passport_father_extension;
+
+                // return $fileName;
+                $passport_father_path = '/public/' . $request->branch_id . '/users/images/';
+                $passport_father_base64 = base64_decode($request->passport_father_photo);
+                File::ensureDirectoryExists(base_path() . $passport_father_path);
+                $passport_father_file = base_path() . $passport_father_path . $passport_father_fileName;
+                $passport_father_suc = file_put_contents($passport_father_file, $passport_father_base64);
+                if ($request->passport_father_old_photo) {
+                    if (\File::exists(base_path($passport_father_path . $request->passport_father_old_photo))) {
+                        \File::delete(base_path($passport_father_path . $request->passport_father_old_photo));
+                    }
+                }
             }
             
+            $studentEmail = "";
             $regData = [
                 'branch_id' => $request->branch_id,
-                'academic_year' => $request->academic_year
+                'academic_year' => $request->enrolled_academic_year
             ];
             if($request->register_number){
 
@@ -22412,11 +22629,173 @@ class ApiController extends BaseController
                 
                 $registerNumber = null;
                 if ($request->role_id == "2") {
-                    if ($request->status == "Approved" || $request->phase_2_status == "Approved") {
+                    if ($request->status == "Approved" && $request->phase_2_status == "Approved" && $request->status_after_approval == "Grade and class fixed") {
                         $registerNumber = $this->registerNumber($regData);
                     }
                 }
             }
+
+            if ($request->role_id == "2") {
+                if ($request->status == "Approved" && $request->phase_2_status == "Approved" && $request->status_after_approval == "Grade and class fixed") {
+                    
+                    $studentEmail = $registerNumber.$request->last_name.$request->first_name."@jskl.edu.my";
+                    if ($conn->table('parent')->where('email', '=', $request->guardian_email)->count() > 0) {
+                        $parent_get = $conn->table('parent')->where('email', '=', $request->guardian_email)->first();
+                        $parentId = $parent_get->id;
+                    }else{
+
+                        $parentId = $conn->table('parent')->insertGetId([
+                            "first_name" => $request->guardian_first_name,
+                            "last_name" => $request->guardian_last_name,
+                            "last_name_furigana" => $request->guardian_last_name_furigana,
+                            "first_name_furigana" => $request->guardian_first_name_furigana,
+                            "last_name_english" => $request->guardian_last_name_english,
+                            "first_name_english" => $request->guardian_first_name_english,
+                            "email" => $request->guardian_email,
+                            "occupation" => $request->guardian_occupation,
+                            "mobile_no" => $request->guardian_phone_number,
+                        ]);
+                        $parent_name = $request->guardian_first_name. ' ' .$request->guardian_last_name;
+                        if (!$parentId) {
+                            return $this->send500Error('Something went wrong.', ['error' => 'Something went wrong add Parent']);
+                        } else {
+                            // add User
+                            
+                            $par_uppercase = Str::random(1,'ABCDEFGHIJKLMNOPQRSTUVWXYZ'); // Generate 1 random uppercase character
+                            $par_lowercase = Str::random(6,'abcdefghijklmnopqrstuvwxyz'); // Generate 6 random lowercase characters
+                            $par_specialCharacter = Str::random(1, '!@#$%^&*(){}[]<>'); // Generate 1 random special character from the provided list
+                            $par_password = $par_uppercase . $par_lowercase . $par_specialCharacter;
+
+                            // Shuffle the password to randomize the characters
+                            $parent_password = str_shuffle($par_password);
+
+                            $query = new User();
+                            $query->name = $parent_name." ".$parent_password;
+                            $query->user_id = $parentId;
+                            $query->role_id = "5";
+                            $query->branch_id = $request->branch_id;
+                            $query->email = $request->guardian_email;
+                            $query->status = "0";
+                            $query->google2fa_secret_enable = isset($request->google2fa_secret_enable) ? '1' : '0';
+                            $query->password = bcrypt($parent_password);
+                            $query->save();
+
+                            
+                    
+                            $parent_email = $request->guardian_email;
+                            $parent_link = $request->url . '/parent/login';
+                            $data = array(
+                                'parent_name' => $parent_name,
+                                'parent_link' => $parent_link, 
+                                'parent_email' => $parent_email, 
+                                'parent_password' => $parent_password,
+                            );
+                            
+                            $mailFromAddress = env('MAIL_FROM_ADDRESS', config('constants.client_email'));
+                            $query = Mail::send('auth.application', $data, function ($message) use ($parent_email,$mailFromAddress) {
+                                $message->to($parent_email, 'Parent')->subject('Login Details');
+                                $message->from($mailFromAddress, 'Login Details');
+                            });
+                        }
+
+                    }
+                    if ($parentId) {
+                        $conn->table('student_applications')->where('guardian_email', $request->guardian_email)->update([
+                            "created_by" => $parentId,
+                            "created_by_role" => "5",
+
+                        ]);
+                        
+                        $conn->table('guest')->where('email', $request->guardian_email)->delete();
+                        User::where('email',$request->guardian_email)->where('role_id',"7")->where('branch_id',$request->branch_id)->delete();
+                    }
+                    if ($conn->table('students')->where('email', '=', $studentEmail)->count() > 0) {
+                        $student_get = $conn->table('students')->where('email', '=', $studentEmail)->first();
+                        $studentId = $student_get->id;
+
+                        $session_id = 0;
+                        $semester_id = 0;
+                        $enroll = $conn->table('enrolls')->where('student_id', '=', $studentId)->where('active_status',"=","0")->update([
+                            'student_id' => $studentId,
+                            'academic_session_id' => $request->enrolled_academic_year,
+                            'department_id' => $request->enrolled_department,
+                            'class_id' => $request->enrolled_grade,
+                            'section_id' => $request->enrolled_class,
+                            'session_id' => $session_id,
+                            'semester_id' => $semester_id,
+                        ]);
+                    }else{
+                        $studentId = $conn->table('students')->insertGetId([
+                            'guardian_id' => $parentId,
+                            'relation' => $request->guardian_relation,
+                            'register_no' => $registerNumber,
+                            'first_name' => isset($request->first_name) ? $request->first_name : "",
+                            'last_name' => isset($request->last_name) ? $request->last_name : "",
+                            'gender' => $request->gender,
+                            'birthday' => $request->date_of_birth,
+                            'religion' => $request->religion,
+                            'country' => $request->country,
+                            'post_code' => $request->postal_code,
+                            'city' => $request->city,
+                            'state' => $request->state,
+                            'email' => $studentEmail,
+                            'status' => isset($request->status) ? $request->status : "0",
+                            'first_name_english' => isset($request->first_name_english) ? $request->first_name_english : "",
+                            'last_name_english' => isset($request->last_name_english) ? $request->last_name_english : "",
+                            'first_name_furigana' => isset($request->first_name_furigana) ? $request->first_name_furigana : "",
+                            'last_name_furigana' => isset($request->last_name_furigana) ? $request->last_name_furigana : "",
+                            'first_name_common' => isset($request->first_name_common) ? $request->first_name_common : "",
+                            'last_name_common' => isset($request->last_name_common) ? $request->last_name_common : "",
+                            'created_at' => date("Y-m-d H:i:s")
+                        ]);
+
+
+                        $studentName = $request->first_name . ' ' . $request->last_name;
+
+                        $success = [];
+
+                        if (!$studentId) {
+                            return $this->send500Error('Something went wrong.', ['error' => 'Something went wrong add Student']);
+                        } else {
+                            $stu_uppercase = Str::random(1,'ABCDEFGHIJKLMNOPQRSTUVWXYZ'); // Generate 1 random uppercase character
+                            $stu_lowercase = Str::random(6,'abcdefghijklmnopqrstuvwxyz'); // Generate 6 random lowercase characters
+                            $stu_specialCharacter = Str::random(1,'!@#$%^&*(){}[]<>'); // Generate 1 random special character from the provided list
+                            $stu_password = $stu_uppercase . $stu_lowercase . $stu_specialCharacter;
+
+                            // Shuffle the password to randomize the characters
+                            $student_password = str_shuffle($stu_password);
+                            // add User
+                            $user = new User();
+                            $user->name = $studentName." ".$student_password;
+                            $user->user_id = $studentId;
+                            $user->role_id = "6";
+                            $user->school_roleid = $request->school_roleid;
+                            $user->branch_id = $request->branch_id;
+                            $user->email = $studentEmail;
+                            $user->status = "0";
+                            $user->google2fa_secret_enable = isset($request->google2fa_secret_enable) ? '1' : '0';
+                            $user->password = bcrypt($student_password);
+                            $query = $user->save();
+                            // return $user->id;
+                            
+                            $session_id = 0;
+                            $semester_id = 0;
+                            $enroll = $conn->table('enrolls')->insert([
+                                'student_id' => $studentId,
+                                'academic_session_id' => $request->enrolled_academic_year,
+                                'department_id' => $request->enrolled_department,
+                                'class_id' => $request->enrolled_grade,
+                                'section_id' => $request->enrolled_class,
+                                'session_id' => $session_id,
+                                'semester_id' => $semester_id,
+                            ]);
+
+                        }
+                    }
+
+                }
+            }
+            // dd(12);
 
             // update data
             $query = $conn->table('student_applications')->where('id', $request->id)->update([
@@ -22424,21 +22803,19 @@ class ApiController extends BaseController
                 'last_name' => isset($request->last_name) ? $request->last_name : "",
                 'gender' => $request->gender,
                 'date_of_birth' => $request->date_of_birth,
-                'mobile_no' => $request->mobile_no,
-                'email' => $request->email,
-                'address_1' => $request->address_1,
-                'address_2' => $request->address_2,
+                // 'mobile_no' => $request->mobile_no,
+                'email' => $studentEmail,
                 'country' => $request->country,
                 'city' => $request->city,
                 'state' => $request->state,
                 'postal_code' => $request->postal_code,
                 'academic_grade' => $request->academic_grade,
                 'academic_year' => $request->academic_year,
-                'grade' => $request->grade,
-                'school_year' => $request->school_year,
+                // 'grade' => $request->grade,
+                // 'school_year' => $request->school_year,
                 'school_last_attended' => $request->school_last_attended,
-                'school_address_1' => $request->school_address_1,
-                'school_address_2' => $request->school_address_2,
+                // 'school_address_1' => $request->school_address_1,
+                // 'school_address_2' => $request->school_address_2,
                 'school_country' => $request->school_country,
                 'school_city' => $request->school_city,
                 'school_state' => $request->school_state,
@@ -22475,7 +22852,7 @@ class ApiController extends BaseController
                 'nric' => $request->nric,
                 'passport' => $request->passport,
                 'passport_expiry_date' => $request->passport_expiry_date,
-                'visa_number' => $request->visa_number,
+                // 'visa_number' => $request->visa_number,
                 'visa_expiry_date' => $request->visa_expiry_date,
                 'passport_photo' => $passport_fileName,
                 'visa_photo' => $visa_fileName,
@@ -22483,7 +22860,88 @@ class ApiController extends BaseController
                 'phase_1_reason' => $request->phase_1_reason,
                 'phase_2_reason' => $request->phase_2_reason,
                 'register_number' => $registerNumber,
+                
+
+                "middle_name" => $request->middle_name,
+                "middle_name_english" => $request->middle_name_english,
+                "middle_name_furigana" => $request->middle_name_furigana,
+                "dual_nationality" => $request->dual_nationality,
+                "school_enrollment_status" => $request->school_enrollment_status,
+                "school_enrollment_status_tendency" => $request->school_enrollment_status_tendency,
+                "mother_middle_name" => $request->mother_middle_name,
+                "mother_last_name_furigana" => $request->mother_last_name_furigana,
+                "mother_middle_name_furigana" => $request->mother_middle_name_furigana,
+                "mother_first_name_furigana" => $request->mother_first_name_furigana,
+                "mother_last_name_english" => $request->mother_last_name_english,
+                "mother_middle_name_english" => $request->mother_middle_name_english,
+                "mother_first_name_english" => $request->mother_first_name_english,
+                "mother_nationality" => $request->mother_nationality,
+                "father_middle_name" => $request->father_middle_name,
+                "father_last_name_furigana" => $request->father_last_name_furigana,
+                "father_middle_name_furigana" => $request->father_middle_name_furigana,
+                "father_first_name_furigana" => $request->father_first_name_furigana,
+                "father_last_name_english" => $request->father_last_name_english,
+                "father_middle_name_english" => $request->father_middle_name_english,
+                "father_first_name_english" => $request->father_first_name_english,
+                "father_nationality" => $request->father_nationality,
+                "guardian_middle_name" => $request->guardian_middle_name,
+                "guardian_last_name_furigana" => $request->guardian_last_name_furigana,
+                "guardian_middle_name_furigana" => $request->guardian_middle_name_furigana,
+                "guardian_first_name_furigana" => $request->guardian_first_name_furigana,
+                "guardian_last_name_english" => $request->guardian_last_name_english,
+                "guardian_middle_name_english" => $request->guardian_middle_name_english,
+                "guardian_first_name_english" => $request->guardian_first_name_english,
+                "guardian_company_name_japan" => $request->guardian_company_name_japan,
+                "guardian_company_name_local" => $request->guardian_company_name_local,
+                "guardian_company_phone_number" => $request->guardian_company_phone_number,
+                "guardian_employment_status" => $request->guardian_employment_status,
+                "expected_academic_year" => $request->expected_academic_year,
+                "expected_grade" => $request->expected_grade,
+                "expected_enroll_date" => $request->expected_enroll_date,
+                "remarks" => $request->remarks,
+
+                
+                "address_unit_no" => $request->address_unit_no,
+                "address_condominium" => $request->address_condominium,
+                "address_street" => $request->address_street,
+                "address_district" => $request->address_district,
+                "visa_type" => $request->visa_type,
+                "visa_type_others" => $request->visa_type_others,
+                "japanese_association_membership_number_student" => $request->japanese_association_membership_number_student,
+                "phase2_remarks" => $request->phase2_remarks,
+                'nric_photo' => $nric_fileName,
+                'japanese_association_membership_image_principal' => $image_principal_fileName,
+                'japanese_association_membership_image_supplimental' => $image_supplimental_fileName,
+                'passport_mother_photo' => $passport_mother_fileName,
+                'passport_father_photo' => $passport_father_fileName,
+                'visa_father_photo' => $visa_father_fileName,
+                'visa_mother_photo' => $visa_mother_fileName,
+
+                "status_after_approval" => $request->status_after_approval,
+                "enrolled_academic_year" => $request->enrolled_academic_year,
+                "enrolled_department" => $request->enrolled_department,
+                "enrolled_grade" => $request->enrolled_grade,
+                "enrolled_class" => $request->enrolled_class,
                 'updated_at' => date("Y-m-d H:i:s")
+            ]);
+
+            $conn->table('student_applications')->where('guardian_email', $request->guardian_email)->update([
+                'guardian_first_name' => $request->guardian_first_name,
+                'guardian_last_name' => $request->guardian_last_name,
+                'guardian_relation' => $request->guardian_relation,
+                'guardian_phone_number' => $request->guardian_phone_number,
+                'guardian_occupation' => $request->guardian_occupation,
+                "guardian_middle_name" => $request->guardian_middle_name,
+                "guardian_last_name_furigana" => $request->guardian_last_name_furigana,
+                "guardian_middle_name_furigana" => $request->guardian_middle_name_furigana,
+                "guardian_first_name_furigana" => $request->guardian_first_name_furigana,
+                "guardian_last_name_english" => $request->guardian_last_name_english,
+                "guardian_middle_name_english" => $request->guardian_middle_name_english,
+                "guardian_first_name_english" => $request->guardian_first_name_english,
+                "guardian_company_name_japan" => $request->guardian_company_name_japan,
+                "guardian_company_name_local" => $request->guardian_company_name_local,
+                "guardian_company_phone_number" => $request->guardian_company_phone_number,
+                "guardian_employment_status" => $request->guardian_employment_status,
             ]);
 
             $success = [];
