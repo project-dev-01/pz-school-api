@@ -22670,7 +22670,7 @@ class ApiController extends BaseController
                             $parent_password = str_shuffle($par_password);
 
                             $query = new User();
-                            $query->name = $parent_name." ".$parent_password;
+                            $query->name = $parent_name;
                             $query->user_id = $parentId;
                             $query->role_id = "5";
                             $query->branch_id = $request->branch_id;
@@ -22766,7 +22766,7 @@ class ApiController extends BaseController
                             $student_password = str_shuffle($stu_password);
                             // add User
                             $user = new User();
-                            $user->name = $studentName." ".$student_password;
+                            $user->name = $studentName;
                             $user->user_id = $studentId;
                             $user->role_id = "6";
                             $user->school_roleid = $request->school_roleid;
