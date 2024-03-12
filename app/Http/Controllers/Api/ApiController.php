@@ -13967,8 +13967,7 @@ class ApiController extends BaseController
 
         $validator = \Validator::make($request->all(), [
             'id' => 'required',
-            'branch_id' => 'required',
-            'token' => 'required'
+            'branch_id' => 'required'
         ]);
         // return $request;
 
