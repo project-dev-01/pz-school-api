@@ -1295,7 +1295,7 @@ class ApiControllerThree extends BaseController
                     ['lev.to_leave', '>=', $to_leave]
                 ])->count();
             if ($fromLeaveCnt > 0 || $toLeaveCnt > 0) {
-                return $this->send422Error('You have already applied for leave between these dates', ['error' => 'You have already applied for leave between these dates']);
+                return $this->sendCommonError('You have already applied for leave between these dates', ['error' => 'You have already applied for leave between these dates']);
             } else {
                 $student_data = $staffConn->table('enrolls as en')
                     ->select(

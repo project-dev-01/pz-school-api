@@ -16417,16 +16417,28 @@ class ApiController extends BaseController
                     return $query->where('lev.status', $status);
                 })
                 ->when($student_name, function ($query, $student_name) {
-                    return $query->where("std.first_name", "LIKE", "%{$student_name}%")
-                        ->orWhere("std.last_name", "LIKE", "%{$student_name}%");
-                })
+                    return $query->where(function ($query) use ($student_name) {
+                        $query->where("std.first_name", "LIKE", "%{$student_name}%")
+                              ->orWhere("std.last_name", "LIKE", "%{$student_name}%");
+                    });
+                })                
+                // ->when($student_name, function ($query, $student_name) {
+                //     return $query->where("std.first_name", "LIKE", "%{$student_name}%")
+                //         ->orWhere("std.last_name", "LIKE", "%{$student_name}%");
+                // })
                 // two date range filter
+                // ->when($date, function ($query, $date) {
+                //     return $query->where(function ($query1) use ($date) {
+                //         $query1->whereBetween('lev.from_leave', [$date['from'], $date['to']])
+                //             ->orWhere(function ($subQuery) use ($date) {
+                //                 $subQuery->whereRaw('lev.to_leave BETWEEN ? AND ?', [$date['from'], $date['to']]);
+                //             });
+                //     });
+                // })
                 ->when($date, function ($query, $date) {
                     return $query->where(function ($query1) use ($date) {
                         $query1->whereBetween('lev.from_leave', [$date['from'], $date['to']])
-                            ->orWhere(function ($subQuery) use ($date) {
-                                $subQuery->whereRaw('lev.to_leave BETWEEN ? AND ?', [$date['from'], $date['to']]);
-                            });
+                               ->orWhereBetween('lev.to_leave', [$date['from'], $date['to']]);
                     });
                 })
                 ->orderBy('lev.from_leave', 'desc')
