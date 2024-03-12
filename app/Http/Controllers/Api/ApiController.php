@@ -25830,9 +25830,9 @@ class ApiController extends BaseController
     {
         $conn = $this->createNewConnection($request->branch_id);
         $success = [];
-        if ($conn->table('students')->where('roll_no', '=', $request->roll_no)->count() > 0) 
+        if ($conn->table('students')->where('register_no', '=', $request->register_no)->count() > 0) 
         {
-            $student=$conn->table('students')->where('roll_no', '=', $request->roll_no)->first();
+            $student=$conn->table('students')->where('register_no', '=', $request->register_no)->first();
             $fileName = "";
             if ($request->photo) {
                 $path = '/public/' . $request->branch_id . '/users/images/';
@@ -25857,7 +25857,7 @@ class ApiController extends BaseController
         } 
         else
         {  
-            return $this->send422Error('Student RollNo Not Exist', ['error' => 'Student RollNo Not Exist']);
+            return $this->send422Error('Student Regsiter Number Exist', ['error' => 'Student Regsiter Number Not Exist']);
             
         }
         return $this->successResponse($success, 'Student Photo uploaded successfully');
