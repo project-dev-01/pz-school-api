@@ -12400,7 +12400,7 @@ class ApiController extends BaseController
         $validator = \Validator::make($request->all(), [
             'year' => 'required',
             // 'register_no' => 'required',
-            'roll_no' => 'required',
+           // 'roll_no' => 'required',
             'admission_date' => 'required',
             // 'category_id' => 'required',
             'first_name' => 'required',
@@ -25427,6 +25427,48 @@ class ApiController extends BaseController
                 File::ensureDirectoryExists(base_path() . $passport_path);
                 $passport_file = base_path() . $passport_path . $passport_fileName;
                 $passport_suc = file_put_contents($passport_file, $passport_base64);
+            }
+            $nric_fileName = null;
+            if ($request->nric_photo) {
+
+                $nric_now = now();
+                $nric_name = strtotime($nric_now);
+                $nric_extension = $request->nric_file_extension;
+
+                $nric_fileName = "nric_".$nric_name . '.' . $nric_extension;
+
+                // return $fileName;
+                $nric_path = '/public/' . $request->branch_id . '/users/images/';
+                $nric_base64 = base64_decode($request->nric_photo);
+                File::ensureDirectoryExists(base_path() . $nric_path);
+                $nric_file = base_path() . $nric_path . $nric_fileName;
+                $nric_suc = file_put_contents($nric_file, $nric_base64);
+                if ($request->nric_old_photo) {
+                    if (\File::exists(base_path($nric_path . $request->nric_old_photo))) {
+                        \File::delete(base_path($nric_path . $request->nric_old_photo));
+                    }
+                }
+            }
+            $image_principal_fileName = "";
+            if ($request->image_principal_photo) {
+
+                $image_principal_now = now();
+                $image_principal_name = strtotime($image_principal_now);
+                $image_principal_extension = "principal_".$request->image_principal_file_extension;
+
+                $image_principal_fileName = $image_principal_name . '.' . $image_principal_extension;
+
+                // return $fileName;
+                $image_principal_path = '/public/' . $request->branch_id . '/users/images/';
+                $image_principal_base64 = base64_decode($request->image_principal_photo);
+                File::ensureDirectoryExists(base_path() . $image_principal_path);
+                $image_principal_file = base_path() . $image_principal_path . $image_principal_fileName;
+                $image_principal_suc = file_put_contents($image_principal_file, $image_principal_base64);
+                if ($request->image_principal_old_photo) {
+                    if (\File::exists(base_path($nric_path . $request->image_principal_old_photo))) {
+                        \File::delete(base_path($nric_path . $request->image_principal_old_photo));
+                    }
+                }
             }
 
             $old = $conn->table('students')->where('id', '=', $id)->first();
