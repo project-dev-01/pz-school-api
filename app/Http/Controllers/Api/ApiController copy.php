@@ -12414,7 +12414,7 @@ class ApiController extends BaseController
             'section_id' => 'required',
 
             'branch_id' => 'required',
-            
+            'token' => 'required',
         ]);
 
         $previous['school_name'] = $request->school_name;
@@ -12487,48 +12487,6 @@ class ApiController extends BaseController
                     if ($request->passport_old_photo) {
                         if (\File::exists(base_path($path . $request->passport_old_photo))) {
                             \File::delete(base_path($path . $request->passport_old_photo));
-                        }
-                    }
-                }
-                $nric_fileName = null;
-                if ($request->nric_photo) {
-
-                    $nric_now = now();
-                    $nric_name = strtotime($nric_now);
-                    $nric_extension = $request->nric_file_extension;
-    
-                    $nric_fileName = "nric_".$nric_name . '.' . $nric_extension;
-    
-                    // return $fileName;
-                    $nric_path = '/public/' . $request->branch_id . '/users/images/';
-                    $nric_base64 = base64_decode($request->nric_photo);
-                    File::ensureDirectoryExists(base_path() . $nric_path);
-                    $nric_file = base_path() . $nric_path . $nric_fileName;
-                    $nric_suc = file_put_contents($nric_file, $nric_base64);
-                    if ($request->nric_old_photo) {
-                        if (\File::exists(base_path($nric_path . $request->nric_old_photo))) {
-                            \File::delete(base_path($nric_path . $request->nric_old_photo));
-                        }
-                    }
-                }
-                $image_principal_fileName = "";
-                if ($request->image_principal_photo) {
-    
-                    $image_principal_now = now();
-                    $image_principal_name = strtotime($image_principal_now);
-                    $image_principal_extension = "principal_".$request->image_principal_file_extension;
-    
-                    $image_principal_fileName = $image_principal_name . '.' . $image_principal_extension;
-    
-                    // return $fileName;
-                    $image_principal_path = '/public/' . $request->branch_id . '/users/images/';
-                    $image_principal_base64 = base64_decode($request->image_principal_photo);
-                    File::ensureDirectoryExists(base_path() . $image_principal_path);
-                    $image_principal_file = base_path() . $image_principal_path . $image_principal_fileName;
-                    $image_principal_suc = file_put_contents($image_principal_file, $image_principal_base64);
-                    if ($request->image_principal_old_photo) {
-                        if (\File::exists(base_path($nric_path . $request->image_principal_old_photo))) {
-                            \File::delete(base_path($nric_path . $request->image_principal_old_photo));
                         }
                     }
                 }
@@ -12711,25 +12669,6 @@ class ApiController extends BaseController
                     'nationality' => $request->nationality,
                     'passport_photo' => $passport_fileName,
                     'visa_photo' => $visa_fileName,
-                    "middle_name" => $request->middle_name,
-                    "middle_name_english" => $request->middle_name_english,
-                    "middle_name_furigana" => $request->middle_name_furigana,
-                    "dual_nationality" => $request->dual_nationality,
-                    "school_enrollment_status" => $request->school_enrollment_status,
-                    "school_enrollment_status_tendency" => $request->school_enrollment_status_tendency,
-                    'school_country' => $request->school_country,
-                    'school_city' => $request->school_city,
-                    'school_state' => $request->school_state,
-                    'school_postal_code' => $request->school_postal_code,
-                    "address_unit_no" => $request->address_unit_no,
-                    "address_condominium" => $request->address_condominium,
-                    "address_street" => $request->address_street,
-                    "address_district" => $request->address_district,
-                    "visa_type" => $request->visa_type,
-                    "visa_type_others" => $request->visa_type_others,
-                    "japanese_association_membership_number_student" => $request->japanese_association_membership_number_student,
-                    'nric_photo' => $nric_fileName,
-                    'japanese_association_membership_image_principal' => $image_principal_fileName,
                     'created_at' => date("Y-m-d H:i:s")
                 ]);
                 // return $studentId;
@@ -13766,21 +13705,21 @@ class ApiController extends BaseController
 
         $validator = \Validator::make($request->all(), [
             'student_id' => 'required',
-             'year' => 'required',
-             'register_no' => 'required',
-              'roll_no' => 'required',
-             'admission_date' => 'required',
+            'year' => 'required',
+            'register_no' => 'required',
+            'roll_no' => 'required',
+            'admission_date' => 'required',
             // 'category_id' => 'required',
-              'first_name' => 'required',
-              'mobile_no' => 'required',
-              'email' => 'required',
+            'first_name' => 'required',
+            'mobile_no' => 'required',
+            'email' => 'required',
 
             'department_id' => 'required',
             'class_id' => 'required',
             'section_id' => 'required',
 
             'branch_id' => 'required',
-           // 'token' => 'required',
+            'token' => 'required',
         ]);
 
         $previous['school_name'] = $request->school_name;
@@ -13867,49 +13806,6 @@ class ApiController extends BaseController
                         }
                     }
                 }
-                $nric_fileName = $request->nric_old_photo;
-                if ($request->nric_photo) {
-    
-                    $nric_now = now();
-                    $nric_name = strtotime($nric_now);
-                    $nric_extension = $request->nric_file_extension;
-    
-                    $nric_fileName = "nric_".$nric_name . '.' . $nric_extension;
-    
-                    // return $fileName;
-                    $nric_path = '/public/' . $request->branch_id . '/users/images/';
-                    $nric_base64 = base64_decode($request->nric_photo);
-                    File::ensureDirectoryExists(base_path() . $nric_path);
-                    $nric_file = base_path() . $nric_path . $nric_fileName;
-                    $nric_suc = file_put_contents($nric_file, $nric_base64);
-                    if ($request->nric_old_photo) {
-                        if (\File::exists(base_path($nric_path . $request->nric_old_photo))) {
-                            \File::delete(base_path($nric_path . $request->nric_old_photo));
-                        }
-                    }
-                }
-    
-                $image_principal_fileName = $request->image_principal_old_photo;
-                if ($request->image_principal_photo) {
-    
-                    $image_principal_now = now();
-                    $image_principal_name = strtotime($image_principal_now);
-                    $image_principal_extension = "principal_".$request->image_principal_file_extension;
-    
-                    $image_principal_fileName = $image_principal_name . '.' . $image_principal_extension;
-    
-                    // return $fileName;
-                    $image_principal_path = '/public/' . $request->branch_id . '/users/images/';
-                    $image_principal_base64 = base64_decode($request->image_principal_photo);
-                    File::ensureDirectoryExists(base_path() . $image_principal_path);
-                    $image_principal_file = base_path() . $image_principal_path . $image_principal_fileName;
-                    $image_principal_suc = file_put_contents($image_principal_file, $image_principal_base64);
-                    if ($request->image_principal_old_photo) {
-                        if (\File::exists(base_path($nric_path . $request->image_principal_old_photo))) {
-                            \File::delete(base_path($nric_path . $request->image_principal_old_photo));
-                        }
-                    }
-                }
 
                 $passport = isset($request->passport) ? Crypt::encryptString($request->passport) : "";
                 $nric = isset($request->nric) ? Crypt::encryptString($request->nric) : "";
@@ -13967,25 +13863,6 @@ class ApiController extends BaseController
                     'race' => $request->race,
                     'religion' => $request->religion,
                     'blood_group' => $request->blood_group,
-                    'school_country' => $request->school_country,
-                    'school_city' => $request->school_city,
-                    'school_state' => $request->school_state,
-                    'school_postal_code' => $request->school_postal_code,
-                    "middle_name" => $request->middle_name,
-                    "middle_name_english" => $request->middle_name_english,
-                    "middle_name_furigana" => $request->middle_name_furigana,
-                    "dual_nationality" => $request->dual_nationality,
-                    "school_enrollment_status" => $request->school_enrollment_status,
-                    "school_enrollment_status_tendency" => $request->school_enrollment_status_tendency,
-                    "address_unit_no" => $request->address_unit_no,
-                    "address_condominium" => $request->address_condominium,
-                    "address_street" => $request->address_street,
-                    "address_district" => $request->address_district,
-                    "visa_type" => $request->visa_type,
-                    "visa_type_others" => $request->visa_type_others,
-                    "japanese_association_membership_number_student" => $request->japanese_association_membership_number_student,
-                    'nric_photo' => $nric_fileName,
-                    'japanese_association_membership_image_principal' => $image_principal_fileName,
                     'created_at' => date("Y-m-d H:i:s")
                 ];
                 $oldData = $conn->table('students')->find($request->student_id);
@@ -14090,7 +13967,8 @@ class ApiController extends BaseController
 
         $validator = \Validator::make($request->all(), [
             'id' => 'required',
-            'branch_id' => 'required'
+            'branch_id' => 'required',
+            'token' => 'required'
         ]);
         // return $request;
 
@@ -14139,6 +14017,7 @@ class ApiController extends BaseController
                 }
             }
             $studentDetail['student'] = $studentObj;
+
             $class_id = $studentDetail['student']->class_id;
             $studentDetail['section'] = $conn->table('section_allocations as sa')->select('s.id as section_id', 's.name as section_name')
                 ->join('sections as s', 'sa.section_id', '=', 's.id')
@@ -14244,7 +14123,6 @@ class ApiController extends BaseController
             if ($conn->table('parent')->where('email', '=', $request->email)->count() > 0) {
                 return $this->send422Error('Email Already Exist', ['error' => 'Email Already Exist']);
             } else {
-
                 /* $fileName = "";
                 if ($request->photo) {
                     $extension = $request->file_extension;
@@ -14502,7 +14380,7 @@ class ApiController extends BaseController
                     $query->name = $name;
                     $query->user_id = $parentId;
                     $query->role_id = "5";
-                    $query->school_roleid=$request->school_roleid ;
+                    $query->school_roleid=isset($request->school_roleid)? $request->school_roleid:'';
                     $query->branch_id = $request->branch_id;
                     $query->email = $request->email;
                     $query->status = $request->status;
@@ -14647,7 +14525,7 @@ class ApiController extends BaseController
                 ->where('father_id', $id)
                 ->orWhere('mother_id', $id)
                 ->orWhere('guardian_id', $id)->get();
-           /* $staffRoles = array('5');
+            /*$staffRoles = array('5');
             $sql = "";
             for ($x = 0; $x < count($staffRoles); $x++) {
                 $getRow = User::select('google2fa_secret_enable', 'id')->where('user_id', $id)
@@ -15010,11 +14888,11 @@ class ApiController extends BaseController
                 }
 
                 // update data
-                $passport = isset($request->passport) ? Crypt::encryptString($request->passport) : "";
-                $nric = isset($request->nric) ? Crypt::encryptString($request->nric) : "";
+               // $passport = isset($request->passport) ? Crypt::encryptString($request->passport) : "";
+               // $nric = isset($request->nric) ? Crypt::encryptString($request->nric) : "";
                 $mobile_no = isset($request->mobile_no) ? Crypt::encryptString($request->mobile_no) : "";
-                $address = isset($request->address) ? Crypt::encryptString($request->address) : "";
-                $address_2 = isset($request->address_2) ? Crypt::encryptString($request->address_2) : "";
+                //$address = isset($request->address) ? Crypt::encryptString($request->address) : "";
+               // $address_2 = isset($request->address_2) ? Crypt::encryptString($request->address_2) : "";
 
                 if ($request->role_id == "5") {
                     $old = $staffConn->table('parent')->where('id', '=', $id)->first();
