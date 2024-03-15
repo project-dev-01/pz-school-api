@@ -26058,7 +26058,7 @@ class ApiController extends BaseController
                 ->where('e.active_status', '=', '0')
                 ->when($parent_id, function ($query, $parent_id) {
                     return $query->where('t.created_by', $parent_id);
-                })->get()->toArray();
+                })->orderBy('t.created_by', 'desc')->get()->toArray();
 
             // $groupDetails = $conn->table('termination')->get()->toArray();
             return $this->successResponse($terminationDetails, 'Termination record fetch successfully');

@@ -1,5 +1,5 @@
 <?php
 return [
-    'main_db'=>'alive_jskl_livedb',
+    'main_db'=>'paxsuze-api',
     'client_email'=>'askyourquery@paxsuzen.com',
 ];

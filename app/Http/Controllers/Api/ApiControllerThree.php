@@ -1525,6 +1525,7 @@ class ApiControllerThree extends BaseController
                         DB::raw("CONCAT(st.first_name, ' ', st.last_name) as name"),
                         DB::raw("CONCAT(st.first_name_english, ' ', st.last_name_english) as eng_name"),
                         DB::raw("CONCAT(st.first_name_furigana, ' ', st.last_name_furigana) as fur_name"),
+                        DB::raw("CONCAT(st.first_name_common, ' ', st.last_name_common) as common_name"),
                         'st.gender',
                         'st.birthday',
                         'st.email',
@@ -1536,6 +1537,24 @@ class ApiControllerThree extends BaseController
                         'st.current_address',
                         'st.permanent_address',
                         'st.mobile_no',
+                        'st.address_unit_no',
+                        'st.address_condominium',
+                        'st.address_street',
+                        'st.address_district',
+                        'st.dual_nationality',
+                        'st.visa_type',
+                        'st.japanese_association_membership_number_student',
+                        'st.city',
+                        'st.state',
+                        'st.country',
+                        'st.post_code',
+                        'st.previous_details',
+                        'st.school_country',
+                        'st.school_city',
+                        'st.school_state',
+                        'st.school_postal_code',
+                        'st.school_enrollment_status',
+                        // 'st.address_condominium'
                         // 'cl.name as class_name',
                         // 'sc.name as section_name',
                         // 'emp.name as department_name'
@@ -1567,6 +1586,7 @@ class ApiControllerThree extends BaseController
                     $student->mobile_no = Helper::decryptStringData($student->mobile_no);
                     $student->current_address = Helper::decryptStringData($student->current_address);
                     $student->permanent_address = Helper::decryptStringData($student->permanent_address);
+                    $student->previous_school = json_decode($student->previous_details);
                     return $student;
                 });
             }
@@ -1582,18 +1602,30 @@ class ApiControllerThree extends BaseController
                         // 'en.section_id',
                         // 'en.semester_id',
                         // 'en.session_id',
-                        DB::raw("CONCAT(p.first_name, ' ', p.last_name) as parent_name"),
-                        DB::raw("CONCAT(p.first_name_english, ' ', p.last_name_english) as parent_eng_name"),
-                        DB::raw("CONCAT(p.first_name_furigana, ' ', p.last_name_furigana) as parent_fur_name"),
-                        'p.nationality as parent_nationality',
-                        'p.gender as parent_gender',
-                        'p.date_of_birth as parent_dob',
-                        'p.education as parent_education',
-                        'p.email as parent_email',
-                        'p.occupation as parent_occupation',
-                        'p.mobile_no as parent_mobile_no',
-                        'p.passport as parent_passport',
-                        'p.nric as parent_nric',
+                        DB::raw("CONCAT(p.father_first_name, ' ', p.father_last_name) as parent_name"),
+                        DB::raw("CONCAT(p.father_first_name_furigana, ' ', p.father_last_name_furigana) as  parent_fur_name"),
+                        DB::raw("CONCAT(p.father_first_name_english, ' ', p.father_last_name_english) as parent_eng_name"),
+                        'p.father_nationality as parent_nationality',
+                        'p.father_email as parent_email',
+                        'p.father_occupation as parent_occupation',
+                        'p.father_phone_number as parent_mobile_no',
+                        DB::raw("CONCAT(p.mother_first_name, ' ', p.mother_last_name) as mother_name"),
+                        DB::raw("CONCAT(p.mother_first_name_furigana, ' ', p.mother_last_name_furigana) as  mother_fur_name"),
+                        DB::raw("CONCAT(p.mother_first_name_english, ' ', p.mother_last_name_english) as mother_eng_name"),
+                        'p.mother_nationality',
+                        'p.mother_email',
+                        'p.mother_occupation',
+                        'p.mother_phone_number',
+                        'p.guardian_company_name_japan',
+                        'p.guardian_email',
+                        'p.guardian_relation',
+                        'p.guardian_phone_number',
+                        'p.guardian_company_name_local',
+                        'p.guardian_company_phone_number',
+                        'p.guardian_employment_status',
+                        'p.guardian_remarks'
+
+                        
                         // 'st.birthday',
                         // 'st.email',
                     )
@@ -1629,8 +1661,8 @@ class ApiControllerThree extends BaseController
                 // Decrypt sensitive data if exists
                 foreach ($getParentInfo as $parent) {
                     $parent->parent_mobile_no = Helper::decryptStringData($parent->parent_mobile_no);
-                    $parent->parent_passport = Helper::decryptStringData($parent->parent_passport);
-                    $parent->parent_nric = Helper::decryptStringData($parent->parent_nric);
+                    // $parent->parent_passport = Helper::decryptStringData($parent->parent_passport);
+                    // $parent->parent_nric = Helper::decryptStringData($parent->parent_nric);
                 }
             }
             // enableSchoolInfo
@@ -1807,7 +1839,10 @@ class ApiControllerThree extends BaseController
                     DB::raw('CONCAT(st.first_name, " ", st.last_name) as name'),
                     'st.register_no',
                     'sa.id as att_id',
-                    'sa.status as att_status',
+                    DB::raw('CASE 
+                    WHEN stu_lev.status = "Approve" THEN "excused"
+                    ELSE sa.status
+                    END as att_status'),
                     'sa.remarks as att_remark',
                     'sa.date',
                     'sa.student_behaviour',
