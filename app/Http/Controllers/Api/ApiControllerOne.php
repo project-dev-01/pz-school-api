@@ -3041,7 +3041,8 @@ class ApiControllerOne extends BaseController
         if (!$validator->passes()) {
             return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
         } else {
-            $branch = 4;
+            // $branch =4;
+            $branch = $request->branch_id;
             $conn = $this->createNewConnection($branch);
             $promotion_data_not_in_enroll = $conn->table('temp_promotion as tp')
                 ->select(
