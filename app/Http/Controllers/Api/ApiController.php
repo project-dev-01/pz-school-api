@@ -16780,17 +16780,11 @@ class ApiController extends BaseController
             $student_name = isset($request->student_name) ? $request->student_name : null;
             $status = isset($request->status) ? $request->status : null;
             $date = null;
+            // Simplifying date range check
             if ($request->date) {
-
                 $date_range = explode(' to ', $request->date);
-                $count = count($date_range);
-                if ($count == 1) {
-                    $date['from'] = $date_range[0];
-                    $date['to'] = $date_range[0];
-                } else if ($count == 2) {
-                    $date['from'] = $date_range[0];
-                    $date['to'] = $date_range[1];
-                }
+                $date['from'] = $date_range[0];
+                $date['to'] = isset($date_range[1]) ? $date_range[1] : $date_range[0];
             }
             // return $status;
             $studentDetails = $conn->table('student_leaves as lev')
@@ -16802,7 +16796,7 @@ class ApiController extends BaseController
                     DB::raw("CONCAT(std.first_name, ' ', std.last_name) as name"),
                     DB::raw('DATE_FORMAT(lev.from_leave, "%d-%m-%Y") as from_leave'),
                     DB::raw('DATE_FORMAT(lev.to_leave, "%d-%m-%Y") as to_leave'),
-                    'as.name as reason',
+                    'ar.name as reason',
                     'slt.name as leave_type_name',
                     'lev.document',
                     'lev.status',
@@ -16822,7 +16816,7 @@ class ApiController extends BaseController
                 ->join('classes as cl', 'lev.class_id', '=', 'cl.id')
                 ->join('sections as sc', 'lev.section_id', '=', 'sc.id')
                 ->leftJoin('student_leave_types as slt', 'lev.change_lev_type', '=', 'slt.id')
-                ->leftJoin('absent_reasons as as', 'lev.reasonId', '=', 'as.id')
+                ->leftJoin('absent_reasons as ar', 'lev.reasonId', '=', 'ar.id')
                 // ->leftJoin('students as std', 'lev.student_id', '=', 'std.id')
                 ->when($class_id, function ($query, $class_id) {
                     return $query->where('lev.class_id', $class_id);
@@ -16838,24 +16832,22 @@ class ApiController extends BaseController
                         $query->where("std.first_name", "LIKE", "%{$student_name}%")
                               ->orWhere("std.last_name", "LIKE", "%{$student_name}%");
                     });
-                })                
-                // ->when($student_name, function ($query, $student_name) {
-                //     return $query->where("std.first_name", "LIKE", "%{$student_name}%")
-                //         ->orWhere("std.last_name", "LIKE", "%{$student_name}%");
-                // })
-                // two date range filter
+                })
                 // ->when($date, function ($query, $date) {
                 //     return $query->where(function ($query1) use ($date) {
                 //         $query1->whereBetween('lev.from_leave', [$date['from'], $date['to']])
-                //             ->orWhere(function ($subQuery) use ($date) {
-                //                 $subQuery->whereRaw('lev.to_leave BETWEEN ? AND ?', [$date['from'], $date['to']]);
-                //             });
+                //                ->orWhereBetween('lev.to_leave', [$date['from'], $date['to']]);
                 //     });
                 // })
                 ->when($date, function ($query, $date) {
                     return $query->where(function ($query1) use ($date) {
-                        $query1->whereBetween('lev.from_leave', [$date['from'], $date['to']])
-                               ->orWhereBetween('lev.to_leave', [$date['from'], $date['to']]);
+                        $query1->where(function ($query2) use ($date) {
+                            $query2->where('lev.from_leave', '>=', $date['from'])
+                                   ->where('lev.from_leave', '<=', $date['to']);
+                        })->orWhere(function ($query3) use ($date) {
+                            $query3->where('lev.to_leave', '>=', $date['from'])
+                                   ->where('lev.to_leave', '<=', $date['to']);
+                        });
                     });
                 })
                 ->orderBy('lev.from_leave', 'desc')

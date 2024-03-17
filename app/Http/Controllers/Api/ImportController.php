@@ -121,6 +121,16 @@ class ImportController extends BaseController
                         $twitter_url = $importData[40];
                         $facebook_url = $importData[41];
                         $linkedin_url = $importData[42];
+                        $first_name_english = $importData[43];
+                        $last_name_english = $importData[44];
+                        $first_name_fur = $importData[45];
+                        $last_name_fur = $importData[46];
+                        $nationality = $importData[47];
+                        $passport_exp_date = $importData[48] !== NULL ? date("Y-m-d", strtotime($importData[48])) : "NULL";
+                        $visa_number = $importData[49];
+                        $visa_exp_date = $importData[50] !== NULL ? date("Y-m-d", strtotime($importData[50])) : "NULL";
+                        $teacher_type = $importData[52];
+                        $school_role_id = $importData[54];
 
                         $role = $importData[18];
 
@@ -156,7 +166,10 @@ class ImportController extends BaseController
                                 ['table_name' => 'staff_positions', 'number' => '22'],
                                 ['table_name' => 'staff_categories', 'number' => '24'],
                                 ['table_name' => 'qualifications', 'number' => '25'],
-                                ['table_name' => 'stream_types', 'number' => '26']
+                                ['table_name' => 'stream_types', 'number' => '26'],
+                                ['table_name' => 'job_title', 'number' => '51'],
+                                ['table_name' => 'employee_types', 'number' => '53'],
+                                ['table_name' => 'school_roles', 'number' => '54'],
                             ];
 
                             $dynamic_data = [];
@@ -171,7 +184,7 @@ class ImportController extends BaseController
                                 $row = $this->getLikeColumnName($column);
                                 $dynamic_data[$number] = $row;
                             }
-
+                            // return $dynamic_data;
                             $employee_data = [
                                 'first_name' => $first_name,
                                 'last_name' => $last_name,
@@ -206,6 +219,17 @@ class ImportController extends BaseController
                                 'twitter_url' => $twitter_url,
                                 'facebook_url' => $facebook_url,
                                 'linkedin_url' => $linkedin_url,
+                                'first_name_english' => $first_name_english,
+                                'last_name_english' => $last_name_english,
+                                'first_name_furigana' => $first_name_fur,
+                                'last_name_furigana' => $last_name_fur,
+                                'nationality' => $nationality,
+                                'passport_expiry_date' => $passport_exp_date,
+                                'visa_number' => $visa_number,
+                                'visa_expiry_date' => $visa_exp_date,
+                                'job_title_id' => $dynamic_data[51],
+                                'teacher_type' => $teacher_type,
+                                'employee_type_id' => $dynamic_data[53],
                                 'created_at' => date("Y-m-d H:i:s")
                             ];
 
@@ -240,6 +264,7 @@ class ImportController extends BaseController
                                         $user->name = (isset($first_name) ? $first_name : "") . " " . (isset($last_name) ? $last_name : "");
                                         $user->user_id = $staffId;
                                         $user->role_id = $dynamic_data[18];
+                                        $user->school_roleid = $dynamic_data[54];
                                         $user->branch_id = $request->branch_id;
                                         $user->email = $email;
                                         $user->status = "0";
@@ -771,6 +796,7 @@ class ImportController extends BaseController
             //             ->orWhereIn('last_name', array_reverse($name));
             //     })
             //     ->get();
+
         } else if ($request['table_name'] == "classes") {
             $ref_dep_id = $conn->table($refer_table)->select(DB::raw("group_concat(id) as id"))->whereIn('name', $refer_table_name)->get();
             $dep_id = 0;
@@ -780,6 +806,8 @@ class ImportController extends BaseController
                 }
             }
             $data = $conn->table($table_name)->select("id")->where('department_id', $dep_id)->WhereIn('name', $name)->get();
+        } else if ($request['table_name'] == "school_roles") {
+            $data = $conn->table($table_name)->select(DB::raw("group_concat(id) as id"))->whereIn('fullname', $name)->get();
         } else {
             $data = $conn->table($table_name)->select(DB::raw("group_concat(id) as id"))->whereIn('name', $name)->get();
         }
@@ -793,7 +821,7 @@ class ImportController extends BaseController
         }
         return $response;
     }
-    
+
     // getLikeColumnName
     public function getLikeColumnNameImport($request)
     {
@@ -1068,7 +1096,7 @@ class ImportController extends BaseController
                     //return $importData_arr;
                     foreach ($importData_arr as $importData) {
                         $dummyInc++;
-                        
+
                         $student_name = $importData[1];
                         $student_number = $importData[2];
                         $current_attendance_no = $importData[3];
@@ -1099,11 +1127,11 @@ class ImportController extends BaseController
                                 'name' => $importData[$number],
                                 'table_name' => $row['table_name']
                             ];
-                             //return $column;
+                            //return $column;
                             $row = $this->getLikeColumnNameImport($column);
                             $dynamic_data[$number] = $row;
                         }
-                       // return $dynamic_data;
+                        // return $dynamic_data;
                         $studentId = $Connection->table('students')->select('id')->where('register_no', '=', $student_number)->first();
 
                         if (!empty($studentId)) {
@@ -1627,7 +1655,7 @@ class ImportController extends BaseController
                         }
                         $dummyInc;
                     }
-                    
+
                     // return 1;
                 } else {
                     return $this->send422Error('Validation error.', ['error' => ['File too large. File must be less than 2MB.']]);
@@ -1668,7 +1696,7 @@ class ImportController extends BaseController
 
                 // dd($key);
                 foreach ($combineData as $importData) {
-                    
+
                     $roll_no = $importData[2];
                     $gender = $importData[4];
 
@@ -1691,7 +1719,7 @@ class ImportController extends BaseController
                         $row = $this->getLikeColumnNameImport($column);
                         $dynamic_data[$number] = $row;
                     }
-                    
+
                     // return 1;
                     // create new connection
                     $conn = $this->createNewConnection($request->branch_id);
@@ -1727,36 +1755,36 @@ class ImportController extends BaseController
                                 'eye_sight_left' => $eye_sight_left,
                             ];
                         } else if ($key == 3) {
-                            
+
                             $hearing_right = "";
-                            if($importData[5]=="異常なし"){
+                            if ($importData[5] == "異常なし") {
                                 $hearing_right = "/";
-                            }else if($importData[5]=="未健診"){
+                            } else if ($importData[5] == "未健診") {
                                 $hearing_right = "未検診";
-                            }else if($importData[5]=="要受診"){
-                                if($importData[6]<=30 && $importData[7]<=25 ){
+                            } else if ($importData[5] == "要受診") {
+                                if ($importData[6] <= 30 && $importData[7] <= 25) {
                                     $hearing_right = "/";
-                                }else if($importData[6] > 30 && $importData[7]<=25 ){
+                                } else if ($importData[6] > 30 && $importData[7] <= 25) {
                                     $hearing_right = "1000Hz";
-                                }else if($importData[6]>30 && $importData[7]>25 ){
+                                } else if ($importData[6] > 30 && $importData[7] > 25) {
                                     $hearing_right = "1000Hz, 4000Hz";
-                                }else if($importData[6]<=30 && $importData[7]>25 ){
+                                } else if ($importData[6] <= 30 && $importData[7] > 25) {
                                     $hearing_right = "4000Hz";
                                 }
                             }
                             $hearing_left = "";
-                            if($importData[8]=="異常なし"){
+                            if ($importData[8] == "異常なし") {
                                 $hearing_left = "/";
-                            }else if($importData[8]=="未健診"){
+                            } else if ($importData[8] == "未健診") {
                                 $hearing_left = "未検診";
-                            }else if($importData[8]=="要受診"){
-                                if($importData[9]<=30 && $importData[10]<=25 ){
+                            } else if ($importData[8] == "要受診") {
+                                if ($importData[9] <= 30 && $importData[10] <= 25) {
                                     $hearing_left = "/";
-                                }else if($importData[9] > 30 && $importData[10]<=25 ){
+                                } else if ($importData[9] > 30 && $importData[10] <= 25) {
                                     $hearing_left = "1000Hz";
-                                }else if($importData[9]>30 && $importData[10]>25 ){
+                                } else if ($importData[9] > 30 && $importData[10] > 25) {
                                     $hearing_left = "1000Hz, 4000Hz";
-                                }else if($importData[9]<=30 && $importData[10]>25 ){
+                                } else if ($importData[9] <= 30 && $importData[10] > 25) {
                                     $hearing_left = "4000Hz";
                                 }
                             }
@@ -1768,24 +1796,24 @@ class ImportController extends BaseController
                             ];
                         } else if ($key == 4) {
                             $nutritional_status = $importData[5];
-                            if($importData[7]=="異常なし" && $importData[8]=="異常なし" && $importData[9]=="異常なし"){
+                            if ($importData[7] == "異常なし" && $importData[8] == "異常なし" && $importData[9] == "異常なし") {
                                 $spine_chest_limb = "/";
-                            }else{
-                                $spine = ($importData[7] == "異常なし") ? "" :  $importData[7].",";
-                                $chest = ($importData[8] == "異常なし") ? "" :  $importData[8].",";
+                            } else {
+                                $spine = ($importData[7] == "異常なし") ? "" :  $importData[7] . ",";
+                                $chest = ($importData[8] == "異常なし") ? "" :  $importData[8] . ",";
                                 $limb = ($importData[9] == "異常なし") ? "" :  $importData[9];
-                                $spine_chest_limb = $spine.$chest.$limb;
+                                $spine_chest_limb = $spine . $chest . $limb;
                             }
                             // $spine_chest_limb = $importData[7];
                             $skin_diseases = $importData[14];
                             $heart_clinical_medical_examination = $importData[17];
-                            
-                            if(($importData[19]=="正常範囲" || $importData[19]=="管理不要") && ($importData[20]=="正常範囲" || $importData[20]=="管理不要")){
+
+                            if (($importData[19] == "正常範囲" || $importData[19] == "管理不要") && ($importData[20] == "正常範囲" || $importData[20] == "管理不要")) {
                                 $heart_diseases_abnormalities = "/";
-                            }else{
-                                $hda1 = ($importData[19] == "正常範囲" || "管理不要") ? "" :  $importData[19].",";
+                            } else {
+                                $hda1 = ($importData[19] == "正常範囲" || "管理不要") ? "" :  $importData[19] . ",";
                                 $hda2 = ($importData[20] == "正常範囲" || "管理不要") ? "" :  $importData[20];
-                                $heart_diseases_abnormalities = $hda1.$hda2;
+                                $heart_diseases_abnormalities = $hda1 . $hda2;
                             }
                             // $heart_diseases_abnormalities = $importData[19];
                             $school_doctors_date = $importData[24];
@@ -1813,27 +1841,27 @@ class ImportController extends BaseController
                                 'other_diseases_abnormalities' => $other_diseases_abnormalities,
                             ];
                         } else if ($key == 6) {
-                            
-                            if($importData[5]=="異常なし" && $importData[6]=="異常なし"){
+
+                            if ($importData[5] == "異常なし" && $importData[6] == "異常なし") {
                                 $eye_diseases_abnormalities = "/";
-                            }else{
-                                $eda1 = ($importData[5] == "異常なし") ? "" :  $importData[5].",";
+                            } else {
+                                $eda1 = ($importData[5] == "異常なし") ? "" :  $importData[5] . ",";
                                 $eda2 = ($importData[6] == "異常なし") ? "" :  $importData[6];
-                                $eye_diseases_abnormalities = $eda1.$eda2;
+                                $eye_diseases_abnormalities = $eda1 . $eda2;
                             }
                             // $eye_diseases_abnormalities = $importData[5];
                             $health_data = [
                                 'eye_diseases_abnormalities' => $eye_diseases_abnormalities,
                             ];
                         } else if ($key == 7) {
-                            
-                            if($importData[5]=="異常なし" && $importData[6]=="異常なし" && $importData[7]=="異常なし"){
+
+                            if ($importData[5] == "異常なし" && $importData[6] == "異常なし" && $importData[7] == "異常なし") {
                                 $otorhinolaryngopathy = "/";
-                            }else{
-                                $ear = ($importData[5] == "異常なし") ? "" :  $importData[5].",";
-                                $nose = ($importData[6] == "異常なし") ? "" :  $importData[6].",";
+                            } else {
+                                $ear = ($importData[5] == "異常なし") ? "" :  $importData[5] . ",";
+                                $nose = ($importData[6] == "異常なし") ? "" :  $importData[6] . ",";
                                 $pharyngeal = ($importData[7] == "異常なし") ? "" :  $importData[7];
-                                $otorhinolaryngopathy = $ear.$nose.$pharyngeal;
+                                $otorhinolaryngopathy = $ear . $nose . $pharyngeal;
                             }
                             // $otorhinolaryngopathy = $importData[5];
                             $health_data = [
