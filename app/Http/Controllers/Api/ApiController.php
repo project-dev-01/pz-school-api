@@ -13725,8 +13725,8 @@ class ApiController extends BaseController
                     's.gender',
                     's.photo'
                 )
-                ->join('students as s', 'e.student_id', '=', 's.id')
-                ->where('e.academic_session_id', '=', $request->academic_session_id);
+                ->join('students as s', 'e.student_id', '=', 's.id');
+                // ->where('e.academic_session_id', '=', $request->academic_session_id);
 
             if (isset($request->department_id) && filled($request->department_id)) {
                 $query->where('e.department_id', $request->department_id);
@@ -13736,9 +13736,9 @@ class ApiController extends BaseController
                 $query->where('e.class_id', $request->class_id);
             }
 
-            if (isset($request->session_id) && filled($request->session_id)) {
-                $query->where('e.session_id', $request->session_id);
-            }
+            // if (isset($request->session_id) && filled($request->session_id)) {
+            //     $query->where('e.session_id', $request->session_id);
+            // }
 
             if (isset($request->section_id) && filled($request->section_id)) {
                 $query->where('e.section_id', $request->section_id);

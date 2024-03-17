@@ -1,5 +1,5 @@
 <?php
 return [
-    'main_db'=>'paxsuze-api',
+    'main_db'=>'aapax',
     'client_email'=>'askyourquery@paxsuzen.com',
 ];

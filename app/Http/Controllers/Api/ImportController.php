@@ -92,17 +92,17 @@ class ImportController extends BaseController
                         $last_name = $importData[2];
                         $gender = $importData[3];
                         $short_name = $importData[4];
-                        $passport = $importData[7];
-                        $nric_number = $importData[8];
+                        // $passport = $importData[7];
+                        // $nric_number = $importData[8];
                         $date_of_birth = $importData[9];
-                        $mobile_number = $importData[10];
+                        // $mobile_number = $importData[10];
                         $employment_status = $importData[11];
                         $country = $importData[12];
                         $state = $importData[13];
                         $city = $importData[14];
                         $zip_code = $importData[15];
-                        $address_1 = $importData[16];
-                        $address_2 = $importData[17];
+                        // $address_1 = $importData[16];
+                        // $address_2 = $importData[17];
                         $joining_date = $importData[19];
                         $salary_grade = $importData[23];
                         $email = $importData[27];
@@ -131,6 +131,11 @@ class ImportController extends BaseController
                         $visa_exp_date = $importData[50] !== NULL ? date("Y-m-d", strtotime($importData[50])) : "NULL";
                         $teacher_type = $importData[52];
                         $school_role_id = $importData[54];
+                        $address_1 = isset($importData[16]) ? Crypt::encryptString($importData[16]) : "";
+                        $address_2 = isset($importData[17]) ? Crypt::encryptString($importData[17]) : "";
+                        $nric_number = isset($importData[8]) ? Crypt::encryptString($importData[8]) : "";
+                        $passport = isset($importData[7]) ? Crypt::encryptString($importData[7]) : "";
+                        $mobile_number = isset($importData[10]) ? Crypt::encryptString($importData[10]) : "";
 
                         $role = $importData[18];
 
