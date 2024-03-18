@@ -15263,6 +15263,21 @@ class ApiController extends BaseController
                 $status_count = "Accept";
             }
             $changeInfo['status_parent'] = $status_count;
+
+            
+            if($status_count == "Remand" || $status_count == "Reject"){
+                $update_parent = $conn->table('parent')->where('id', '=', $id)->first();
+                $update_parent_email = $update_parent->guardian_email;
+                $data = array(
+                    'parent_name' => $update_parent->first_name . ' '. $update_parent->last_name,
+                    'status' => $status_count, 
+                );
+                $mailFromAddress = env('MAIL_FROM_ADDRESS', config('constants.client_email'));
+                $query = Mail::send('auth.parent_update_info', $data, function ($message) use ($update_parent_email,$mailFromAddress) {
+                    $message->to($update_parent_email, 'Parent')->subject('Parent Information Update');
+                    $message->from($mailFromAddress, 'Parent Profile Details');
+                });
+            }
             // return $changeInfo;
             if (!empty($insertArr)) {
 
@@ -23037,11 +23052,10 @@ class ApiController extends BaseController
                     }
                 }
             }
-            
             $studentEmail = "";
             $regData = [
                 'branch_id' => $request->branch_id,
-                'academic_year' => $request->enrolled_academic_year
+                'academic_year' => $request->expected_academic_year
             ];
             if($request->register_number){
 
@@ -23050,90 +23064,262 @@ class ApiController extends BaseController
                 
                 $registerNumber = null;
                 if ($request->role_id == "2") {
-                    if ($request->status == "Approved" && $request->phase_2_status == "Approved" && $request->status_after_approval == "Grade and class fixed") {
+                    if ($request->status == "Approved" && $request->phase_2_status == "Approved") {
                         $registerNumber = $this->registerNumber($regData);
                     }
                 }
             }
-
+            $parent_name = $request->guardian_first_name. ' ' .$request->guardian_last_name;
             if ($request->role_id == "2") {
                 if ($request->status == "Approved" && $request->phase_2_status == "Approved" && $request->status_after_approval == "Grade and class fixed") {
                     
-                    $studentEmail = $registerNumber.$request->last_name.$request->first_name."@jskl.edu.my";
-                    if ($conn->table('parent')->where('email', '=', $request->guardian_email)->count() > 0) {
-                        $parent_get = $conn->table('parent')->where('email', '=', $request->guardian_email)->first();
-                        $parentId = $parent_get->id;
-                    }else{
-
-                        $parentId = $conn->table('parent')->insertGetId([
-                            "first_name" => $request->guardian_first_name,
-                            "last_name" => $request->guardian_last_name,
-                            "last_name_furigana" => $request->guardian_last_name_furigana,
-                            "first_name_furigana" => $request->guardian_first_name_furigana,
-                            "last_name_english" => $request->guardian_last_name_english,
-                            "first_name_english" => $request->guardian_first_name_english,
-                            "email" => $request->guardian_email,
-                            "occupation" => $request->guardian_occupation,
-                            "mobile_no" => $request->guardian_phone_number,
-                        ]);
-                        $parent_name = $request->guardian_first_name. ' ' .$request->guardian_last_name;
-                        if (!$parentId) {
-                            return $this->send500Error('Something went wrong.', ['error' => 'Something went wrong add Parent']);
-                        } else {
-                            // add User
                             
-                            $par_uppercase = Str::random(1,'ABCDEFGHIJKLMNOPQRSTUVWXYZ'); // Generate 1 random uppercase character
-                            $par_lowercase = Str::random(6,'abcdefghijklmnopqrstuvwxyz'); // Generate 6 random lowercase characters
-                            $par_specialCharacter = Str::random(1, '!@#$%^&*(){}[]<>'); // Generate 1 random special character from the provided list
-                            $par_password = $par_uppercase . $par_lowercase . $par_specialCharacter;
+                    $studentEmail = $registerNumber.$request->last_name.$request->first_name. config('constants.student_email_domain');
 
-                            // Shuffle the password to randomize the characters
-                            $parent_password = str_shuffle($par_password);
-
-                            $query = new User();
-                            $query->name = $parent_name;
-                            $query->user_id = $parentId;
-                            $query->role_id = "5";
-                            $query->branch_id = $request->branch_id;
-                            $query->email = $request->guardian_email;
-                            $query->status = "0";
-                            $query->google2fa_secret_enable = isset($request->google2fa_secret_enable) ? '1' : '0';
-                            $query->password = bcrypt($parent_password);
-                            $query->save();
-
-                            
+                    $father_id = "";
+                    $mother_id = "";
+                    $guardian_id = "";
                     
-                            $parent_email = $request->guardian_email;
-                            $parent_link = $request->url . '/parent/login';
-                            $data = array(
-                                'parent_name' => $parent_name,
-                                'parent_link' => $parent_link, 
-                                'parent_email' => $parent_email, 
-                                'parent_password' => $parent_password,
-                            );
-                            
-                            $mailFromAddress = env('MAIL_FROM_ADDRESS', config('constants.client_email'));
-                            $query = Mail::send('auth.application', $data, function ($message) use ($parent_email,$mailFromAddress) {
-                                $message->to($parent_email, 'Parent')->subject('Login Details');
-                                $message->from($mailFromAddress, 'Login Details');
-                            });
+                    $relation = $conn->table('relations')->where('id',$request->guardian_relation)->first();
+                    if ($request->guardian_first_name) {
+                        // return $request;
+                        $guardian_data = [
+                                'first_name' => isset($request->guardian_first_name) ? $request->guardian_first_name : "",
+                                'last_name' => isset($request->guardian_last_name) ? $request->guardian_last_name : "",
+                                'middle_name' => isset($request->guardian_middle_name) ? $request->guardian_middle_name : "",
+                                'first_name_furigana' => isset($request->guardian_first_name_furigana) ? $request->guardian_first_name_furigana : "",
+                                'last_name_furigana' => isset($request->guardian_last_name_furigana) ? $request->guardian_last_name_furigana : "",
+                                'middle_name_furigana' => isset($request->guardian_middle_name_furigana) ? $request->guardian_middle_name_furigana : "",
+                                'first_name_english' => isset($request->guardian_first_name_english) ? $request->guardian_first_name_english : "",
+                                'last_name_english' => isset($request->guardian_last_name_english) ? $request->guardian_last_name_english : "",
+                                'middle_name_english' => isset($request->guardian_middle_name_english) ? $request->guardian_middle_name_english : "",
+                                'occupation' => $request->guardian_occupation,
+                                'mobile_no' => $request->guardian_phone_number,
+                                'email' => $request->guardian_email,
+                                'company_name_japan' => $request->guardian_company_name_japan,
+                                'company_name_local' => $request->guardian_company_name_local,
+                                'company_phone_number' => $request->guardian_company_phone_number,
+                                'employment_status' => $request->guardian_employment_status,
+                                'japanese_association_membership_image_supplimental' => $image_supplimental_fileName,
+                                'status' => "0",
+                        ];
+                        
+                        if($relation->parent == "1"){
+                            //father is guardian 
+                            $guardian_data['passport_photo'] = $passport_father_fileName;
+                            $guardian_data['visa_photo'] = $visa_father_fileName;
+                        }else if($relation->parent == "2"){
+                            //mother is guardian 
+                            $guardian_data['passport_photo'] = $passport_mother_fileName;
+                            $guardian_data['visa_photo'] = $visa_mother_fileName;
                         }
 
+                        if ($conn->table('parent')->where('email', '=', $request->guardian_email)->count() > 0) {
+                            $guardian_data['updated_at'] = date("Y-m-d H:i:s");
+                            $conn->table('parent')->update($guardian_data);
+                            $guardian = $conn->table('parent')->select('id')->where('email', '=', $request->guardian_email)->first();
+                            $guardian_id = $guardian->id;
+                        } else {
+                            
+                            $guardian_data['created_at'] = date("Y-m-d H:i:s");
+                            $guardian_id = $conn->table('parent')->insertGetId($guardian_data);
+                        }
+
+                        $guardian_name = $request->guardian_first_name . ' ' . $request->guardian_last_name;
+                        if (!$guardian_id) {
+                            return $this->send500Error('Something went wrong.', ['error' => 'Something went wrong add Parent']);
+                        } else {
+
+                            // add Userwhere([['email', '=', $request->guardian_email], ['branch_id', '=', $request->branch_id], ['role_id', '=', 5]])->count < 1
+                            
+                            if(User::where([['email', '=', $request->guardian_email],['branch_id', '=', $request->branch_id], ['role_id', '=', "5"]])->count() < 1){
+                                
+
+                                $par_uppercase = Str::random(1,'ABCDEFGHIJKLMNOPQRSTUVWXYZ'); // Generate 1 random uppercase character
+                                $par_lowercase = Str::random(6,'abcdefghijklmnopqrstuvwxyz'); // Generate 6 random lowercase characters
+                                $par_specialCharacter = Str::random(1, '!@#$%^&*(){}[]<>'); // Generate 1 random special character from the provided list
+                                $par_password = $par_uppercase . $par_lowercase . $par_specialCharacter;
+
+                                // Shuffle the password to randomize the characters
+                                $parent_password = str_shuffle($par_password);
+
+                                $query = new User();
+                                $query->name = $guardian_name;
+                                $query->user_id = $guardian_id;
+                                $query->role_id = "5";
+                                $query->branch_id = $request->branch_id;
+                                $query->email = $request->guardian_email;
+                                $query->status = "0";
+                                $query->google2fa_secret_enable = '0';
+                                $query->password = bcrypt($request->guardian_email);
+                                $query->save();
+
+                                $parent_email = $request->guardian_email;
+                                $parent_link = $request->url . '/parent/login';
+                                $data = array(
+                                    'parent_name' => $parent_name,
+                                    'parent_link' => $parent_link, 
+                                    'parent_email' => $parent_email, 
+                                    'parent_password' => $parent_password,
+                                );
+                                
+                                $mailFromAddress = env('MAIL_FROM_ADDRESS', config('constants.client_email'));
+                                $query = Mail::send('auth.application', $data, function ($message) use ($parent_email,$mailFromAddress) {
+                                    $message->to($parent_email, 'Parent')->subject('Login Details');
+                                    $message->from($mailFromAddress, 'Login Details');
+                                });
+                            }
+                        }
                     }
-                    if ($parentId) {
+
+                    if($relation->parent == "1"){
+                        //father is guardian 
+                        $father_id = $guardian_id;
+                    }else{
+
+                        if ($request->father_first_name) {
+
+                            $father_data = [
+                                'first_name' => isset($request->father_first_name) ? $request->father_first_name : "",
+                                'last_name' => isset($request->father_last_name) ? $request->father_last_name : "",
+                                'middle_name' => isset($request->father_middle_name) ? $request->father_middle_name : "",
+                                'first_name_furigana' => isset($request->father_first_name_furigana) ? $request->father_first_name_furigana : "",
+                                'last_name_furigana' => isset($request->father_last_name_furigana) ? $request->father_last_name_furigana : "",
+                                'middle_name_furigana' => isset($request->father_middle_name_furigana) ? $request->father_middle_name_furigana : "",
+                                'first_name_english' => isset($request->father_first_name_english) ? $request->father_first_name_english : "",
+                                'last_name_english' => isset($request->father_last_name_english) ? $request->father_last_name_english : "",
+                                'middle_name_english' => isset($request->father_middle_name_english) ? $request->father_middle_name_english : "",
+                                'occupation' => $request->father_occupation,
+                                'mobile_no' => $request->father_phone_number,
+                                'email' => $request->father_email,
+                                'nationality' => $request->father_nationality,
+                                'passport_photo' => $passport_father_fileName,
+                                'visa_photo' => $visa_father_fileName,
+                                'status' => "0",
+                            ];
+                            if ($conn->table('parent')->where('email', '=', $request->father_email)->count() > 0) {
+                                $father_data['updated_at'] = date("Y-m-d H:i:s");
+                                $conn->table('parent')->update($father_data);
+                                $father_id = $conn->table('parent')->select('id')->where('email', '=', $request->father_email)->first();
+                                $father_id = $father_id->id;
+                            } else {
+                                $father_data['created_at'] = date("Y-m-d H:i:s");
+                                $father_id = $conn->table('parent')->insertGetId($father_data);
+                            }
+    
+                            $father_name = $request->father_first_name . ' ' . $request->father_last_name;
+                        }
+                    }
+
+                    if($relation->parent == "2"){
+                        //father is guardian 
+                        $mother_id = $guardian_id;
+                    }else{
+                        if ($request->mother_first_name) {
+                            $mother_data = [
+                                'first_name' => isset($request->mother_first_name) ? $request->mother_first_name : "",
+                                'last_name' => isset($request->mother_last_name) ? $request->mother_last_name : "",
+                                'middle_name' => isset($request->mother_middle_name) ? $request->mother_middle_name : "",
+                                'first_name_furigana' => isset($request->mother_first_name_furigana) ? $request->mother_first_name_furigana : "",
+                                'last_name_furigana' => isset($request->mother_last_name_furigana) ? $request->mother_last_name_furigana : "",
+                                'middle_name_furigana' => isset($request->mother_middle_name_furigana) ? $request->mother_middle_name_furigana : "",
+                                'first_name_english' => isset($request->mother_first_name_english) ? $request->mother_first_name_english : "",
+                                'last_name_english' => isset($request->mother_last_name_english) ? $request->mother_last_name_english : "",
+                                'middle_name_english' => isset($request->mother_middle_name_english) ? $request->mother_middle_name_english : "",
+                                'occupation' => $request->mother_occupation,
+                                'mobile_no' => $request->mother_phone_number,
+                                'email' => $request->mother_email,
+                                'nationality' => $request->mother_nationality,
+                                'passport_photo' => $passport_mother_fileName,
+                                'visa_photo' => $visa_mother_fileName,
+                                'status' => "0",
+                            ];
+                            if ($conn->table('parent')->where('email', '=', $request->mother_email)->count() > 0) {
+                                $mother_data['updated_at'] = date("Y-m-d H:i:s");
+                                $conn->table('parent')->update($mother_data);
+                                $mother_id = $conn->table('parent')->select('id')->where('email', '=', $request->mother_email)->first();
+                                $mother_id = $mother_id->id;
+                            } else {
+                                $mother_id = $conn->table('parent')->insertGetId($mother_data);
+                            }
+
+                            $mother_name = $request->mother_first_name . ' ' . $request->mother_last_name;
+                        }
+                    }
+                    if ($guardian_id) {
                         $conn->table('student_applications')->where('guardian_email', $request->guardian_email)->update([
-                            "created_by" => $parentId,
+                            "created_by" => $guardian_id,
                             "created_by_role" => "5",
 
                         ]);
-                        
                         $conn->table('guest')->where('email', $request->guardian_email)->delete();
                         User::where('email',$request->guardian_email)->where('role_id',"7")->where('branch_id',$request->branch_id)->delete();
                     }
+                    $student_data = [
+                        'guardian_id' => $guardian_id,
+                        'father_id' => $father_id,
+                        'mother_id' => $mother_id,
+                        'relation' => $request->guardian_relation,
+                        'register_no' => $registerNumber,
+                        'first_name' => isset($request->first_name) ? $request->first_name : "",
+                        'last_name' => isset($request->last_name) ? $request->last_name : "",
+                        'middle_name' => isset($request->middle_name) ? $request->middle_name : "",
+                        'first_name_english' => isset($request->first_name_english) ? $request->first_name_english : "",
+                        'last_name_english' => isset($request->last_name_english) ? $request->last_name_english : "",
+                        'middle_name_english' => isset($request->middle_name_english) ? $request->middle_name_english : "",
+                        'first_name_furigana' => isset($request->first_name_furigana) ? $request->first_name_furigana : "",
+                        'last_name_furigana' => isset($request->last_name_furigana) ? $request->last_name_furigana : "",
+                        'middle_name_furigana' => isset($request->middle_name_furigana) ? $request->middle_name_furigana : "",
+                        'first_name_common' => isset($request->first_name_common) ? $request->first_name_common : "",
+                        'last_name_common' => isset($request->last_name_common) ? $request->last_name_common : "",
+                        'gender' => $request->gender,
+                        'birthday' => $request->date_of_birth,
+                        'religion' => $request->religion,
+                        'nationality' => $request->nationality,
+                        'dual_nationality' => $request->dual_nationality,
+                        'school_name' => $request->school_last_attended,
+                        'school_country' => $request->school_country,
+                        'school_city' => $request->school_city,
+                        'school_state' => $request->school_state,
+                        'school_postal_code' => $request->school_postal_code,
+                        'school_enrollment_status' => $request->school_enrollment_status,
+                        'school_enrollment_status_tendency' => $request->school_enrollment_status_tendency,
+                        'country' => $request->country,
+                        'post_code' => $request->postal_code,
+                        'city' => $request->city,
+                        'state' => $request->state,
+                        'address_unit_no' => $request->address_unit_no,
+                        'address_condominium' => $request->address_condominium,
+                        'address_street' => $request->address_street,
+                        'address_district' => $request->address_district,
+                        "nric" => $request->nric,
+                        "visa_type" => $request->visa_type,
+                        "visa_type_others" => $request->visa_type_others,
+                        "japanese_association_membership_number_student" => $request->japanese_association_membership_number_student,
+                        'nric_photo' => $nric_fileName,
+                        'japanese_association_membership_image_principal' => $image_principal_fileName,
+                        // 'japanese_association_membership_image_supplimental' => $image_supplimental_fileName,
+                        'passport' => $request->passport,
+                        'passport_expiry_date' => $request->passport_expiry_date,
+                        // 'visa_number' => $request->visa_number,
+                        'visa_expiry_date' => $request->visa_expiry_date,
+                        'passport_photo' => $passport_fileName,
+                        'visa_photo' => $visa_fileName,
+                        'gender' => $request->gender,
+                        'birthday' => $request->date_of_birth,
+                        'religion' => $request->religion,
+                        'nationality' => $request->nationality,
+                        'dual_nationality' => $request->dual_nationality,
+                        'email' => $studentEmail,
+                        'status' => isset($request->status) ? $request->status : "0",
+                    ];
                     if ($conn->table('students')->where('email', '=', $studentEmail)->count() > 0) {
+                        $student_data['updated_at'] = date("Y-m-d H:i:s");
+                        $conn->table('students')->update($student_data);
                         $student_get = $conn->table('students')->where('email', '=', $studentEmail)->first();
                         $studentId = $student_get->id;
 
+                        
                         $session_id = 0;
                         $semester_id = 0;
                         $enroll = $conn->table('enrolls')->where('student_id', '=', $studentId)->where('active_status',"=","0")->update([
@@ -23146,30 +23332,8 @@ class ApiController extends BaseController
                             'semester_id' => $semester_id,
                         ]);
                     }else{
-                        $studentId = $conn->table('students')->insertGetId([
-                            'guardian_id' => $parentId,
-                            'relation' => $request->guardian_relation,
-                            'register_no' => $registerNumber,
-                            'first_name' => isset($request->first_name) ? $request->first_name : "",
-                            'last_name' => isset($request->last_name) ? $request->last_name : "",
-                            'gender' => $request->gender,
-                            'birthday' => $request->date_of_birth,
-                            'religion' => $request->religion,
-                            'country' => $request->country,
-                            'post_code' => $request->postal_code,
-                            'city' => $request->city,
-                            'state' => $request->state,
-                            'email' => $studentEmail,
-                            'status' => isset($request->status) ? $request->status : "0",
-                            'first_name_english' => isset($request->first_name_english) ? $request->first_name_english : "",
-                            'last_name_english' => isset($request->last_name_english) ? $request->last_name_english : "",
-                            'first_name_furigana' => isset($request->first_name_furigana) ? $request->first_name_furigana : "",
-                            'last_name_furigana' => isset($request->last_name_furigana) ? $request->last_name_furigana : "",
-                            'first_name_common' => isset($request->first_name_common) ? $request->first_name_common : "",
-                            'last_name_common' => isset($request->last_name_common) ? $request->last_name_common : "",
-                            'created_at' => date("Y-m-d H:i:s")
-                        ]);
-
+                        $student_data['created_at'] = date("Y-m-d H:i:s");
+                        $studentId = $conn->table('students')->insertGetId($student_data);
 
                         $studentName = $request->first_name . ' ' . $request->last_name;
 
@@ -23218,6 +23382,7 @@ class ApiController extends BaseController
             }
             // dd(12);
 
+            // return 1;
             // update data
             $query = $conn->table('student_applications')->where('id', $request->id)->update([
                 'first_name' => isset($request->first_name) ? $request->first_name : "",
@@ -23270,6 +23435,7 @@ class ApiController extends BaseController
                 'nationality' => $request->nationality,
                 'enrollment' => $request->enrollment,
                 'trail_date' => $request->trail_date,
+                'official_date' => $request->official_date,
                 'nric' => $request->nric,
                 'passport' => $request->passport,
                 'passport_expiry_date' => $request->passport_expiry_date,
@@ -23346,10 +23512,57 @@ class ApiController extends BaseController
                 'updated_at' => date("Y-m-d H:i:s")
             ]);
 
+            // return $request;
+
+            if ($request->role_id == "2") {
+                if ($request->status != $request->status_old){
+                    if($request->status != "Applied"){
+                        
+                    
+                        $phase_1_email = $request->guardian_email;
+                        $data = array(
+                            'parent_name' => $request->guardian_first_name .' '. $request->guardian_last_name,
+                            'child_name' => $request->first_name .' '. $request->last_name,
+                            'status' => $request->status, 
+                            'phase' => "Phase 1", 
+                        );
+                        
+                        $mailFromAddress = env('MAIL_FROM_ADDRESS', config('constants.client_email'));
+                        $query = Mail::send('auth.application_status', $data, function ($message) use ($phase_1_email,$mailFromAddress) {
+                            $message->to($phase_1_email, 'Parent')->subject('Student Application');
+                            $message->from($mailFromAddress, 'Application Details');
+                        });
+                    }
+
+                }
+            }
+            if ($request->role_id == "2") {
+                if ($request->phase_2_status != $request->phase_2_status_old){
+                    if($request->phase_2_status != "Process"){
+                        
+                    
+                        $phase_2_email = $request->guardian_email;
+                        $data = array(
+                            'parent_name' => $request->guardian_first_name .' '. $request->guardian_last_name,
+                            'child_name' => $request->first_name .' '. $request->last_name,
+                            'status' => $request->status,  
+                            'phase' => "Phase 2", 
+                        );
+                        
+                        $mailFromAddress = env('MAIL_FROM_ADDRESS', config('constants.client_email'));
+                        $query = Mail::send('auth.application_status', $data, function ($message) use ($phase_2_email,$mailFromAddress) {
+                            $message->to($phase_2_email, 'Parent')->subject('Student Application');
+                            $message->from($mailFromAddress, 'Application Details');
+                        });
+                    }
+
+                }
+            }
+
             $conn->table('student_applications')->where('guardian_email', $request->guardian_email)->update([
                 'guardian_first_name' => $request->guardian_first_name,
                 'guardian_last_name' => $request->guardian_last_name,
-                'guardian_relation' => $request->guardian_relation,
+                // 'guardian_relation' => $request->guardian_relation,
                 'guardian_phone_number' => $request->guardian_phone_number,
                 'guardian_occupation' => $request->guardian_occupation,
                 "guardian_middle_name" => $request->guardian_middle_name,
@@ -25494,7 +25707,7 @@ class ApiController extends BaseController
                 $query = $conn->table('student_change_info')->insertGetId($insertArr);
 
 
-                // send Termination notifications
+                // send  notifications
 
                 $user = User::where([
                     ['branch_id', '=', $request->branch_id],
@@ -26145,7 +26358,7 @@ class ApiController extends BaseController
                     ->where('s.id', $request->student_id)->first();
 
                 $parent_name = $conn->table('parent as p')
-                    ->select(DB::raw("CONCAT(p.first_name, ' ', p.last_name) as name"))
+                ->select(DB::raw("CONCAT(p.first_name, ' ', p.last_name) as name"), 'p.guardian_email')
                     ->where('p.id', $request->created_by)->first();
 
                 $termination = [];
@@ -26162,6 +26375,28 @@ class ApiController extends BaseController
                 // return $details;
                 // notifications sent
                 Notification::send($user, new ParentTermination($details));
+            }
+
+            
+            if ($request->role_id == "2") {
+                if ($request->termination_status != $request->termination_status_old){
+                    if($request->termination_status != "Pending"){
+                        
+                        $term_email = $parent_name->guardian_email;
+                        $data = array(
+                            'parent_name' => $parent_name->name,
+                            'child_name' => $student_name->name,
+                            'status' => $request->status, 
+                        );
+                        
+                        $mailFromAddress = env('MAIL_FROM_ADDRESS', config('constants.client_email'));
+                        $query = Mail::send('auth.termination', $data, function ($message) use ($term_email,$mailFromAddress) {
+                            $message->to($term_email, 'Parent')->subject('Student Termination');
+                            $message->from($mailFromAddress, 'Termination Details');
+                        });
+                    }
+
+                }
             }
 
             $success = [];
