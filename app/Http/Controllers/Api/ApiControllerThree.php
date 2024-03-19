@@ -1555,13 +1555,13 @@ class ApiControllerThree extends BaseController
                         'st.school_postal_code',
                         'st.school_enrollment_status',
                         // 'st.address_condominium'
-                        // 'cl.name as class_name',
-                        // 'sc.name as section_name',
-                        // 'emp.name as department_name'
+                         'cl.name as class_name',
+                        'sc.name as section_name',
+                         'emp.name as department_name'
                     )
-                    // ->leftJoin('emp_department as emp', 'en.department_id', '=', 'emp.id')
-                    // ->leftJoin('classes as cl', 'en.class_id', '=', 'cl.id')
-                    // ->leftJoin('sections as sc', 'en.section_id', '=', 'sc.id')
+                    ->leftJoin('emp_department as emp', 'en.department_id', '=', 'emp.id')
+                    ->leftJoin('classes as cl', 'en.class_id', '=', 'cl.id')
+                    ->leftJoin('sections as sc', 'en.section_id', '=', 'sc.id')
                     ->join('students as st', 'en.student_id', '=', 'st.id')
                     ->when($class_id, function ($q)  use ($class_id) {
                         $q->where('en.class_id', $class_id);
@@ -1575,8 +1575,8 @@ class ApiControllerThree extends BaseController
                     ->when($student_name, function ($query, $student_name) {
                         return $query->where('st.first_name', 'like', '%' . $student_name . '%')->orWhere('st.last_name', 'like', '%' . $student_name . '%');
                     })
-                    // ->where('en.active_status', '=', '0')
-                    ->where('en.academic_session_id', '=', $academic_year)
+                     ->where('en.active_status', '=', '0')
+                   // ->where('en.academic_session_id', '=', $academic_year)
                     ->groupBy('en.student_id')
                     ->get();
                 // Decrypt sensitive data if exists
@@ -1602,28 +1602,18 @@ class ApiControllerThree extends BaseController
                         // 'en.section_id',
                         // 'en.semester_id',
                         // 'en.session_id',
-                        DB::raw("CONCAT(p.father_first_name, ' ', p.father_last_name) as parent_name"),
-                        DB::raw("CONCAT(p.father_first_name_furigana, ' ', p.father_last_name_furigana) as  parent_fur_name"),
-                        DB::raw("CONCAT(p.father_first_name_english, ' ', p.father_last_name_english) as parent_eng_name"),
-                        'p.father_nationality as parent_nationality',
-                        'p.father_email as parent_email',
-                        'p.father_occupation as parent_occupation',
-                        'p.father_phone_number as parent_mobile_no',
-                        DB::raw("CONCAT(p.mother_first_name, ' ', p.mother_last_name) as mother_name"),
-                        DB::raw("CONCAT(p.mother_first_name_furigana, ' ', p.mother_last_name_furigana) as  mother_fur_name"),
-                        DB::raw("CONCAT(p.mother_first_name_english, ' ', p.mother_last_name_english) as mother_eng_name"),
-                        'p.mother_nationality',
-                        'p.mother_email',
-                        'p.mother_occupation',
-                        'p.mother_phone_number',
-                        'p.guardian_company_name_japan',
-                        'p.guardian_email',
-                        'p.guardian_relation',
-                        'p.guardian_phone_number',
-                        'p.guardian_company_name_local',
-                        'p.guardian_company_phone_number',
-                        'p.guardian_employment_status',
-                        'p.guardian_remarks'
+                        DB::raw("CONCAT(p.first_name, ' ', p.last_name) as parent_name"),
+                        DB::raw("CONCAT(p.first_name_furigana, ' ', p.last_name_furigana) as  parent_fur_name"),
+                        DB::raw("CONCAT(p.first_name_english, ' ', p.last_name_english) as parent_eng_name"),
+                        'p.nationality as parent_nationality',
+                        'p.email as parent_email',
+                        'p.occupation as parent_occupation',
+                        'p.mobile_no as parent_mobile_no',
+                        'p.company_name_japan',
+                        'p.company_name_local',
+                        'p.company_phone_number',
+                        'p.employment_status',
+                        'p.remarks'
 
                         
                         // 'st.birthday',
