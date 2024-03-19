@@ -24,6 +24,7 @@ use App\Http\Controllers\Api\BaseController as BaseController;
 use Illuminate\Support\Facades\Session;
 use Laravel\Passport\Token;
 use Exception;
+use Illuminate\Support\Facades\Cache;
 
 class AuthController extends BaseController
 {
@@ -55,17 +56,25 @@ class AuthController extends BaseController
     }
     public function authenticate(Request $request)
     {
+        // Generate cache key based on request data
+        $cacheKey = md5(json_encode($request->only('email', 'password', 'branch_id')));
+
+        // Check if the data is cached
+        if (Cache::has($cacheKey)) {
+            return Cache::get($cacheKey);
+        }
         // return 1;
-        $credentials = $request->only('email', 'password', 'branch_id');
-        //valid credential
-        $validator = Validator::make($credentials, [
+        // Valid credential
+        $validator = Validator::make($request->only('email', 'password', 'branch_id'), [
             'email' => 'required|email',
             'password' => 'required|string|min:6|max:50',
             'branch_id' => 'required'
         ]);
         //Send failed response if request is not valid
         if ($validator->fails()) {
-            return $this->send422Error('Validation error.', ['error' => $validator->messages()]);
+            $errorResponse = $this->send422Error('Validation error.', ['error' => $validator->messages()]);
+            Cache::put($cacheKey, $errorResponse, now()->addMinutes(1)); // Cache for 5 minutes
+            return $errorResponse;
         }
         // dd(Session::getId());
         // check auth
@@ -184,7 +193,9 @@ class AuthController extends BaseController
                     $success['checkInOutTime'] = $checkInOutTime;
                     $success['hiddenWeekends'] = $hiddenWeekends;
                 }
-                return $this->successResponse($success, 'User signed in successfully');
+                $successResponse = $this->successResponse($success, 'User signed in successfully');
+                Cache::put($cacheKey, $successResponse, now()->addMinutes(60)); // Cache for 60 minutes
+                return $successResponse;
             } else if ($user->status == 2) {
                 return $this->send500Error('Your School Role Deleted, please contact the admin', ['error' => 'You have been locked out of your account, please contact the admin']);
             } else {
@@ -218,7 +229,10 @@ class AuthController extends BaseController
                     return $this->send500Error('Your account has been locked after more than 3 attempts. Please contact the admin', ['error' => 'Your account has been locked after more than 3 attempts. Please contact the admin']);
                 }
             } else {
-                return $this->send401Error('Unauthorised.', ['error' => 'Unauthorised']);
+                // return $this->send401Error('Unauthorised.', ['error' => 'Unauthorised']);
+                $unauthorizedResponse = $this->send401Error('Unauthorised.', ['error' => 'Unauthorised']);
+                Cache::put($cacheKey, $unauthorizedResponse, now()->addMinutes(1)); // Cache for 5 minutes
+                return $unauthorizedResponse;
             }
         }
     }
