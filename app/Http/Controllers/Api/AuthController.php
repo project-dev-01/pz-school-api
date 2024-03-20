@@ -57,12 +57,12 @@ class AuthController extends BaseController
     public function authenticate(Request $request)
     {
         // Generate cache key based on request data
-        $cacheKey = md5(json_encode($request->only('email', 'password', 'branch_id')));
+        // $cacheKey = md5(json_encode($request->only('email', 'password', 'branch_id')));
 
-        // Check if the data is cached
-        if (Cache::has($cacheKey)) {
-            return Cache::get($cacheKey);
-        }
+        // // Check if the data is cached
+        // if (Cache::has($cacheKey)) {
+        //     return Cache::get($cacheKey);
+        // }
         // return 1;
         // Valid credential
         $validator = Validator::make($request->only('email', 'password', 'branch_id'), [
@@ -73,8 +73,8 @@ class AuthController extends BaseController
         //Send failed response if request is not valid
         if ($validator->fails()) {
             $errorResponse = $this->send422Error('Validation error.', ['error' => $validator->messages()]);
-            Cache::put($cacheKey, $errorResponse, now()->addMinutes(1)); // Cache for 5 minutes
-            return $errorResponse;
+            // Cache::put($cacheKey, $errorResponse, now()->addDay()); // Cache for 1 day
+            // return $errorResponse;
         }
         // dd(Session::getId());
         // check auth
@@ -194,7 +194,7 @@ class AuthController extends BaseController
                     $success['hiddenWeekends'] = $hiddenWeekends;
                 }
                 $successResponse = $this->successResponse($success, 'User signed in successfully');
-                Cache::put($cacheKey, $successResponse, now()->addMinutes(60)); // Cache for 60 minutes
+                // Cache::put($cacheKey, $successResponse, now()->addDay()); // Cache for 1 Day
                 return $successResponse;
             } else if ($user->status == 2) {
                 return $this->send500Error('Your School Role Deleted, please contact the admin', ['error' => 'You have been locked out of your account, please contact the admin']);
@@ -231,7 +231,7 @@ class AuthController extends BaseController
             } else {
                 // return $this->send401Error('Unauthorised.', ['error' => 'Unauthorised']);
                 $unauthorizedResponse = $this->send401Error('Unauthorised.', ['error' => 'Unauthorised']);
-                Cache::put($cacheKey, $unauthorizedResponse, now()->addMinutes(1)); // Cache for 5 minutes
+                // Cache::put($cacheKey, $unauthorizedResponse, now()->addMinutes(1)); // Cache for 5 minutes
                 return $unauthorizedResponse;
             }
         }

@@ -1150,5 +1150,7 @@ Route::group(['middleware' => ['auth:api', 'throttle:limit_per_user', 'logroute'
     Route::post('exam_result/classteacher_principal', [ExamreportController::class, 'classteacher_principal']);
     Route::post('exam_result/getpaperoverallmarklist1', [ExamreportController::class, 'getpaperoverallmarklist1']);
     Route::post('encrypt/variable', [ApiControllerThree::class, 'encryptVariable']);
+    Route::post('decrypt/variable', [ApiControllerThree::class, 'decryptVariable']);
+    Route::get('password/update', [ApiControllerThree::class, 'passwordUpdate']);
 
 });

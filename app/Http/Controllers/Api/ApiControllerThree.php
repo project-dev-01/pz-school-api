@@ -1555,9 +1555,9 @@ class ApiControllerThree extends BaseController
                         'st.school_postal_code',
                         'st.school_enrollment_status',
                         // 'st.address_condominium'
-                         'cl.name as class_name',
+                        'cl.name as class_name',
                         'sc.name as section_name',
-                         'emp.name as department_name'
+                        'emp.name as department_name'
                     )
                     ->leftJoin('emp_department as emp', 'en.department_id', '=', 'emp.id')
                     ->leftJoin('classes as cl', 'en.class_id', '=', 'cl.id')
@@ -1575,8 +1575,8 @@ class ApiControllerThree extends BaseController
                     ->when($student_name, function ($query, $student_name) {
                         return $query->where('st.first_name', 'like', '%' . $student_name . '%')->orWhere('st.last_name', 'like', '%' . $student_name . '%');
                     })
-                     ->where('en.active_status', '=', '0')
-                   // ->where('en.academic_session_id', '=', $academic_year)
+                    ->where('en.active_status', '=', '0')
+                    // ->where('en.academic_session_id', '=', $academic_year)
                     ->groupBy('en.student_id')
                     ->get();
                 // Decrypt sensitive data if exists
@@ -1615,7 +1615,7 @@ class ApiControllerThree extends BaseController
                         'p.employment_status',
                         'p.remarks'
 
-                        
+
                         // 'st.birthday',
                         // 'st.email',
                     )
@@ -2631,6 +2631,55 @@ class ApiControllerThree extends BaseController
                 "decrypt_name" => $decrypt_name
             ];
             return $this->successResponse($data, 'encrypt and decrypt values');
+        }
+    }
+    public function decryptVariable(Request $request)
+    {
+        $validator = \Validator::make($request->all(), [
+            'name' => 'required'
+        ]);
+        if (!$validator->passes()) {
+            return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
+        } else {
+            // create new connection
+            $decrypt_name = Helper::decryptStringData($request->name);
+            $data = [
+                "decrypt_name" => $decrypt_name
+            ];
+            return $this->successResponse($data, 'decrypt values');
+        }
+    }
+    public function passwordUpdate(Request $request)
+    {
+        // Set branch ID and role ID
+        $branchID = "6";
+        $roleID = "5";
+
+        // Retrieve users matching criteria
+        $users = User::select('id', 'password', 'email')
+            ->where('role_id', $roleID)
+            ->where('branch_id', $branchID)
+            ->get();
+
+        // Initialize success flag
+        $success = false;
+
+        // Update passwords
+        foreach ($users as $user) {
+            if ($user->email != "N/A") {
+                $removeFourChar = substr($user->email, 4);
+                $update = User::find($user->id)->update(['password' => \Hash::make($removeFourChar)]);
+                if ($update) {
+                    $success = true;
+                }
+            }
+        }
+
+        // Return response
+        if ($success) {
+            return $this->successResponse([], 'Passwords updated successfully');
+        } else {
+            return $this->send500Error('Something went wrong.', ['error' => 'Something went wrong']);
         }
     }
 }
