@@ -12546,20 +12546,25 @@ class ApiController extends BaseController
                     $mother_id = "";
                     $guardian_id = "";
                     if ($student_application->father_first_name) {
-                        if ($conn->table('parent')->where('email', '=', $student_application->father_email)->count() > 0) {
-                            $father_id = $conn->table('parent')->select('id')->where('email', '=', $student_application->father_email)->first();
-                            $father_id = $father_id->id;
-                        } else {
-                            $father_id = $conn->table('parent')->insertGetId([
+                        if($request->father_id){
+                            $father_id = $request->father_id;
+                        }else {
+                            if ($conn->table('parent')->where('email', '=', $student_application->father_email)->count() > 0) {
+                                
+                                $father_id = $conn->table('parent')->select('id')->where('email', '=', $student_application->father_email)->first();
+                                $father_id = $father_id->id;
+                            } else {
+                                $father_id = $conn->table('parent')->insertGetId([
 
-                                'first_name' => isset($student_application->father_first_name) ? $student_application->father_first_name : "",
-                                'last_name' => isset($student_application->father_last_name) ? $student_application->father_last_name : "",
-                                'occupation' => $student_application->father_occupation,
-                                'mobile_no' => $student_application->father_phone_number,
-                                'email' => $student_application->father_email,
-                                'status' => "0",
-                                'created_at' => date("Y-m-d H:i:s")
-                            ]);
+                                    'first_name' => isset($student_application->father_first_name) ? $student_application->father_first_name : "",
+                                    'last_name' => isset($student_application->father_last_name) ? $student_application->father_last_name : "",
+                                    'occupation' => $student_application->father_occupation,
+                                    'mobile_no' => $student_application->father_phone_number,
+                                    'email' => $student_application->father_email,
+                                    'status' => "0",
+                                    'created_at' => date("Y-m-d H:i:s")
+                                ]);
+                            }
                         }
 
                         $father_name = $student_application->father_first_name . ' ' . $student_application->father_last_name;
@@ -14126,7 +14131,6 @@ class ApiController extends BaseController
                 ->leftJoin('sections as sec', 'e.section_id', '=', 'sec.id')
                 ->where('s.id', $id)
                 ->get();
-            // dd($getStudentDetail);
             $studentObj = new \stdClass();
             if (!empty($getStudentDetail)) {
                 foreach ($getStudentDetail as $suc) {
@@ -14273,66 +14277,66 @@ class ApiController extends BaseController
                 }
 
                 //Mother Start
-                $mother_visa_fileName = null;
-                if ($request->visa_mother_photo) {
+//                 $mother_visa_fileName = null;
+//                 if ($request->visa_mother_photo) {
 
-                    $mother_visa_extension = $request->mother_visa_file_extension;
+//                     $mother_visa_extension = $request->mother_visa_file_extension;
 
-                    $mother_visa_fileName = 'M-VIMG_' . date('Ymd') . uniqid() . '.' . $mother_visa_extension;
+//                     $mother_visa_fileName = 'M-VIMG_' . date('Ymd') . uniqid() . '.' . $mother_visa_extension;
 
-                    // return $fileName;
-                    $mother_visa_path = '/public/' . $request->branch_id . '/users/images/';
-                    $mother_visa_base64 = base64_decode($request->visa_mother_photo);
-                    File::ensureDirectoryExists(base_path() . $mother_visa_path);
-                    $mother_visa_file = base_path() . $mother_visa_path . $mother_visa_fileName;
-                    $mother_visa_suc = file_put_contents($mother_visa_file, $mother_visa_base64);
-                }
+//                     // return $fileName;
+//                     $mother_visa_path = '/public/' . $request->branch_id . '/users/images/';
+//                     $mother_visa_base64 = base64_decode($request->visa_mother_photo);
+//                     File::ensureDirectoryExists(base_path() . $mother_visa_path);
+//                     $mother_visa_file = base_path() . $mother_visa_path . $mother_visa_fileName;
+//                     $mother_visa_suc = file_put_contents($mother_visa_file, $mother_visa_base64);
+//                 }
 
-                $mother_passport_fileName = null;
-                if ($request->passport_mother_photo) {
+//                 $mother_passport_fileName = null;
+//                 if ($request->passport_mother_photo) {
 
-                    $mother_passport_extension = $request->mother_passport_file_extension;
+//                     $mother_passport_extension = $request->mother_passport_file_extension;
 
-                    $mother_passport_fileName = 'M-PIMG_' . date('Ymd') . uniqid() . '.' . $mother_passport_extension;
+//                     $mother_passport_fileName = 'M-PIMG_' . date('Ymd') . uniqid() . '.' . $mother_passport_extension;
 
-                    // return $fileName;
-                    $mother_passport_path = '/public/' . $request->branch_id . '/users/images/';
-                    $mother_passport_base64 = base64_decode($request->passport_mother_photo);
-                    File::ensureDirectoryExists(base_path() . $mother_passport_path);
-                    $mother_passport_file = base_path() . $mother_passport_path . $mother_passport_fileName;
-                    $mother_passport_suc = file_put_contents($mother_passport_file, $mother_passport_base64);
-                }
-                // Mother End
-// Father Start
-                $father_visa_fileName = null;
-                if ($request->visa_father_photo) {
+//                     // return $fileName;
+//                     $mother_passport_path = '/public/' . $request->branch_id . '/users/images/';
+//                     $mother_passport_base64 = base64_decode($request->passport_mother_photo);
+//                     File::ensureDirectoryExists(base_path() . $mother_passport_path);
+//                     $mother_passport_file = base_path() . $mother_passport_path . $mother_passport_fileName;
+//                     $mother_passport_suc = file_put_contents($mother_passport_file, $mother_passport_base64);
+//                 }
+//                 // Mother End
+// // Father Start
+//                 $father_visa_fileName = null;
+//                 if ($request->visa_father_photo) {
 
-                    $father_visa_extension = $request->father_visa_file_extension;
+//                     $father_visa_extension = $request->father_visa_file_extension;
 
-                    $father_visa_fileName = 'F-VIMG_' . date('Ymd') . uniqid() . '.' . $father_visa_extension;
+//                     $father_visa_fileName = 'F-VIMG_' . date('Ymd') . uniqid() . '.' . $father_visa_extension;
 
-                    // return $fileName;
-                    $father_visa_path = '/public/' . $request->branch_id . '/users/images/';
-                    $father_visa_base64 = base64_decode($request->visa_father_photo);
-                    File::ensureDirectoryExists(base_path() . $father_visa_path);
-                    $father_visa_file = base_path() . $father_visa_path . $father_visa_fileName;
-                    $father_visa_suc = file_put_contents($father_visa_file, $father_visa_base64);
-                }
+//                     // return $fileName;
+//                     $father_visa_path = '/public/' . $request->branch_id . '/users/images/';
+//                     $father_visa_base64 = base64_decode($request->visa_father_photo);
+//                     File::ensureDirectoryExists(base_path() . $father_visa_path);
+//                     $father_visa_file = base_path() . $father_visa_path . $father_visa_fileName;
+//                     $father_visa_suc = file_put_contents($father_visa_file, $father_visa_base64);
+//                 }
 
-                $father_passport_fileName = null;
-                if ($request->passport_father_photo) {
+//                 $father_passport_fileName = null;
+//                 if ($request->passport_father_photo) {
 
-                    $father_passport_extension = $request->father_passport_file_extension;
+//                     $father_passport_extension = $request->father_passport_file_extension;
 
-                    $father_passport_fileName = 'F-PIMG_' . date('Ymd') . uniqid() . '.' . $father_passport_extension;
+//                     $father_passport_fileName = 'F-PIMG_' . date('Ymd') . uniqid() . '.' . $father_passport_extension;
 
-                    // return $fileName;
-                    $father_passport_path = '/public/' . $request->branch_id . '/users/images/';
-                    $father_passport_base64 = base64_decode($request->passport_father_photo);
-                    File::ensureDirectoryExists(base_path() . $father_passport_path);
-                    $father_passport_file = base_path() . $father_passport_path . $father_passport_fileName;
-                    $father_passport_suc = file_put_contents($father_passport_file, $father_passport_base64);
-                }
+//                     // return $fileName;
+//                     $father_passport_path = '/public/' . $request->branch_id . '/users/images/';
+//                     $father_passport_base64 = base64_decode($request->passport_father_photo);
+//                     File::ensureDirectoryExists(base_path() . $father_passport_path);
+//                     $father_passport_file = base_path() . $father_passport_path . $father_passport_fileName;
+//                     $father_passport_suc = file_put_contents($father_passport_file, $father_passport_base64);
+//                 }
                 // Father End
 // Guardian Start
                /* $visa_fileName = null;
@@ -14365,7 +14369,7 @@ class ApiController extends BaseController
                     $passport_suc = file_put_contents($passport_file, $passport_base64);
                 }*/
 
-
+// return $request;
                 $name = $request->first_name . " " . $request->last_name;
                 // insert data
                
@@ -14407,8 +14411,6 @@ class ApiController extends BaseController
                     'email' => $request->email,
                     'mobile_no' => $mobile_no,
                     'status' => $request->status,
-                    'guardian_email' => $request->email,
-                    'guardian_phone_number' => $mobile_no,
                     
                     
                     'first_name_english' => $request->first_name_english,
@@ -14418,7 +14420,7 @@ class ApiController extends BaseController
                     'middle_name_furigana' => $request->middle_name_furigana, 
                     'last_name_furigana' => $request->last_name_furigana,
                     
-                    'nationality' => $request->nationality,
+                    // 'nationality' => $request->nationality,
                    /* 'passport_number' => $passport,
                     'passport_expiry_date' => $request->passport_expiry_date,
                     'visa_number' => $request->visa_number,
@@ -14426,29 +14428,29 @@ class ApiController extends BaseController
                     'passport_photo' => $passport_fileName,
                     'visa_photo' => $visa_fileName,*/
 
-                    'guardian_relation' => $request->guardian_relation,
-                    'guardian_company_name_japan' => $request->guardian_company_name_japan,
-                    'guardian_company_name_local' => $request->guardian_company_name_local,
-                    'guardian_company_phone_number' => $request->guardian_company_phone_number,
-                    'guardian_employment_status' => $request->guardian_employment_status,
-                    'guardian_remarks' => $request->guardian_remarks,                   
+                    // 'guardian_relation' => $request->guardian_relation,
+                    'company_name_japan' => $request->company_name_japan,
+                    'company_name_local' => $request->company_name_local,
+                    'company_phone_number' => $request->company_phone_number,
+                    'employment_status' => $request->employment_status,
+                    // 'guardian_remarks' => $request->guardian_remarks,                   
 
 
-                    'mother_last_name_furigana' => $request->mother_last_name_furigana,
-                    'mother_middle_name_furigana' => $request->mother_middle_name_furigana,
-                    'mother_first_name_furigana' => $request->mother_first_name_furigana,
-                    'mother_last_name_english' => $request->mother_last_name_english,
-                    'mother_middle_name_english' => $request->mother_middle_name_english,
-                    'mother_first_name_english' => $request->mother_first_name_english,
-                    'mother_nationality' => $request->mother_nationality,           
-                    'mother_first_name' => $request->mother_first_name,
-                    'mother_last_name' => $request->mother_last_name,
-                    'mother_middle_name' => $request->mother_middle_name,
-                    'mother_phone_number' => $request->mother_phone_number,
-                    'mother_occupation' => $request->mother_occupation,
-                    'mother_email' => $request->mother_email,
-                    'visa_mother_photo' => $mother_visa_fileName, 
-                    'passport_mother_photo' => $mother_passport_fileName, 
+                    // 'mother_last_name_furigana' => $request->mother_last_name_furigana,
+                    // 'mother_middle_name_furigana' => $request->mother_middle_name_furigana,
+                    // 'mother_first_name_furigana' => $request->mother_first_name_furigana,
+                    // 'mother_last_name_english' => $request->mother_last_name_english,
+                    // 'mother_middle_name_english' => $request->mother_middle_name_english,
+                    // 'mother_first_name_english' => $request->mother_first_name_english,
+                    // 'mother_nationality' => $request->mother_nationality,           
+                    // 'mother_first_name' => $request->mother_first_name,
+                    // 'mother_last_name' => $request->mother_last_name,
+                    // 'mother_middle_name' => $request->mother_middle_name,
+                    // 'mother_phone_number' => $request->mother_phone_number,
+                    // 'mother_occupation' => $request->mother_occupation,
+                    // 'mother_email' => $request->mother_email,
+                    // 'visa_mother_photo' => $mother_visa_fileName, 
+                    // 'passport_mother_photo' => $mother_passport_fileName, 
                     /*     
                     'mother_nric' => $request->mother_nric,
                     'mother_visa_number' => $request->mother_visa_number,
@@ -14459,21 +14461,21 @@ class ApiController extends BaseController
                     'mother_passport_expiry_date' => $request->mother_passport_expiry_date,*/
         
                     
-                    'father_last_name_furigana' => $request->father_last_name_furigana,
-                    'father_middle_name_furigana' => $request->father_middle_name_furigana,
-                    'father_first_name_furigana' => $request->father_first_name_furigana,
-                    'father_last_name_english' => $request->father_last_name_english,
-                    'father_middle_name_english' => $request->father_middle_name_english,
-                    'father_first_name_english' => $request->father_first_name_english,
-                    'father_nationality' => $request->father_nationality,
-                    'father_first_name' => $request->father_first_name,
-                    'father_last_name' => $request->father_last_name,
-                    'father_middle_name' => $request->father_middle_name,
-                    'father_phone_number' => $request->father_phone_number,
-                    'father_occupation' => $request->father_occupation,
-                    'father_email' => $request->father_email,
-                    'visa_father_photo' => $father_visa_fileName, 
-                    'passport_father_photo' => $father_passport_fileName,                              
+                    // 'father_last_name_furigana' => $request->father_last_name_furigana,
+                    // 'father_middle_name_furigana' => $request->father_middle_name_furigana,
+                    // 'father_first_name_furigana' => $request->father_first_name_furigana,
+                    // 'father_last_name_english' => $request->father_last_name_english,
+                    // 'father_middle_name_english' => $request->father_middle_name_english,
+                    // 'father_first_name_english' => $request->father_first_name_english,
+                    // 'father_nationality' => $request->father_nationality,
+                    // 'father_first_name' => $request->father_first_name,
+                    // 'father_last_name' => $request->father_last_name,
+                    // 'father_middle_name' => $request->father_middle_name,
+                    // 'father_phone_number' => $request->father_phone_number,
+                    // 'father_occupation' => $request->father_occupation,
+                    // 'father_email' => $request->father_email,
+                    // 'visa_father_photo' => $father_visa_fileName, 
+                    // 'passport_father_photo' => $father_passport_fileName,                              
                    /* 'father_nric' => $request->father_nric,
                     'father_visa_number' => $request->father_visa_number,
                     'father_visa_expiry_date' => $request->father_visa_expiry_date,     
@@ -14485,7 +14487,7 @@ class ApiController extends BaseController
                     'japan_contact_no' => $request->japan_contact_no,
                     'japan_emergency_sms' => $request->japan_emergency_sms,
                     'japan_address' => $request->japan_address,
-                    'japan_staycategory' => $request->japan_staycategory,
+                    'stay_category' => $request->stay_category,
 
                     'created_at' => date("Y-m-d H:i:s")
                 ]);
@@ -14821,15 +14823,16 @@ class ApiController extends BaseController
     // update Parent
     public function updateParent(Request $request)
     {
+        // return $request;
         $id = $request->id;
         $validator = \Validator::make($request->all(), [
-            'id' => 'required',
-            'first_name' => 'required',
-            'occupation' => 'required',
-            'mobile_no' => 'required',
-            'email' => 'required',
-            'branch_id' => 'required',
-            'token' => 'required',
+            // 'id' => 'required',
+            // 'first_name' => 'required',
+            // 'occupation' => 'required',
+            // 'mobile_no' => 'required',
+            // 'email' => 'required',
+            // 'branch_id' => 'required',
+            // 'token' => 'required',
         ]);
 
         if (!$validator->passes()) {
@@ -14840,183 +14843,61 @@ class ApiController extends BaseController
             // create new connection
             $staffConn = $this->createNewConnection($request->branch_id);
             // check exist email
-            if ($staffConn->table('parent')->where([['email', '=', $request->email], ['id', '!=', $id]])->count() > 0) {
-                return $this->send422Error('Email Already Exist', ['error' => 'Email Already Exist']);
-            } else {
-
-                /*if ($request->photo) {
-
-                    $extension = $request->file_extension;
-
-                    $fileName = 'UIMG_' . date('Ymd') . uniqid() . '.' . $extension;
-
-                    // return $fileName;
-                    $path = '/public/' . $request->branch_id . '/users/images/';
-                    $base64 = base64_decode($request->photo);
-                    File::ensureDirectoryExists(base_path() . $path);
-                    $file = base_path() . $path . $fileName;
-                    $suc = file_put_contents($file, $base64);
-
-
-                    if ($request->old_photo) {
-                        if (\File::exists(base_path($path . $request->old_photo))) {
-                            \File::delete(base_path($path . $request->old_photo));
-                        }
-                    }
-                } else {
-                    $fileName = $request->old_photo;
-                }*/
-                $fileName = $request->japanese_association_membership_image_supplimental_old;;
-                if ($request->japanese_association_membership_image_supplimental) {
-                    $extension = $request->japanese_association_membership_image_supplimental_file_extension;
-
-                    $fileName = 'JM-IMG_' . date('Ymd') . uniqid() . '.' . $extension;
-
-                    // return $fileName;
-                    $path = '/public/' . $request->branch_id . '/users/images/';
-                    $base64 = base64_decode($request->japanese_association_membership_image_supplimental);
-                    File::ensureDirectoryExists(base_path() . $path);
-                    $file = base_path() . $path . $fileName;
-                    $suc = file_put_contents($file, $base64);
-                }
-
-                //Mother Start
-                $mother_visa_fileName = $request->visa_mother_photo_old;
-                if ($request->visa_mother_photo) {
-
-                    $mother_visa_extension = $request->mother_visa_file_extension;
-
-                    $mother_visa_fileName = 'M-VIMG_' . date('Ymd') . uniqid() . '.' . $mother_visa_extension;
-
-                    // return $fileName;
-                    $mother_visa_path = '/public/' . $request->branch_id . '/users/images/';
-                    $mother_visa_base64 = base64_decode($request->visa_mother_photo);
-                    File::ensureDirectoryExists(base_path() . $mother_visa_path);
-                    $mother_visa_file = base_path() . $mother_visa_path . $mother_visa_fileName;
-                    $mother_visa_suc = file_put_contents($mother_visa_file, $mother_visa_base64);
-                }
-
-                $mother_passport_fileName =$request->passport_mother_photo_old;
-                if ($request->passport_mother_photo) {
-
-                    $mother_passport_extension = $request->mother_passport_file_extension;
-
-                    $mother_passport_fileName = 'PIMG_' . date('Ymd') . uniqid() . '.' . $mother_passport_extension;
-
-                    // return $fileName;
-                    $mother_passport_path = '/public/' . $request->branch_id . '/users/images/';
-                    $mother_passport_base64 = base64_decode($request->passport_mother_photo);
-                    File::ensureDirectoryExists(base_path() . $mother_passport_path);
-                    $mother_passport_file = base_path() . $mother_passport_path . $mother_passport_fileName;
-                    $mother_passport_suc = file_put_contents($mother_passport_file, $mother_passport_base64);
-                }
-                // Mother End
-// Father Start
-                $father_visa_fileName = $request->visa_father_photo_old;
-                if ($request->visa_father_photo) {
-
-                    $father_visa_extension = $request->father_visa_file_extension;
-
-                    $father_visa_fileName = 'VIMG_' . date('Ymd') . uniqid() . '.' . $father_visa_extension;
-
-                    // return $fileName;
-                    $father_visa_path = '/public/' . $request->branch_id . '/users/images/';
-                    $father_visa_base64 = base64_decode($request->visa_father_photo);
-                    File::ensureDirectoryExists(base_path() . $father_visa_path);
-                    $father_visa_file = base_path() . $father_visa_path . $father_visa_fileName;
-                    $father_visa_suc = file_put_contents($father_visa_file, $father_visa_base64);
-                }
-
-                $father_passport_fileName = $request->passport_father_photo_old;
-                if ($request->passport_father_photo) {
-
-                    $father_passport_extension = $request->father_passport_file_extension;
-
-                    $father_passport_fileName = 'PIMG_' . date('Ymd') . uniqid() . '.' . $father_passport_extension;
-
-                    // return $fileName;
-                    $father_passport_path = '/public/' . $request->branch_id . '/users/images/';
-                    $father_passport_base64 = base64_decode($request->passport_father_photo);
-                    File::ensureDirectoryExists(base_path() . $father_passport_path);
-                    $father_passport_file = base_path() . $father_passport_path . $father_passport_fileName;
-                    $father_passport_suc = file_put_contents($father_passport_file, $father_passport_base64);
-                }
-                // Father End
-// Guardian Start
-               /* $visa_fileName = $request->visa_old_photo;
-                if ($request->visa_photo) {
-
-                    $visa_extension = $request->visa_file_extension;
-
-                    $visa_fileName = 'VIMG_' . date('Ymd') . uniqid() . '.' . $visa_extension;
-
-                    // return $fileName;
-                    $visa_path = '/public/' . $request->branch_id . '/users/images/';
-                    $visa_base64 = base64_decode($request->visa_photo);
-                    File::ensureDirectoryExists(base_path() . $visa_path);
-                    $visa_file = base_path() . $visa_path . $visa_fileName;
-                    $visa_suc = file_put_contents($visa_file, $visa_base64);
-                }
-
-                $passport_fileName = $request->passport_old_photo;
-                if ($request->passport_photo) {
-
-                    $passport_extension = $request->passport_file_extension;
-
-                    $passport_fileName = 'PIMG_' . date('Ymd') . uniqid() . '.' . $passport_extension;
-
-                    // return $fileName;
-                    $passport_path = '/public/' . $request->branch_id . '/users/images/';
-                    $passport_base64 = base64_decode($request->passport_photo);
-                    File::ensureDirectoryExists(base_path() . $passport_path);
-                    $passport_file = base_path() . $passport_path . $passport_fileName;
-                    $passport_suc = file_put_contents($passport_file, $passport_base64);
-                }*/
-
-                $password = $request->password;
-                $name = $request->first_name . " " . $request->last_name;
-                if ($password) {
-
-                    $passvalidator = \Validator::make($request->all(), [
-                        'password' => 'required|min:6',
-                        'confirm_password' => 'required|same:password|min:6',
-                    ]);
-
-                    // return $passvalidator;
-
-                    if (!$passvalidator->passes()) {
-                        return $this->send422Error('Validation error.', ['error' => $passvalidator->errors()->toArray()]);
-                    } else {
-
-                        $updatePassword = bcrypt($request->password);
-                        $parent = User::where([['user_id', '=', $id], ['role_id', '=', "5"], ['branch_id', '=', $request->branch_id]])
-                            ->update([
-                                'name' => $name,
-                                'email' => $request->email,
-                                'status' => isset($request->status) ? $request->status : '0',
-                                'google2fa_secret_enable' => isset($request->google2fa_secret_enable) ? '1' : '0',
-                                'password' => $updatePassword
-                            ]);
-                    }
-                } else {
-                    $parent = User::where([['user_id', '=', $id], ['role_id', '=', "5"], ['branch_id', '=', $request->branch_id]])
-                        ->update([
-                            'name' => $name,
-                            'email' => $request->email,
-                            'school_roleid' => $request->school_roleid,
-                            'status' => isset($request->status) ? $request->status : '0',
-                            'google2fa_secret_enable' => isset($request->google2fa_secret_enable) ? '1' : '0',
-                        ]);
-                }
-
-                // update data
-                $passport = isset($request->passport) ? Crypt::encryptString($request->passport) : "";
-                $nric = isset($request->nric) ? Crypt::encryptString($request->nric) : "";
-                $mobile_no = isset($request->mobile_no) ? Crypt::encryptString($request->mobile_no) : "";
-                $address = isset($request->address) ? Crypt::encryptString($request->address) : "";
-                $address_2 = isset($request->address_2) ? Crypt::encryptString($request->address_2) : "";
+            // if ($staffConn->table('parent')->where([['email', '=', $request->email], ['id', '!=', $id]])->count() > 0) {
+            //     return $this->send422Error('Email Already Exist', ['error' => 'Email Already Exist']);
+            // } else {
 
                 if ($request->role_id == "5") {
+                    $father_old = $staffConn->table('parent')->select(
+                        'middle_name','first_name','last_name',
+                        'middle_name_furigana','first_name_furigana','last_name_furigana',
+                        'last_name_english','middle_name_english','first_name_english',
+                        'nationality','mobile_no','occupation',
+                        'email','id'
+
+                    )->where('id', '=', $request->father_id)->first();
+
+                    // dd($father_old);
+                    $father_data = [
+                        'id' => $request->father_id,
+                        "last_name_furigana" => $request->father_last_name_furigana,
+                        "middle_name_furigana" => $request->father_middle_name_furigana,
+                        "first_name_furigana" => $request->father_first_name_furigana,
+                        "last_name_english" => $request->father_last_name_english,
+                        "middle_name_english" => $request->father_middle_name_english,
+                        "first_name_english" => $request->father_first_name_english,
+                        "nationality" => $request->father_nationality,           
+                        'first_name' => $request->father_first_name,
+                        'last_name' => $request->father_last_name,
+                        "middle_name" => $request->father_middle_name,
+                        'phone_number' => $request->father_phone_number,
+                        'occupation' => $request->father_occupation,
+                        'email' => $request->father_email,
+                    ];
+                    $father_insertArr = [];
+                    $father_insertArr['status'] = "Admin";
+                    foreach ($father_old as $key => $o) {
+                        // dd($father_data[$key]);
+                        if ($father_data[$key]) {
+                            if ($key == "passport" || $key == "nric"  || $key == "address" || $key == "address_2") {
+                                // $encrypt = Helper::decryptStringData($old->$key);
+                                // dd(Crypt::encryptString($old->$key));
+                                if (Helper::decryptStringData($father_old->$key) != $request->$key) {
+                                    $father_insertArr[$key] = Crypt::encryptString($request->$key);
+                                }
+                            } else if ($key == "passport_photo") {
+                                    $father_insertArr[$key] = $passport_fileName;
+                            } else if ($key == "visa_photo") {
+                                    $father_insertArr[$key] = $visa_fileName;
+                            }  else {
+                                if ($father_old->$key != $request->$key) {
+                                    $father_insertArr[$key] = $request->$key;
+                                }
+                            }
+                            
+                        }
+                    }
+                    // dd($father_insertArr);
                     $old = $staffConn->table('parent')->where('id', '=', $id)->first();
 
 
@@ -15077,6 +14958,68 @@ class ApiController extends BaseController
                         $query = 1;
                     }
                 } else {
+                
+                    // update data
+                    $passport = isset($request->passport) ? Crypt::encryptString($request->passport) : "";
+                    $nric = isset($request->nric) ? Crypt::encryptString($request->nric) : "";
+                    $mobile_no = isset($request->mobile_no) ? Crypt::encryptString($request->mobile_no) : "";
+                    $address = isset($request->address) ? Crypt::encryptString($request->address) : "";
+                    $address_2 = isset($request->address_2) ? Crypt::encryptString($request->address_2) : "";
+                    $fileName = $request->japanese_association_membership_image_supplimental_old;;
+                    if ($request->japanese_association_membership_image_supplimental) {
+                        $extension = $request->japanese_association_membership_image_supplimental_file_extension;
+
+                        $fileName = 'JM-IMG_' . date('Ymd') . uniqid() . '.' . $extension;
+
+                        // return $fileName;
+                        $path = '/public/' . $request->branch_id . '/users/images/';
+                        $base64 = base64_decode($request->japanese_association_membership_image_supplimental);
+                        File::ensureDirectoryExists(base_path() . $path);
+                        $file = base_path() . $path . $fileName;
+                        $suc = file_put_contents($file, $base64);
+                    }
+
+                    // Mother End
+                    // Father End
+
+
+                    $password = $request->password;
+                    $name = $request->first_name . " " . $request->last_name;
+                    if ($password) {
+
+                        $passvalidator = \Validator::make($request->all(), [
+                            'password' => 'required|min:6',
+                            'confirm_password' => 'required|same:password|min:6',
+                        ]);
+
+                        // return $passvalidator;
+
+                        if (!$passvalidator->passes()) {
+                            return $this->send422Error('Validation error.', ['error' => $passvalidator->errors()->toArray()]);
+                        } else {
+
+                            $updatePassword = bcrypt($request->password);
+                            $parent = User::where([['user_id', '=', $id], ['role_id', '=', "5"], ['branch_id', '=', $request->branch_id]])
+                                ->update([
+                                    'name' => $name,
+                                    'email' => $request->email,
+                                    'status' => isset($request->status) ? $request->status : '0',
+                                    'google2fa_secret_enable' => isset($request->google2fa_secret_enable) ? '1' : '0',
+                                    'password' => $updatePassword
+                                ]);
+                        }
+                    } else {
+                        $parent = User::where([['user_id', '=', $id], ['role_id', '=', "5"], ['branch_id', '=', $request->branch_id]])
+                            ->update([
+                                'name' => $name,
+                                'email' => $request->email,
+                                'school_roleid' => $request->school_roleid,
+                                'status' => isset($request->status) ? $request->status : '0',
+                                'google2fa_secret_enable' => isset($request->google2fa_secret_enable) ? '1' : '0',
+                            ]);
+                    }
+
+
                     $query = $staffConn->table('parent')->where('id', $id)->update([
                         
                         'first_name' => isset($request->first_name) ? $request->first_name : "",
@@ -15086,8 +15029,8 @@ class ApiController extends BaseController
                         'email' => $request->email,
                         'mobile_no' => $mobile_no,
                         'status' => $request->status,
-                        'guardian_email' => $request->email,
-                        'guardian_phone_number' => $mobile_no,
+                        'email' => $request->email,
+                        'mobile_no' => $mobile_no,
                        /* 'gender' => $request->gender,
                         'date_of_birth' => $request->date_of_birth,
                         'passport' => $passport,
@@ -15124,29 +15067,34 @@ class ApiController extends BaseController
                         'passport_photo' => $passport_fileName,
                         'visa_photo' => $visa_fileName,*/
 
-                        'guardian_relation' => $request->guardian_relation,
-                    'guardian_company_name_japan' => $request->guardian_company_name_japan,
-                    'guardian_company_name_local' => $request->guardian_company_name_local,
-                    'guardian_company_phone_number' => $request->guardian_company_phone_number,
-                    'guardian_employment_status' => $request->guardian_employment_status,
-                    'guardian_remarks' => $request->guardian_remarks,                   
+                        // 'guardian_relation' => $request->guardian_relation,
+                    'company_name_japan' => $request->company_name_japan,
+                    'company_name_local' => $request->company_name_local,
+                    'company_phone_number' => $request->company_phone_number,
+                    'employment_status' => $request->employment_status,               
 
 
-                    'mother_last_name_furigana' => $request->mother_last_name_furigana,
-                    'mother_middle_name_furigana' => $request->mother_middle_name_furigana,
-                    'mother_first_name_furigana' => $request->mother_first_name_furigana,
-                    'mother_last_name_english' => $request->mother_last_name_english,
-                    'mother_middle_name_english' => $request->mother_middle_name_english,
-                    'mother_first_name_english' => $request->mother_first_name_english,
-                    'mother_nationality' => $request->mother_nationality,           
-                    'mother_first_name' => $request->mother_first_name,
-                    'mother_last_name' => $request->mother_last_name,
-                    'mother_middle_name' => $request->mother_middle_name,
-                    'mother_phone_number' => $request->mother_phone_number,
-                    'mother_occupation' => $request->mother_occupation,
-                    'mother_email' => $request->mother_email,
-                    'passport_mother_photo' => $mother_passport_fileName,  
-                    'visa_mother_photo' => $mother_visa_fileName,       
+                    'japanese_association_membership_image_supplimental' => $fileName,
+                    'japan_postalcode' => $request->japan_postalcode,
+                    'japan_contact_no' => $request->japan_contact_no,
+                    'japan_emergency_sms' => $request->japan_emergency_sms,
+                    'japan_address' => $request->japan_address,
+                    'stay_category' => $request->stay_category,
+                    // 'mother_last_name_furigana' => $request->mother_last_name_furigana,
+                    // 'mother_middle_name_furigana' => $request->mother_middle_name_furigana,
+                    // 'mother_first_name_furigana' => $request->mother_first_name_furigana,
+                    // 'mother_last_name_english' => $request->mother_last_name_english,
+                    // 'mother_middle_name_english' => $request->mother_middle_name_english,
+                    // 'mother_first_name_english' => $request->mother_first_name_english,
+                    // 'mother_nationality' => $request->mother_nationality,           
+                    // 'mother_first_name' => $request->mother_first_name,
+                    // 'mother_last_name' => $request->mother_last_name,
+                    // 'mother_middle_name' => $request->mother_middle_name,
+                    // 'mother_phone_number' => $request->mother_phone_number,
+                    // 'mother_occupation' => $request->mother_occupation,
+                    // 'mother_email' => $request->mother_email,
+                    // 'passport_mother_photo' => $mother_passport_fileName,  
+                    // 'visa_mother_photo' => $mother_visa_fileName,       
                     /*'mother_nric' => $request->mother_nric,
                     'mother_visa_number' => $request->mother_visa_number,
                     'mother_visa_expiry_date' => $request->mother_visa_expiry_date,
@@ -15156,21 +15104,21 @@ class ApiController extends BaseController
                     'mother_passport_expiry_date' => $request->mother_passport_expiry_date,*/
         
                     
-                    'father_last_name_furigana' => $request->father_last_name_furigana,
-                    'father_middle_name_furigana' => $request->father_middle_name_furigana,
-                    'father_first_name_furigana' => $request->father_first_name_furigana,
-                    'father_last_name_english' => $request->father_last_name_english,
-                    'father_middle_name_english' => $request->father_middle_name_english,
-                    'father_first_name_english' => $request->father_first_name_english,
-                    'father_nationality' => $request->father_nationality,
-                    'father_first_name' => $request->father_first_name,
-                    'father_last_name' => $request->father_last_name,
-                    'father_middle_name' => $request->father_middle_name,
-                    'father_phone_number' => $request->father_phone_number,
-                    'father_occupation' => $request->father_occupation,
-                    'father_email' => $request->father_email,
-                    'visa_father_photo' => $father_visa_fileName, 
-                    'passport_father_photo' => $father_passport_fileName,  
+                    // 'father_last_name_furigana' => $request->father_last_name_furigana,
+                    // 'father_middle_name_furigana' => $request->father_middle_name_furigana,
+                    // 'father_first_name_furigana' => $request->father_first_name_furigana,
+                    // 'father_last_name_english' => $request->father_last_name_english,
+                    // 'father_middle_name_english' => $request->father_middle_name_english,
+                    // 'father_first_name_english' => $request->father_first_name_english,
+                    // 'father_nationality' => $request->father_nationality,
+                    // 'father_first_name' => $request->father_first_name,
+                    // 'father_last_name' => $request->father_last_name,
+                    // 'father_middle_name' => $request->father_middle_name,
+                    // 'father_phone_number' => $request->father_phone_number,
+                    // 'father_occupation' => $request->father_occupation,
+                    // 'father_email' => $request->father_email,
+                    // 'visa_father_photo' => $father_visa_fileName, 
+                    // 'passport_father_photo' => $father_passport_fileName,  
                     /*'father_nric' => $request->father_nric,
                     'father_visa_number' => $request->father_visa_number,
                     'father_visa_expiry_date' => $request->father_visa_expiry_date,
@@ -15188,7 +15136,7 @@ class ApiController extends BaseController
                 } else {
                     return $this->send500Error('Something went wrong.', ['error' => 'Something went wrong']);
                 }
-            }
+            
         }
     }
     // update Parent Info
