@@ -12397,6 +12397,7 @@ class ApiController extends BaseController
     // add Admission
     public function addAdmission(Request $request)
     {
+        //return $request;
         $validator = \Validator::make($request->all(), [
             'year' => 'required',
             // 'register_no' => 'required',
@@ -12538,111 +12539,112 @@ class ApiController extends BaseController
                 $mobile_no = isset($request->mobile_no) ? Crypt::encryptString($request->mobile_no) : "";
                 $current_address = isset($request->current_address) ? Crypt::encryptString($request->current_address) : "";
                 $permanent_address = isset($request->permanent_address) ? Crypt::encryptString($request->permanent_address) : "";
+                $father_mobile_no = isset($request->father_mobile_no) ? Crypt::encryptString($request->father_mobile_no) : "";
+                $mother_mobile_no = isset($request->mother_mobile_no) ? Crypt::encryptString($request->mother_mobile_no) : "";
+               
+                $father_id = "";
+                $mother_id = "";
+                $guardian_id = "";
+                if ($request->father_first_name)
+                {
+                    if($request->father_id){
+                         $father_id = $request->father_id;
+                    }else{
+                            if ($conn->table('parent')->where('email', '=', $request->father_email)->count() > 0) {
+                                $conn->table('parent')->where('email', '=', $request->father_email)->update([
+                                    'first_name' => $request->father_first_name ?? '',
+                                    'middle_name' => $request->father_middle_name ?? '',
+                                    'last_name' => $request->father_last_name ?? '',
+                                    'occupation' => $request->father_occupation,
+                                    'mobile_no' => $request->father_phone_number,
+                                    'email' => $request->father_email,
+                                    'nationality' => $request->father_nationality,
+                                    'last_name_furigana' => $request->father_last_name_furigana ?? '',
+                                    'middle_name_furigana' => $request->father_middle_name_furigana ?? '',
+                                    'first_name_furigana' => $request->father_first_name_furigana ?? '',
+                                    'last_name_english' => $request->father_last_name_english ?? '',
+                                    'middle_name_english' => $request->father_middle_name_english ?? '',
+                                    'first_name_english' => $request->father_first_name_english ?? '',
+                                    'mobile_no' =>  $father_mobile_no ,
+                                    'status' => '0', // Assuming you want to update the status as well
+                                    'updated_at' => now()
+                                ]);
+                            }else {
+                                    $father_id = $conn->table('parent')->insertGetId([
 
-                if ($request->sudent_application_id) {
-                    $student_application = $conn->table('student_applications')->where('id', '=', $request->sudent_application_id)->first();
+                                        'first_name' => $request->father_first_name ?? '',
+                                        'middle_name' => $request->father_middle_name ?? '',
+                                        'last_name' => $request->father_last_name ?? '',
+                                        'occupation' => $request->father_occupation,
+                                        'mobile_no' => $request->father_phone_number,
+                                        'email' => $request->father_email,
+                                        'nationality' => $request->father_nationality,
+                                        'last_name_furigana' => $request->father_last_name_furigana ?? '',
+                                        'middle_name_furigana' => $request->father_middle_name_furigana ?? '',
+                                        'first_name_furigana' => $request->father_first_name_furigana ?? '',
+                                        'last_name_english' => $request->father_last_name_english ?? '',
+                                        'middle_name_english' => $request->father_middle_name_english ?? '',
+                                        'first_name_english' => $request->father_first_name_english ?? '',
+                                        'mobile_no' =>  $father_mobile_no,
+                                        'status' => '0',
+                                        'created_at' => now()
+                                    ]);
+                                }
+                        }
+                }
 
-                    $father_id = "";
-                    $mother_id = "";
-                    $guardian_id = "";
-                    if ($student_application->father_first_name) {
-                        if($request->father_id){
-                            $father_id = $request->father_id;
+                        
+                    if ($request->mother_first_name) 
+                    {
+                            if($request->mother_id){
+                                 $mother_id = $request->mother_id;
                         }else {
-                            if ($conn->table('parent')->where('email', '=', $student_application->father_email)->count() > 0) {
-                                
-                                $father_id = $conn->table('parent')->select('id')->where('email', '=', $student_application->father_email)->first();
-                                $father_id = $father_id->id;
-                            } else {
-                                $father_id = $conn->table('parent')->insertGetId([
+                            if ($conn->table('parent')->where('email', '=', $request->mother_email)->count() > 0) {
 
-                                    'first_name' => isset($student_application->father_first_name) ? $student_application->father_first_name : "",
-                                    'last_name' => isset($student_application->father_last_name) ? $student_application->father_last_name : "",
-                                    'occupation' => $student_application->father_occupation,
-                                    'mobile_no' => $student_application->father_phone_number,
-                                    'email' => $student_application->father_email,
+                                $conn->table('parent')->where('email', '=', $request->mother_email)->update([
+                                    'first_name' => $request->mother_first_name ?? '',
+                                    'last_name' => $request->mother_last_name ?? '',
+                                    'middle_name' => $request->mother_middle_name ?? '',
+                                    'last_name_furigana' => $request->mother_last_name_furigana ?? '',
+                                    'middle_name_furigana' => $request->mother_middle_name_furigana ?? '',
+                                    'first_name_furigana' => $request->mother_first_name_furigana ?? '',
+                                    'last_name_english' => $request->mother_last_name_english ?? '',
+                                    'middle_name_english' => $request->mother_middle_name_english ?? '',
+                                    'first_name_english' => $request->mother_first_name_english ?? '',
+                                    'email' => $request->mother_email,
+                                    'nationality' => $request->mother_nationality,
+                                    'occupation' => $request->mother_occupation,
+                                    'mobile_no' =>   $mother_mobile_no,
+                                    'status' => '0', // Assuming you want to update the status as well
+                                    'updated_at' => now()
+                                ]);
+                            } else {
+                                $mother_id = $conn->table('parent')->insertGetId([
+
+                                    'first_name' => isset($request->mother_first_name) ? $request->mother_first_name : "",
+                                    'last_name' => isset($request->mother_last_name) ? $request->mother_last_name : "",
+                                    'middle_name' => $request->mother_middle_name ?? '',
+                                    'last_name_furigana' => $request->mother_last_name_furigana ?? '',
+                                    'middle_name_furigana' => $request->mother_middle_name_furigana ?? '',
+                                    'first_name_furigana' => $request->mother_first_name_furigana ?? '',
+                                    'last_name_english' => $request->mother_last_name_english ?? '',
+                                    'middle_name_english' => $request->mother_middle_name_english ?? '',
+                                    'first_name_english' => $request->mother_first_name_english ?? '',
+                                    'occupation' => $request->mother_occupation,
+                                    'mobile_no' =>   $mother_mobile_no,
+                                    'email' => $request->mother_email,
                                     'status' => "0",
                                     'created_at' => date("Y-m-d H:i:s")
                                 ]);
                             }
                         }
-
-                        $father_name = $student_application->father_first_name . ' ' . $student_application->father_last_name;
-                        if (!$father_id) {
-                            return $this->send500Error('Something went wrong.', ['error' => 'Something went wrong add Parent']);
-                        } else {
-
-                            // add User
-                            $query = new User();
-                            $query->name = $father_name;
-                            $query->user_id = $father_id;
-                            $query->role_id = "5";
-                            $query->branch_id = $request->branch_id;
-                            $query->email = $student_application->father_email;
-                            $query->status = "0";
-                            $query->google2fa_secret_enable = '0';
-                            $query->password = bcrypt($student_application->father_email);
-                            $query->save();
-                        }
                     }
-                    if ($student_application->mother_first_name) {
-                        if ($conn->table('parent')->where('email', '=', $student_application->mother_email)->count() > 0) {
+                    $guardian_id = $request->guardian_id;
+                    if (!$guardian_id) {
+                        return $this->send500Error('Something went wrong.', ['error' => 'Something went wrong add Parent']);
+                    } else {
 
-                            $mother_id = $conn->table('parent')->select('id')->where('email', '=', $student_application->mother_email)->first();
-                            $mother_id = $mother_id->id;
-                        } else {
-                            $mother_id = $conn->table('parent')->insertGetId([
-
-                                'first_name' => isset($student_application->mother_first_name) ? $student_application->mother_first_name : "",
-                                'last_name' => isset($student_application->mother_last_name) ? $student_application->mother_last_name : "",
-                                'occupation' => $student_application->mother_occupation,
-                                'mobile_no' => $student_application->mother_phone_number,
-                                'email' => $student_application->mother_email,
-                                'status' => "0",
-                                'created_at' => date("Y-m-d H:i:s")
-                            ]);
-                        }
-
-                        $mother_name = $student_application->mother_first_name . ' ' . $student_application->mother_last_name;
-                        if (!$mother_id) {
-                            return $this->send500Error('Something went wrong.', ['error' => 'Something went wrong add Parent']);
-                        } else {
-
-                            // add User
-                            $query = new User();
-                            $query->name = $mother_name;
-                            $query->user_id = $mother_id;
-                            $query->role_id = "5";
-                            $query->branch_id = $request->branch_id;
-                            $query->email = $student_application->mother_email;
-                            $query->status = "0";
-                            $query->google2fa_secret_enable = '0';
-                            $query->password = bcrypt($student_application->mother_email);
-                            $query->save();
-                        }
-                    }
-                    if ($student_application->guardian_first_name) {
-                        // return $student_application;
-                        if ($conn->table('parent')->where('email', '=', $student_application->guardian_email)->count() > 0) {
-                            $guardian_id = $conn->table('parent')->select('id')->where('email', '=', $student_application->guardian_email)->first();
-                            $guardian_id = $guardian_id->id;
-                        } else {
-                            $guardian_id = $conn->table('parent')->insertGetId([
-
-                                'first_name' => isset($student_application->guardian_first_name) ? $student_application->guardian_first_name : "",
-                                'last_name' => isset($student_application->guardian_last_name) ? $student_application->guardian_last_name : "",
-                                'occupation' => $student_application->guardian_occupation,
-                                'mobile_no' => $student_application->guardian_phone_number,
-                                'email' => $student_application->guardian_email,
-                                'status' => "0",
-                                'created_at' => date("Y-m-d H:i:s")
-                            ]);
-                        }
-
-                        $guardian_name = $student_application->guardian_first_name . ' ' . $student_application->guardian_last_name;
-                        if (!$guardian_id) {
-                            return $this->send500Error('Something went wrong.', ['error' => 'Something went wrong add Parent']);
-                        } else {
+                        $guardian_name = $request->guardian_first_name . ' ' . $request->guardian_last_name;
 
                             // add User
                             $query = new User();
@@ -12650,18 +12652,13 @@ class ApiController extends BaseController
                             $query->user_id = $guardian_id;
                             $query->role_id = "5";
                             $query->branch_id = $request->branch_id;
-                            $query->email = $student_application->guardian_email;
+                            $query->email = $request->guardian_email;
                             $query->status = "0";
                             $query->google2fa_secret_enable = '0';
-                            $query->password = bcrypt($student_application->guardian_email);
+                            $query->password = bcrypt($request->guardian_email);
                             $query->save();
-                        }
                     }
-                } else {
-                    $father_id = $request->father_id;
-                    $mother_id = $request->mother_id;
-                    $guardian_id = $request->guardian_id;
-                }
+                    
                 
                 $regData = [
                     'branch_id' => $request->branch_id,
@@ -12791,8 +12788,7 @@ class ApiController extends BaseController
                     }
                 }
             }
-
-            // return $request;
+             // return $request;
         }
     }
     // get Teacher list 
@@ -13773,7 +13769,7 @@ class ApiController extends BaseController
             'student_id' => 'required',
              'year' => 'required',
              'register_no' => 'required',
-              'roll_no' => 'required',
+            //  'roll_no' => 'required',
              'admission_date' => 'required',
             // 'category_id' => 'required',
               'first_name' => 'required',
@@ -13787,7 +13783,7 @@ class ApiController extends BaseController
             'branch_id' => 'required',
            // 'token' => 'required',
         ]);
-
+       // return $request;
         $previous['school_name'] = $request->school_name;
         $previous['qualification'] = $request->qualification;
         $previous['remarks'] = $request->remarks;
@@ -13921,6 +13917,71 @@ class ApiController extends BaseController
                 $mobile_no = isset($request->mobile_no) ? Crypt::encryptString($request->mobile_no) : "";
                 $current_address = isset($request->current_address) ? Crypt::encryptString($request->current_address) : "";
                 $permanent_address = isset($request->permanent_address) ? Crypt::encryptString($request->permanent_address) : "";
+                $father_phone_number = isset($request->father_phone_number) ? Crypt::encryptString($request->father_phone_number) : "";
+                $mother_phone_number = isset($request->mother_phone_number) ? Crypt::encryptString($request->mother_phone_number) : "";
+                $guardian_mobile_no = isset($request->guardian_mobile_no) ? Crypt::encryptString($request->guardian_mobile_no) : "";
+                if ($request->father_id) {
+                    $conn->table('parent')->where('id', $request->father_id)->update([
+                    'first_name' => $request->father_first_name ?? '',
+                    'middle_name' => $request->father_middle_name ?? '',
+                    'last_name' => $request->father_last_name ?? '',
+                    'occupation' => $request->father_occupation,
+                    'mobile_no' =>  $father_phone_number,
+                    'email' => $request->father_email,
+                    'nationality'=> $request->father_nationality,
+                    'last_name_furigana' => $request->father_last_name_furigana ?? '',
+                    'middle_name_furigana' => $request->father_middle_name_furigana ?? '',
+                    'first_name_furigana' => $request->father_first_name_furigana ?? '',
+                    'last_name_english' => $request->father_last_name_english ?? '',
+                    'middle_name_english' => $request->father_middle_name_english ?? '',
+                    'first_name_english' => $request->father_first_name_english ?? '',
+                    'status' => '0', // Assuming you want to update the status as well
+                    'updated_at' => now()
+                    ]);
+                }
+                if ($request->mother_id) {
+                    $conn->table('parent')->where('id', $request->mother_id)->update([
+                        'first_name' => $request->mother_first_name ?? '',
+                        'last_name' => $request->mother_last_name ?? '',
+                        'middle_name' => $request->mother_middle_name ?? '',
+                        'last_name_furigana' => $request->mother_last_name_furigana ?? '',
+                        'middle_name_furigana' => $request->mother_middle_name_furigana ?? '',
+                        'first_name_furigana' => $request->mother_first_name_furigana ?? '',
+                        'last_name_english' => $request->mother_last_name_english ?? '',
+                        'middle_name_english' => $request->mother_middle_name_english ?? '',
+                        'first_name_english' => $request->mother_first_name_english ?? '',
+                        'email' => $request->mother_email,
+                        'occupation' => $request->mother_occupation,
+                        'mobile_no' =>  $mother_phone_number,
+                        'nationality'=> $request->mother_nationality,
+                        'status' => '0', // Assuming you want to update the status as well
+                        'updated_at' => now()
+                    ]);
+                }
+                if ($request->guardian_id) {
+                    $conn->table('parent')->where('id', $request->mother_id)->update([
+                        'first_name' => $request->guardian_first_name ?? '',
+                        'last_name' => $request->guardian_last_name ?? '',
+                        'middle_name' => $request->guardian_middle_name ?? '',
+                        'last_name_furigana' => $request->guardian_last_name_furigana ?? '',
+                        'middle_name_furigana' => $request->guardian_middle_name_furigana ?? '',
+                        'first_name_furigana' => $request->guardian_first_name_furigana ?? '',
+                        'last_name_english' => $request->guardian_last_name_english ?? '',
+                        'middle_name_english' => $request->guardian_middle_name_english ?? '',
+                        'first_name_english' => $request->guardian_first_name_english ?? '',
+                        'occupation' => $request->guardian_occupation,
+                        'mobile_no' => $guardian_mobile_no,
+                        'email' => $request->guardian_email,
+                        "company_name_japan" => $request->guardian_company_name_japan,
+                        "company_name_local" => $request->guardian_company_name_local,
+                        "company_phone_number" => $request->guardian_company_phone_number,
+                        "employment_status" => $request->guardian_employment_status,
+                        'status' => '0', // Assuming you want to update the status as well
+                        'updated_at' => now()
+                    ]);
+                }
+               
+
 
                 $data = [
                     'father_id' => $request->father_id,
@@ -25535,13 +25596,14 @@ class ApiController extends BaseController
     // update Student
     public function parentUpdateStudent(Request $request)
     {
-
+        //return $request;
         $validator = \Validator::make($request->all(), [
             'student_id' => 'required',
 
             'branch_id' => 'required',
             'token' => 'required',
         ]);
+       
 
         // return $request['old_photo'];
 

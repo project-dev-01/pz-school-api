@@ -224,6 +224,7 @@ class ApiControllerThree extends BaseController
                 ])->where(function ($q) {
                     $q->where('role_id', 5);
                 })->get();
+                //  dd( $user);
                 // Before sending the notification
                 // \Log::info('Sending notification to users: ' . json_encode($user));
                 Notification::send($user, new ParentEmail($request->branch_id));
