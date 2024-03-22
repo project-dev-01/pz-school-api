@@ -303,8 +303,7 @@ class MenuAccessController extends BaseController
     public function getschool_roleLists(Request $request)
     {
         $validator = \Validator::make($request->all(), [
-            'branch_id' => 'required',
-            //'token' => 'required',
+            'branch_id' => 'required'
         ]);
 
         if (!$validator->passes()) {
@@ -328,8 +327,8 @@ class MenuAccessController extends BaseController
                 ->select('t1.role_id','t2.role_name') 
                 ->leftJoin($main_db . '.roles AS t2', 't1.role_id', '=', 't2.id')
                 ->distinct()
-                ->where('school_roleid', '=', $school_role->id)
-                ->pluck('role_name');
+                ->where('t1.school_roleid', '=', $school_role->id)
+                ->pluck('t2.role_name');
                 $roles='';
                 foreach($roleIds1 as $role)
                 {
