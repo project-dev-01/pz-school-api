@@ -14597,7 +14597,7 @@ class ApiController extends BaseController
             // create new connection
             $conn = $this->createNewConnection($request->branch_id);
             // get data
-            $parentDetails = $conn->table('parent')->select("*", DB::raw("CONCAT(first_name, ' ', last_name) as name"))->where('status','=','0')->get();
+            $parentDetails = $conn->table('parent')->select("id",'email','occupation', DB::raw("CONCAT(first_name, ' ', last_name) as name"))->where('status','=','0')->get();
             return $this->successResponse($parentDetails, 'Parent record fetch successfully');
         }
     }
