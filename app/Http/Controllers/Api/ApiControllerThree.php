@@ -1488,6 +1488,7 @@ class ApiControllerThree extends BaseController
             $session_id = isset($request->session_id) ? $request->session_id : null;
             $class_id = isset($request->class_id) ? $request->class_id : null;
             $section_id = isset($request->section_id) ? $request->section_id : null;
+            $status = isset($request->status) ? $request->status : null;
             $academic_year = isset($request->academic_year) ? $request->academic_year : null;
 
             // student parent school info
@@ -1578,7 +1579,9 @@ class ApiControllerThree extends BaseController
                     ->when($student_name, function ($query, $student_name) {
                         return $query->where('st.first_name', 'like', '%' . $student_name . '%')->orWhere('st.last_name', 'like', '%' . $student_name . '%');
                     })
-                    ->where('en.active_status', '=', '0')
+                    ->when($status !== null, function ($query) use ($status) {
+                    $query->where('en.active_status', $status);
+                     }) 
                     // ->where('en.academic_session_id', '=', $academic_year)
                     ->groupBy('en.student_id')
                     ->get();
@@ -1640,8 +1643,10 @@ class ApiControllerThree extends BaseController
                     ->when($student_name, function ($query, $student_name) {
                         return $query->where('st.first_name', 'like', '%' . $student_name . '%')->orWhere('st.last_name', 'like', '%' . $student_name . '%');
                     })
-                    // ->where('en.active_status', '=', '0')
-                    ->where('en.academic_session_id', '=', $academic_year)
+                    ->when($status !== null, function ($query) use ($status) {
+                    $query->where('en.active_status', $status);
+                     }) 
+                    //->where('en.academic_session_id', '=', $academic_year)
                     ->groupBy('en.student_id')
                     ->get();
                 // Decrypt sensitive data if exists
