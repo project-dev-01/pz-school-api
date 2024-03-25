@@ -3011,7 +3011,7 @@ class ApiController extends BaseController
             if ($Connection->table('staffs')->where('email', '=', $request->email)->count() > 0) {
                 return $this->send422Error('Email Already Exist', ['error' => 'Email Already Exist']);
             } else {
-                $existUser = $this->existUser($request->email);
+                $existUser = $this->existUserWithBranch($request->email,$request->branch_id);
                 if ($existUser) {
                     // add bank details validation
                     // if ($request->skip_bank_details == 1) {
@@ -23370,7 +23370,7 @@ class ApiController extends BaseController
                             ];
                             if ($conn->table('parent')->where('email', '=', $request->father_email)->count() > 0) {
                                 $father_data['updated_at'] = date("Y-m-d H:i:s");
-                                $conn->table('parent')->update($father_data);
+                                $conn->table('parent')->where('email', '=', $request->father_email)->update($father_data);
                                 $father_id = $conn->table('parent')->select('id')->where('email', '=', $request->father_email)->first();
                                 $father_id = $father_id->id;
                             } else {
@@ -23407,7 +23407,7 @@ class ApiController extends BaseController
                             ];
                             if ($conn->table('parent')->where('email', '=', $request->mother_email)->count() > 0) {
                                 $mother_data['updated_at'] = date("Y-m-d H:i:s");
-                                $conn->table('parent')->update($mother_data);
+                                $conn->table('parent')->where('email', '=', $request->mother_email)->update($mother_data);
                                 $mother_id = $conn->table('parent')->select('id')->where('email', '=', $request->mother_email)->first();
                                 $mother_id = $mother_id->id;
                             } else {
@@ -23453,11 +23453,10 @@ class ApiController extends BaseController
 
                         if ($conn->table('parent')->where('email', '=', $request->guardian_email)->count() > 0) {
                             $guardian_data['updated_at'] = date("Y-m-d H:i:s");
-                            $conn->table('parent')->update($guardian_data);
+                            $conn->table('parent')->where('email', '=', $request->guardian_email)->update($guardian_data);
                             $guardian = $conn->table('parent')->select('id')->where('email', '=', $request->guardian_email)->first();
                             $guardian_id = $guardian->id;
                         } else {
-                            
                             $guardian_data['created_at'] = date("Y-m-d H:i:s");
                             $guardian_id = $conn->table('parent')->insertGetId($guardian_data);
                         }
@@ -23555,14 +23554,14 @@ class ApiController extends BaseController
                         'address_condominium' => $request->address_condominium,
                         'address_street' => $request->address_street,
                         'address_district' => $request->address_district,
-                        "nric" => $request->nric,
+                        "nric" => isset($request->nric) ? Crypt::encryptString($request->nric) : "",
                         "visa_type" => $request->visa_type,
                         "visa_type_others" => $request->visa_type_others,
                         "japanese_association_membership_number_student" => $request->japanese_association_membership_number_student,
                         'nric_photo' => $nric_fileName,
                         'japanese_association_membership_image_principal' => $image_principal_fileName,
                         // 'japanese_association_membership_image_supplimental' => $image_supplimental_fileName,
-                        'passport' => $request->passport,
+                        'passport' => isset($request->passport) ? Crypt::encryptString($request->passport) : "",
                         'passport_expiry_date' => $request->passport_expiry_date,
                         // 'visa_number' => $request->visa_number,
                         'visa_expiry_date' => $request->visa_expiry_date,
@@ -23574,11 +23573,11 @@ class ApiController extends BaseController
                         'nationality' => $request->nationality,
                         'dual_nationality' => $request->dual_nationality,
                         'email' => $studentEmail,
-                        'status' => isset($request->status) ? $request->status : "0",
+                        'status' => "0",
                     ];
                     if ($conn->table('students')->where('email', '=', $studentEmail)->count() > 0) {
                         $student_data['updated_at'] = date("Y-m-d H:i:s");
-                        $conn->table('students')->update($student_data);
+                        $conn->table('students')->where('email', '=', $studentEmail)->update($student_data);
                         $student_get = $conn->table('students')->where('email', '=', $studentEmail)->first();
                         $studentId = $student_get->id;
 

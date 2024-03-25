@@ -169,6 +169,15 @@ class BaseController extends Controller
             return true;
         }
     }
+    // check users email exit with branch
+    function existUserWithBranch($email,$branch)
+    {
+        if (User::where([['email', '=', $email], ['branch', '=', $branch]])->count() > 0) {
+            return false;
+        } else {
+            return true;
+        }
+    }
     // check users email exit 
     function existBranch($email)
     {
