@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Api;
 
 // use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-//
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Auth;
 use Symfony\Component\HttpFoundation\Response;
@@ -95,6 +95,10 @@ class ApiController extends BaseController
                     'name' => $request->name,
                     'created_at' => date("Y-m-d H:i:s")
                 ]);
+                // cache clear start
+                $cache_sections = config('constants.cache_sections');
+                $this->clearCache($cache_sections,$request->branch_id);
+                // cache clear end
                 $success = [];
                 if (!$query) {
                     return $this->send500Error('Something went wrong.', ['error' => 'Something went wrong']);
@@ -114,10 +118,24 @@ class ApiController extends BaseController
         if (!$validator->passes()) {
             return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
         } else {
-            // create new connection
-            $secConn = $this->createNewConnection($request->branch_id);
-            // get data
-            $section = $secConn->table('sections')->orderBy('name', 'asc')->get();
+                // get data
+                $cache_time = config('constants.cache_time');
+                $cache_sections = config('constants.cache_sections');
+                //dd($cache_academic_years);
+                //$Department = $Connection->table('academic_year')->get();
+                $cacheKey = $cache_sections . $request->branch_id;
+
+                // Check if the data is cached
+                if (Cache::has($cacheKey)) {
+                    // If cached, return cached data
+                    $section = Cache::get($cacheKey);
+                } else {
+                    // create new connection
+                    $secConn = $this->createNewConnection($request->branch_id);
+                    // get data
+                    $section = $secConn->table('sections')->orderBy('name', 'asc')->get();
+                    Cache::put($cacheKey, $section, now()->addHours($cache_time)); // Cache for 24 hours  
+                    }
             return $this->successResponse($section, 'Classes record fetch successfully');
         }
     }
@@ -167,6 +185,10 @@ class ApiController extends BaseController
                     'name' => $request->name,
                     'updated_at' => date("Y-m-d H:i:s")
                 ]);
+                // cache clear start
+                $cache_sections = config('constants.cache_sections');
+                $this->clearCache($cache_sections,$request->branch_id);
+                // cache clear end
                 $success = [];
                 if ($query) {
                     return $this->successResponse($success, 'Classes Details have Been updated');
@@ -194,7 +216,10 @@ class ApiController extends BaseController
             $createConnection = $this->createNewConnection($request->branch_id);
             // get data
             $query = $createConnection->table('sections')->where('id', $section_id)->delete();
-
+            // cache clear start
+            $cache_sections = config('constants.cache_sections');
+            $this->clearCache($cache_sections,$request->branch_id);
+            // cache clear end
             $success = [];
             if ($query) {
                 return $this->successResponse($success, 'Classes have been deleted successfully');
@@ -543,6 +568,10 @@ class ApiController extends BaseController
                     'name_numeric' => $request->name_numeric,
                     'created_at' => date("Y-m-d H:i:s")
                 ]);
+                //cache clear Start
+                $cache_classes = config('constants.cache_classes');
+                $this->clearCache($cache_classes,$request->branch_id);
+                //cache clear End
                 $success = [];
                 if (!$query) {
                     return $this->send500Error('Something went wrong.', ['error' => 'Something went wrong']);
@@ -563,6 +592,18 @@ class ApiController extends BaseController
         if (!$validator->passes()) {
             return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
         } else {
+            // get data
+            $cache_time = config('constants.cache_time');
+            $cache_classes = config('constants.cache_classes');
+            //dd($cache_academic_years);
+            //$Department = $Connection->table('academic_year')->get();
+            $cacheKey = $cache_classes . $request->branch_id;
+            //$this->clearCache($cache_classes,$request->branch_id);
+            // Check if the data is cached
+            if (Cache::has($cacheKey)) {
+                // If cached, return cached data
+                $class = Cache::get($cacheKey);
+            } else {
             // create new connection
             $classConn = $this->createNewConnection($request->branch_id);
             // get data
@@ -571,6 +612,8 @@ class ApiController extends BaseController
                 ->leftJoin('staff_departments as stf_dp', 'cl.department_id', '=', 'stf_dp.id')
                 ->orderBy('cl.department_id', 'desc')
                 ->get();
+                Cache::put($cacheKey, $class, now()->addHours($cache_time)); // Cache for 24 hours
+            }
             return $this->successResponse($class, 'Grade record fetch successfully');
         }
     }
@@ -623,6 +666,10 @@ class ApiController extends BaseController
                     'name_numeric' => $request->name_numeric,
                     'updated_at' => date("Y-m-d H:i:s")
                 ]);
+                //cache clear Start
+                $cache_classes = config('constants.cache_classes');
+                $this->clearCache($cache_classes,$request->branch_id);
+                 //cache clear End
                 $success = [];
                 if ($query) {
                     return $this->successResponse($success, 'Grade Details have Been updated');
@@ -650,7 +697,10 @@ class ApiController extends BaseController
             $createConnection = $this->createNewConnection($request->branch_id);
             // get data
             $query = $createConnection->table('classes')->where('id', $class_id)->delete();
-
+            //cache clear Start
+            $cache_classes = config('constants.cache_classes');
+            $this->clearCache($cache_classes,$request->branch_id);
+            //cache clear End
             $success = [];
             if ($query) {
                 return $this->successResponse($success, 'Grade have been deleted successfully');
@@ -2594,6 +2644,10 @@ class ApiController extends BaseController
                     'name' => $request->name,
                     'created_at' => date("Y-m-d H:i:s")
                 ]);
+                // Cache clear Start
+                $cache_departments = config('constants.cache_departments');               
+                $this->clearCache($cache_departments,$request->branch_id);
+             // Cache clear End
                 $success = [];
                 if (!$query) {
                     return $this->send500Error('Something went wrong.', ['error' => 'Something went wrong']);
@@ -2614,10 +2668,26 @@ class ApiController extends BaseController
         if (!$validator->passes()) {
             return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
         } else {
+            $cache_time = config('constants.cache_time');
+            $cache_departments = config('constants.cache_departments');
             // create new connection
-            $staffConn = $this->createNewConnection($request->branch_id);
+            $Connection = $this->createNewConnection($request->branch_id);
             // get data
-            $Department = $staffConn->table('staff_departments')->get();
+            //$Department = $Connection->table('academic_year')->get();
+            $cacheKey = $cache_departments . $request->branch_id;
+
+            // Check if the data is cached
+            if (Cache::has($cacheKey)) {
+                // If cached, return cached data
+                $Department = Cache::get($cacheKey);
+            } else {
+                // create new connection
+                $staffConn = $this->createNewConnection($request->branch_id);
+                // get data
+                $Department = $staffConn->table('staff_departments')->get();
+                // Cache the fetched data for future requests
+                Cache::put($cacheKey, $Department, now()->addHours(24)); // Cache for 24 hours
+            }
             return $this->successResponse($Department, 'Department record fetch successfully');
         }
     }
@@ -2667,6 +2737,10 @@ class ApiController extends BaseController
                     'name' => $request->name,
                     'updated_at' => date("Y-m-d H:i:s")
                 ]);
+                // Cache clear Start
+            $cache_departments = config('constants.cache_departments');               
+            $this->clearCache($cache_departments,$request->branch_id);
+             // Cache clear End
                 $success = [];
                 if ($query) {
                     return $this->successResponse($success, 'Department Details have Been updated');
@@ -2695,6 +2769,10 @@ class ApiController extends BaseController
             $staffConn = $this->createNewConnection($request->branch_id);
             // get data
             $query = $staffConn->table('staff_departments')->where('id', $id)->delete();
+            // Cache clear Start
+            $cache_departments = config('constants.cache_departments');               
+            $this->clearCache($cache_departments,$request->branch_id);
+             // Cache clear End
 
             $success = [];
             if ($query) {
@@ -23966,11 +24044,27 @@ class ApiController extends BaseController
         if (!$validator->passes()) {
             return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
         } else {
-            // create new connection
-            $Connection = $this->createNewConnection($request->branch_id);
             // get data
-            $Department = $Connection->table('academic_year')->get();
-            return $this->successResponse($Department, 'Academic year record fetch successfully');
+            $cache_time = config('constants.cache_time');
+            $cache_academic_years = config('constants.cache_academic_years');
+            //dd($cache_academic_years);
+            //$Department = $Connection->table('academic_year')->get();
+            $cacheKey = $cache_academic_years . $request->branch_id;
+
+            // Check if the data is cached
+            if (Cache::has($cacheKey)) {
+                // If cached, return cached data
+                $academicYears = Cache::get($cacheKey);
+            } else {
+                // create new connection
+                $Connection = $this->createNewConnection($request->branch_id);
+                // get data
+                $academicYears = $Connection->table('academic_year')->get();
+                // Cache the fetched data for future requests
+                Cache::put($cacheKey, $academicYears, now()->addHours($cache_time)); // Cache for 24 hours
+            }
+            return $this->successResponse($academicYears, 'Academic year records fetched successfully');
+            //return $this->successResponse($Department, 'Academic year record fetch successfully');
         }
     }
 
@@ -27193,5 +27287,10 @@ class ApiController extends BaseController
         ->where([['inter.academic_year', '=', $request->academic_year],['inter.department_id', '=', $request->department_id],['inter.class_id', '=', $request->class_id],['inter.section_id', '=', $request->section_id],['inter.semester_id', '=', $request->semester_id]])->get();
         return $this->successResponse($record, 'Personal Interview Informations get Successfully');
         
-    }  
+    }
+    protected function clearCache($cache_name,$branchId)
+    {
+        $cacheKey = $cache_name . $branchId;
+        Cache::forget($cacheKey);
+    }
 }
