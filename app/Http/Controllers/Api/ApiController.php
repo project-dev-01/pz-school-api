@@ -23342,6 +23342,108 @@ class ApiController extends BaseController
                     $guardian_id = "";
                     
                     $relation = $conn->table('relations')->where('id',$request->guardian_relation)->first();
+
+                    
+                    if ($request->guardian_first_name) {
+                        // return $request;
+                        $guardian_data = [
+                                'first_name' => isset($request->guardian_first_name) ? $request->guardian_first_name : "",
+                                'last_name' => isset($request->guardian_last_name) ? $request->guardian_last_name : "",
+                                'middle_name' => isset($request->guardian_middle_name) ? $request->guardian_middle_name : "",
+                                'first_name_furigana' => isset($request->guardian_first_name_furigana) ? $request->guardian_first_name_furigana : "",
+                                'last_name_furigana' => isset($request->guardian_last_name_furigana) ? $request->guardian_last_name_furigana : "",
+                                'middle_name_furigana' => isset($request->guardian_middle_name_furigana) ? $request->guardian_middle_name_furigana : "",
+                                'first_name_english' => isset($request->guardian_first_name_english) ? $request->guardian_first_name_english : "",
+                                'last_name_english' => isset($request->guardian_last_name_english) ? $request->guardian_last_name_english : "",
+                                'middle_name_english' => isset($request->guardian_middle_name_english) ? $request->guardian_middle_name_english : "",
+                                'occupation' => $request->guardian_occupation,
+                                'mobile_no' => isset($request->guardian_phone_number) ? Crypt::encryptString($request->guardian_phone_number) : "",
+                                'email' => $request->guardian_email,
+                                'company_name_japan' => $request->guardian_company_name_japan,
+                                'company_name_local' => $request->guardian_company_name_local,
+                                'company_phone_number' => isset($request->guardian_company_phone_number) ? Crypt::encryptString($request->guardian_company_phone_number) : "",
+                                'employment_status' => $request->guardian_employment_status,
+                                'japanese_association_membership_image_supplimental' => $image_supplimental_fileName,
+                                'status' => "0",
+                        ];
+                        
+                        if($relation->parent == "1"){
+                            //father is guardian 
+                            $guardian_data['passport_photo'] = $passport_father_fileName;
+                            $guardian_data['visa_photo'] = $visa_father_fileName;
+                        }else if($relation->parent == "2"){
+                            //mother is guardian 
+                            $guardian_data['passport_photo'] = $passport_mother_fileName;
+                            $guardian_data['visa_photo'] = $visa_mother_fileName;
+                        }
+
+                        if ($conn->table('parent')->where('email', '=', $request->guardian_email)->count() > 0) {
+                            $guardian_data['updated_at'] = date("Y-m-d H:i:s");
+                            $conn->table('parent')->where('email', '=', $request->guardian_email)->update($guardian_data);
+                            $guardian = $conn->table('parent')->select('id')->where('email', '=', $request->guardian_email)->first();
+                            $guardian_id = $guardian->id;
+                        } else {
+                            $guardian_data['created_at'] = date("Y-m-d H:i:s");
+                            $guardian_id = $conn->table('parent')->insertGetId($guardian_data);
+                                
+                            $guardian_name = $request->guardian_first_name . ' ' . $request->guardian_last_name;
+                            if (!$guardian_id) {
+                                return $this->send500Error('Something went wrong.', ['error' => 'Something went wrong add Parent']);
+                            } else {
+
+                                // add Userwhere([['email', '=', $request->guardian_email], ['branch_id', '=', $request->branch_id], ['role_id', '=', 5]])->count < 1
+                                
+                                if(User::where([['email', '=', $request->guardian_email],['branch_id', '=', $request->branch_id], ['role_id', '=', "5"]])->count() < 1){
+                                    
+
+                                    $par_uppercase = Str::random(1,'ABCDEFGHIJKLMNOPQRSTUVWXYZ'); // Generate 1 random uppercase character
+                                    $par_lowercase = Str::random(6,'abcdefghijklmnopqrstuvwxyz'); // Generate 6 random lowercase characters
+                                    $par_specialCharacter = Str::random(1, '!@#$%^&*(){}[]<>'); // Generate 1 random special character from the provided list
+                                    $par_password = $par_uppercase . $par_lowercase . $par_specialCharacter;
+
+                                    // Shuffle the password to randomize the characters
+                                    $parent_password = str_shuffle($par_password);
+
+                                    $query = new User();
+                                    $query->name = $guardian_name;
+                                    $query->user_id = $guardian_id;
+                                    $query->role_id = "5";
+                                    $query->branch_id = $request->branch_id;
+                                    $query->email = $request->guardian_email;
+                                    $query->status = "0";
+                                    $query->google2fa_secret_enable = '0';
+                                    $query->password = bcrypt($parent_password);
+                                    $query->save();
+
+                                    $parent_email = $request->guardian_email;
+                                    $parent_link = $request->url . '/parent/login';
+                                    $data = array(
+                                        'parent_name' => $parent_name,
+                                        'parent_link' => $parent_link, 
+                                        'parent_email' => $parent_email, 
+                                        'parent_password' => $parent_password,
+                                    );
+                                    
+                                    $mailFromAddress = env('MAIL_FROM_ADDRESS', config('constants.client_email'));
+                                    $query = Mail::send('auth.application', $data, function ($message) use ($parent_email,$mailFromAddress) {
+                                        $message->to($parent_email, 'Parent')->subject('Login Details');
+                                        $message->from($mailFromAddress, 'Login Details');
+                                    });
+                                }
+                            }
+                        }
+
+                    }
+
+                    if ($guardian_id) {
+                        $conn->table('student_applications')->where('guardian_email', $request->guardian_email)->update([
+                            "created_by" => $guardian_id,
+                            "created_by_role" => "5",
+
+                        ]);
+                        $conn->table('guest')->where('email', $request->guardian_email)->delete();
+                        User::where('email',$request->guardian_email)->where('role_id',"7")->where('branch_id',$request->branch_id)->delete();
+                    }
                    
                     if($relation->parent == "1"){
                         //father is guardian 
@@ -23417,106 +23519,7 @@ class ApiController extends BaseController
                             $mother_name = $request->mother_first_name . ' ' . $request->mother_last_name;
                         }
                     }
-
-                    if ($request->guardian_first_name) {
-                        // return $request;
-                        $guardian_data = [
-                                'first_name' => isset($request->guardian_first_name) ? $request->guardian_first_name : "",
-                                'last_name' => isset($request->guardian_last_name) ? $request->guardian_last_name : "",
-                                'middle_name' => isset($request->guardian_middle_name) ? $request->guardian_middle_name : "",
-                                'first_name_furigana' => isset($request->guardian_first_name_furigana) ? $request->guardian_first_name_furigana : "",
-                                'last_name_furigana' => isset($request->guardian_last_name_furigana) ? $request->guardian_last_name_furigana : "",
-                                'middle_name_furigana' => isset($request->guardian_middle_name_furigana) ? $request->guardian_middle_name_furigana : "",
-                                'first_name_english' => isset($request->guardian_first_name_english) ? $request->guardian_first_name_english : "",
-                                'last_name_english' => isset($request->guardian_last_name_english) ? $request->guardian_last_name_english : "",
-                                'middle_name_english' => isset($request->guardian_middle_name_english) ? $request->guardian_middle_name_english : "",
-                                'occupation' => $request->guardian_occupation,
-                                'mobile_no' => isset($request->guardian_phone_number) ? Crypt::encryptString($request->guardian_phone_number) : "",
-                                'email' => $request->guardian_email,
-                                'company_name_japan' => $request->guardian_company_name_japan,
-                                'company_name_local' => $request->guardian_company_name_local,
-                                'company_phone_number' => isset($request->guardian_company_phone_number) ? Crypt::encryptString($request->guardian_company_phone_number) : "",
-                                'employment_status' => $request->guardian_employment_status,
-                                'japanese_association_membership_image_supplimental' => $image_supplimental_fileName,
-                                'status' => "0",
-                        ];
-                        
-                        if($relation->parent == "1"){
-                            //father is guardian 
-                            $guardian_data['passport_photo'] = $passport_father_fileName;
-                            $guardian_data['visa_photo'] = $visa_father_fileName;
-                        }else if($relation->parent == "2"){
-                            //mother is guardian 
-                            $guardian_data['passport_photo'] = $passport_mother_fileName;
-                            $guardian_data['visa_photo'] = $visa_mother_fileName;
-                        }
-
-                        if ($conn->table('parent')->where('email', '=', $request->guardian_email)->count() > 0) {
-                            $guardian_data['updated_at'] = date("Y-m-d H:i:s");
-                            $conn->table('parent')->where('email', '=', $request->guardian_email)->update($guardian_data);
-                            $guardian = $conn->table('parent')->select('id')->where('email', '=', $request->guardian_email)->first();
-                            $guardian_id = $guardian->id;
-                        } else {
-                            $guardian_data['created_at'] = date("Y-m-d H:i:s");
-                            $guardian_id = $conn->table('parent')->insertGetId($guardian_data);
-                        }
-
-                        $guardian_name = $request->guardian_first_name . ' ' . $request->guardian_last_name;
-                        if (!$guardian_id) {
-                            return $this->send500Error('Something went wrong.', ['error' => 'Something went wrong add Parent']);
-                        } else {
-
-                            // add Userwhere([['email', '=', $request->guardian_email], ['branch_id', '=', $request->branch_id], ['role_id', '=', 5]])->count < 1
-                            
-                            if(User::where([['email', '=', $request->guardian_email],['branch_id', '=', $request->branch_id], ['role_id', '=', "5"]])->count() < 1){
-                                
-
-                                $par_uppercase = Str::random(1,'ABCDEFGHIJKLMNOPQRSTUVWXYZ'); // Generate 1 random uppercase character
-                                $par_lowercase = Str::random(6,'abcdefghijklmnopqrstuvwxyz'); // Generate 6 random lowercase characters
-                                $par_specialCharacter = Str::random(1, '!@#$%^&*(){}[]<>'); // Generate 1 random special character from the provided list
-                                $par_password = $par_uppercase . $par_lowercase . $par_specialCharacter;
-
-                                // Shuffle the password to randomize the characters
-                                $parent_password = str_shuffle($par_password);
-
-                                $query = new User();
-                                $query->name = $guardian_name;
-                                $query->user_id = $guardian_id;
-                                $query->role_id = "5";
-                                $query->branch_id = $request->branch_id;
-                                $query->email = $request->guardian_email;
-                                $query->status = "0";
-                                $query->google2fa_secret_enable = '0';
-                                $query->password = bcrypt($request->guardian_email);
-                                $query->save();
-
-                                $parent_email = $request->guardian_email;
-                                $parent_link = $request->url . '/parent/login';
-                                $data = array(
-                                    'parent_name' => $parent_name,
-                                    'parent_link' => $parent_link, 
-                                    'parent_email' => $parent_email, 
-                                    'parent_password' => $parent_password,
-                                );
-                                
-                                $mailFromAddress = env('MAIL_FROM_ADDRESS', config('constants.client_email'));
-                                $query = Mail::send('auth.application', $data, function ($message) use ($parent_email,$mailFromAddress) {
-                                    $message->to($parent_email, 'Parent')->subject('Login Details');
-                                    $message->from($mailFromAddress, 'Login Details');
-                                });
-                            }
-                        }
-                    }
-
-                    if ($guardian_id) {
-                        $conn->table('student_applications')->where('guardian_email', $request->guardian_email)->update([
-                            "created_by" => $guardian_id,
-                            "created_by_role" => "5",
-
-                        ]);
-                        $conn->table('guest')->where('email', $request->guardian_email)->delete();
-                        User::where('email',$request->guardian_email)->where('role_id',"7")->where('branch_id',$request->branch_id)->delete();
-                    }
+                    // return $father_i
                     $student_data = [
                         'guardian_id' => $guardian_id,
                         'father_id' => $father_id,
