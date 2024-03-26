@@ -172,7 +172,7 @@ class BaseController extends Controller
     // check users email exit with branch
     function existUserWithBranch($email,$branch)
     {
-        if (User::where([['email', '=', $email], ['branch', '=', $branch]])->count() > 0) {
+        if (User::where([['email', '=', $email], ['branch_id', '=', $branch]])->count() > 0) {
             return false;
         } else {
             return true;

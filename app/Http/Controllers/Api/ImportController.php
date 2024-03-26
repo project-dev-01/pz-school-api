@@ -131,6 +131,12 @@ class ImportController extends BaseController
                         $visa_exp_date = $importData[50] !== NULL ? date("Y-m-d", strtotime($importData[50])) : "NULL";
                         $teacher_type = $importData[52];
                         $school_role_id = $importData[54];
+                        $department_start_date = $importData[55];
+                        $department_end_date = $importData[56];
+                        $designation_start_date = $importData[57];
+                        $designation_end_date = $importData[58];
+                        $employee_type_start_date = $importData[59];
+                        $employee_type_end_date = $importData[60];
                         $address_1 = isset($importData[16]) ? Crypt::encryptString($importData[16]) : "";
                         $address_2 = isset($importData[17]) ? Crypt::encryptString($importData[17]) : "";
                         $nric_number = isset($importData[8]) ? Crypt::encryptString($importData[8]) : "";
@@ -235,6 +241,12 @@ class ImportController extends BaseController
                                 'job_title_id' => $dynamic_data[51],
                                 'teacher_type' => $teacher_type,
                                 'employee_type_id' => $dynamic_data[53],
+                                'department_start_date' => $department_start_date,
+                                'department_end_date' => $department_end_date,
+                                'designation_start_date' => $designation_start_date,
+                                'designation_end_date' => $designation_end_date,
+                                'employee_type_start_date' => $employee_type_start_date,
+                                'employee_type_end_date' => $employee_type_end_date,
                                 'created_at' => date("Y-m-d H:i:s")
                             ];
 
