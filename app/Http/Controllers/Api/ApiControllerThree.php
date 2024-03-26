@@ -180,7 +180,7 @@ class ApiControllerThree extends BaseController
                 $user = User::whereIn('user_id', $assignerID)->where([
                     ['branch_id', '=', $request->branch_id]
                 ])->where(function ($q) {
-                    $q->where('role_id', 6);
+                    $q->where('role_id', 'like', '%6%');
                 })->get();
                 // Before sending the notification
                 //\Log::info('Sending notification to users: ' . json_encode($user));
@@ -222,7 +222,7 @@ class ApiControllerThree extends BaseController
                 $user = User::whereIn('user_id', $assignerID)->where([
                     ['branch_id', '=', $request->branch_id]
                 ])->where(function ($q) {
-                    $q->where('role_id', 5);
+                    $q->where('role_id', 'like', '%5%');
                 })->get();
                 //  dd( $user);
                 // Before sending the notification
@@ -251,7 +251,7 @@ class ApiControllerThree extends BaseController
                 $user = User::whereIn('user_id', $assignerID)->where([
                     ['branch_id', '=', $request->branch_id]
                 ])->where(function ($q) {
-                    $q->where('role_id', 4);
+                    $q->where('role_id', 'like', '%4%');
                 })->get();
 
                 Notification::send($user, new TeacherEmail($request->branch_id));
@@ -638,7 +638,7 @@ class ApiControllerThree extends BaseController
                     $query->where('b.publish_end_date', '>', $currentDateTime)
                         ->orWhereNull('b.publish_end_date');
                 })
-                ->where('b.publish_date', '<=', now())
+                // ->where('b.publish_date', '<=', now())
                 ->groupBy("b.id")
                 ->orderBy('b.id', 'desc')
                 ->get()->toArray();
@@ -761,7 +761,7 @@ class ApiControllerThree extends BaseController
                     $query->where('b.publish_end_date', '>', $currentDateTime)
                         ->orWhereNull('b.publish_end_date');
                 })
-                ->where('b.publish_date', '<=', now())
+                // ->where('b.publish_date', '<=', now())
                 ->groupBy("b.id")
                 ->get()->toArray();
 
@@ -831,7 +831,7 @@ class ApiControllerThree extends BaseController
                     $query->where('b.publish_end_date', '>', $currentDateTime)
                         ->orWhereNull('b.publish_end_date');
                 })
-                ->where('b.publish_date', '<=', now())
+                // ->where('b.publish_date', '<=', now())
                 ->groupBy("b.id")
                 ->orderBy('b.id', 'desc')
                 ->get()->toArray();
@@ -947,7 +947,7 @@ class ApiControllerThree extends BaseController
                     $query->where('b.publish_end_date', '>', $currentDateTime)
                         ->orWhereNull('b.publish_end_date');
                 })
-                ->where('b.publish_date', '<=', now())
+                // ->where('b.publish_date', '<=', now())
                 ->groupBy("b.id")
                 ->get()->toArray();
 
@@ -998,7 +998,7 @@ class ApiControllerThree extends BaseController
                     $query->where('b.publish_end_date', '>', $currentDateTime)
                         ->orWhereNull('b.publish_end_date');
                 })
-                ->where('b.publish_date', '<=', now())
+                // ->where('b.publish_date', '<=', now())
                 ->groupBy("b.id")
                 ->orderBy('b.id', 'desc')
                 ->get()->toArray();
@@ -1051,7 +1051,7 @@ class ApiControllerThree extends BaseController
                     $query->where('b.publish_end_date', '>', $currentDateTime)
                         ->orWhereNull('b.publish_end_date');
                 })
-                ->where('b.publish_date', '<=', now())
+                // ->where('b.publish_date', '<=', now())
                 ->groupBy("b.id")
                 ->orderBy('b.id', 'desc')
                 ->get()->toArray();
@@ -1527,8 +1527,10 @@ class ApiControllerThree extends BaseController
                      //   DB::raw("CONCAT(st.first_name, ' ', st.last_name) as name"),
                         'st.first_name',
                         'st.last_name',
-                        DB::raw("CONCAT(st.first_name_english, ' ', st.last_name_english) as eng_name"),
-                        DB::raw("CONCAT(st.first_name_furigana, ' ', st.last_name_furigana) as fur_name"),
+                        'st.first_name_english',
+                        'st.last_name_english',
+                        'st.first_name_furigana',
+                        'st.last_name_furigana',
                         DB::raw("CONCAT(st.first_name_common, ' ', st.last_name_common) as common_name"),
                         'st.gender',
                         'st.birthday',

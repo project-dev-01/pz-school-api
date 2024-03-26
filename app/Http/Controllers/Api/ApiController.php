@@ -3210,28 +3210,47 @@ class ApiController extends BaseController
         // create new connection
         $Connection = $this->createNewConnection($request->branch_id);
         $Staff = $Connection->table('staffs as s')
-            ->select(
-                DB::raw("CONCAT(s.first_name, ' ', s.last_name) as name"),
-                's.id',
-                's.short_name',
-                's.salary_grade',
-                's.email',
-                's.mobile_no',
-                's.photo',
-                's.is_active',
-                'stp.name as stream_type',
-                DB::raw("GROUP_CONCAT(DISTINCT  dp.name) as department_name"),
-                DB::raw("GROUP_CONCAT(DISTINCT  ds.name) as designation_name")
-            )
-            ->leftJoin("staff_departments as dp", DB::raw("FIND_IN_SET(dp.id,s.department_id)"), ">", DB::raw("'0'"))
-            ->leftJoin("staff_designations as ds", DB::raw("FIND_IN_SET(ds.id,s.designation_id)"), ">", DB::raw("'0'"))
-            ->leftJoin('stream_types as stp', 's.stream_type_id', '=', 'stp.id')
-            ->where('s.is_active', '=', '0')
-            ->whereNull('s.deleted_at')
-            ->orderBy('stp.name', 'desc')
-            ->orderBy('s.salary_grade', 'desc')
-            ->groupBy("s.id")
-            ->get();
+        ->select(
+            DB::raw("CONCAT(s.first_name, ' ', s.last_name) as name"),
+            DB::raw('CONCAT(s.first_name_english, " ", s.last_name_english) as english_emp_name'),
+            DB::raw('CONCAT(s.first_name_furigana, " ", s.last_name_furigana) as furigana_emp_name'),
+            's.id',
+            's.short_name',
+            's.salary_grade',
+            's.email',
+            's.gender',
+            's.height',
+            's.weight',
+            's.allergy',
+            's.blood_group',
+            's.employment_status',
+            'stps.name as staff_position_name',
+            'stc.name as staff_category_name',
+            's.birthday',
+            's.nationality',
+            're.name as religion_name',
+            's.mobile_no',
+            's.photo',
+            's.is_active',
+            'stp.name as stream_type',
+            DB::raw("GROUP_CONCAT(DISTINCT  dp.name) as department_name"),
+            DB::raw("GROUP_CONCAT(DISTINCT  ds.name) as designation_name"),
+            's.joining_date',
+            'em.name as employee_name'
+        )
+        ->leftJoin("staff_departments as dp", DB::raw("FIND_IN_SET(dp.id,s.department_id)"), ">", DB::raw("'0'"))
+        ->leftJoin("staff_designations as ds", DB::raw("FIND_IN_SET(ds.id,s.designation_id)"), ">", DB::raw("'0'"))
+        ->leftJoin("employee_types as em", DB::raw("FIND_IN_SET(em.id, s.employee_type_id)"), ">", DB::raw("'0'"))
+        ->leftJoin('stream_types as stp', 's.stream_type_id', '=', 'stp.id')
+        ->leftJoin('religions as re', 's.religion', '=', 're.id')
+        ->leftJoin('staff_categories as stc', 's.staff_category', '=', 'stc.id')
+        ->leftJoin('staff_positions as stps', 's.staff_position', '=', 'stps.id')
+        ->where('s.is_active', '=', '0')
+        ->whereNull('s.deleted_at')
+        ->orderBy('stp.name', 'desc')
+        ->orderBy('s.salary_grade', 'desc')
+        ->groupBy("s.id")
+        ->get();
         return $this->successResponse($Staff, 'Staff record fetch successfully');
     }
     // getEmployeeDetails row details
