@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Auth;
 use Symfony\Component\HttpFoundation\Response;
 // base controller add
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Cache;
 use App\Http\Controllers\Api\BaseController as BaseController;
 use Illuminate\Validation\Rule;
 use DateTime;
@@ -1111,20 +1112,36 @@ class ApiControllerThree extends BaseController
     // getStudentLeaveTypes
     public function getStudentLeaveTypes(Request $request)
     {
-        $validator = \Validator::make($request->all(), [
+       
+        // Data not found in cache, fetch from database
+        $validator = Validator::make($request->all(), [
             'branch_id' => 'required'
         ]);
-        if (!$validator->passes()) {
+
+        if ($validator->fails()) {
             return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
-        } else {
-            // create new connection
-            $conn = $this->createNewConnection($request->branch_id);
-            // get data
-            $getAllTypes = $conn->table('student_leave_types')
-                ->select('id', 'name', 'short_name')
-                ->get();
-            return $this->successResponse($getAllTypes, 'student leave types fetch successfully');
         }
+
+        // Create new connection
+        $conn = $this->createNewConnection($request->branch_id);
+         // Generate cache key based on request data
+         $cacheKey = 'student_leave_types_' . $request->branch_id;
+
+         // Check if the data is cached
+         if (Cache::has($cacheKey)) {
+             // Data found in cache, return cached data
+             $cachedTypes = Cache::get($cacheKey);
+             return $this->successResponse($cachedTypes, 'Student leave types fetched successfully from cache');
+         }
+        // Get data from the database
+        $getAllTypes = $conn->table('student_leave_types')
+            ->select('id', 'name', 'short_name')
+            ->get();
+
+        // Store data in cache
+        Cache::put($cacheKey, $getAllTypes, now()->addDay());
+
+        return $this->successResponse($getAllTypes, 'Student leave types fetched successfully from database');
     }
     // get Reasons By LeaveType
     public function getReasonsByLeaveType(Request $request)

@@ -56,14 +56,6 @@ class AuthController extends BaseController
     }
     public function authenticate(Request $request)
     {
-        // Generate cache key based on request data
-        // $cacheKey = md5(json_encode($request->only('email', 'password', 'branch_id')));
-
-        // // Check if the data is cached
-        // if (Cache::has($cacheKey)) {
-        //     return Cache::get($cacheKey);
-        // }
-        // return 1;
         // Valid credential
         $validator = Validator::make($request->only('email', 'password', 'branch_id'), [
             'email' => 'required|email',
@@ -73,7 +65,6 @@ class AuthController extends BaseController
         //Send failed response if request is not valid
         if ($validator->fails()) {
             $errorResponse = $this->send422Error('Validation error.', ['error' => $validator->messages()]);
-            // Cache::put($cacheKey, $errorResponse, now()->addDay()); // Cache for 1 day
             return $errorResponse;
         }
         // dd(Session::getId());
@@ -90,12 +81,22 @@ class AuthController extends BaseController
             // return $request;
             $user = Auth::user();
             $token =  $user->createToken('paxsuzen')->accessToken;
-
-            // return $user;
-            // $success['name'] =  $user->name;
-            // return $this->successResponse($success, 'User signed in successfully');
-            // $user = auth()->user();
-            // User::where('id', $user->id)->update(['remember_token' => $token]);
+            $cacheKey = 'auth_' . md5(json_encode($request->only('email', 'password', 'branch_id')));
+            // Check if the data is cached
+            if (Cache::has($cacheKey)) {
+                // Get the cached data
+                $cachedData = Cache::get($cacheKey);
+                // Check if the cached data is an array and it contains the 'token' key
+                if (is_array($cachedData) && array_key_exists('token', $cachedData)) {
+                    // Update the token in the cached data
+                    $cachedData['data']['token'] = $token;
+                    $cachedData['token'] = $token; // Update the top-level token as well
+                    // Store the updated data back into the cache
+                    Cache::put($cacheKey, $cachedData, now()->addDay());
+                    // Return the updated data
+                    return $cachedData;
+                }
+            }
             // Auth::logoutOtherDevices($request->password);
             if ($user->status == 0) {
                 // update left to 0
@@ -118,15 +119,15 @@ class AuthController extends BaseController
                 if ($ipAddress != '::1' || $ipAddress != '127.0.0.1') {
                     try {
                         $url = "http://ip-api.com/json/{$ipAddress}";
-
+ 
                         $response = Http::get($url);
-
+ 
                         $ip_info = $response->json();
-
+ 
                         $country = $ip_info['country'] ?? 'Unknown';
                         $country_code = $ip_info['countryCode'] ?? 'Unknown';
                     } catch (Exception $e) {
-
+ 
                         $country = 'Unknown';
                         $country_code = 'Unknown';
                     }
@@ -149,7 +150,7 @@ class AuthController extends BaseController
                 ];
                 //$query = $staffConn->table('staff_leaves')->insert($data);
                 $query = Log_history::insert($data);
-
+ 
                 $success['token'] = $token;
                 $success['user'] = $user;
                 $success['role_name'] = $user->role->role_name;
@@ -194,7 +195,7 @@ class AuthController extends BaseController
                     $success['hiddenWeekends'] = $hiddenWeekends;
                 }
                 $successResponse = $this->successResponse($success, 'User signed in successfully');
-                // Cache::put($cacheKey, $successResponse, now()->addDay()); // Cache for 1 Day
+                Cache::put($cacheKey, $successResponse, now()->addDay()); // Cache for 1 Day
                 return $successResponse;
             } else if ($user->status == 2) {
                 return $this->send500Error('Your School Role Deleted, please contact the admin', ['error' => 'You have been locked out of your account, please contact the admin']);
@@ -231,7 +232,6 @@ class AuthController extends BaseController
             } else {
                 // return $this->send401Error('Unauthorised.', ['error' => 'Unauthorised']);
                 $unauthorizedResponse = $this->send401Error('Unauthorised.', ['error' => 'Unauthorised']);
-                // Cache::put($cacheKey, $unauthorizedResponse, now()->addMinutes(1)); // Cache for 5 minutes
                 return $unauthorizedResponse;
             }
         }
