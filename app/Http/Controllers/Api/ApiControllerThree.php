@@ -5,12 +5,12 @@ namespace App\Http\Controllers\Api;
 // use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 //
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Auth;
 use Symfony\Component\HttpFoundation\Response;
 // base controller add
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Cache;
 use App\Http\Controllers\Api\BaseController as BaseController;
 use Illuminate\Validation\Rule;
 use DateTime;
@@ -1153,12 +1153,24 @@ class ApiControllerThree extends BaseController
         if (!$validator->passes()) {
             return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
         } else {
+            // get data
+            $cache_time = config('constants.cache_time');
+            $cache_ReasonsByLeaveType = config('constants.cache_ReasonsByLeaveType');
+            $cacheKey = $cache_ReasonsByLeaveType . $request->branch_id . $request->student_leave_type_id;
+            // Check if the data is cached
+            if (Cache::has($cacheKey)) {
+                // If cached, return cached data
+                $getAllReason = Cache::get($cacheKey);
+        } else {
             // create new connection
             $conn = $this->createNewConnection($request->branch_id);
             // get data
             $getAllReason = $conn->table('absent_reasons as ar')
                 ->where("ar.student_leave_type_id", $request->student_leave_type_id)
                 ->get();
+                // Cache the fetched data for future requests
+                Cache::put($cacheKey, $getAllReason, now()->addHours($cache_time)); // Cache for 24 hours
+                }
             return $this->successResponse($getAllReason, 'reasons by leave types fetch successfully');
         }
     }
@@ -1253,6 +1265,16 @@ class ApiControllerThree extends BaseController
         if (!$validator->passes()) {
             return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
         } else {
+            // get data
+            $cache_time = config('constants.cache_time');
+            $cache_leaveTypeWiseAllReason = config('constants.cache_leaveTypeWiseAllReason');
+            $cacheKey = $cache_leaveTypeWiseAllReason . $request->branch_id;
+            
+            // Check if the data is cached
+            if (Cache::has($cacheKey)) {
+                // If cached, return cached data
+                $jsonResult = Cache::get($cacheKey);
+        } else {
             // create new connection
             $conn = $this->createNewConnection($request->branch_id);
             $results = $conn->select("
@@ -1269,6 +1291,9 @@ class ApiControllerThree extends BaseController
         lt.id
 ");
             $jsonResult = json_encode($results);
+            // Cache the fetched data for future requests
+            Cache::put($cacheKey, $jsonResult, now()->addHours($cache_time)); // Cache for 24 hours
+            }
             return $this->successResponse($jsonResult, 'student leave types fetch successfully');
         }
     }
@@ -2708,5 +2733,10 @@ class ApiControllerThree extends BaseController
         } else {
             return $this->send500Error('Something went wrong.', ['error' => 'Something went wrong']);
         }
+    }
+    protected function clearCache($cache_name,$branchId)
+    {
+        $cacheKey = $cache_name . $branchId;
+        Cache::forget($cacheKey);
     }
 }
