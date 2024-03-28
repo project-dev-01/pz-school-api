@@ -74,7 +74,7 @@ class AuthController extends BaseController
         if ($validator->fails()) {
             $errorResponse = $this->send422Error('Validation error.', ['error' => $validator->messages()]);
             // Cache::put($cacheKey, $errorResponse, now()->addDay()); // Cache for 1 day
-            // return $errorResponse;
+            return $errorResponse;
         }
         // dd(Session::getId());
         // check auth
