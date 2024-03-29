@@ -2712,15 +2712,15 @@ class ApiController extends BaseController
             if (Cache::has($cacheKey)) {
                 // If cached, return cached data
                 $Department = Cache::get($cacheKey);
-        } else {
-            // create new connection
-            $staffConn = $this->createNewConnection($request->branch_id);
-            // get data
-            $Department = $staffConn->table('staff_departments')->get();
-            // Cache the fetched data for future requests
-            Cache::put($cacheKey, $Department, now()->addHours(24)); // Cache for 24 hours
-            return $this->successResponse($Department, 'Department record fetch successfully');
-        }
+            } else {
+                // create new connection
+                $staffConn = $this->createNewConnection($request->branch_id);
+                // get data
+                $Department = $staffConn->table('staff_departments')->get();
+                // Cache the fetched data for future requests
+                Cache::put($cacheKey, $Department, now()->addHours(24)); // Cache for 24 hours
+                return $this->successResponse($Department, 'Department record fetch successfully');
+            }
         }
     }
     // get department row details
@@ -3335,9 +3335,9 @@ class ApiController extends BaseController
         $Connection = $this->createNewConnection($request->branch_id);
         $Staff = $Connection->table('staffs as s')
         ->select(
-            DB::raw("CONCAT(s.first_name, ' ', s.last_name) as name"),
-            DB::raw('CONCAT(s.first_name_english, " ", s.last_name_english) as english_emp_name'),
-            DB::raw('CONCAT(s.first_name_furigana, " ", s.last_name_furigana) as furigana_emp_name'),
+            DB::raw("CONCAT(s.last_name, ' ', s.first_name) as name"),
+            DB::raw('CONCAT(s.last_name_english, " ", s.first_name_english) as english_emp_name'),
+            DB::raw('CONCAT(s.last_name_furigana, " ", s.first_name_furigana) as furigana_emp_name'),
             's.id',
             's.short_name',
             's.salary_grade',
@@ -3447,7 +3447,7 @@ class ApiController extends BaseController
                     's.department_end_date',
                     's.employee_type_start_date',
                     's.employee_type_end_date',
-                    DB::raw("CONCAT(s.first_name, ' ', s.last_name) as name"),
+                    DB::raw("CONCAT(s.last_name, ' ', s.first_name) as name"),
                     DB::raw("GROUP_CONCAT(DISTINCT  dp.name) as department_name"),
                     's.first_name_english',
                     's.last_name_english',
@@ -4416,7 +4416,7 @@ class ApiController extends BaseController
             $output['timetable'] = $Timetable;
             $output['teacher'] = $classConn->table('subject_assigns as sa')->select(
                 's.id',
-                DB::raw('CONCAT(s.first_name, " ", s.last_name) as name')
+                DB::raw('CONCAT(s.last_name, " ", s.first_name) as name')
             )
                 ->join('staffs as s', 'sa.teacher_id', '=', 's.id')
                 ->where('sa.class_id', $request->class_id)
@@ -4478,7 +4478,7 @@ class ApiController extends BaseController
             $output['timetable'] = $Timetable;
             $output['teacher'] = $classConn->table('subject_assigns as sa')->select(
                 's.id',
-                DB::raw('CONCAT(s.first_name, " ", s.last_name) as name')
+                DB::raw('CONCAT(s.last_name, " ", s.first_name) as name')
             )
                 ->join('staffs as s', 'sa.teacher_id', '=', 's.id')
                 ->when($class_id != "All", function ($q)  use ($class_id) {
@@ -5134,7 +5134,7 @@ class ApiController extends BaseController
 
                 $output['teacher'] = $con->table('subject_assigns as sa')->select(
                     's.id',
-                    DB::raw('CONCAT(s.first_name, " ", s.last_name) as name')
+                    DB::raw('CONCAT(s.last_name, " ", s.first_name) as name')
                 )
                     ->join('staffs as s', 'sa.teacher_id', '=', 's.id')
                     ->where('sa.class_id', $request->class_id)
@@ -6567,7 +6567,7 @@ class ApiController extends BaseController
                 ->select(
                     'en.student_id',
                     'en.roll',
-                    DB::raw('CONCAT(st.first_name, " ", st.last_name) as name'),
+                    DB::raw('CONCAT(st.last_name, " ", st.first_name) as name'),
                     'st.register_no',
                     'sa.id as att_id',
                     'sa.status as att_status',
@@ -6724,7 +6724,7 @@ class ApiController extends BaseController
                 ->select(
                     'en.student_id',
                     'en.roll',
-                    DB::raw('CONCAT(st.first_name, " ", st.last_name) as name'),
+                    DB::raw('CONCAT(st.last_name, " ", st.first_name) as name'),
                     'st.register_no',
                     'sa.id as att_id',
                     'sa.status as att_status',
@@ -6817,7 +6817,7 @@ class ApiController extends BaseController
                 ->select(
                     'en.student_id',
                     'en.roll',
-                    DB::raw('CONCAT(st.first_name, " ", st.last_name) as name'),
+                    DB::raw('CONCAT(st.last_name, " ", st.first_name) as name'),
                     'st.register_no',
                     'sa.id as att_id',
                     'sa.status as att_status',
@@ -7117,7 +7117,7 @@ class ApiController extends BaseController
                 ->select(
                     'en.student_id',
                     'en.roll',
-                    DB::raw('CONCAT(st.first_name, " ", st.last_name) as name'),
+                    DB::raw('CONCAT(st.last_name, " ", st.first_name) as name'),
                     'st.register_no',
                     'sht.id as short_test_id',
                     'sht.test_marks',
@@ -7363,7 +7363,7 @@ class ApiController extends BaseController
             $getDailyReportRemarks = $Connection->table('enrolls as en')
                 ->select(
                     'en.student_id',
-                    DB::raw('CONCAT(st.first_name, " ", st.last_name) as name'),
+                    DB::raw('CONCAT(st.last_name, " ", st.first_name) as name'),
                     'dr.student_remarks',
                     'dr.teacher_remarks',
                     'dr.id',
@@ -8456,7 +8456,7 @@ class ApiController extends BaseController
                         'sad.remarks',
                         'st.photo',
                         'sad.homeroom_teacher_remarks',
-                        DB::raw("CONCAT(st.first_name_english, ' ', st.last_name_english) as name_english"),
+                        DB::raw("CONCAT(st.last_name_english, ' ', st.first_name_english) as name_english"),
                     DB::raw('COUNT(*) as "no_of_days_attendance"'),
                     DB::raw('COUNT(CASE WHEN sad.status = "present" then 1 ELSE NULL END) as "presentCount"'),
                     DB::raw('COUNT(CASE WHEN sad.status = "absent" then 1 ELSE NULL END) as "absentCount"'),
@@ -8585,7 +8585,7 @@ class ApiController extends BaseController
                             'sad.remarks',
                             'st.photo',
                             'sad.homeroom_teacher_remarks',
-                            DB::raw("CONCAT(st.first_name_english, ' ', st.last_name_english) as name_english"),
+                            DB::raw("CONCAT(st.last_name_english, ' ', st.first_name_english) as name_english"),
                             DB::raw('COUNT(*) as "no_of_days_attendance"'),
                             DB::raw('COUNT(CASE WHEN sad.status = "present" then 1 ELSE NULL END) as "presentCount"'),
                             DB::raw('COUNT(CASE WHEN sad.status = "absent" then 1 ELSE NULL END) as "absentCount"'),
@@ -8655,7 +8655,7 @@ class ApiController extends BaseController
                         'sad.status',
                         'sad.remarks',
                         'st.photo',
-                        DB::raw("CONCAT(st.first_name_english, ' ', st.last_name_english) as name_english"),
+                        DB::raw("CONCAT(st.last_name_english, ' ', st.first_name_english) as name_english"),
                         'sad.homeroom_teacher_remarks',
                     DB::raw('COUNT(*) as "no_of_days_attendance"'),
                     DB::raw('COUNT(CASE WHEN sad.status = "present" then 1 ELSE NULL END) as "presentCount"'),
@@ -8755,7 +8755,7 @@ class ApiController extends BaseController
                             'sad.status',
                             'sad.remarks',
                             'st.photo',
-                            DB::raw("CONCAT(st.first_name_english, ' ', st.last_name_english) as name_english"),
+                            DB::raw("CONCAT(st.last_name_english, ' ', st.first_name_english) as name_english"),
                         DB::raw('COUNT(*) as "no_of_days_attendance"'),
                         DB::raw('COUNT(CASE WHEN sad.status = "present" then 1 ELSE NULL END) as "presentCount"'),
                         DB::raw('COUNT(CASE WHEN sad.status = "absent" then 1 ELSE NULL END) as "absentCount"'),
@@ -8868,7 +8868,7 @@ class ApiController extends BaseController
                         'sad.status',
                         'sad.remarks',
                         'st.photo',
-                        DB::raw("CONCAT(st.first_name_english, ' ', st.last_name_english) as name_english"),
+                        DB::raw("CONCAT(st.last_name_english, ' ', st.first_name_english) as name_english"),
                     DB::raw('COUNT(*) as "no_of_days_attendance"'),
                     DB::raw('COUNT(CASE WHEN sad.status = "present" then 1 ELSE NULL END) as "presentCount"'),
                     DB::raw('COUNT(CASE WHEN sad.status = "absent" then 1 ELSE NULL END) as "absentCount"'),
@@ -8987,7 +8987,7 @@ class ApiController extends BaseController
                         'sad.status',
                         'sad.remarks',
                         'st.photo',
-                        DB::raw("CONCAT(st.first_name_english, ' ', st.last_name_english) as name_english"),
+                        DB::raw("CONCAT(st.last_name_english, ' ', st.first_name_english) as name_english"),
                     DB::raw('COUNT(*) as "no_of_days_attendance"'),
                     DB::raw('COUNT(CASE WHEN sad.status = "present" then 1 ELSE NULL END) as "presentCount"'),
                     DB::raw('COUNT(CASE WHEN sad.status = "absent" then 1 ELSE NULL END) as "absentCount"'),
@@ -11120,7 +11120,7 @@ class ApiController extends BaseController
                 if (isset($exam['distributor'])) {
                     if ($exam['distributor_type'] == "1") {
 
-                        $data = $con->table('staffs as s')->select('s.id',  DB::raw('CONCAT(s.first_name, " ", s.last_name) as name'),)
+                        $data = $con->table('staffs as s')->select('s.id',  DB::raw('CONCAT(s.last_name, " ", s.first_name) as name'),)
                             ->where('id', $exam['distributor'])
                             ->first();
 
@@ -11456,7 +11456,7 @@ class ApiController extends BaseController
                     ->select(
                         'en.student_id',
                         'en.roll',
-                        DB::raw('CONCAT(st.first_name, " ", st.last_name) as name'),
+                        DB::raw('CONCAT(st.last_name, " ", st.first_name) as name'),
                         'st.register_no',
                         'sa.id as att_id',
                         'sa.score',
@@ -12998,7 +12998,7 @@ class ApiController extends BaseController
             // create new connection
             $createConnection = $this->createNewConnection($request->branch_id);
             // insert data
-            $success = $createConnection->table('subject_assigns as sa')->select('s.id', DB::raw("CONCAT(first_name, ' ', last_name) as name"))
+            $success = $createConnection->table('subject_assigns as sa')->select('s.id', DB::raw("CONCAT(last_name, ' ', first_name) as name"))
                 ->join('staffs as s', 'sa.teacher_id', '=', 's.id')
                 // ->where('sa.class_id', $request->class_id)
                 ->where('sa.academic_session_id', '=', $request->academic_session_id)
@@ -13896,7 +13896,7 @@ class ApiController extends BaseController
             // create new connection
             $con = $this->createNewConnection($request->branch_id);
             // get data
-            // $student = $con->table('enrolls as e')->select('s.id', DB::raw('CONCAT(s.first_name, " ", s.last_name) as name'), 's.register_no', 's.roll_no', 's.mobile_no', 's.email', 's.gender', 's.photo')
+            // $student = $con->table('enrolls as e')->select('s.id', DB::raw('CONCAT(s.last_name, " ", s.first_name) as name'), 's.register_no', 's.roll_no', 's.mobile_no', 's.email', 's.gender', 's.photo')
             //     ->leftJoin('students as s', 'e.student_id', '=', 's.id')
             //     ->when($department_id, function ($query, $department_id) {
             //         return $query->where('e.department_id', $department_id);
@@ -13921,8 +13921,8 @@ class ApiController extends BaseController
             $query = $con->table('enrolls as e')
                 ->select(
                     's.id',
-                    DB::raw('CONCAT(s.first_name, " ", s.last_name) as name'),
-                    DB::raw('CONCAT(s.first_name_common, " ", s.last_name_common) as name_common'),
+                    DB::raw('CONCAT(s.last_name, " ", s.first_name) as name'),
+                    DB::raw('CONCAT(s.last_name_common, " ", s.first_name_common) as name_common'),
                     's.register_no',
                     's.roll_no',
                     's.mobile_no',
@@ -14379,7 +14379,7 @@ class ApiController extends BaseController
             $conn = $this->createNewConnection($request->branch_id);
             // get data
             // $studentDetail['student'] = $conn->table('students as s')
-            //     ->select('s.*', DB::raw("CONCAT(s.first_name, ' ', s.last_name) as name"), 'c.name as class_name', 'sec.name as section_name', 's.relation', 'e.class_id', 'e.section_id', 'e.session_id', 'e.semester_id')
+            //     ->select('s.*', DB::raw("CONCAT(s.last_name, ' ', s.first_name) as name"), 'c.name as class_name', 'sec.name as section_name', 's.relation', 'e.class_id', 'e.section_id', 'e.session_id', 'e.semester_id')
             //     ->leftJoin('enrolls as e', 's.id', '=', 'e.student_id')
             //     ->leftJoin('classes as c', 'e.class_id', '=', 'c.id')
             //     ->leftJoin('sections as sec', 'e.section_id', '=', 'sec.id')
@@ -14388,7 +14388,7 @@ class ApiController extends BaseController
             $getStudentDetail = $conn->table('students as s')
                 ->select(
                     's.*',
-                    DB::raw("CONCAT(s.first_name, ' ', s.last_name) as name"),
+                    DB::raw("CONCAT(s.last_name, ' ', s.first_name) as name"),
                     'e.academic_session_id as year',
                     'c.name as class_name',
                     'sec.name as section_name',
@@ -14828,7 +14828,7 @@ class ApiController extends BaseController
             // create new connection
             $conn = $this->createNewConnection($request->branch_id);
             // get data
-            $parentDetails = $conn->table('parent')->select("id",'email','occupation', DB::raw("CONCAT(first_name, ' ', last_name) as name"))->where('status','=','0')->get();
+            $parentDetails = $conn->table('parent')->select("id",'email','occupation', DB::raw("CONCAT(last_name, ' ', first_name) as name"))->where('status','=','0')->get();
             // Cache the fetched data for future requests
             Cache::put($cacheKey, $parentDetails, now()->addHours($cache_time)); // Cache for 24 hours
             }
@@ -14851,9 +14851,9 @@ class ApiController extends BaseController
             $conn = $this->createNewConnection($request->branch_id);
             // get data
             $parent_id = $request->parent_id;
-            $parentDetails = $conn->table('parent_change_info as pi')->select("p.email","pi.status", "pi.status_parent", "p.id as parent_id", "pi.id", "p.occupation", DB::raw("CONCAT(p.first_name, ' ', p.last_name) as name"))
+            $parentDetails = $conn->table('parent_change_info as pi')->select("p.email","pi.status", "pi.status_parent", "p.id as parent_id", "pi.id", "p.occupation", DB::raw("CONCAT(p.last_name, ' ', p.first_name) as name"))
                 ->leftJoin('parent as p', 'pi.parent_id', '=', 'p.id')->where('pi.parent_id', $parent_id)->get()->toArray();
-            $studentDetails = $conn->table('student_change_info as si')->select("s.email","si.status", "si.status_parent", "s.id as student_id", 'si.id', "s.roll_no", DB::raw("CONCAT(s.first_name, ' ', s.last_name) as name"))
+            $studentDetails = $conn->table('student_change_info as si')->select("s.email","si.status", "si.status_parent", "s.id as student_id", 'si.id', "s.roll_no", DB::raw("CONCAT(s.last_name, ' ', s.first_name) as name"))
                 ->leftJoin('students as s', 'si.student_id', '=', 's.id')->where('si.parent_id', $parent_id)->get()->toArray();
             $details = array_merge($parentDetails, $studentDetails);
             return $this->successResponse($details, 'Parent record fetch successfully');
@@ -14873,7 +14873,7 @@ class ApiController extends BaseController
             // create new connection
             $conn = $this->createNewConnection($request->branch_id);
             // get data
-            $parentDetails = $conn->table('parent_change_info as pi')->select("p.email", "pi.status_parent", "p.id as parent_id", "pi.id", "p.occupation", DB::raw("CONCAT(p.first_name, ' ', p.last_name) as name"))
+            $parentDetails = $conn->table('parent_change_info as pi')->select("p.email", "pi.status_parent", "p.id as parent_id", "pi.id", "p.occupation", DB::raw("CONCAT(p.last_name, ' ', p.first_name) as name"))
                 ->leftJoin('parent as p', 'pi.parent_id', '=', 'p.id')->where('pi.status', $request->status)->get();
             return $this->successResponse($parentDetails, 'Parent record fetch successfully');
         }
@@ -14893,7 +14893,7 @@ class ApiController extends BaseController
             // create new connection
             $conn = $this->createNewConnection($request->branch_id);
             // get data
-            $studentDetails = $conn->table('student_change_info as si')->select("s.email", "s.id as student_id", 'si.id', "s.roll_no", DB::raw("CONCAT(s.first_name, ' ', s.last_name) as name"))
+            $studentDetails = $conn->table('student_change_info as si')->select("s.email", "s.id as student_id", 'si.id', "s.roll_no", DB::raw("CONCAT(s.last_name, ' ', s.first_name) as name"))
                 ->leftJoin('students as s', 'si.student_id', '=', 's.id')->where('si.status', $request->status)->get();
             return $this->successResponse($studentDetails, 'Student record fetch successfully');
         }
@@ -14915,12 +14915,12 @@ class ApiController extends BaseController
             // create new connection
             $conn = $this->createNewConnection($request->branch_id);
             // get data
-            // $parentDetails['parent'] = $conn->table('parent')->select('*', DB::raw("CONCAT(first_name, ' ', last_name) as name"))->where('id', $id)->first();
+            // $parentDetails['parent'] = $conn->table('parent')->select('*', DB::raw("CONCAT(last_name, ' ', first_name) as name"))->where('id', $id)->first();
 
             $getparentDetails = $conn->table('parent as s')
                 ->select(
                     's.*',
-                    DB::raw("CONCAT(s.first_name, ' ', s.last_name) as name")
+                    DB::raw("CONCAT(s.last_name, ' ', s.first_name) as name")
                 )
                 ->where('s.id', $id)
                 ->get();
@@ -14978,7 +14978,7 @@ class ApiController extends BaseController
             // create new connection
             $conn = $this->createNewConnection($request->branch_id);
             // get data
-            // $parentDetails['parent'] = $conn->table('parent')->select('*', DB::raw("CONCAT(first_name, ' ', last_name) as name"))->where('id', $id)->first();
+            // $parentDetails['parent'] = $conn->table('parent')->select('*', DB::raw("CONCAT(last_name, ' ', first_name) as name"))->where('id', $id)->first();
 
             $getparentDetails = $conn->table('parent_change_info as pci')
                 ->select(
@@ -15015,7 +15015,7 @@ class ApiController extends BaseController
                     'japan_address',
                     'stay_category',
 
-                    // DB::raw("CONCAT(s.first_name, ' ', s.last_name) as name")
+                    // DB::raw("CONCAT(s.last_name, ' ', s.first_name) as name")
                 )
                 ->where('pci.id', $id)
                 ->first();
@@ -15106,7 +15106,7 @@ class ApiController extends BaseController
             $conn = $this->createNewConnection($request->branch_id);
             // get data
             $data = $conn->table('parent')
-                ->select("id", DB::raw("CONCAT(first_name, ' ', last_name) as name"), 'email')
+                ->select("id", DB::raw("CONCAT(last_name, ' ', first_name) as name"), 'email')
                 ->where("first_name", "LIKE", "%{$request->name}%")
                 ->orWhere("last_name", "LIKE", "%{$request->name}%")
                 ->where("status",'=','0')
@@ -15945,7 +15945,7 @@ class ApiController extends BaseController
                     'us.role_id',
                     'us.branch_id',
                     'stf.id',
-                    DB::raw("CONCAT(stf.first_name, ' ', stf.last_name) as name"),
+                    DB::raw("CONCAT(stf.last_name, ' ', stf.first_name) as name"),
                     'us.role_id',
                     'us.user_id',
                     'us.email',
@@ -16743,7 +16743,7 @@ class ApiController extends BaseController
                     'std.id',
                     'en.class_id',
                     'en.section_id',
-                    DB::raw("CONCAT(first_name, ' ', last_name) as name"),
+                    DB::raw("CONCAT(last_name, ' ', first_name) as name"),
                     'std.gender'
                 )
                 ->join('enrolls as en', 'std.id', '=', 'en.student_id')
@@ -16877,7 +16877,7 @@ class ApiController extends BaseController
                 // get staff name
                 $student_name = $staffConn->table('students')
                     ->select(
-                        DB::raw('CONCAT(students.first_name, " ", students.last_name) as name')
+                        DB::raw('CONCAT(students.last_name, " ", students.first_name) as name')
                     )
                     ->where([
                         ['id', '=', $request->student_id]
@@ -17019,7 +17019,7 @@ class ApiController extends BaseController
                     'lev.class_id',
                     'lev.section_id',
                     'lev.student_id',
-                    DB::raw('CONCAT(std.first_name, " ", std.last_name) as name'),
+                    DB::raw('CONCAT(std.last_name, " ", std.first_name) as name'),
                     DB::raw('DATE_FORMAT(lev.from_leave, "%d-%m-%Y") as from_leave'),
                     DB::raw('DATE_FORMAT(lev.to_leave, "%d-%m-%Y") as to_leave'),
                     DB::raw('DATE_FORMAT(lev.created_at, "%d-%m-%Y") as created_at'),
@@ -17085,7 +17085,7 @@ class ApiController extends BaseController
                     'lev.class_id',
                     'lev.section_id',
                     'lev.student_id',
-                    DB::raw("CONCAT(std.first_name, ' ', std.last_name) as name"),
+                    DB::raw("CONCAT(std.last_name, ' ', std.first_name) as name"),
                     DB::raw('DATE_FORMAT(lev.from_leave, "%d-%m-%Y") as from_leave'),
                     DB::raw('DATE_FORMAT(lev.to_leave, "%d-%m-%Y") as to_leave'),
                     DB::raw('DATE_FORMAT(lev.created_at, "%d-%m-%Y") as created_at'),
@@ -17220,8 +17220,8 @@ class ApiController extends BaseController
                     'as.status as absent_status',
                     'as.recommended_leave_days',
                     'lev.status',
-                    DB::raw("CONCAT(std.first_name, ' ', std.last_name) as name"),
-                    DB::raw("CONCAT(p.first_name, ' ', p.last_name) as parent_name"),
+                    DB::raw("CONCAT(std.last_name, ' ', std.first_name) as name"),
+                    DB::raw("CONCAT(p.last_name, ' ', p.first_name) as parent_name"),
                     'p.email'
                 )
                 ->join('students as std', 'lev.student_id', '=', 'std.id')
@@ -17312,7 +17312,7 @@ class ApiController extends BaseController
                     'lev.class_id',
                     'lev.section_id',
                     'lev.student_id',
-                    DB::raw("CONCAT(std.first_name, ' ', std.last_name) as name"),
+                    DB::raw("CONCAT(std.last_name, ' ', std.first_name) as name"),
                     DB::raw('DATE_FORMAT(lev.from_leave, "%d-%m-%Y") as from_leave'),
                     DB::raw('DATE_FORMAT(lev.to_leave, "%d-%m-%Y") as to_leave'),
                     'ar.name as reason',
@@ -18208,7 +18208,7 @@ class ApiController extends BaseController
                 ->select(
                     'lev.id',
                     'lev.staff_id',
-                    DB::raw('CONCAT(stf.first_name, " ", stf.last_name) as name'),
+                    DB::raw('CONCAT(stf.last_name, " ", stf.first_name) as name'),
                     DB::raw('DATE_FORMAT(lev.from_leave, "%d-%m-%Y") as from_leave'),
                     DB::raw('DATE_FORMAT(lev.to_leave, "%d-%m-%Y") as to_leave'),
                     DB::raw('DATE_FORMAT(lev.created_at, "%d-%m-%Y") as created_at'),
@@ -18494,7 +18494,7 @@ class ApiController extends BaseController
                     'ala.level_two_staff_id',
                     'ala.level_three_staff_id',
                     DB::raw("GROUP_CONCAT(sdp.name) as department_name"),
-                    DB::raw("CONCAT(stf.first_name, ' ', stf.last_name) as name")
+                    DB::raw("CONCAT(stf.last_name, ' ', stf.first_name) as name")
                 )
                 // ->join('' . $main_db . '.users as us', 'stf.id', '=', 'us.user_id')
                 ->join('' . $main_db . '.users as us', function ($join) use ($branchID) {
@@ -18636,7 +18636,7 @@ class ApiController extends BaseController
                         'alp.level_two_staff_id',
                         'alp.level_three_staff_id',
                         'lev.staff_id',
-                        DB::raw('CONCAT(stf.first_name, " ", stf.last_name) as name'),
+                        DB::raw('CONCAT(stf.last_name, " ", stf.first_name) as name'),
                         DB::raw('DATE_FORMAT(lev.from_leave, "%d-%m-%Y") as from_leave'),
                         DB::raw('DATE_FORMAT(lev.to_leave, "%d-%m-%Y") as to_leave'),
                         DB::raw('DATE_FORMAT(lev.created_at, "%d-%m-%Y") as created_at'),
@@ -18769,7 +18769,7 @@ class ApiController extends BaseController
                     'lev.level_two_staff_remarks',
                     'lev.level_three_staff_remarks',
                     'lev.leave_reject',
-                    DB::raw('CONCAT(stf.first_name, " ", stf.last_name) as name'),
+                    DB::raw('CONCAT(stf.last_name, " ", stf.first_name) as name'),
                     DB::raw('DATE_FORMAT(lev.from_leave, "%d-%m-%Y") as from_leave'),
                     DB::raw('DATE_FORMAT(lev.to_leave, "%d-%m-%Y") as to_leave'),
                     DB::raw('DATE_FORMAT(lev.created_at, "%d-%m-%Y") as created_at'),
@@ -18901,7 +18901,7 @@ class ApiController extends BaseController
             $getStaffDetailsByFilter = $conn->table('staffs as stf')
                 ->select(
                     'stf.id',
-                    DB::raw('CONCAT(stf.first_name, " ", stf.last_name) as name'),
+                    DB::raw('CONCAT(stf.last_name, " ", stf.first_name) as name'),
                     DB::raw("GROUP_CONCAT(DISTINCT  dp.name) as department_name")
                 )
                 ->leftJoin("staff_departments as dp", DB::raw("FIND_IN_SET(dp.id,stf.department_id)"), ">", DB::raw("'0'"))
@@ -19855,7 +19855,7 @@ class ApiController extends BaseController
                     'en.student_id',
                     'en.class_id',
                     'en.section_id',
-                    DB::raw("CONCAT(st.first_name, ' ', st.last_name) as name"),
+                    DB::raw("CONCAT(st.last_name, ' ', st.first_name) as name"),
                     'st.id as id',
                     'st.register_no',
                     'st.roll_no',
@@ -21423,7 +21423,7 @@ class ApiController extends BaseController
                 $staff = [];
                 foreach ($group_staff as $gs) {
                     $data = $conn->table('staffs as s')
-                        ->select("s.id", DB::raw("CONCAT(s.first_name, ' ', s.last_name) as name"), DB::raw("GROUP_CONCAT(DISTINCT  dp.name) as department_name"))
+                        ->select("s.id", DB::raw("CONCAT(s.last_name, ' ', s.first_name) as name"), DB::raw("GROUP_CONCAT(DISTINCT  dp.name) as department_name"))
                         ->leftJoin("staff_departments as dp", DB::raw("FIND_IN_SET(dp.id,s.department_id)"), ">", DB::raw("'0'"))
                         ->where('s.id', $gs)->first();
                     array_push($staff, $data);
@@ -21435,7 +21435,7 @@ class ApiController extends BaseController
                 $student = [];
                 foreach ($group_student as $gs) {
                     $data = $conn->table('students as s')
-                        ->select("s.id", DB::raw("CONCAT(s.first_name, ' ', s.last_name) as name"), 'c.name as class_name', 'sc.name as section_name')
+                        ->select("s.id", DB::raw("CONCAT(s.last_name, ' ', s.first_name) as name"), 'c.name as class_name', 'sc.name as section_name')
                         ->leftJoin('enrolls as e', 'e.student_id', '=', 's.id')
                         ->leftJoin('classes as c', 'e.class_id', '=', 'c.id')
                         ->leftJoin('sections as sc', 'e.section_id', '=', 'sc.id')
@@ -21448,7 +21448,7 @@ class ApiController extends BaseController
                 $group_parent = explode(",", $group->parent);
                 $parent = [];
                 foreach ($group_parent as $gp) {
-                    $data = $conn->table('parent')->select("id", DB::raw("CONCAT(first_name, ' ', last_name) as name"), 'email')->where('id', $gp)->first();
+                    $data = $conn->table('parent')->select("id", DB::raw("CONCAT(last_name, ' ', first_name) as name"), 'email')->where('id', $gp)->first();
                     array_push($parent, $data);
                 }
             }
@@ -21549,7 +21549,7 @@ class ApiController extends BaseController
             // get data
 
             $data = $conn->table('students as s')
-                ->select("s.id", DB::raw("CONCAT(s.first_name, ' ', s.last_name) as name"), 'c.name as class_name', 'sc.name as section_name')
+                ->select("s.id", DB::raw("CONCAT(s.last_name, ' ', s.first_name) as name"), 'c.name as class_name', 'sc.name as section_name')
                 ->leftJoin('enrolls as e', 'e.student_id', '=', 's.id')
                 ->leftJoin('classes as c', 'e.class_id', '=', 'c.id')
                 ->leftJoin('sections as sc', 'e.section_id', '=', 'sc.id')
@@ -21590,7 +21590,7 @@ class ApiController extends BaseController
             $conn = $this->createNewConnection($request->branch_id);
             // get data
             $data = $conn->table('staffs as s')
-                ->select("s.id", DB::raw("CONCAT(s.first_name, ' ', s.last_name) as name"), DB::raw("GROUP_CONCAT(DISTINCT  dp.name) as department_name"))
+                ->select("s.id", DB::raw("CONCAT(s.last_name, ' ', s.first_name) as name"), DB::raw("GROUP_CONCAT(DISTINCT  dp.name) as department_name"))
                 ->where("s.first_name", "LIKE", "%{$request->name}%")
                 ->orWhere("s.last_name", "LIKE", "%{$request->name}%")
                 ->leftJoin("staff_departments as dp", DB::raw("FIND_IN_SET(dp.id,s.department_id)"), ">", DB::raw("'0'"))
@@ -22887,7 +22887,7 @@ class ApiController extends BaseController
                     'us.id as uuid',
                     'us.branch_id',
                     'stf.id',
-                    DB::raw("CONCAT(stf.first_name, ' ', stf.last_name) as name"),
+                    DB::raw("CONCAT(stf.last_name, ' ', stf.first_name) as name"),
                     'us.role_id',
                     'us.user_id',
                     'us.email'
@@ -23194,7 +23194,7 @@ class ApiController extends BaseController
             // $application = $conn->table('student_applications as s')
             //     ->select(
             //         's.*',
-            //         DB::raw("CONCAT(s.first_name, ' ', s.last_name) as name"),
+            //         DB::raw("CONCAT(s.last_name, ' ', s.first_name) as name"),
             //         DB::raw("CONCAT(s.first_name_english, ' ', s.last_name_english) as name_english"),
             //         DB::raw("CONCAT(s.first_name_furigana, ' ', s.last_name_furigana) as name_furigana"),
             //         DB::raw("CONCAT(s.first_name_common, ' ', s.last_name_common) as name_common"),
@@ -23225,10 +23225,10 @@ class ApiController extends BaseController
             // foreach ($application as $key => $app) {
             //     $created_by = "Public";
             //     if ($app->created_by_role == "5") {
-            //         $name = $conn->table('parent')->select(DB::raw("CONCAT(first_name, ' ', last_name) as name"))->where('id', $app->created_by)->first();
+            //         $name = $conn->table('parent')->select(DB::raw("CONCAT(last_name, ' ', first_name) as name"))->where('id', $app->created_by)->first();
             //         $created_by = $name->name . " (Parent)";
             //     } else if ($app->created_by_role == "2") {
-            //         $name = $conn->table('staffs')->select(DB::raw("CONCAT(first_name, ' ', last_name) as name"))->where('id', $app->created_by)->first();
+            //         $name = $conn->table('staffs')->select(DB::raw("CONCAT(last_name, ' ', first_name) as name"))->where('id', $app->created_by)->first();
             //         $created_by = $name->name . " (Admin)";
             //     }
             //     // else if($app->created_by_role == "7"){
@@ -23244,10 +23244,10 @@ class ApiController extends BaseController
             $applications = $conn->table('student_applications as s')
             ->select(
                 's.*',
-                DB::raw("CONCAT(s.first_name, ' ', s.last_name) as name"),
-                DB::raw("CONCAT(s.first_name_english, ' ', s.last_name_english) as name_english"),
-                DB::raw("CONCAT(s.first_name_furigana, ' ', s.last_name_furigana) as name_furigana"),
-                DB::raw("CONCAT(s.first_name_common, ' ', s.last_name_common) as name_common"),
+                DB::raw("CONCAT(s.last_name, ' ', s.first_name) as name"),
+                DB::raw("CONCAT(s.last_name_english, ' ', s.first_name_english) as name_english"),
+                DB::raw("CONCAT(s.last_name_furigana, ' ', s.first_name_furigana) as name_furigana"),
+                DB::raw("CONCAT(s.last_name_common, ' ', s.first_name_common) as name_common"),
                 'academic_cl.name as academic_grade',
                 'ay.name as academic_year',
             )
@@ -23271,10 +23271,10 @@ class ApiController extends BaseController
             foreach ($applications as $application) {
                 $created_by = "Public";
                 if ($application->created_by_role == "5") {
-                    $parent = $conn->table('parent')->select(DB::raw("CONCAT(first_name, ' ', last_name) as name"))->where('id', $application->created_by)->first();
+                    $parent = $conn->table('parent')->select(DB::raw("CONCAT(last_name, ' ', first_name) as name"))->where('id', $application->created_by)->first();
                     $created_by = isset($parent->name)?$parent->name:"-" . " (Parent)";
                 } elseif ($application->created_by_role == "2") {
-                    $staff = $conn->table('staffs')->select(DB::raw("CONCAT(first_name, ' ', last_name) as name"))->where('id', $application->created_by)->first();
+                    $staff = $conn->table('staffs')->select(DB::raw("CONCAT(last_name, ' ', first_name) as name"))->where('id', $application->created_by)->first();
                     $created_by = isset($staff->name)?$staff->name:"-" . " (Admin)";
                 }
                 $application->created_by = $created_by;
@@ -23590,8 +23590,9 @@ class ApiController extends BaseController
             if ($request->role_id == "2") {
                 if ($request->status == "Approved" && $request->phase_2_status == "Approved" && $request->status_after_approval == "Grade and class fixed") {
                     
-                            
-                    $studentEmail = $registerNumber.$request->last_name.$request->first_name. config('constants.student_email_domain');
+                    $email_space_remove = str_replace(' ', '', $request->last_name_english).str_replace(' ', '', $request->first_name_english);
+                    $email_name_english = strtolower($email_space_remove);
+                    $studentEmail = $registerNumber.$email_name_english. config('constants.student_email_domain');
 
                     $father_id = "";
                     $mother_id = "";
@@ -24943,7 +24944,7 @@ class ApiController extends BaseController
                 $class_id =   $request->class_id;
                 $section_id = $request->section_id;
                 $student_id  = $request->student_id;
-                $getStudent = $con->table('enrolls as e')->select('s.id', DB::raw('CONCAT(s.first_name, " ", s.last_name) as name'), 's.register_no', 's.roll_no', 's.mobile_no', 's.email', 's.gender', 's.photo')
+                $getStudent = $con->table('enrolls as e')->select('s.id', DB::raw('CONCAT(s.last_name, " ", s.first_name) as name'), 's.register_no', 's.roll_no', 's.mobile_no', 's.email', 's.gender', 's.photo')
                     ->leftJoin('students as s', 'e.student_id', '=', 's.id')
                     ->when($class_id, function ($query, $class_id) {
                         return $query->where('e.class_id', $class_id);
@@ -25220,7 +25221,7 @@ class ApiController extends BaseController
             // create new connection
             $con = $this->createNewConnection($request->branch_id);
             // get data
-            $student = $con->table('enrolls as e')->select('s.id', DB::raw('CONCAT(s.first_name, " ", s.last_name) as name'), 's.register_no', 's.roll_no', 's.mobile_no', 's.email', 's.gender', 's.photo')
+            $student = $con->table('enrolls as e')->select('s.id', DB::raw('CONCAT(s.last_name, " ", s.first_name) as name'), 's.register_no', 's.roll_no', 's.mobile_no', 's.email', 's.gender', 's.photo')
                 ->leftJoin('students as s', 'e.student_id', '=', 's.id')
                 ->when($class_id, function ($query, $class_id) {
                     return $query->where('e.class_id', $class_id);
@@ -26254,7 +26255,7 @@ class ApiController extends BaseController
                 ])->get();
 
                 $parent_name = $conn->table('parent as p')
-                    ->select(DB::raw("CONCAT(p.first_name, ' ', p.last_name) as name"))
+                    ->select(DB::raw("CONCAT(p.last_name, ' ', p.first_name) as name"))
                     ->where('p.id', $request->parent_id)->first();
 
                 // return $parent_name;
@@ -26329,7 +26330,7 @@ class ApiController extends BaseController
                     'sci.city',
                     'sci.post_code',
                     'sci.mobile_no',
-                    // DB::raw("CONCAT(s.first_name, ' ', s.last_name) as name")
+                    // DB::raw("CONCAT(s.last_name, ' ', s.first_name) as name")
                 )
                 ->where('sci.id', $id)
                 ->first();
@@ -26340,7 +26341,7 @@ class ApiController extends BaseController
             if (!empty($getstudentDetails)) {
                 foreach ($getstudentDetails as $key => $suc) {
 
-                    $old = $conn->table('students as s')->select('s.*', DB::raw("CONCAT(s.first_name, ' ', s.last_name) as name"), 'c.name as class_name', 'sc.name as section_name')
+                    $old = $conn->table('students as s')->select('s.*', DB::raw("CONCAT(s.last_name, ' ', s.first_name) as name"), 'c.name as class_name', 'sc.name as section_name')
                         ->leftJoin('enrolls as e', 'e.student_id', '=', 's.id')
                         ->leftJoin('classes as c', 'e.class_id', '=', 'c.id')
                         ->leftJoin('sections as sc', 'e.section_id', '=', 'sc.id')
@@ -26527,7 +26528,7 @@ class ApiController extends BaseController
             // create new connection
             $conn = $this->createNewConnection($request->branch_id);
             // get data
-            // $parentDetails['parent'] = $conn->table('parent')->select('*', DB::raw("CONCAT(first_name, ' ', last_name) as name"))->where('id', $id)->first();
+            // $parentDetails['parent'] = $conn->table('parent')->select('*', DB::raw("CONCAT(last_name, ' ', first_name) as name"))->where('id', $id)->first();
             $type = $request->type;
             if ($type == "Parent") {
 
@@ -26560,7 +26561,7 @@ class ApiController extends BaseController
                         'visa_number',
                         'visa_photo',
                         'visa_expiry_date',
-                        // DB::raw("CONCAT(s.first_name, ' ', s.last_name) as name")
+                        // DB::raw("CONCAT(s.last_name, ' ', s.first_name) as name")
                     )
                     ->where('pci.id', $id)
                     ->first();
@@ -26630,7 +26631,7 @@ class ApiController extends BaseController
                         'sci.city',
                         'sci.post_code',
                         'sci.mobile_no',
-                        // DB::raw("CONCAT(s.first_name, ' ', s.last_name) as name")
+                        // DB::raw("CONCAT(s.last_name, ' ', s.first_name) as name")
                     )
                     ->where('sci.id', $id)
                     ->first();
@@ -26644,7 +26645,7 @@ class ApiController extends BaseController
 
 
                         $new = $conn->table('student_change_info')->where('id', '=', $id)->first();
-                        $old = $conn->table('students as s')->select('s.*', DB::raw("CONCAT(s.first_name, ' ', s.last_name) as name"), 'c.name as class_name', 'sc.name as section_name')
+                        $old = $conn->table('students as s')->select('s.*', DB::raw("CONCAT(s.last_name, ' ', s.first_name) as name"), 'c.name as class_name', 'sc.name as section_name')
                             ->leftJoin('enrolls as e', 'e.student_id', '=', 's.id')
                             ->leftJoin('classes as c', 'e.class_id', '=', 'c.id')
                             ->leftJoin('sections as sc', 'e.section_id', '=', 'sc.id')
@@ -26747,17 +26748,17 @@ class ApiController extends BaseController
                 // return $user;
 
                 $student_name = $conn->table('students as s')
-                    ->select(DB::raw("CONCAT(s.first_name, ' ', s.last_name) as name"))
+                    ->select(DB::raw("CONCAT(s.last_name, ' ', s.first_name) as name"))
                     ->where('s.id', $request->student_id)->first();
 
                 $parent_name = $conn->table('parent as p')
-                    ->select(DB::raw("CONCAT(p.first_name, ' ', p.last_name) as name"))
+                    ->select(DB::raw("CONCAT(p.last_name, ' ', p.first_name) as name"))
                     ->where('p.id', $request->created_by)->first();
 
                 $termination = [];
                 $termination['status'] = "Applied";
                 $termination['student_name'] = $student_name->name;
-                $termination['parent_name'] = $parent_name->name;
+                $termination['parent_name'] = isset($parent_name->name) ? $parent_name->name : "";
                 $details = [
                     'branch_id' => $request->branch_id,
                     'parent_id' => $request->created_by,
@@ -26793,7 +26794,7 @@ class ApiController extends BaseController
             $conn = $this->createNewConnection($request->branch_id);
             // get data
             $parent_id = $request->parent_id;
-            $terminationDetails = $conn->table('termination as t')->select('t.*', 'ay.name as academic_year', 's.gender', DB::raw("CONCAT(s.first_name_english, ' ', s.last_name_english) as name_english"), DB::raw("CONCAT(s.first_name, ' ', s.last_name) as name"), 'c.name as class_name', 'sc.name as section_name')
+            $terminationDetails = $conn->table('termination as t')->select('t.*', 'ay.name as academic_year', 's.gender', DB::raw("CONCAT(s.last_name_english, ' ', s.first_name_english) as name_english"), DB::raw("CONCAT(s.last_name, ' ', s.first_name) as name"), 'c.name as class_name', 'sc.name as section_name')
                 ->leftJoin('students as s', 's.id', '=', 't.student_id')
                 ->leftJoin('enrolls as e', 'e.student_id', '=', 's.id')
                 ->leftJoin('classes as c', 'e.class_id', '=', 'c.id')
@@ -26825,7 +26826,7 @@ class ApiController extends BaseController
             $conn = $this->createNewConnection($request->branch_id);
             // get data
             $id = $request->id;
-            $terminationDetails = $conn->table('termination as t')->select('t.*', DB::raw("CONCAT(s.first_name_english, ' ', s.last_name_english) as name_english"), DB::raw("CONCAT(s.first_name, ' ', s.last_name) as name"), 'c.name as class_name', 'sc.name as section_name')
+            $terminationDetails = $conn->table('termination as t')->select('t.*', DB::raw("CONCAT(s.last_name_english, ' ', s.first_name_english) as name_english"), DB::raw("CONCAT(s.last_name, ' ', s.first_name) as name"), 'c.name as class_name', 'sc.name as section_name')
                 ->leftJoin('students as s', 's.id', '=', 't.student_id')
                 ->leftJoin('enrolls as e', 'e.student_id', '=', 's.id')
                 ->leftJoin('classes as c', 'e.class_id', '=', 'c.id')
@@ -26893,11 +26894,11 @@ class ApiController extends BaseController
                 // return $user;
 
                 $student_name = $conn->table('students as s')
-                    ->select(DB::raw("CONCAT(s.first_name, ' ', s.last_name) as name"))
+                    ->select(DB::raw("CONCAT(s.last_name, ' ', s.first_name) as name"))
                     ->where('s.id', $request->student_id)->first();
 
                 $parent_name = $conn->table('parent as p')
-                ->select(DB::raw("CONCAT(p.first_name, ' ', p.last_name) as name"), 'p.guardian_email')
+                ->select(DB::raw("CONCAT(p.last_name, ' ', p.first_name) as name"), 'p.guardian_email')
                     ->where('p.id', $request->created_by)->first();
 
                 $termination = [];
@@ -26920,19 +26921,21 @@ class ApiController extends BaseController
             if ($request->role_id == "2") {
                 if ($request->termination_status != $request->termination_status_old){
                     if($request->termination_status != "Pending"){
-                        
-                        $term_email = $parent_name->guardian_email;
-                        $data = array(
-                            'parent_name' => $parent_name->name,
-                            'child_name' => $student_name->name,
-                            'status' => $request->status, 
-                        );
-                        
-                        $mailFromAddress = env('MAIL_FROM_ADDRESS', config('constants.client_email'));
-                        $query = Mail::send('auth.termination', $data, function ($message) use ($term_email,$mailFromAddress) {
-                            $message->to($term_email, 'Parent')->subject('Student Termination');
-                            $message->from($mailFromAddress, 'Termination Details');
-                        });
+
+                        $term_email = isset($parent_name->guardian_email) ? $parent_name->guardian_email : "";
+                        if($term_email){
+                            $data = array(
+                                'parent_name' => $parent_name->name,
+                                'child_name' => $student_name->name,
+                                'status' => $request->status, 
+                            );
+                            
+                            $mailFromAddress = env('MAIL_FROM_ADDRESS', config('constants.client_email'));
+                            $query = Mail::send('auth.termination', $data, function ($message) use ($term_email,$mailFromAddress) {
+                                $message->to($term_email, 'Parent')->subject('Student Termination');
+                                $message->from($mailFromAddress, 'Termination Details');
+                            });
+                        }
                     }
 
                 }
@@ -26989,9 +26992,8 @@ class ApiController extends BaseController
                 $parent = $conn->table('parent as p')->select("email")
                             ->where('p.id', $termination_info->created_by)->first();
                 $student_name = $conn->table('students as s')
-                    ->select(DB::raw("CONCAT(s.first_name, ' ', s.last_name) as name"))
+                    ->select(DB::raw("CONCAT(s.last_name, ' ', s.first_name) as name"))
                     ->where('s.id', $termination_info->student_id)->first();
-
                 $termination = [];
                 $termination['status'] = "Approved";
                 $termination['student_name'] = $student_name->name;
@@ -27006,18 +27008,22 @@ class ApiController extends BaseController
                 // return $details;
                 // notifications sent
                 Notification::send($user, new AdminTermination($details));
-                $email = $parent->email;
 
-                $data = array(
-                    'student' => isset($student_name->name) ? $student_name->name : "",
-                    'date' => isset($request->date_of_termination) ? $request->date_of_termination : "",
-                );
-                // return $data;
-                $mailFromAddress = env('MAIL_FROM_ADDRESS', config('constants.client_email'));
-                Mail::send('auth.email_termination', $data, function ($message) use ($email,$mailFromAddress) {
-                    $message->to($email, 'Parent')->subject('Termination Approval');
-                    $message->from($mailFromAddress, 'Termination');
-                });
+                $email = isset($parent->email) ? $parent->email : "";
+
+                if($email){
+
+                    $data = array(
+                        'student' => isset($student_name->name) ? $student_name->name : "",
+                        'date' => isset($request->date_of_termination) ? $request->date_of_termination : "",
+                    );
+                    // return $data;
+                    $mailFromAddress = env('MAIL_FROM_ADDRESS', config('constants.client_email'));
+                    Mail::send('auth.email_termination', $data, function ($message) use ($email,$mailFromAddress) {
+                        $message->to($email, 'Parent')->subject('Termination Approval');
+                        $message->from($mailFromAddress, 'Termination');
+                    });
+                }
             }
             $success = [];
             if (!$query) {
