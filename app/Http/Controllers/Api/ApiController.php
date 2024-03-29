@@ -23832,6 +23832,7 @@ class ApiController extends BaseController
                         'nationality' => $request->nationality,
                         'dual_nationality' => $request->dual_nationality,
                         'email' => $studentEmail,
+                        'stay_category' => $request->stay_category,
                         'status' => "0",
                     ];
                     if ($conn->table('students')->where('email', '=', $studentEmail)->count() > 0) {
