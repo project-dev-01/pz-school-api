@@ -17,5 +17,6 @@ return [
     'cache_semester' => "cache_semester_",
     'cache_eventDetails' => "cache_eventDetails_",    
     'cache_student_leave_types' => "student_leave_types_",
+    'cache_subjects' => "subjects_",
     
 ];
