@@ -1,6 +1,6 @@
 <?php
 return [
-    'main_db'=>'live-api',
+    'main_db'=>'paxsuzen-api',
     'client_email'=>'askyourquery@suzen.school',
     'student_email_domain' => "@jskl.edu.my",
     'cache_time'=>"24",
@@ -15,5 +15,7 @@ return [
     'cache_leaveTypeWiseAllReason' => "cache_leaveTypeWiseAllReason_",
     'cache_ReasonsByLeaveType' => "cache_ReasonsByLeaveType_",
     'cache_semester' => "cache_semester_",
-    'cache_eventDetails' => "cache_eventDetails_",
+    'cache_eventDetails' => "cache_eventDetails_",    
+    'cache_student_leave_types' => "student_leave_types_",
+    
 ];

@@ -136,12 +136,7 @@ class ApiController extends BaseController
                     $section = $secConn->table('sections')->orderBy('name', 'asc')->get();
                     Cache::put($cacheKey, $section, now()->addHours($cache_time)); // Cache for 24 hours  
                     }
-            // create new connection
-            $secConn = $this->createNewConnection($request->branch_id);
-            // get data
-            $section = $secConn->table('sections')->orderBy('name', 'asc')->get();
-            // Cache the fetched data for future requests
-            Cache::put($cacheKey, $eventDetails, now()->addHours($cache_time)); // Cache for 24 hours
+           
             return $this->successResponse($section, 'Classes record fetch successfully');
         }
         
@@ -2702,14 +2697,12 @@ class ApiController extends BaseController
         } else {
             $cache_time = config('constants.cache_time');
             $cache_departments = config('constants.cache_departments');
-            // create new connection
-            $Connection = $this->createNewConnection($request->branch_id);
-            // get data
-            //$Department = $Connection->table('academic_year')->get();
+             // get data
+            
             $cacheKey = $cache_departments . $request->branch_id;
-
+            //$this->clearCache($cache_departments,$request->branch_id);
             // Check if the data is cached
-            if (Cache::has($cacheKey)) {
+            if (Cache::has($cacheKey) ) {
                 // If cached, return cached data
                 $Department = Cache::get($cacheKey);
             } else {
@@ -2718,9 +2711,10 @@ class ApiController extends BaseController
                 // get data
                 $Department = $staffConn->table('staff_departments')->get();
                 // Cache the fetched data for future requests
-                Cache::put($cacheKey, $Department, now()->addHours(24)); // Cache for 24 hours
-                return $this->successResponse($Department, 'Department record fetch successfully');
+                Cache::put($cacheKey, $Department, now()->addHours($cache_time)); // Cache for 24 hours
+                
             }
+            return $this->successResponse($Department, 'Department record fetch successfully');
         }
     }
     // get department row details
@@ -13884,8 +13878,8 @@ class ApiController extends BaseController
             // get data
             $cache_time = config('constants.cache_time');
             $cache_students = config('constants.cache_students');
-            //dd($cache_academic_years);
-            //$Department = $Connection->table('academic_year')->get();
+            
+            
             $cacheKey = $cache_students . $request->branch_id;
             
             // Check if the data is cached
@@ -14815,9 +14809,9 @@ class ApiController extends BaseController
         } else {
             // get data
             $cache_time = config('constants.cache_time');
-            $cache_parentDetails = config('constants.parentDetails');
-            //dd($cache_academic_years);
-            //$Department = $Connection->table('academic_year')->get();
+            $cache_parentDetails = config('constants.cache_parentDetails');
+          
+           // $this->clearCache($cache_parentDetails,$request->branch_id);
             $cacheKey = $cache_parentDetails . $request->branch_id;
             
             // Check if the data is cached
@@ -15789,6 +15783,10 @@ class ApiController extends BaseController
             // if (!empty($relation)) {
             //     $query = $conn->table('students')->where('guardian_id', $id)->update($relation);
             // }
+              // cache clear start
+              $cache_parentDetails = config('constants.cache_parentDetails');
+              $this->clearCache($cache_parentDetails,$request->branch_id);
+              // cache clear end
             $success = [];
             if ($query) {
                 return $this->successResponse($success, 'Parent Details have been Updated successfully');

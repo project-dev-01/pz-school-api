@@ -1122,17 +1122,23 @@ class ApiControllerThree extends BaseController
             return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
         }
 
-        // Create new connection
-        $conn = $this->createNewConnection($request->branch_id);
+       
          // Generate cache key based on request data
-         $cacheKey = 'student_leave_types_' . $request->branch_id;
+          // get data
+          $cache_time = config('constants.cache_time');
+          $cache_student_leave_types = config('constants.cache_student_leave_types');
+          
+         $cacheKey = $cache_student_leave_types . $request->branch_id;
 
          // Check if the data is cached
          if (Cache::has($cacheKey)) {
              // Data found in cache, return cached data
-             $cachedTypes = Cache::get($cacheKey);
-             return $this->successResponse($cachedTypes, 'Student leave types fetched successfully from cache');
+             $getAllTypes = Cache::get($cacheKey);
+            
          }
+         else{
+             // Create new connection
+        $conn = $this->createNewConnection($request->branch_id);
         // Get data from the database
         $getAllTypes = $conn->table('student_leave_types')
             ->select('id', 'name', 'short_name')
@@ -1140,8 +1146,8 @@ class ApiControllerThree extends BaseController
 
         // Store data in cache
         Cache::put($cacheKey, $getAllTypes, now()->addDay());
-
-        return $this->successResponse($getAllTypes, 'Student leave types fetched successfully from database');
+         }
+        return $this->successResponse($getAllTypes, 'Student leave types fetched successfully');
     }
     // get Reasons By LeaveType
     public function getReasonsByLeaveType(Request $request)
@@ -1274,7 +1280,8 @@ class ApiControllerThree extends BaseController
             if (Cache::has($cacheKey)) {
                 // If cached, return cached data
                 $jsonResult = Cache::get($cacheKey);
-        } else {
+        } 
+        else {
             // create new connection
             $conn = $this->createNewConnection($request->branch_id);
             $results = $conn->select("
