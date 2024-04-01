@@ -24133,6 +24133,7 @@ class ApiController extends BaseController
                 "enrolled_department" => $request->enrolled_department,
                 "enrolled_grade" => $request->enrolled_grade,
                 "enrolled_class" => $request->enrolled_class,
+                "stay_category" => $request->stay_category,
                 'updated_at' => date("Y-m-d H:i:s")
             ]);
 

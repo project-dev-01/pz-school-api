@@ -255,7 +255,6 @@ class ImportController extends BaseController
                                     $staffId = $Connection->table('staffs')->insertGetId($employee_data);
 
                                     $bank_data = [
-                                        'staff_id' => $staffId,
                                         'bank_name' => $bank_name,
                                         'holder_name' => $holder_name,
                                         'bank_branch' => $bank_branch,
@@ -264,12 +263,12 @@ class ImportController extends BaseController
                                         'account_no' => $account_no
                                     ];
                                     $bank_rules = [
-                                        'bank_name' => '',
-                                        'holder_name' => '',
-                                        'bank_branch' => '',
-                                        'bank_address' => '',
-                                        'account_no' => '',
-                                        'ifsc_code' => ''
+                                        'bank_name' => 'required',
+                                        'holder_name' => 'required',
+                                        'bank_branch' => 'required',
+                                        'bank_address' => 'required',
+                                        'account_no' => 'required',
+                                        'ifsc_code' => 'required'
                                     ];
                                     $bankValidator = \Validator::make($bank_data, $bank_rules);
                                     // add bank details
