@@ -9961,6 +9961,10 @@ class ApiControllerOne extends BaseController
                 'created_at' => date("Y-m-d H:i:s"),
                 'created_by' => isset($request->created_by) ? $request->created_by : null
             ]);
+            // cache clear start
+            $cache_holidays = config('constants.cache_holidays');
+            $this->clearCache($cache_holidays,$request->branch_id);
+            // cache clear end
             $success = [];
             if (!$query) {
                 return $this->send500Error('Something went wrong.', ['error' => 'Something went wrong']);
@@ -9978,10 +9982,23 @@ class ApiControllerOne extends BaseController
         if (!$validator->passes()) {
             return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
         } else {
+            // get data
+            $cache_time = config('constants.cache_time');
+            $cache_holidays = config('constants.cache_holidays');
+            $cacheKey = $cache_holidays . $request->branch_id;
+           
+            // Check if the data is cached
+            if (Cache::has($cacheKey)) {
+                // If cached, return cached data
+                $section = Cache::get($cacheKey);
+            } else {
             // create new connection
             $secConn = $this->createNewConnection($request->branch_id);
             // get data
             $section = $secConn->table('holidays')->select('id', 'name', 'date')->orderBy('date', 'DESC')->whereNull('deleted_at')->get();
+             // Cache the fetched data for future requests
+             Cache::put($cacheKey, $section, now()->addHours($cache_time)); // Cache for 24 hours
+            }
             return $this->successResponse($section, 'Holidays record fetch successfully');
         }
     }
@@ -10027,6 +10044,10 @@ class ApiControllerOne extends BaseController
                 'updated_at' => date("Y-m-d H:i:s"),
                 'updated_by' => isset($request->updated_by) ? $request->updated_by : null
             ]);
+            // cache clear start
+            $cache_holidays = config('constants.cache_holidays');
+            $this->clearCache($cache_holidays,$request->branch_id);
+            // cache clear end
             $success = [];
             if ($query) {
                 return $this->successResponse($success, 'holidays details have been updated');
@@ -10054,7 +10075,10 @@ class ApiControllerOne extends BaseController
                 'deleted_at' => date("Y-m-d H:i:s"),
                 'deleted_by' => isset($request->deleted_by) ? $request->deleted_by : null
             ]);
-
+            // cache clear start
+            $cache_holidays = config('constants.cache_holidays');
+            $this->clearCache($cache_holidays,$request->branch_id);
+            // cache clear end
             $success = [];
             if ($query) {
                 return $this->successResponse($success, 'Holidays have been deleted successfully');

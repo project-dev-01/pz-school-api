@@ -13951,19 +13951,35 @@ class ApiController extends BaseController
         if (!$validator->passes()) {
             return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
         } else {
-            // // get data
-            // $cache_time = config('constants.cache_time');
-            // $cache_students = config('constants.cache_students');
+            // get data
+            $cache_time = config('constants.cache_time');
+            $cache_students = config('constants.cache_students');
+            $department_id="0_"; $class_id="0_"; $section_id="0_"; $status="0_"; $name="0_";
+            if (isset($request->department_id) && filled($request->department_id)) {
+                $department_id = $request->department_id;
+            }
+
+            if (isset($request->class_id) && filled($request->class_id)) {
+                $class_id = $request->class_id;
+            }
+
+            if (isset($request->section_id) && filled($request->section_id)) {
+                $section_id = $request->section_id;
+            }
+            if (isset($request->status) && filled($request->status)) {
+                $status = $request->status;
+            }
+
+            if (isset($request->student_name) && filled($request->student_name)) {
+                $name = $request->student_name;               
+            }
+            $cacheKey = $cache_students .$department_id . $class_id . $section_id . $status . $name . $request->branch_id;
             
-            
-            // $cacheKey = $cache_students . $request->branch_id;
-            
-            // // $this->clearCache($cache_students,$request->branch_id);
-            // // Check if the data is cached
-            // if (Cache::has($cacheKey)) {
-            //     // If cached, return cached data
-            //     $students = Cache::get($cacheKey);
-            // } else {
+            // Check if the data is cached
+            if (Cache::has($cacheKey)) {
+                // If cached, return cached data
+                $students = Cache::get($cacheKey);
+        } else {
                 // create new connection
                 $con = $this->createNewConnection($request->branch_id);
                 // get data
@@ -14033,8 +14049,8 @@ class ApiController extends BaseController
 
                 $students = $query->groupBy('e.student_id')->get()->toArray();
                 // Cache the fetched data for future requests
-                // Cache::put($cacheKey, $students, now()->addHours($cache_time)); // Cache for 24 hours
-            // }
+                Cache::put($cacheKey, $students, now()->addHours($cache_time)); // Cache for 24 hours
+                }
             return $this->successResponse($students , 'Student record fetch successfully');
         }
     }
@@ -16548,6 +16564,10 @@ class ApiController extends BaseController
                     'name' => $request->name,
                     'created_at' => date("Y-m-d H:i:s")
                 ]);
+                // cache clear start
+                $cache_religions = config('constants.cache_religions');
+                $this->clearCache($cache_religions,$request->branch_id);
+                // cache clear end
                 $success = [];
                 if (!$query) {
                     return $this->send500Error('Something went wrong.', ['error' => 'Something went wrong']);
@@ -16568,10 +16588,23 @@ class ApiController extends BaseController
         if (!$validator->passes()) {
             return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
         } else {
+            // get data
+            $cache_time = config('constants.cache_time');
+            $cache_religions = config('constants.cache_religions');
+            $cacheKey = $cache_religionss . $request->branch_id;
+           
+            // Check if the data is cached
+            if (Cache::has($cacheKey)) {
+                // If cached, return cached data
+                $religionDetails = Cache::get($cacheKey);
+            } else {
             // create new connection
             $conn = $this->createNewConnection($request->branch_id);
             // get data
             $religionDetails = $conn->table('religions')->get();
+            // Cache the fetched data for future requests
+            Cache::put($cacheKey, $religionDetails, now()->addHours($cache_time)); // Cache for 24 hours
+            }
             return $this->successResponse($religionDetails, 'Religion record fetch successfully');
         }
     }
@@ -16621,6 +16654,10 @@ class ApiController extends BaseController
                     'name' => $request->name,
                     'updated_at' => date("Y-m-d H:i:s")
                 ]);
+                // cache clear start
+                $cache_religions = config('constants.cache_religions');
+                $this->clearCache($cache_religions,$request->branch_id);
+                // cache clear end
                 $success = [];
                 if ($query) {
                     return $this->successResponse($success, 'Religion Details have Been updated');
@@ -16648,7 +16685,10 @@ class ApiController extends BaseController
             $conn = $this->createNewConnection($request->branch_id);
             // get data
             $query = $conn->table('religions')->where('id', $id)->delete();
-
+            // cache clear start
+            $cache_religions = config('constants.cache_religions');
+            $this->clearCache($cache_religions,$request->branch_id);
+            // cache clear end
             $success = [];
             if ($query) {
                 return $this->successResponse($success, 'Religion have been deleted successfully');
@@ -16682,6 +16722,10 @@ class ApiController extends BaseController
                     'name' => $request->name,
                     'created_at' => date("Y-m-d H:i:s")
                 ]);
+                // cache clear start
+                $cache_race = config('constants.cache_race');
+                $this->clearCache($cache_race,$request->branch_id);
+                // cache clear end
                 $success = [];
                 if (!$query) {
                     return $this->send500Error('Something went wrong.', ['error' => 'Something went wrong']);
@@ -16702,10 +16746,22 @@ class ApiController extends BaseController
         if (!$validator->passes()) {
             return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
         } else {
+            // get data
+            $cache_time = config('constants.cache_time');
+            $cache_race = config('constants.cache_race');
+            $cacheKey = $cache_race . $request->branch_id;
+            // Check if the data is cached
+            if (Cache::has($cacheKey)) {
+                // If cached, return cached data
+                $raceDetails = Cache::get($cacheKey);
+            } else {
             // create new connection
             $conn = $this->createNewConnection($request->branch_id);
             // get data
             $raceDetails = $conn->table('races')->get();
+            // Cache the fetched data for future requests
+            Cache::put($cacheKey, $raceDetails, now()->addHours($cache_time)); // Cache for 24 hours
+            }
             return $this->successResponse($raceDetails, 'Race record fetch successfully');
         }
     }
@@ -16755,6 +16811,10 @@ class ApiController extends BaseController
                     'name' => $request->name,
                     'updated_at' => date("Y-m-d H:i:s")
                 ]);
+                // cache clear start
+                $cache_race = config('constants.cache_race');
+                $this->clearCache($cache_race,$request->branch_id);
+                // cache clear end
                 $success = [];
                 if ($query) {
                     return $this->successResponse($success, 'Race Details have Been updated');
@@ -16782,7 +16842,10 @@ class ApiController extends BaseController
             $conn = $this->createNewConnection($request->branch_id);
             // get data
             $query = $conn->table('races')->where('id', $id)->delete();
-
+            // cache clear start
+            $cache_race = config('constants.cache_race');
+            $this->clearCache($cache_race,$request->branch_id);
+            // cache clear end
             $success = [];
             if ($query) {
                 return $this->successResponse($success, 'Race have been deleted successfully');
@@ -19781,6 +19844,10 @@ class ApiController extends BaseController
                     'name' => $request->name,
                     'created_at' => date("Y-m-d H:i:s")
                 ]);
+                // cache clear start
+                $cache_educations = config('constants.cache_educations');
+                $this->clearCache($cache_educations,$request->branch_id);
+                // cache clear end
                 $success = [];
                 if (!$query) {
                     return $this->send500Error('Something went wrong.', ['error' => 'Something went wrong']);
@@ -19801,10 +19868,23 @@ class ApiController extends BaseController
         if (!$validator->passes()) {
             return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
         } else {
+            // get data
+            $cache_time = config('constants.cache_time');
+            $cache_educations = config('constants.cache_educations');
+            $cacheKey = $cache_educations . $request->branch_id;
+            
+            // Check if the data is cached
+            if (Cache::has($cacheKey)) {
+                // If cached, return cached data
+                $educationDetails = Cache::get($cacheKey);
+            } else {
             // create new connection
             $conn = $this->createNewConnection($request->branch_id);
             // get data
             $educationDetails = $conn->table('educations')->get();
+             // Cache the fetched data for future requests
+             Cache::put($cacheKey, $educationDetails, now()->addHours($cache_time)); // Cache for 24 hours
+            }
             return $this->successResponse($educationDetails, 'Education record fetch successfully');
         }
     }
@@ -19854,6 +19934,10 @@ class ApiController extends BaseController
                     'name' => $request->name,
                     'updated_at' => date("Y-m-d H:i:s")
                 ]);
+                // cache clear start
+                $cache_educations = config('constants.cache_educations');
+                $this->clearCache($cache_educations,$request->branch_id);
+                // cache clear end
                 $success = [];
                 if ($query) {
                     return $this->successResponse($success, 'Education Details have Been updated');
@@ -19881,7 +19965,10 @@ class ApiController extends BaseController
             $conn = $this->createNewConnection($request->branch_id);
             // get data
             $query = $conn->table('educations')->where('id', $id)->delete();
-
+            // cache clear start
+            $cache_educations = config('constants.cache_educations');
+            $this->clearCache($cache_educations,$request->branch_id);
+            // cache clear end
             $success = [];
             if ($query) {
                 return $this->successResponse($success, 'Education have been deleted successfully');
@@ -22148,6 +22235,10 @@ class ApiController extends BaseController
                     'name' => $request->name,
                     'created_at' => date("Y-m-d H:i:s")
                 ]);
+                // cache clear start
+                $cache_absent_reasons = config('constants.cache_absent_reasons');
+                $this->clearCache($cache_absent_reasons,$request->branch_id);
+                // cache clear end
                 $success = [];
                 if (!$query) {
                     return $this->send500Error('Something went wrong.', ['error' => 'Something went wrong']);
@@ -22168,10 +22259,23 @@ class ApiController extends BaseController
         if (!$validator->passes()) {
             return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
         } else {
+            // get data
+            $cache_time = config('constants.cache_time');
+            $cache_absent_reasons = config('constants.cache_absent_reasons');
+            $cacheKey = $cache_absent_reasons . $request->branch_id;
+        
+            // Check if the data is cached
+            if (Cache::has($cacheKey)) {
+                // If cached, return cached data
+                $raceDetails = Cache::get($cacheKey);
+            } else {
             // create new connection
             $conn = $this->createNewConnection($request->branch_id);
             // get data
             $raceDetails = $conn->table('absent_reasons')->get();
+            // Cache the fetched data for future requests
+            Cache::put($cacheKey, $raceDetails, now()->addHours($cache_time)); // Cache for 24 hours
+            }
             return $this->successResponse($raceDetails, 'Absent Reason record fetch successfully');
         }
     }
@@ -22221,6 +22325,10 @@ class ApiController extends BaseController
                     'name' => $request->name,
                     'updated_at' => date("Y-m-d H:i:s")
                 ]);
+                // cache clear start
+                $cache_absent_reasons = config('constants.cache_absent_reasons');
+                $this->clearCache($cache_absent_reasons,$request->branch_id);
+                // cache clear end
                 $success = [];
                 if ($query) {
                     return $this->successResponse($success, 'Absent Reason Details have Been updated');
@@ -22248,7 +22356,10 @@ class ApiController extends BaseController
             $conn = $this->createNewConnection($request->branch_id);
             // get data
             $query = $conn->table('absent_reasons')->where('id', $id)->delete();
-
+            // cache clear start
+            $cache_absent_reasons = config('constants.cache_absent_reasons');
+            $this->clearCache($cache_absent_reasons,$request->branch_id);
+            // cache clear end
             $success = [];
             if ($query) {
                 return $this->successResponse($success, 'Absent Reason have been deleted successfully');
@@ -22282,6 +22393,10 @@ class ApiController extends BaseController
                     'name' => $request->name,
                     'created_at' => date("Y-m-d H:i:s")
                 ]);
+                // cache clear start
+                $cache_late_reasons = config('constants.cache_late_reasons');
+                $this->clearCache($cache_late_reasons,$request->branch_id);
+                // cache clear end
                 $success = [];
                 if (!$query) {
                     return $this->send500Error('Something went wrong.', ['error' => 'Something went wrong']);
@@ -22302,10 +22417,23 @@ class ApiController extends BaseController
         if (!$validator->passes()) {
             return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
         } else {
+            // get data
+            $cache_time = config('constants.cache_time');
+            $cache_late_reasons = config('constants.cache_late_reasons');
+            $cacheKey = $cache_late_reasons . $request->branch_id;
+        
+            // Check if the data is cached
+            if (Cache::has($cacheKey)) {
+                // If cached, return cached data
+                $raceDetails = Cache::get($cacheKey);
+            } else {
             // create new connection
             $conn = $this->createNewConnection($request->branch_id);
             // get data
             $raceDetails = $conn->table('late_reasons')->get();
+            // Cache the fetched data for future requests
+            Cache::put($cacheKey, $raceDetails, now()->addHours($cache_time)); // Cache for 24 hours
+            }
             return $this->successResponse($raceDetails, 'Late Reason record fetch successfully');
         }
     }
@@ -22355,6 +22483,10 @@ class ApiController extends BaseController
                     'name' => $request->name,
                     'updated_at' => date("Y-m-d H:i:s")
                 ]);
+                // cache clear start
+                $cache_late_reasons = config('constants.cache_late_reasons');
+                $this->clearCache($cache_late_reasons,$request->branch_id);
+                // cache clear end
                 $success = [];
                 if ($query) {
                     return $this->successResponse($success, 'Late Reason Details have Been updated');
@@ -22383,6 +22515,10 @@ class ApiController extends BaseController
             // get data
             $query = $conn->table('late_reasons')->where('id', $id)->delete();
 
+            // cache clear start
+            $cache_late_reasons = config('constants.cache_late_reasons');
+            $this->clearCache($cache_late_reasons,$request->branch_id);
+            // cache clear end
             $success = [];
             if ($query) {
                 return $this->successResponse($success, 'Late Reason have been deleted successfully');
@@ -22416,6 +22552,10 @@ class ApiController extends BaseController
                     'name' => $request->name,
                     'created_at' => date("Y-m-d H:i:s")
                 ]);
+                // cache clear start
+                $cache_excused_reasons = config('constants.cache_excused_reasons');
+                $this->clearCache($cache_excused_reasons,$request->branch_id);
+                // cache clear end
                 $success = [];
                 if (!$query) {
                     return $this->send500Error('Something went wrong.', ['error' => 'Something went wrong']);
@@ -22436,10 +22576,23 @@ class ApiController extends BaseController
         if (!$validator->passes()) {
             return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
         } else {
+            // get data
+            $cache_time = config('constants.cache_time');
+            $cache_excused_reasons = config('constants.cache_excused_reasons');
+            $cacheKey = $cache_excused_reasons . $request->branch_id;
+           
+            // Check if the data is cached
+            if (Cache::has($cacheKey)) {
+                // If cached, return cached data
+                $raceDetails = Cache::get($cacheKey);
+            } else {
             // create new connection
             $conn = $this->createNewConnection($request->branch_id);
             // get data
             $raceDetails = $conn->table('excused_reasons')->get();
+            // Cache the fetched data for future requests
+            Cache::put($cacheKey, $raceDetails, now()->addHours($cache_time)); // Cache for 24 hours
+            }
             return $this->successResponse($raceDetails, 'Excused Reason record fetch successfully');
         }
     }
@@ -22489,6 +22642,10 @@ class ApiController extends BaseController
                     'name' => $request->name,
                     'updated_at' => date("Y-m-d H:i:s")
                 ]);
+                // cache clear start
+                $cache_excused_reasons = config('constants.cache_excused_reasons');
+                $this->clearCache($cache_excused_reasons,$request->branch_id);
+                // cache clear end
                 $success = [];
                 if ($query) {
                     return $this->successResponse($success, 'Excused Reason Details have Been updated');
@@ -22516,7 +22673,10 @@ class ApiController extends BaseController
             $conn = $this->createNewConnection($request->branch_id);
             // get data
             $query = $conn->table('excused_reasons')->where('id', $id)->delete();
-
+            // cache clear start
+            $cache_excused_reasons = config('constants.cache_excused_reasons');
+            $this->clearCache($cache_excused_reasons,$request->branch_id);
+            // cache clear end
             $success = [];
             if ($query) {
                 return $this->successResponse($success, 'Excused Reason have been deleted successfully');
