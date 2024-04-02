@@ -13951,89 +13951,90 @@ class ApiController extends BaseController
         if (!$validator->passes()) {
             return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
         } else {
-            // get data
-            $cache_time = config('constants.cache_time');
-            $cache_students = config('constants.cache_students');
+            // // get data
+            // $cache_time = config('constants.cache_time');
+            // $cache_students = config('constants.cache_students');
             
             
-            $cacheKey = $cache_students . $request->branch_id;
+            // $cacheKey = $cache_students . $request->branch_id;
             
-            // Check if the data is cached
-            if (Cache::has($cacheKey)) {
-                // If cached, return cached data
-                $students = Cache::get($cacheKey);
-        } else {
-            // create new connection
-            $con = $this->createNewConnection($request->branch_id);
-            // get data
-            // $student = $con->table('enrolls as e')->select('s.id', DB::raw('CONCAT(s.last_name, " ", s.first_name) as name'), 's.register_no', 's.roll_no', 's.mobile_no', 's.email', 's.gender', 's.photo')
-            //     ->leftJoin('students as s', 'e.student_id', '=', 's.id')
-            //     ->when($department_id, function ($query, $department_id) {
-            //         return $query->where('e.department_id', $department_id);
-            //     })
-            //     ->when($class_id, function ($query, $class_id) {
-            //         return $query->where('e.class_id', $class_id);
-            //     })
-            //     ->when($session_id, function ($query, $session_id) {
-            //         return $query->where('e.session_id', $session_id);
-            //     })
-            //     ->when($section_id, function ($query, $section_id) {
-            //         return $query->where('e.section_id', $section_id);
-            //     })
-            //     ->when($name, function ($query, $name) {
-            //         return $query->where('s.first_name', 'like', '%' . $name . '%')->orWhere('s.last_name', 'like', '%' . $name . '%');
-            //     })
-            //     ->where('e.academic_session_id', '=', $request->academic_session_id)
-            //     // ->where('e.active_status', '=', "0")
-            //     ->groupBy('e.student_id')
-            //     ->get()->toArray();
-            // Get data
-            $query = $con->table('enrolls as e')
-                ->select(
-                    's.id',
-                    DB::raw('CONCAT(s.last_name, " ", s.first_name) as name'),
-                    DB::raw('CONCAT(s.last_name_common, " ", s.first_name_common) as name_common'),
-                    's.register_no',
-                    's.roll_no',
-                    's.mobile_no',
-                    's.email',
-                    's.gender',
-                    's.photo'
-                )
-                ->join('students as s', 'e.student_id', '=', 's.id');
-                // ->where('e.academic_session_id', '=', $request->academic_session_id);
+            // // $this->clearCache($cache_students,$request->branch_id);
+            // // Check if the data is cached
+            // if (Cache::has($cacheKey)) {
+            //     // If cached, return cached data
+            //     $students = Cache::get($cacheKey);
+            // } else {
+                // create new connection
+                $con = $this->createNewConnection($request->branch_id);
+                // get data
+                // $student = $con->table('enrolls as e')->select('s.id', DB::raw('CONCAT(s.last_name, " ", s.first_name) as name'), 's.register_no', 's.roll_no', 's.mobile_no', 's.email', 's.gender', 's.photo')
+                //     ->leftJoin('students as s', 'e.student_id', '=', 's.id')
+                //     ->when($department_id, function ($query, $department_id) {
+                //         return $query->where('e.department_id', $department_id);
+                //     })
+                //     ->when($class_id, function ($query, $class_id) {
+                //         return $query->where('e.class_id', $class_id);
+                //     })
+                //     ->when($session_id, function ($query, $session_id) {
+                //         return $query->where('e.session_id', $session_id);
+                //     })
+                //     ->when($section_id, function ($query, $section_id) {
+                //         return $query->where('e.section_id', $section_id);
+                //     })
+                //     ->when($name, function ($query, $name) {
+                //         return $query->where('s.first_name', 'like', '%' . $name . '%')->orWhere('s.last_name', 'like', '%' . $name . '%');
+                //     })
+                //     ->where('e.academic_session_id', '=', $request->academic_session_id)
+                //     // ->where('e.active_status', '=', "0")
+                //     ->groupBy('e.student_id')
+                //     ->get()->toArray();
+                // Get data
+                $query = $con->table('enrolls as e')
+                    ->select(
+                        's.id',
+                        DB::raw('CONCAT(s.last_name, " ", s.first_name) as name'),
+                        DB::raw('CONCAT(s.last_name_common, " ", s.first_name_common) as name_common'),
+                        's.register_no',
+                        's.roll_no',
+                        's.mobile_no',
+                        's.email',
+                        's.gender',
+                        's.photo'
+                    )
+                    ->join('students as s', 'e.student_id', '=', 's.id');
+                    // ->where('e.academic_session_id', '=', $request->academic_session_id);
 
-            if (isset($request->department_id) && filled($request->department_id)) {
-                $query->where('e.department_id', $request->department_id);
-            }
+                if (isset($request->department_id) && filled($request->department_id)) {
+                    $query->where('e.department_id', $request->department_id);
+                }
 
-            if (isset($request->class_id) && filled($request->class_id)) {
-                $query->where('e.class_id', $request->class_id);
-            }
+                if (isset($request->class_id) && filled($request->class_id)) {
+                    $query->where('e.class_id', $request->class_id);
+                }
 
-            // if (isset($request->session_id) && filled($request->session_id)) {
-            //     $query->where('e.session_id', $request->session_id);
+                // if (isset($request->session_id) && filled($request->session_id)) {
+                //     $query->where('e.session_id', $request->session_id);
+                // }
+
+                if (isset($request->section_id) && filled($request->section_id)) {
+                    $query->where('e.section_id', $request->section_id);
+                }
+                if (isset($request->status) && filled($request->status)) {
+                    $query->where('e.active_status', $request->status);
+                }
+
+                if (isset($request->student_name) && filled($request->student_name)) {
+                    $name = $request->student_name;
+                    $query->where(function ($q) use ($name) {
+                        $q->where('s.first_name', 'like', '%' . $name . '%')
+                        ->orWhere('s.last_name', 'like', '%' . $name . '%');
+                    });
+                }
+
+                $students = $query->groupBy('e.student_id')->get()->toArray();
+                // Cache the fetched data for future requests
+                // Cache::put($cacheKey, $students, now()->addHours($cache_time)); // Cache for 24 hours
             // }
-
-            if (isset($request->section_id) && filled($request->section_id)) {
-                $query->where('e.section_id', $request->section_id);
-            }
-            if (isset($request->status) && filled($request->status)) {
-                $query->where('e.active_status', $request->status);
-            }
-
-            if (isset($request->student_name) && filled($request->student_name)) {
-                $name = $request->student_name;
-                $query->where(function ($q) use ($name) {
-                    $q->where('s.first_name', 'like', '%' . $name . '%')
-                    ->orWhere('s.last_name', 'like', '%' . $name . '%');
-                });
-            }
-
-            $students = $query->groupBy('e.student_id')->get()->toArray();
-            // Cache the fetched data for future requests
-            Cache::put($cacheKey, $students, now()->addHours($cache_time)); // Cache for 24 hours
-            }
             return $this->successResponse($students , 'Student record fetch successfully');
         }
     }
