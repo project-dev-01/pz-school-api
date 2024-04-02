@@ -16823,6 +16823,7 @@ class ApiController extends BaseController
                 ->join('enrolls as en', 'std.id', '=', 'en.student_id')
                 ->where('std.father_id', '=', $parent_id)
                 ->orWhere('std.mother_id', '=', $parent_id)
+                ->orWhere('std.guardian_id', '=', $parent_id)
                 ->get();
             return $this->successResponse($studentDetails, 'Student details fetch successfully');
         }
