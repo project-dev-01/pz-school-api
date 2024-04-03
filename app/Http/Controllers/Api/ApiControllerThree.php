@@ -1653,35 +1653,43 @@ class ApiControllerThree extends BaseController
                 $getParentInfo = $Connection->table('enrolls as en')
                     ->select(
                         'en.student_id',
-                        // 'en.attendance_no',
-                        // 'en.department_id',
-                        // 'en.class_id',
-                        // 'en.section_id',
-                        // 'en.semester_id',
-                        // 'en.session_id',
-                        DB::raw("CONCAT(p.first_name, ' ', p.last_name) as parent_name"),
-                        DB::raw("CONCAT(p.first_name_furigana, ' ', p.last_name_furigana) as  parent_fur_name"),
-                        DB::raw("CONCAT(p.first_name_english, ' ', p.last_name_english) as parent_eng_name"),
-                        'p.nationality as parent_nationality',
-                        'p.email as parent_email',
-                        'p.occupation as parent_occupation',
-                        'p.mobile_no as parent_mobile_no',
-                        'p.company_name_japan',
-                        'p.company_name_local',
-                        'p.company_phone_number',
-                        'p.employment_status',
-                        'p.remarks'
-
-
+                        DB::raw("CASE WHEN st.father_id IS NOT NULL THEN CONCAT(pf.first_name, ' ', pf.last_name) END as father_name"),
+                        DB::raw("CASE WHEN st.father_id IS NOT NULL THEN CONCAT(pf.first_name_furigana, ' ', pf.last_name_furigana) END as father_fur_name"),
+                        DB::raw("CASE WHEN st.father_id IS NOT NULL THEN CONCAT(pf.first_name_english, ' ', pf.last_name_english) END as father_eng_name"),
+                        DB::raw("CASE WHEN st.father_id IS NOT NULL THEN pf.nationality END as father_nationality"),
+                        DB::raw("CASE WHEN st.father_id IS NOT NULL THEN pf.email END as father_email"),
+                        DB::raw("CASE WHEN st.father_id IS NOT NULL THEN pf.occupation END as father_occupation"),
+                        DB::raw("CASE WHEN st.father_id IS NOT NULL THEN pf.mobile_no END as father_mobile_no"),
+                        // Mother's details
+                        DB::raw("CASE WHEN st.mother_id IS NOT NULL THEN CONCAT(pm.first_name, ' ', pm.last_name) END as mother_name"),
+                        DB::raw("CASE WHEN st.mother_id IS NOT NULL THEN CONCAT(pm.first_name_furigana, ' ', pm.last_name_furigana) END as mother_fur_name"),
+                        DB::raw("CASE WHEN st.mother_id IS NOT NULL THEN CONCAT(pm.first_name_english, ' ', pm.last_name_english) END as mother_eng_name"),
+                        DB::raw("CASE WHEN st.mother_id IS NOT NULL THEN pm.nationality END as mother_nationality"),
+                        DB::raw("CASE WHEN st.mother_id IS NOT NULL THEN pm.email END as mother_email"),
+                        DB::raw("CASE WHEN st.mother_id IS NOT NULL THEN pm.occupation END as mother_occupation"),
+                        DB::raw("CASE WHEN st.mother_id IS NOT NULL THEN pm.mobile_no END as mother_mobile_no"),
+                        // Guardian's details
+                        DB::raw("CASE WHEN st.guardian_id IS NOT NULL THEN CONCAT(pg.first_name, ' ', pg.last_name) END as guardian_name"),
+                        DB::raw("CASE WHEN st.guardian_id IS NOT NULL THEN CONCAT(pg.first_name_furigana, ' ', pg.last_name_furigana) END as guardian_fur_name"),
+                        DB::raw("CASE WHEN st.guardian_id IS NOT NULL THEN CONCAT(pg.first_name_english, ' ', pg.last_name_english) END as guardian_eng_name"),
+                        DB::raw("CASE WHEN st.guardian_id IS NOT NULL THEN pg.email END as guardian_email"),
+                        DB::raw("CASE WHEN st.guardian_id IS NOT NULL THEN pg.occupation END as guardian_occupation"),
+                        DB::raw("CASE WHEN st.guardian_id IS NOT NULL THEN pg.mobile_no END as guardian_mobile_no"),
+                        DB::raw("CASE WHEN st.guardian_id IS NOT NULL THEN pg.company_name_japan END as guardian_company_name_japan"),
+                        DB::raw("CASE WHEN st.guardian_id IS NOT NULL THEN pg.company_name_local END as guardian_company_name_local"),
+                        DB::raw("CASE WHEN st.guardian_id IS NOT NULL THEN pg.company_phone_number END as guardian_company_phone_number"),
+                        DB::raw("CASE WHEN st.guardian_id IS NOT NULL THEN pg.employment_status END as guardian_employment_status"),
+                        
                         // 'st.birthday',
                         // 'st.email',
                     )
                     ->join('students as st', 'en.student_id', '=', 'st.id')
-                    ->leftjoin('parent as p', function ($join) {
-                        $join->on('st.father_id', '=', 'p.id');
-                        $join->orOn('st.mother_id', '=', 'p.id');
-                        $join->orOn('st.guardian_id', '=', 'p.id');
-                    })
+                    // Join for father
+                    ->leftJoin('parent as pf', 'st.father_id', '=', 'pf.id')
+                    // Join for mother
+                    ->leftJoin('parent as pm', 'st.mother_id', '=', 'pm.id')
+                    // Join for guardian
+                    ->leftJoin('parent as pg', 'st.guardian_id', '=', 'pg.id')
                     ->when($class_id, function ($q)  use ($class_id) {
                         $q->where('en.class_id', $class_id);
                     })
@@ -1709,7 +1717,9 @@ class ApiControllerThree extends BaseController
                 // });
                 // Decrypt sensitive data if exists
                 foreach ($getParentInfo as $parent) {
-                    $parent->parent_mobile_no = Helper::decryptStringData($parent->parent_mobile_no);
+                    $parent->father_mobile_no = Helper::decryptStringData($parent->father_mobile_no);
+                    $parent->mother_mobile_no = Helper::decryptStringData($parent->mother_mobile_no);
+                    $parent->guardian_mobile_no = Helper::decryptStringData($parent->guardian_mobile_no);
                     // $parent->parent_passport = Helper::decryptStringData($parent->parent_passport);
                     // $parent->parent_nric = Helper::decryptStringData($parent->parent_nric);
                 }
