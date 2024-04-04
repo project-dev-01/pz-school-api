@@ -163,11 +163,13 @@ class MenuAccessController extends BaseController
                 $query->select('id')
                     ->from('menuaccess')
                     ->where('branch_id', $br_id)
+                    
                     ->whereColumn('menus.menu_id', 'menuaccess.menu_id')
                     ->limit(1);
             }, 'menuaccess_id')
             ->where('menu_type', $request->type)
             ->where('role_id', $request->role_id)
+            ->where('flog', '0')
             ->orderBy("menu_order", "asc")
             ->get();
         // dd($data);
@@ -555,6 +557,7 @@ class MenuAccessController extends BaseController
             ->where('ma.branch_id', $br_id)
             ->where('ms.menu_type', $request->type)
             ->where('ms.role_id', $request->role_id)
+            ->where('ms.flog', 0)
             ->orderBy("ms.menu_order", "asc")
             ->get();
         // dd($data);

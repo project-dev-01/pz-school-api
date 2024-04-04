@@ -16591,7 +16591,7 @@ class ApiController extends BaseController
             // get data
             $cache_time = config('constants.cache_time');
             $cache_religions = config('constants.cache_religions');
-            $cacheKey = $cache_religionss . $request->branch_id;
+            $cacheKey = $cache_religions . $request->branch_id;
            
             // Check if the data is cached
             if (Cache::has($cacheKey)) {
@@ -17580,7 +17580,10 @@ class ApiController extends BaseController
                         ]);
                     }
                 }
-
+                // cache clear start
+                $cache_leave_types = config('constants.cache_leave_types');
+                $this->clearCache($cache_leave_types,$request->branch_id);
+                // cache clear end
                 $success = [];
                 if (!$leave_type_id) {
                     return $this->send500Error('Something went wrong.', ['error' => 'Something went wrong']);
@@ -17601,10 +17604,24 @@ class ApiController extends BaseController
         if (!$validator->passes()) {
             return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
         } else {
+            // get data
+            $cache_time = config('constants.cache_time');
+            $cache_leave_types = config('constants.cache_leave_types');
+            
+            $cacheKey = $cache_leave_types . $request->branch_id;
+        
+            // Check if the data is cached
+            if (Cache::has($cacheKey)) {
+                // If cached, return cached data
+                $leaveTypeDetails = Cache::get($cacheKey);
+            } else {
             // create new connection
             $conn = $this->createNewConnection($request->branch_id);
             // get data
             $leaveTypeDetails = $conn->table('leave_types')->get();
+             // Cache the fetched data for future requests
+             Cache::put($cacheKey, $leaveTypeDetails, now()->addHours($cache_time)); // Cache for 24 hours
+            }
             return $this->successResponse($leaveTypeDetails, 'Leave Type record fetch successfully');
         }
     }
@@ -17689,6 +17706,10 @@ class ApiController extends BaseController
                         }
                     }
                 }
+                // cache clear start
+                $cache_leave_types = config('constants.cache_leave_types');
+                $this->clearCache($cache_leave_types,$request->branch_id);
+                // cache clear end
                 $success = [];
                 if ($query) {
                     return $this->successResponse($success, 'Leave Type Details have Been updated');
@@ -17719,6 +17740,10 @@ class ApiController extends BaseController
             if ($query) {
                 $conn->table('staff_leave_assign')->where('leave_type', $id)->delete();
             }
+            // cache clear start
+            $cache_leave_types = config('constants.cache_leave_types');
+            $this->clearCache($cache_leave_types,$request->branch_id);
+            // cache clear end
             $success = [];
             if ($query) {
                 return $this->successResponse($success, 'Leave Type have been deleted successfully');
