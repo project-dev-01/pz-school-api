@@ -1660,6 +1660,7 @@ class ApiControllerThree extends BaseController
                         DB::raw("CASE WHEN st.father_id IS NOT NULL THEN pf.email END as father_email"),
                         DB::raw("CASE WHEN st.father_id IS NOT NULL THEN pf.occupation END as father_occupation"),
                         DB::raw("CASE WHEN st.father_id IS NOT NULL THEN pf.mobile_no END as father_mobile_no"),
+                       
                         // Mother's details
                         DB::raw("CASE WHEN st.mother_id IS NOT NULL THEN CONCAT(pm.first_name, ' ', pm.last_name) END as mother_name"),
                         DB::raw("CASE WHEN st.mother_id IS NOT NULL THEN CONCAT(pm.first_name_furigana, ' ', pm.last_name_furigana) END as mother_fur_name"),
@@ -1679,6 +1680,11 @@ class ApiControllerThree extends BaseController
                         DB::raw("CASE WHEN st.guardian_id IS NOT NULL THEN pg.company_name_local END as guardian_company_name_local"),
                         DB::raw("CASE WHEN st.guardian_id IS NOT NULL THEN pg.company_phone_number END as guardian_company_phone_number"),
                         DB::raw("CASE WHEN st.guardian_id IS NOT NULL THEN pg.employment_status END as guardian_employment_status"),
+                        DB::raw("CASE WHEN st.guardian_id IS NOT NULL THEN pg.japan_postalcode END as guardian_japan_postalcode"),
+                        DB::raw("CASE WHEN st.guardian_id IS NOT NULL THEN pg.japan_address END as guardian_japan_address"),
+                        DB::raw("CASE WHEN st.guardian_id IS NOT NULL THEN pg.japan_contact_no END as guardian_japan_contact_no"),
+                        DB::raw("CASE WHEN st.guardian_id IS NOT NULL THEN pg.japan_emergency_sms END as guardian_japan_emergency_sms"),
+                        DB::raw("CASE WHEN st.guardian_id IS NOT NULL THEN pg.japan_staycategory END as guardian_japan_staycategory"),
                         
                         // 'st.birthday',
                         // 'st.email',
