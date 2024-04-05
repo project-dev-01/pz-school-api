@@ -5037,7 +5037,7 @@ class ApiController extends BaseController
             // Check if the data is cached
             //if (Cache::has($cacheKey)) {
                 // If cached, return cached data
-                //$output = Cache::get($cacheKey);
+                $output = Cache::get($cacheKey);
         //} else {
             // create new connection
             $con = $this->createNewConnection($request->branch_id);
@@ -11043,7 +11043,7 @@ class ApiController extends BaseController
             // get data
             $cache_time = config('constants.cache_time');
             $cache_exam = config('constants.cache_exam');
-            $cacheKey = $cache_exam . $request->branch_id;
+            $cacheKey = $cache_exam . $request->academic_session_id . $request->branch_id;
         
             // Check if the data is cached
             if (Cache::has($cacheKey)) {
@@ -13951,35 +13951,23 @@ class ApiController extends BaseController
         if (!$validator->passes()) {
             return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
         } else {
-            // get data
+           // get data
             $cache_time = config('constants.cache_time');
             $cache_students = config('constants.cache_students');
-            $department_id="0_"; $class_id="0_"; $section_id="0_"; $status="0_"; $name="0_";
-            if (isset($request->department_id) && filled($request->department_id)) {
-                $department_id = $request->department_id;
-            }
-
-            if (isset($request->class_id) && filled($request->class_id)) {
-                $class_id = $request->class_id;
-            }
-
-            if (isset($request->section_id) && filled($request->section_id)) {
-                $section_id = $request->section_id;
-            }
-            if (isset($request->status) && filled($request->status)) {
-                $status = $request->status;
-            }
-
-            if (isset($request->student_name) && filled($request->student_name)) {
-                $name = $request->student_name;               
-            }
-            $cacheKey = $cache_students .$department_id . $class_id . $section_id . $status . $name . $request->branch_id;
             
+            $cacheKey = $cache_students . 
+            'department_' . $department_id . 
+            '_class_' . $class_id . 
+            '_section_' . $section_id . 
+            '_status_' . $status . 
+            '_name_' . $name . 
+            '_branch_' . $request->branch_id;
+            // $this->clearCache($cache_students . $department_id . $class_id . $section_id . $status . $name . $request->branch_id);
             // Check if the data is cached
             if (Cache::has($cacheKey)) {
                 // If cached, return cached data
                 $students = Cache::get($cacheKey);
-        } else {
+            } else {
                 // create new connection
                 $con = $this->createNewConnection($request->branch_id);
                 // get data
@@ -14050,7 +14038,7 @@ class ApiController extends BaseController
                 $students = $query->groupBy('e.student_id')->get()->toArray();
                 // Cache the fetched data for future requests
                 Cache::put($cacheKey, $students, now()->addHours($cache_time)); // Cache for 24 hours
-                }
+            }
             return $this->successResponse($students , 'Student record fetch successfully');
         }
     }
@@ -14903,19 +14891,33 @@ class ApiController extends BaseController
             // get data
             $cache_time = config('constants.cache_time');
             $cache_parentDetails = config('constants.cache_parentDetails');
-          
-           // $this->clearCache($cache_parentDetails,$request->branch_id);
-            $cacheKey = $cache_parentDetails . $request->branch_id;
             
-            // Check if the data is cached
-            if (Cache::has($cacheKey)) {
-                // If cached, return cached data
-                $parentDetails = Cache::get($cacheKey);
-        } else {
+            // $this->clearCache($cache_parentDetails,$request->branch_id);
+            if(isset($request->status))
+                {
+                    $cacheKey = $cache_parentDetails . $request->status. $request->branch_id;
+                }
+                else
+                {
+                    $cacheKey = $cache_parentDetails . $request->branch_id; 
+                }
+                // Check if the data is cached
+                if (Cache::has($cacheKey)) {
+                    // If cached, return cached data
+                    $parentDetails = Cache::get($cacheKey);
+            } else {
             // create new connection
             $conn = $this->createNewConnection($request->branch_id);
             // get data
-            $parentDetails = $conn->table('parent')->select("id",'email','occupation', DB::raw("CONCAT(last_name, ' ', first_name) as name"))->where('status','=','0')->get();
+            if(isset($request->status))
+            {
+                $parentDetails = $conn->table('parent')->select("id",'email','occupation', DB::raw("CONCAT(last_name, ' ', first_name) as name"))->where('status','=',$request->status)->get();
+            }
+            else
+            {
+                $parentDetails = $conn->table('parent')->select("id",'email','occupation', DB::raw("CONCAT(last_name, ' ', first_name) as name"))->where('status','=','0')->get();
+            }
+            //$parentDetails = $conn->table('parent')->select("id",'email','occupation', DB::raw("CONCAT(last_name, ' ', first_name) as name"))->where('status','=','0')->get();
             // Cache the fetched data for future requests
             Cache::put($cacheKey, $parentDetails, now()->addHours($cache_time)); // Cache for 24 hours
             }
@@ -21926,8 +21928,8 @@ class ApiController extends BaseController
             // get data
             $cache_time = config('constants.cache_time');
             $cache_exam_papers = config('constants.cache_exam_papers');
-            $cacheKey = $cache_exam_papers . $request->branch_id;
-           
+            $cacheKey = $cache_exam_papers . $request->academic_session_id . $request->branch_id;
+            
             // Check if the data is cached
             if (Cache::has($cacheKey)) {
                 // If cached, return cached data
