@@ -19,6 +19,7 @@ use DatePeriod;
 use App\Models\Branches;
 use App\Models\Section;
 use App\Helpers\Helper;
+use App\Mail\TestQueueMail;
 use App\Models\Classes;
 use App\Models\Role;
 use App\Models\EventType;
@@ -48,6 +49,7 @@ use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Hash;
 use App\Models\Menus;
 use App\Models\Menuaccess;
+use Illuminate\Support\Facades\Mail;
 
 class ApiControllerThree extends BaseController
 {
@@ -1112,7 +1114,7 @@ class ApiControllerThree extends BaseController
     // getStudentLeaveTypes
     public function getStudentLeaveTypes(Request $request)
     {
-       
+
         // Data not found in cache, fetch from database
         $validator = Validator::make($request->all(), [
             'branch_id' => 'required'
@@ -1122,31 +1124,29 @@ class ApiControllerThree extends BaseController
             return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
         }
 
-       
-         // Generate cache key based on request data
-          // get data
-          $cache_time = config('constants.cache_time');
-          $cache_student_leave_types = config('constants.cache_student_leave_types');
-          
-         $cacheKey = $cache_student_leave_types . $request->branch_id;
 
-         // Check if the data is cached
-         if (Cache::has($cacheKey)) {
-             // Data found in cache, return cached data
-             $getAllTypes = Cache::get($cacheKey);
-            
-         }
-         else{
-             // Create new connection
-        $conn = $this->createNewConnection($request->branch_id);
-        // Get data from the database
-        $getAllTypes = $conn->table('student_leave_types')
-            ->select('id', 'name', 'short_name')
-            ->get();
+        // Generate cache key based on request data
+        // get data
+        $cache_time = config('constants.cache_time');
+        $cache_student_leave_types = config('constants.cache_student_leave_types');
 
-        // Store data in cache
-        Cache::put($cacheKey, $getAllTypes, now()->addDay());
-         }
+        $cacheKey = $cache_student_leave_types . $request->branch_id;
+
+        // Check if the data is cached
+        if (Cache::has($cacheKey)) {
+            // Data found in cache, return cached data
+            $getAllTypes = Cache::get($cacheKey);
+        } else {
+            // Create new connection
+            $conn = $this->createNewConnection($request->branch_id);
+            // Get data from the database
+            $getAllTypes = $conn->table('student_leave_types')
+                ->select('id', 'name', 'short_name')
+                ->get();
+
+            // Store data in cache
+            Cache::put($cacheKey, $getAllTypes, now()->addDay());
+        }
         return $this->successResponse($getAllTypes, 'Student leave types fetched successfully');
     }
     // get Reasons By LeaveType
@@ -1167,16 +1167,16 @@ class ApiControllerThree extends BaseController
             if (Cache::has($cacheKey)) {
                 // If cached, return cached data
                 $getAllReason = Cache::get($cacheKey);
-        } else {
-            // create new connection
-            $conn = $this->createNewConnection($request->branch_id);
-            // get data
-            $getAllReason = $conn->table('absent_reasons as ar')
-                ->where("ar.student_leave_type_id", $request->student_leave_type_id)
-                ->get();
+            } else {
+                // create new connection
+                $conn = $this->createNewConnection($request->branch_id);
+                // get data
+                $getAllReason = $conn->table('absent_reasons as ar')
+                    ->where("ar.student_leave_type_id", $request->student_leave_type_id)
+                    ->get();
                 // Cache the fetched data for future requests
                 Cache::put($cacheKey, $getAllReason, now()->addHours($cache_time)); // Cache for 24 hours
-                }
+            }
             return $this->successResponse($getAllReason, 'reasons by leave types fetch successfully');
         }
     }
@@ -1275,16 +1275,15 @@ class ApiControllerThree extends BaseController
             $cache_time = config('constants.cache_time');
             $cache_leaveTypeWiseAllReason = config('constants.cache_leaveTypeWiseAllReason');
             $cacheKey = $cache_leaveTypeWiseAllReason . $request->branch_id;
-            
+
             // Check if the data is cached
             if (Cache::has($cacheKey)) {
                 // If cached, return cached data
                 $jsonResult = Cache::get($cacheKey);
-        } 
-        else {
-            // create new connection
-            $conn = $this->createNewConnection($request->branch_id);
-            $results = $conn->select("
+            } else {
+                // create new connection
+                $conn = $this->createNewConnection($request->branch_id);
+                $results = $conn->select("
             SELECT 
             lt.id AS leave_type_id,
         lt.name AS leave_type,
@@ -1297,9 +1296,9 @@ class ApiControllerThree extends BaseController
     GROUP BY 
         lt.id
 ");
-            $jsonResult = json_encode($results);
-            // Cache the fetched data for future requests
-            Cache::put($cacheKey, $jsonResult, now()->addHours($cache_time)); // Cache for 24 hours
+                $jsonResult = json_encode($results);
+                // Cache the fetched data for future requests
+                Cache::put($cacheKey, $jsonResult, now()->addHours($cache_time)); // Cache for 24 hours
             }
             return $this->successResponse($jsonResult, 'student leave types fetch successfully');
         }
@@ -1573,7 +1572,7 @@ class ApiControllerThree extends BaseController
                         // 'en.section_id',
                         // 'en.semester_id',
                         // 'en.session_id',
-                     //   DB::raw("CONCAT(st.first_name, ' ', st.last_name) as name"),
+                        //   DB::raw("CONCAT(st.first_name, ' ', st.last_name) as name"),
                         'st.first_name',
                         'st.last_name',
                         'st.first_name_english',
@@ -1631,8 +1630,8 @@ class ApiControllerThree extends BaseController
                         return $query->where('st.first_name', 'like', '%' . $student_name . '%')->orWhere('st.last_name', 'like', '%' . $student_name . '%');
                     })
                     ->when($status !== null, function ($query) use ($status) {
-                    $query->where('en.active_status', $status);
-                     }) 
+                        $query->where('en.active_status', $status);
+                    })
                     // ->where('en.academic_session_id', '=', $academic_year)
                     ->groupBy('en.student_id')
                     ->get();
@@ -1660,7 +1659,7 @@ class ApiControllerThree extends BaseController
                         DB::raw("CASE WHEN st.father_id IS NOT NULL THEN pf.email END as father_email"),
                         DB::raw("CASE WHEN st.father_id IS NOT NULL THEN pf.occupation END as father_occupation"),
                         DB::raw("CASE WHEN st.father_id IS NOT NULL THEN pf.mobile_no END as father_mobile_no"),
-                       
+
                         // Mother's details
                         DB::raw("CASE WHEN st.mother_id IS NOT NULL THEN CONCAT(pm.first_name, ' ', pm.last_name) END as mother_name"),
                         DB::raw("CASE WHEN st.mother_id IS NOT NULL THEN CONCAT(pm.first_name_furigana, ' ', pm.last_name_furigana) END as mother_fur_name"),
@@ -1685,7 +1684,7 @@ class ApiControllerThree extends BaseController
                         DB::raw("CASE WHEN st.guardian_id IS NOT NULL THEN pg.japan_contact_no END as guardian_japan_contact_no"),
                         DB::raw("CASE WHEN st.guardian_id IS NOT NULL THEN pg.japan_emergency_sms END as guardian_japan_emergency_sms"),
                         DB::raw("CASE WHEN st.guardian_id IS NOT NULL THEN pg.japan_staycategory END as guardian_japan_staycategory"),
-                        
+
                         // 'st.birthday',
                         // 'st.email',
                     )
@@ -1709,8 +1708,8 @@ class ApiControllerThree extends BaseController
                         return $query->where('st.first_name', 'like', '%' . $student_name . '%')->orWhere('st.last_name', 'like', '%' . $student_name . '%');
                     })
                     ->when($status !== null, function ($query) use ($status) {
-                    $query->where('en.active_status', $status);
-                     }) 
+                        $query->where('en.active_status', $status);
+                    })
                     //->where('en.academic_session_id', '=', $academic_year)
                     ->groupBy('en.student_id')
                     ->get();
@@ -2757,7 +2756,34 @@ class ApiControllerThree extends BaseController
             return $this->send500Error('Something went wrong.', ['error' => 'Something went wrong']);
         }
     }
-    protected function clearCache($cache_name,$branchId)
+    public function testQueueEmail(Request $request)
+    {
+        $validator = \Validator::make($request->all(), [
+            'email' => 'required'
+        ]);
+        if (!$validator->passes()) {
+            return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
+        } else {
+            try {
+                // echo "test";
+                $content = [
+                    'subject' => '【Suzen】アカウント情報のご案内'
+                ];
+                $evenMoreUsers = [
+                    "chlee@kddi.com.my",
+                    "syakirin@kddi.com.my",
+                    "chinhui1.lee@gmail.com"
+                ];
+                Mail::to('karthik@aibots.my')->bcc($evenMoreUsers)
+                    ->send(new TestQueueMail($content));
+
+                return "Email has been sent.";
+            } catch (\Exception $e) {
+                return "Failed to send email. Error: " . $e->getMessage();
+            }
+        }
+    }
+    protected function clearCache($cache_name, $branchId)
     {
         $cacheKey = $cache_name . $branchId;
         Cache::forget($cacheKey);

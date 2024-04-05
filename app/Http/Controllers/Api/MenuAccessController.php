@@ -163,7 +163,6 @@ class MenuAccessController extends BaseController
                 $query->select('id')
                     ->from('menuaccess')
                     ->where('branch_id', $br_id)
-                    
                     ->whereColumn('menus.menu_id', 'menuaccess.menu_id')
                     ->limit(1);
             }, 'menuaccess_id')
@@ -319,34 +318,32 @@ class MenuAccessController extends BaseController
             // create new connection
             $conn = $this->createNewConnection($request->branch_id);
             // get data
-            
-            $schoolroleDetails = $conn->table('school_roles')->where('flag','=','0')->get();
-            $school_array=[];
-            foreach( $schoolroleDetails as $school_role)
-            {
-                
-                $roleIds1 =$conn->table('school_menuaccess as t1')
-                ->select('t1.role_id','t2.role_name') 
-                ->leftJoin($main_db . '.roles AS t2', 't1.role_id', '=', 't2.id')
-                ->distinct()
-                ->where('t1.school_roleid', '=', $school_role->id)
-                ->pluck('t2.role_name');
-                $roles='';
-                foreach($roleIds1 as $role)
-                {
-                    $roles.=$role.',';
+
+            $schoolroleDetails = $conn->table('school_roles')->where('flag', '=', '0')->get();
+            $school_array = [];
+            foreach ($schoolroleDetails as $school_role) {
+
+                $roleIds1 = $conn->table('school_menuaccess as t1')
+                    ->select('t1.role_id', 't2.role_name')
+                    ->leftJoin($main_db . '.roles AS t2', 't1.role_id', '=', 't2.id')
+                    ->distinct()
+                    ->where('t1.school_roleid', '=', $school_role->id)
+                    ->pluck('t2.role_name');
+                $roles = '';
+                foreach ($roleIds1 as $role) {
+                    $roles .= $role . ',';
                 }
-                
-                $datas=[
-                    "id"=> $school_role->id,
-                    "fullname"=> $school_role->fullname,
-                    "shortname"=> $school_role->shortname,
-                    "portal_roleid"=> $school_role->portal_roleid,
-                    "created_at"=> $school_role->created_at,
-                    "updated_at"=> $school_role->updated_at,
-                    "flag"=> $school_role->flag,
-                    "roles"=> substr($roles, 0, -1),
-                    
+
+                $datas = [
+                    "id" => $school_role->id,
+                    "fullname" => $school_role->fullname,
+                    "shortname" => $school_role->shortname,
+                    "portal_roleid" => $school_role->portal_roleid,
+                    "created_at" => $school_role->created_at,
+                    "updated_at" => $school_role->updated_at,
+                    "flag" => $school_role->flag,
+                    "roles" => substr($roles, 0, -1),
+
                 ];
                 array_push($school_array, $datas);
             }
@@ -391,11 +388,11 @@ class MenuAccessController extends BaseController
             return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
         } else {
             $id = $request->id;
-          
+
             // create new connection
             $conn = $this->createNewConnection($request->branch_id);
             // get data
-       
+
             $schoolroleDetails = $conn->table('school_roles')->where('id', $id)->first();
             return $this->successResponse($schoolroleDetails, 'School Role row fetch successfully');
         }
@@ -442,7 +439,7 @@ class MenuAccessController extends BaseController
     {
 
         $id = $request->id;
-        $user_id=$request->user_id;
+        $user_id = $request->user_id;
         $validator = \Validator::make($request->all(), [
             'token' => 'required',
             'branch_id' => 'required',
@@ -456,14 +453,14 @@ class MenuAccessController extends BaseController
             $conn = $this->createNewConnection($request->branch_id);
             // get data
             //$query = $conn->table('school_roles')->where('id', $id)->delete();
-            $query = $conn->table('school_roles')->where('id', $id)->update([                
+            $query = $conn->table('school_roles')->where('id', $id)->update([
                 'flag' => '2',
                 'deleted_at' => date("Y-m-d H:i:s"),
                 'deleted_by' => $user_id
             ]);
             // Set School Role deleted status as 2
             User::where([['school_roleid', '=', $id], ['branch_id', '=', $request->branch_id]])->update([
-                
+
                 'status' => '2',
                 'updated_at' => date("Y-m-d H:i:s")
             ]);
@@ -493,7 +490,7 @@ class MenuAccessController extends BaseController
             // get data
             $schoolroleDetails = $conn->table('school_roles')->where('id', $id)->first();
             $portal_roleid  = $schoolroleDetails->portal_roleid;
-            $roleDetails = $conn->table('portal_role')->where('id', $portal_roleid)->first();            
+            $roleDetails = $conn->table('portal_role')->where('id', $portal_roleid)->first();
             $portal_roleid  = explode(',', $roleDetails->roles);
             $roles = Role::whereIn('id', $portal_roleid)->get();
             return $this->successResponse($roles, 'School Role row fetch successfully');
@@ -583,8 +580,7 @@ class MenuAccessController extends BaseController
                     'export' => @$request->export[$menuid],
                     'created_at' => date("Y-m-d H:i:s")
                 ]);
-            } 
-            else {
+            } else {
                 $query = $conn->table('school_menuaccess')->where('id', $request->menuaccess_id[$menuid])->update([
                     'read' => @$request->read[$menuid],
                     'add' => @$request->add[$menuid],
@@ -595,24 +591,22 @@ class MenuAccessController extends BaseController
                 ]);
             }
         }
-        $sid=$request->school_roleid;
-        if($sid!='' || $sid!=null)
-        {
-            $roleIds1 =$conn->table('school_menuaccess as t1')
-            ->select('t1.role_id','t2.role_name') 
-            ->leftJoin($main_db . '.roles AS t2', 't1.role_id', '=', 't2.id')
-            ->distinct()
-            ->where('school_roleid', '=', $request->school_roleid)
-            ->pluck('role_id');
-            
-            $roles='';
-            foreach($roleIds1 as $role)
-            {
-                $roles.=$role.',';
+        $sid = $request->school_roleid;
+        if ($sid != '' || $sid != null) {
+            $roleIds1 = $conn->table('school_menuaccess as t1')
+                ->select('t1.role_id', 't2.role_name')
+                ->leftJoin($main_db . '.roles AS t2', 't1.role_id', '=', 't2.id')
+                ->distinct()
+                ->where('school_roleid', '=', $request->school_roleid)
+                ->pluck('role_id');
+
+            $roles = '';
+            foreach ($roleIds1 as $role) {
+                $roles .= $role . ',';
             }
-            $roles= substr($roles, 0, -1);        
+            $roles = substr($roles, 0, -1);
             User::where([['school_roleid', '=', $request->school_roleid], ['branch_id', '=', $request->branch_id]])->update([
-                    
+
                 'role_id' => $roles,
                 'updated_at' => date("Y-m-d H:i:s")
             ]);
@@ -630,25 +624,23 @@ class MenuAccessController extends BaseController
         $conn = $this->createNewConnection($request->branch_id);
         $main_db = config('constants.main_db');
         $query = $conn->table('school_menuaccess')->where([['school_roleid', '=', $request->school_roleid], ['role_id', '=', $request->role_id]])->delete();
-        
-        $sid=$request->school_roleid;
-        if($sid!='' || $sid!=null)
-        {
-            $roleIds1 =$conn->table('school_menuaccess as t1')
-            ->select('t1.role_id','t2.role_name') 
-            ->leftJoin($main_db . '.roles AS t2', 't1.role_id', '=', 't2.id')
-            ->distinct()
-            ->where('school_roleid', '=', $request->school_roleid)
-            ->pluck('role_id');
-            
-            $roles='';
-            foreach($roleIds1 as $role)
-            {
-                $roles.=$role.',';
+
+        $sid = $request->school_roleid;
+        if ($sid != '' || $sid != null) {
+            $roleIds1 = $conn->table('school_menuaccess as t1')
+                ->select('t1.role_id', 't2.role_name')
+                ->leftJoin($main_db . '.roles AS t2', 't1.role_id', '=', 't2.id')
+                ->distinct()
+                ->where('school_roleid', '=', $request->school_roleid)
+                ->pluck('role_id');
+
+            $roles = '';
+            foreach ($roleIds1 as $role) {
+                $roles .= $role . ',';
             }
-            $roles= substr($roles, 0, -1);        
+            $roles = substr($roles, 0, -1);
             User::where([['school_roleid', '=', $request->school_roleid], ['branch_id', '=', $request->branch_id]])->update([
-                    
+
                 'role_id' => $roles,
                 'updated_at' => date("Y-m-d H:i:s")
             ]);

@@ -1,7 +1,7 @@
 <?php
 return [
-    'main_db'=>'alive_jskl_livedb',
-    'client_email'=>'askyourquery@suzen.school',
+    'main_db'=>'paxsuzen-api-jskl',
+    'client_email'=>'suzen-noreply@suzen.school',
     'student_email_domain' => "@jskl.edu.my",
     'cache_time'=>"24",
     'cache_academic_years'=>"academic_years_",

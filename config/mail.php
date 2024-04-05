@@ -85,7 +85,7 @@ return [
     */
 
     'from' => [
-        'address' => env('MAIL_FROM_ADDRESS', 'hello@example.com'),
+        'address' => env('MAIL_FROM_ADDRESS', config('constants.client_email')),
         'name' => env('MAIL_FROM_NAME', 'Example'),
     ],
 
