@@ -12768,28 +12768,6 @@ class ApiController extends BaseController
                         }
                     }
                 }
-                $image_principal_fileName = "";
-                if ($request->image_principal_photo) {
-    
-                    $image_principal_now = now();
-                    $image_principal_name = strtotime($image_principal_now);
-                    $image_principal_extension = "principal_".$request->image_principal_file_extension;
-    
-                    $image_principal_fileName = $image_principal_name . '.' . $image_principal_extension;
-    
-                    // return $fileName;
-                    $image_principal_path = '/public/' . $request->branch_id . '/users/images/';
-                    $image_principal_base64 = base64_decode($request->image_principal_photo);
-                    File::ensureDirectoryExists(base_path() . $image_principal_path);
-                    $image_principal_file = base_path() . $image_principal_path . $image_principal_fileName;
-                    $image_principal_suc = file_put_contents($image_principal_file, $image_principal_base64);
-                    if ($request->image_principal_old_photo) {
-                        if (\File::exists(base_path($nric_path . $request->image_principal_old_photo))) {
-                            \File::delete(base_path($nric_path . $request->image_principal_old_photo));
-                        }
-                    }
-                }
-
                 $passport = isset($request->passport) ? Crypt::encryptString($request->passport) : "";
                 $nric = isset($request->nric) ? Crypt::encryptString($request->nric) : "";
                 $mobile_no = isset($request->mobile_no) ? Crypt::encryptString($request->mobile_no) : "";
@@ -12989,7 +12967,6 @@ class ApiController extends BaseController
                     "visa_type_others" => $request->visa_type_others,
                     "japanese_association_membership_number_student" => $request->japanese_association_membership_number_student,
                     'nric_photo' => $nric_fileName,
-                    'japanese_association_membership_image_principal' => $image_principal_fileName,
                     'created_at' => date("Y-m-d H:i:s")
                 ]);
                 // return $studentId;
@@ -14172,27 +14149,27 @@ class ApiController extends BaseController
                     }
                 }
     
-                $image_principal_fileName = $request->image_principal_old_photo;
-                if ($request->image_principal_photo) {
+                // $image_principal_fileName = $request->image_principal_old_photo;
+                // if ($request->image_principal_photo) {
     
-                    $image_principal_now = now();
-                    $image_principal_name = strtotime($image_principal_now);
-                    $image_principal_extension = "principal_".$request->image_principal_file_extension;
+                //     $image_principal_now = now();
+                //     $image_principal_name = strtotime($image_principal_now);
+                //     $image_principal_extension = "principal_".$request->image_principal_file_extension;
     
-                    $image_principal_fileName = $image_principal_name . '.' . $image_principal_extension;
+                //     $image_principal_fileName = $image_principal_name . '.' . $image_principal_extension;
     
-                    // return $fileName;
-                    $image_principal_path = '/public/' . $request->branch_id . '/users/images/';
-                    $image_principal_base64 = base64_decode($request->image_principal_photo);
-                    File::ensureDirectoryExists(base_path() . $image_principal_path);
-                    $image_principal_file = base_path() . $image_principal_path . $image_principal_fileName;
-                    $image_principal_suc = file_put_contents($image_principal_file, $image_principal_base64);
-                    if ($request->image_principal_old_photo) {
-                        if (\File::exists(base_path($nric_path . $request->image_principal_old_photo))) {
-                            \File::delete(base_path($nric_path . $request->image_principal_old_photo));
-                        }
-                    }
-                }
+                //     // return $fileName;
+                //     $image_principal_path = '/public/' . $request->branch_id . '/users/images/';
+                //     $image_principal_base64 = base64_decode($request->image_principal_photo);
+                //     File::ensureDirectoryExists(base_path() . $image_principal_path);
+                //     $image_principal_file = base_path() . $image_principal_path . $image_principal_fileName;
+                //     $image_principal_suc = file_put_contents($image_principal_file, $image_principal_base64);
+                //     if ($request->image_principal_old_photo) {
+                //         if (\File::exists(base_path($nric_path . $request->image_principal_old_photo))) {
+                //             \File::delete(base_path($nric_path . $request->image_principal_old_photo));
+                //         }
+                //     }
+                // }
 
                 $passport = isset($request->passport) ? Crypt::encryptString($request->passport) : "";
                 $nric = isset($request->nric) ? Crypt::encryptString($request->nric) : "";
@@ -14241,7 +14218,7 @@ class ApiController extends BaseController
                     ]);
                 }
                 if ($request->guardian_id) {
-                    $conn->table('parent')->where('id', $request->mother_id)->update([
+                    $conn->table('parent')->where('id', $request->guardian_id)->update([
                         'first_name' => $request->guardian_first_name ?? '',
                         'last_name' => $request->guardian_last_name ?? '',
                         'middle_name' => $request->guardian_middle_name ?? '',
@@ -14333,7 +14310,7 @@ class ApiController extends BaseController
                     "visa_type_others" => $request->visa_type_others,
                     "japanese_association_membership_number_student" => $request->japanese_association_membership_number_student,
                     'nric_photo' => $nric_fileName,
-                    'japanese_association_membership_image_principal' => $image_principal_fileName,
+                    // 'japanese_association_membership_image_principal' => $image_principal_fileName,
                     'created_at' => date("Y-m-d H:i:s")
                 ];
                 $oldData = $conn->table('students')->find($request->student_id);
@@ -14613,6 +14590,28 @@ class ApiController extends BaseController
                     $file = base_path() . $path . $fileName;
                     $suc = file_put_contents($file, $base64);
                 }*/
+                
+                $image_principal_fileName = "";
+                if ($request->image_principal_photo) {
+    
+                    $image_principal_now = now();
+                    $image_principal_name = strtotime($image_principal_now);
+                    $image_principal_extension = "principal_".$request->image_principal_file_extension;
+    
+                    $image_principal_fileName = $image_principal_name . '.' . $image_principal_extension;
+    
+                    // return $fileName;
+                    $image_principal_path = '/public/' . $request->branch_id . '/users/images/';
+                    $image_principal_base64 = base64_decode($request->image_principal_photo);
+                    File::ensureDirectoryExists(base_path() . $image_principal_path);
+                    $image_principal_file = base_path() . $image_principal_path . $image_principal_fileName;
+                    $image_principal_suc = file_put_contents($image_principal_file, $image_principal_base64);
+                    if ($request->image_principal_old_photo) {
+                        if (\File::exists(base_path($nric_path . $request->image_principal_old_photo))) {
+                            \File::delete(base_path($nric_path . $request->image_principal_old_photo));
+                        }
+                    }
+                }
                 $fileName = "";
                 if ($request->japanese_association_membership_image_supplimental) {
                     $extension = $request->japanese_association_membership_image_supplimental_file_extension;
@@ -14780,10 +14779,10 @@ class ApiController extends BaseController
                     'visa_photo' => $visa_fileName,*/
 
                     // 'guardian_relation' => $request->guardian_relation,
-                    'company_name_japan' => $request->company_name_japan,
-                    'company_name_local' => $request->company_name_local,
-                    'company_phone_number' => isset($request->company_phone_number) ? Crypt::encryptString($request->company_phone_number) : "",
-                    'employment_status' => $request->employment_status,
+                    'company_name_japan' => $request->guardian_company_name_japan,
+                    'company_name_local' => $request->guardian_company_name_local,
+                    'company_phone_number' => isset($request->guardian_company_phone_number) ? Crypt::encryptString($request->guardian_company_phone_number) : "",
+                    'employment_status' => $request->guardian_employment_status,
                     // 'guardian_remarks' => $request->guardian_remarks,                   
 
 
@@ -14833,6 +14832,7 @@ class ApiController extends BaseController
                     'father_passport_number' => $request->father_passport_number, 
                     'father_passport_expiry_date' => $request->father_passport_expiry_date,*/
 
+                    'japanese_association_membership_image_principal' => $image_principal_fileName,
                     'japanese_association_membership_image_supplimental' => $fileName,
                     'japan_postalcode' => $request->japan_postalcode,
                     'japan_contact_no' =>  isset($request->japan_contact_no) ? Crypt::encryptString($request->japan_contact_no) : "",
@@ -15477,6 +15477,28 @@ class ApiController extends BaseController
 
                     if($request->guardian_id){
 
+                        
+                        $image_principal_fileName = "";
+                        if ($request->image_principal_photo) {
+
+                            $image_principal_now = now();
+                            $image_principal_name = strtotime($image_principal_now);
+                            $image_principal_extension = "principal_".$request->image_principal_file_extension;
+
+                            $image_principal_fileName = $image_principal_name . '.' . $image_principal_extension;
+
+                            // return $fileName;
+                            $image_principal_path = '/public/' . $request->branch_id . '/users/images/';
+                            $image_principal_base64 = base64_decode($request->image_principal_photo);
+                            File::ensureDirectoryExists(base_path() . $image_principal_path);
+                            $image_principal_file = base_path() . $image_principal_path . $image_principal_fileName;
+                            $image_principal_suc = file_put_contents($image_principal_file, $image_principal_base64);
+                            if ($request->image_principal_old_photo) {
+                                if (\File::exists(base_path($nric_path . $request->image_principal_old_photo))) {
+                                    \File::delete(base_path($nric_path . $request->image_principal_old_photo));
+                                }
+                            }
+                        }
                         $supplimental_fileName = $request->japanese_association_membership_image_supplimental_old;
                         if ($request->japanese_association_membership_image_supplimental) {
                             $extension = $request->japanese_association_membership_image_supplimental_file_extension;
@@ -15499,7 +15521,8 @@ class ApiController extends BaseController
                             'p.company_name_japan','p.company_name_local','p.company_phone_number',
                             'p.employment_status','p.japan_postalcode','p.japan_emergency_sms',
                             'p.japan_contact_no','p.japan_address','p.stay_category',
-                            'p.japanese_association_membership_image_supplimental'
+                            'p.japanese_association_membership_image_supplimental',
+                            'p.japanese_association_membership_image_principal'
 
                         )
                         ->leftJoin('students as st', 'p.id', '=', 'st.guardian_id')
@@ -15543,7 +15566,11 @@ class ApiController extends BaseController
                                     if($supplimental_fileName){
                                         $guardian_insertArr[$key] = $supplimental_fileName;
                                     }
-                                }  else {
+                                } else if ($key == "japanese_association_membership_image_principal") {
+                                    if($image_principal_fileName){
+                                        $guardian_insertArr[$key] = $image_principal_fileName;
+                                    }
+                                } else {
                                     if ($guardian_old->$key != $guardian_data[$key]) {
                                         $guardian_insertArr[$key] = $guardian_data[$key];
                                     }
@@ -15591,6 +15618,29 @@ class ApiController extends BaseController
                     $mobile_no = isset($request->mobile_no) ? Crypt::encryptString($request->mobile_no) : "";
                     $address = isset($request->address) ? Crypt::encryptString($request->address) : "";
                     $address_2 = isset($request->address_2) ? Crypt::encryptString($request->address_2) : "";
+
+                    
+                    $image_principal_fileName = $request->image_principal_old_photo;
+                    if ($request->image_principal_photo) {
+
+                        $image_principal_now = now();
+                        $image_principal_name = strtotime($image_principal_now);
+                        $image_principal_extension = "principal_".$request->image_principal_file_extension;
+
+                        $image_principal_fileName = $image_principal_name . '.' . $image_principal_extension;
+
+                        // return $fileName;
+                        $image_principal_path = '/public/' . $request->branch_id . '/users/images/';
+                        $image_principal_base64 = base64_decode($request->image_principal_photo);
+                        File::ensureDirectoryExists(base_path() . $image_principal_path);
+                        $image_principal_file = base_path() . $image_principal_path . $image_principal_fileName;
+                        $image_principal_suc = file_put_contents($image_principal_file, $image_principal_base64);
+                        if ($request->image_principal_old_photo) {
+                            if (\File::exists(base_path($nric_path . $request->image_principal_old_photo))) {
+                                \File::delete(base_path($nric_path . $request->image_principal_old_photo));
+                            }
+                        }
+                    }
                     $fileName = $request->japanese_association_membership_image_supplimental_old;
                     if ($request->japanese_association_membership_image_supplimental) {
                         $extension = $request->japanese_association_membership_image_supplimental_file_extension;
@@ -15694,12 +15744,13 @@ class ApiController extends BaseController
                         'visa_photo' => $visa_fileName,*/
 
                         // 'guardian_relation' => $request->guardian_relation,
-                    'company_name_japan' => $request->company_name_japan,
-                    'company_name_local' => $request->company_name_local,
-                    'company_phone_number' => isset($request->company_phone_number) ? Crypt::encryptString($request->company_phone_number) : "",
-                    'employment_status' => $request->employment_status,               
+                    'company_name_japan' => $request->guardian_company_name_japan,
+                    'company_name_local' => $request->guardian_company_name_local,
+                    'company_phone_number' => isset($request->guardian_company_phone_number) ? Crypt::encryptString($request->guardian_company_phone_number) : "",
+                    'employment_status' => $request->guardian_employment_status,               
 
 
+                    'japanese_association_membership_image_principal' => $image_principal_fileName,
                     'japanese_association_membership_image_supplimental' => $fileName,
                     'japan_postalcode' => $request->japan_postalcode,
                     'japan_contact_no' =>  isset($request->japan_contact_no) ? Crypt::encryptString($request->japan_contact_no) : "",
@@ -23910,6 +23961,8 @@ class ApiController extends BaseController
                                 'company_name_local' => $request->guardian_company_name_local,
                                 'company_phone_number' => isset($request->guardian_company_phone_number) ? Crypt::encryptString($request->guardian_company_phone_number) : "",
                                 'employment_status' => $request->guardian_employment_status,
+                                
+                                'japanese_association_membership_image_principal' => $image_principal_fileName,
                                 'japanese_association_membership_image_supplimental' => $image_supplimental_fileName,
                                 'status' => "0",
                         ];
@@ -24109,7 +24162,7 @@ class ApiController extends BaseController
                         "visa_type_others" => $request->visa_type_others,
                         "japanese_association_membership_number_student" => $request->japanese_association_membership_number_student,
                         'nric_photo' => $nric_fileName,
-                        'japanese_association_membership_image_principal' => $image_principal_fileName,
+                        // 'japanese_association_membership_image_principal' => $image_principal_fileName,
                         // 'japanese_association_membership_image_supplimental' => $image_supplimental_fileName,
                         'passport' => isset($request->passport) ? Crypt::encryptString($request->passport) : "",
                         'passport_expiry_date' => $request->passport_expiry_date,
@@ -26485,28 +26538,6 @@ class ApiController extends BaseController
                     }
                 }
             }
-            $image_principal_fileName = "";
-            if ($request->image_principal_photo) {
-
-                $image_principal_now = now();
-                $image_principal_name = strtotime($image_principal_now);
-                $image_principal_extension = "principal_".$request->image_principal_file_extension;
-
-                $image_principal_fileName = $image_principal_name . '.' . $image_principal_extension;
-
-                // return $fileName;
-                $image_principal_path = '/public/' . $request->branch_id . '/users/images/';
-                $image_principal_base64 = base64_decode($request->image_principal_photo);
-                File::ensureDirectoryExists(base_path() . $image_principal_path);
-                $image_principal_file = base_path() . $image_principal_path . $image_principal_fileName;
-                $image_principal_suc = file_put_contents($image_principal_file, $image_principal_base64);
-                if ($request->image_principal_old_photo) {
-                    if (\File::exists(base_path($nric_path . $request->image_principal_old_photo))) {
-                        \File::delete(base_path($nric_path . $request->image_principal_old_photo));
-                    }
-                }
-            }
-
             $old = $conn->table('students')->where('id', '=', $id)->first();
             $insertArr = [];
             $insertArr['status'] = "Admin";
@@ -26756,7 +26787,7 @@ class ApiController extends BaseController
         $application = $conn->table('student_applications')->where("register_number", 'LIKE', $yearStart.'%')->max("register_number");
         $admission = $conn->table('students')->where("register_no", 'LIKE', $yearStart.'%')->max("register_no");
         $prevNumber = 0;
-        if($application != Null && $admission != Null){
+        if($application != Null || $admission != Null){
 
             if($application >= $admission){
                 $lastRemove = substr($application,0,-1);
