@@ -1518,6 +1518,7 @@ class ApiControllerThree extends BaseController
     }
     public function downloadStudentListInformation(Request $request)
     {
+        // return $request;
         $validator = \Validator::make($request->all(), [
             'branch_id' => 'required',
             'staff_id' => 'required',
@@ -1683,7 +1684,7 @@ class ApiControllerThree extends BaseController
                         DB::raw("CASE WHEN st.guardian_id IS NOT NULL THEN pg.japan_address END as guardian_japan_address"),
                         DB::raw("CASE WHEN st.guardian_id IS NOT NULL THEN pg.japan_contact_no END as guardian_japan_contact_no"),
                         DB::raw("CASE WHEN st.guardian_id IS NOT NULL THEN pg.japan_emergency_sms END as guardian_japan_emergency_sms"),
-                        DB::raw("CASE WHEN st.guardian_id IS NOT NULL THEN pg.japan_staycategory END as guardian_japan_staycategory"),
+                        DB::raw("CASE WHEN st.guardian_id IS NOT NULL THEN pg.stay_category END as guardian_japan_staycategory"),
 
                         // 'st.birthday',
                         // 'st.email',
