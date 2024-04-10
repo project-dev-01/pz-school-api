@@ -1,6 +1,6 @@
 <?php
 return [
-    'main_db'=>'live-api',
+    'main_db'=>'paxsuze-api',
     'client_email'=>'suzen-noreply@suzen.school',
     'student_email_domain' => "@jskl.edu.my",
     'cache_time'=>"24",

@@ -2789,4 +2789,49 @@ class ApiControllerThree extends BaseController
         $cacheKey = $cache_name . $branchId;
         Cache::forget($cacheKey);
     }
+    public function getParentDetailsAccStudentId(Request $request)
+    {
+        $validator = \Validator::make($request->all(), [
+            //'token' => 'required',
+            'branch_id' => 'required',
+            'student_id' => 'required'
+        ]);
+
+        if (!$validator->passes()) {
+            return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
+        } else {
+            $student_id = $request->student_id;
+            // create new connection
+            $conn = $this->createNewConnection($request->branch_id);
+            // get data
+            $parentIds = $conn->table('students as std')
+                ->select('std.father_id', 'std.mother_id')
+                ->join('enrolls as en', 'std.id', '=', 'en.student_id')
+                ->where('std.id', '=', $student_id)
+                ->first();
+               // dd($parentIds );
+                if ($parentIds) {
+                    // Fetch parent details from the 'parent' table using the retrieved IDs
+                    $fatherDetails =  $conn->table('parent')
+                        ->where('id', $parentIds->father_id)
+                        ->first();
+                
+                    $motherDetails =  $conn->table('parent')
+                        ->where('id', $parentIds->mother_id)
+                        ->first();
+                
+                    // $guardianDetails =  $conn->table('parent')
+                    //     ->where('id', $parentIds->guardian_id)
+                    //     ->first();
+                
+                    // Prepare parent details array
+                    $parentDetails = [
+                        'father' => $fatherDetails,
+                        'mother' => $motherDetails,
+                        //'guardian' => $guardianDetails,
+                    ];
+                }
+            return $this->successResponse($parentDetails, 'Student details fetch successfully');
+        }
+    }
 }

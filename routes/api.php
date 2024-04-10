@@ -515,6 +515,7 @@ Route::group(['middleware' => ['auth:api', 'throttle:limit_per_user', 'logroute'
     Route::post('parent/update_info/update', [ApiController::class, 'updateParentUpdateInfo']);
     Route::post('student/update_info/update', [ApiController::class, 'updateStudentUpdateInfo']);
     Route::post('parent/delete', [ApiController::class, 'deleteParent']);
+    Route::post('parent/getParentDetailsAccStudentId', [ApiControllerThree::class, 'getParentDetailsAccStudentId']);
 
     Route::get('student/update_info/list', [ApiController::class, 'getStudentUpdateInfoList']);
     Route::post('student/update_info/view', [ApiController::class, 'getStudentUpdateInfoDetails']);

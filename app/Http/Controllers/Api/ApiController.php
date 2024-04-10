@@ -15222,7 +15222,7 @@ class ApiController extends BaseController
     // update Parent
     public function updateParent(Request $request)
     {
-        // return $request;
+       // return $request;
         $id = $request->id;
         $validator = \Validator::make($request->all(), [
             // 'id' => 'required',
@@ -15474,6 +15474,22 @@ class ApiController extends BaseController
                         }
     
                     }
+                    if($request->student_id){
+                        $namesArray= $request->full_name;
+                        $namesString = implode(',', $namesArray);
+                        $dobArray= $request->sblingdob;
+                        $dobString = implode(',', $dobArray);
+                        $relationshipArray= $request->relationship;
+                        $relationshipString = implode(',', $relationshipArray);
+                       
+                        $staffConn->table('students')->where('id', '=', $request->student_id)->update([
+                           'sibling_full_name' =>  $namesString ,
+                           'sibling_dob' =>  $dobString,
+                           'sibling_relationship' =>  $relationshipString,
+                           'relation' =>  $request->guardian_relation,
+                            'updated_at' => now()
+                        ]);
+                    }
 
                     if($request->guardian_id){
 
@@ -15618,7 +15634,8 @@ class ApiController extends BaseController
                     $mobile_no = isset($request->mobile_no) ? Crypt::encryptString($request->mobile_no) : "";
                     $address = isset($request->address) ? Crypt::encryptString($request->address) : "";
                     $address_2 = isset($request->address_2) ? Crypt::encryptString($request->address_2) : "";
-
+                    $father_mobile_no = isset($request->father_phone_number) ? Crypt::encryptString($request->father_phone_number) : "";
+                    $mother_mobile_no = isset($request->mother_phone_number) ? Crypt::encryptString($request->mother_phone_number) : "";
                     
                     $image_principal_fileName = $request->image_principal_old_photo;
                     if ($request->image_principal_photo) {
@@ -15694,6 +15711,122 @@ class ApiController extends BaseController
                                 'google2fa_secret_enable' => isset($request->google2fa_secret_enable) ? '1' : '0',
                             ]);
                     }
+                    if($request->father_id){
+                        $father_visa_fileName = null;
+                        if ($request->visa_father_photo) {
+
+                            $father_visa_extension = $request->father_visa_file_extension;
+
+                            $father_visa_fileName = 'F-VIMG_' . date('Ymd') . uniqid() . '.' . $father_visa_extension;
+
+                            // return $fileName;
+                            $father_visa_path = '/public/' . $request->branch_id . '/users/images/';
+                            $father_visa_base64 = base64_decode($request->visa_father_photo);
+                            File::ensureDirectoryExists(base_path() . $father_visa_path);
+                            $father_visa_file = base_path() . $father_visa_path . $father_visa_fileName;
+                            $father_visa_suc = file_put_contents($father_visa_file, $father_visa_base64);
+                        }
+                        $father_passport_fileName = null;
+                        if ($request->passport_father_photo) {
+
+                            $father_passport_extension = $request->father_passport_file_extension;
+
+                            $father_passport_fileName = 'F-PIMG_' . date('Ymd') . uniqid() . '.' . $father_passport_extension;
+
+                            // return $fileName;
+                            $father_passport_path = '/public/' . $request->branch_id . '/users/images/';
+                            $father_passport_base64 = base64_decode($request->passport_father_photo);
+                            File::ensureDirectoryExists(base_path() . $father_passport_path);
+                            $father_passport_file = base_path() . $father_passport_path . $father_passport_fileName;
+                            $father_passport_suc = file_put_contents($father_passport_file, $father_passport_base64);
+                        }
+                        $staffConn->table('parent')->where('id', '=', $request->father_id)->update([
+                            'first_name' => $request->father_first_name ?? '',
+                            'middle_name' => $request->father_middle_name ?? '',
+                            'last_name' => $request->father_last_name ?? '',
+                            'occupation' => $request->father_occupation,
+                            'mobile_no' => $request->father_phone_number,
+                            'email' => $request->father_email,
+                            'nationality' => $request->father_nationality,
+                            'last_name_furigana' => $request->father_last_name_furigana ?? '',
+                            'middle_name_furigana' => $request->father_middle_name_furigana ?? '',
+                            'first_name_furigana' => $request->father_first_name_furigana ?? '',
+                            'last_name_english' => $request->father_last_name_english ?? '',
+                            'middle_name_english' => $request->father_middle_name_english ?? '',
+                            'first_name_english' => $request->father_first_name_english ?? '',
+                            'mobile_no' =>  $father_mobile_no ,
+                           'visa_photo' => $father_visa_fileName, 
+                             'passport_photo' => $father_passport_fileName,  
+                            'status' => '0', // Assuming you want to update the status as well
+                            'updated_at' => now()
+                        ]);
+                    }
+                    if($request->mother_id){
+                        $mother_visa_fileName = null;
+                        if ($request->visa_mother_photo) {
+
+                            $mother_visa_extension = $request->mother_visa_file_extension;
+
+                            $mother_visa_fileName = 'F-VIMG_' . date('Ymd') . uniqid() . '.' . $mother_visa_extension;
+
+                            // return $fileName;
+                            $mother_visa_path = '/public/' . $request->branch_id . '/users/images/';
+                            $mother_visa_base64 = base64_decode($request->visa_mother_photo);
+                            File::ensureDirectoryExists(base_path() . $mother_visa_path);
+                            $mother_visa_file = base_path() . $mother_visa_path . $mother_visa_fileName;
+                            $mother_visa_suc = file_put_contents($mother_visa_file, $mother_visa_base64);
+                        }
+                        $mother_passport_fileName = null;
+                        if ($request->passport_mother_photo) {
+
+                            $mother_passport_extension = $request->mother_passport_file_extension;
+
+                            $mother_passport_fileName = 'F-PIMG_' . date('Ymd') . uniqid() . '.' . $mother_passport_extension;
+
+                            // return $fileName;
+                            $mother_passport_path = '/public/' . $request->branch_id . '/users/images/';
+                            $mother_passport_base64 = base64_decode($request->passport_mother_photo);
+                            File::ensureDirectoryExists(base_path() . $mother_passport_path);
+                            $mother_passport_file = base_path() . $mother_passport_path . $mother_passport_fileName;
+                            $mother_passport_suc = file_put_contents($mother_passport_file, $mother_passport_base64);
+                        }
+                        $staffConn->table('parent')->where('id', '=', $request->mother_id)->update([
+                            'first_name' => $request->mother_first_name ?? '',
+                            'last_name' => $request->mother_last_name ?? '',
+                            'middle_name' => $request->mother_middle_name ?? '',
+                            'last_name_furigana' => $request->mother_last_name_furigana ?? '',
+                            'middle_name_furigana' => $request->mother_middle_name_furigana ?? '',
+                            'first_name_furigana' => $request->mother_first_name_furigana ?? '',
+                            'last_name_english' => $request->mother_last_name_english ?? '',
+                            'middle_name_english' => $request->mother_middle_name_english ?? '',
+                            'first_name_english' => $request->mother_first_name_english ?? '',
+                            'email' => $request->mother_email,
+                            'nationality' => $request->mother_nationality,
+                            'occupation' => $request->mother_occupation,
+                            'mobile_no' =>   $mother_mobile_no,
+                            'passport_photo' => $mother_passport_fileName,  
+                            'visa_photo' => $mother_visa_fileName, 
+                            'status' => '0', // Assuming you want to update the status as well
+                            'updated_at' => now()
+                        ]);
+                    }
+                    if($request->student_id){
+                        $namesArray= $request->full_name;
+                        $namesString = implode(',', $namesArray);
+                        $dobArray= $request->sblingdob;
+                        $dobString = implode(',', $dobArray);
+                        $relationshipArray= $request->relationship;
+                        $relationshipString = implode(',', $relationshipArray);
+                       
+                        $staffConn->table('students')->where('id', '=', $request->student_id)->update([
+                           'sibling_full_name' =>  $namesString ,
+                           'sibling_dob' =>  $dobString,
+                           'sibling_relationship' =>  $relationshipString,
+                           'relation' =>  $request->guardian_relation,
+                            'updated_at' => now()
+                        ]);
+                    }
+
 
 
                     $query = $staffConn->table('parent')->where('id', $id)->update([
@@ -15750,7 +15883,7 @@ class ApiController extends BaseController
                     'employment_status' => $request->guardian_employment_status,               
 
 
-                    'japanese_association_membership_image_principal' => $image_principal_fileName,
+                    //'japanese_association_membership_image_principal' => $image_principal_fileName,
                     'japanese_association_membership_image_supplimental' => $fileName,
                     'japan_postalcode' => $request->japan_postalcode,
                     'japan_contact_no' =>  isset($request->japan_contact_no) ? Crypt::encryptString($request->japan_contact_no) : "",
