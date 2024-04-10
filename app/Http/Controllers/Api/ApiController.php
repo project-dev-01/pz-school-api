@@ -5037,7 +5037,7 @@ class ApiController extends BaseController
             // Check if the data is cached
             //if (Cache::has($cacheKey)) {
                 // If cached, return cached data
-                $output = Cache::get($cacheKey);
+                // $output = Cache::get($cacheKey);
         //} else {
             // create new connection
             $con = $this->createNewConnection($request->branch_id);
@@ -5056,7 +5056,7 @@ class ApiController extends BaseController
                 ->where([
                     ['timetable_class.class_id', $request->class_id],
                     ['timetable_class.semester_id', $request->semester_id],
-                    ['timetable_class.session_id', $request->session_id],
+                    // ['timetable_class.session_id', $request->session_id],
                     ['timetable_class.section_id', $request->section_id],
                     ['timetable_class.academic_session_id', $request->academic_session_id]
                 ])
@@ -13919,57 +13919,29 @@ class ApiController extends BaseController
             'branch_id' => 'required',
         ]);
 
-        $department_id = isset($request->department_id)?$request->department_id:null;
-        $class_id = isset($request->class_id)?$request->class_id:null;
-        $session_id = isset($request->session_id)?$request->session_id:0;
-        $section_id = isset($request->section_id)?$request->section_id:null;
-        $status = isset($request->status)?$request->status:null;
-        $name = isset($request->student_name)?$request->student_name:null;
+        $department_id = isset($request->department_id) ? $request->department_id : null;
+        $class_id = isset($request->class_id) ? $request->class_id : null;
+        $session_id = isset($request->session_id) ? $request->session_id : 0;
+        $section_id = isset($request->section_id) ? $request->section_id : null;
+        $status = isset($request->status) ? $request->status : null;
+        $name = isset($request->student_name) ? $request->student_name : null;
+
         if (!$validator->passes()) {
             return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
         } else {
-           // get data
+            // get data
             $cache_time = config('constants.cache_time');
             $cache_students = config('constants.cache_students');
-            
-            $cacheKey = $cache_students . 
-            'department_' . $department_id . 
-            '_class_' . $class_id . 
-            '_section_' . $section_id . 
-            '_status_' . $status . 
-            '_name_' . $name . 
-            '_branch_' . $request->branch_id;
-            // $this->clearCache($cache_students . $department_id . $class_id . $section_id . $status . $name . $request->branch_id);
+
+            $cacheKey = $cache_students . $request->branch_id;
             // Check if the data is cached
-            if (Cache::has($cacheKey)) {
-                // If cached, return cached data
+            if (Cache::has($cacheKey) && !($department_id || $class_id || $session_id || $section_id || $status)) {
+                // If cached and no filters are applied, return cached data
+                \Log::info('cacheKey ' . json_encode($cacheKey));
                 $students = Cache::get($cacheKey);
             } else {
                 // create new connection
                 $con = $this->createNewConnection($request->branch_id);
-                // get data
-                // $student = $con->table('enrolls as e')->select('s.id', DB::raw('CONCAT(s.last_name, " ", s.first_name) as name'), 's.register_no', 's.roll_no', 's.mobile_no', 's.email', 's.gender', 's.photo')
-                //     ->leftJoin('students as s', 'e.student_id', '=', 's.id')
-                //     ->when($department_id, function ($query, $department_id) {
-                //         return $query->where('e.department_id', $department_id);
-                //     })
-                //     ->when($class_id, function ($query, $class_id) {
-                //         return $query->where('e.class_id', $class_id);
-                //     })
-                //     ->when($session_id, function ($query, $session_id) {
-                //         return $query->where('e.session_id', $session_id);
-                //     })
-                //     ->when($section_id, function ($query, $section_id) {
-                //         return $query->where('e.section_id', $section_id);
-                //     })
-                //     ->when($name, function ($query, $name) {
-                //         return $query->where('s.first_name', 'like', '%' . $name . '%')->orWhere('s.last_name', 'like', '%' . $name . '%');
-                //     })
-                //     ->where('e.academic_session_id', '=', $request->academic_session_id)
-                //     // ->where('e.active_status', '=', "0")
-                //     ->groupBy('e.student_id')
-                //     ->get()->toArray();
-                // Get data
                 $query = $con->table('enrolls as e')
                     ->select(
                         's.id',
@@ -13983,7 +13955,6 @@ class ApiController extends BaseController
                         's.photo'
                     )
                     ->join('students as s', 'e.student_id', '=', 's.id');
-                    // ->where('e.academic_session_id', '=', $request->academic_session_id);
 
                 if (isset($request->department_id) && filled($request->department_id)) {
                     $query->where('e.department_id', $request->department_id);
@@ -14000,6 +13971,7 @@ class ApiController extends BaseController
                 if (isset($request->section_id) && filled($request->section_id)) {
                     $query->where('e.section_id', $request->section_id);
                 }
+
                 if (isset($request->status) && filled($request->status)) {
                     $query->where('e.active_status', $request->status);
                 }
@@ -14008,17 +13980,21 @@ class ApiController extends BaseController
                     $name = $request->student_name;
                     $query->where(function ($q) use ($name) {
                         $q->where('s.first_name', 'like', '%' . $name . '%')
-                        ->orWhere('s.last_name', 'like', '%' . $name . '%');
+                            ->orWhere('s.last_name', 'like', '%' . $name . '%');
                     });
                 }
 
                 $students = $query->groupBy('e.student_id')->get()->toArray();
-                // Cache the fetched data for future requests
-                Cache::put($cacheKey, $students, now()->addHours($cache_time)); // Cache for 24 hours
+
+                // Cache the fetched data for future requests, only if no filters are applied
+                if (!($department_id || $class_id || $session_id || $section_id || $status)) {
+                    Cache::put($cacheKey, $students, now()->addHours($cache_time)); // Cache for 24 hours
+                }
             }
-            return $this->successResponse($students , 'Student record fetch successfully');
+            return $this->successResponse($students, 'Student record fetch successfully');
         }
     }
+
 
     // update Student
     public function updateStudent(Request $request)
@@ -14503,53 +14479,57 @@ class ApiController extends BaseController
     // delete Student
     public function deleteStudent(Request $request)
     {
-        $id = $request->id;
+        \Log::info('Delete student request: ' . json_encode($request->all()));
         $validator = \Validator::make($request->all(), [
-            'token' => 'required',
             'branch_id' => 'required',
             'id' => 'required',
         ]);
-
-        if (!$validator->passes()) {
+        if ($validator->fails()) {
             return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
-        } else {
-            // create new connection
-            $conn = $this->createNewConnection($request->branch_id);
-            // get data
+        }
+        try {
+            $id = $request->id;
+            $branch_id = $request->branch_id;
+            // Get student data and photo path
+            $conn = $this->createNewConnection($branch_id);
+            $student = $conn->table('students as s')
+                            ->select('s.photo', 'e.*')
+                            ->leftJoin('enrolls as e', 's.id', '=', 'e.student_id')
+                            ->where('s.id', $id)
+                            ->first();
+    
+            if (!$student) {
+                return $this->send404Error('Student not found.', ['error' => 'Student not found']);
+            }
             $path = '/public/' . $request->branch_id . '/users/images/';
-            $data = $conn->table('students as s')->select('s.photo', 'e.*')
-                ->leftJoin('enrolls as e', 's.id', '=', 'e.student_id')
-                ->where('s.id', $id)
-                ->first();
-            $imageDelete = $data->photo;
+            $imageDelete = $student->photo;
             if ($imageDelete) {
                 if (\File::exists(base_path($path . $imageDelete))) {
                     \File::delete(base_path($path . $imageDelete));
                 }
             }
-            // $studentDelete = 1;
-            $studentDelete = User::where([['user_id', '=', $id], ['role_id', '=', "6"], ['branch_id', '=', $request->branch_id]])->delete();
-            $enroll = $conn->table('enrolls')->where('student_id', $id)->delete();
-            $query = $conn->table('students')->where('id', $id)->delete();
-
-            $success = $conn->table('enrolls as e')->select('s.id', 's.first_name', 's.last_name', 's.register_no', 's.roll_no', 's.mobile_no', 's.email', 's.gender')
-                ->leftJoin('students as s', 'e.student_id', '=', 's.id')
-                ->where([
-                    ['e.class_id', $data->class_id],
-                    ['e.semester_id', $data->semester_id],
-                    ['e.session_id', $data->session_id],
-                    ['e.section_id', $data->section_id]
-                ])
-                ->get()->toArray();
-                // cache clear start
-                $cache_students = config('constants.cache_students');
-                $this->clearCache($cache_students,$request->branch_id);
-                // cache clear end
-            if ($studentDelete) {
-                return $this->successResponse($success, 'Student have been deleted successfully');
-            } else {
-                return $this->send500Error('Something went wrong.', ['error' => 'Something went wrong']);
-            }
+            // Delete user
+            $deletedUserCount = User::where('user_id', $id)
+                                    ->where('role_id', 6)
+                                    ->where('branch_id', $branch_id)
+                                    ->delete();
+    
+            // Delete enrollment records
+            $enrollDeleteCount = $conn->table('enrolls')->where('student_id', $id)->delete();
+    
+            // Delete student record
+            $studentDeleteCount = $conn->table('students')->where('id', $id)->delete();
+    
+            // Clear cache
+            $cache_students = config('constants.cache_students');
+            $this->clearCache($cache_students, $branch_id);
+    
+            \Log::info("Deleted student with ID $id. User records deleted: $deletedUserCount, Enrollment records deleted: $enrollDeleteCount, Student records deleted: $studentDeleteCount");
+    
+            return $this->successResponse([], 'Student has been deleted successfully');
+        } catch (\Exception $e) {
+            \Log::error('Error deleting student: ' . $e->getMessage());
+            return $this->send500Error('Something went wrong.', ['error' => $e->getMessage()]);
         }
     }
     // addParent
@@ -14888,43 +14868,45 @@ class ApiController extends BaseController
         if (!$validator->passes()) {
             return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
         } else {
-            // get data
             $cache_time = config('constants.cache_time');
             $cache_parentDetails = config('constants.cache_parentDetails');
+            $status = $request->status ?? null;
             
-            // $this->clearCache($cache_parentDetails,$request->branch_id);
-            if(isset($request->status))
-                {
-                    $cacheKey = $cache_parentDetails . $request->status. $request->branch_id;
-                }
-                else
-                {
-                    $cacheKey = $cache_parentDetails . $request->branch_id; 
-                }
-                // Check if the data is cached
+            if ($status === null) {
+                // Cache enabled for status filtering
+                $cacheKey = $cache_parentDetails . $request->branch_id; 
+
                 if (Cache::has($cacheKey)) {
-                    // If cached, return cached data
                     $parentDetails = Cache::get($cacheKey);
+                } else {
+                    $parentDetails = $this->fetchParentDetails($request->branch_id);
+                    Cache::put($cacheKey, $parentDetails, now()->addHours($cache_time));
+                }
             } else {
-            // create new connection
-            $conn = $this->createNewConnection($request->branch_id);
-            // get data
-            if(isset($request->status))
-            {
-                $parentDetails = $conn->table('parent')->select("id",'email','occupation', DB::raw("CONCAT(last_name, ' ', first_name) as name"))->where('status','=',$request->status)->get();
+                // No caching for status filtering
+                $parentDetails = $this->fetchParentDetails($request->branch_id, $status);
             }
-            else
-            {
-                $parentDetails = $conn->table('parent')->select("id",'email','occupation', DB::raw("CONCAT(last_name, ' ', first_name) as name"))->where('status','=','0')->get();
-            }
-            //$parentDetails = $conn->table('parent')->select("id",'email','occupation', DB::raw("CONCAT(last_name, ' ', first_name) as name"))->where('status','=','0')->get();
-            // Cache the fetched data for future requests
-            Cache::put($cacheKey, $parentDetails, now()->addHours($cache_time)); // Cache for 24 hours
-            }
-            return $this->successResponse($parentDetails, 'Parent record fetch successfully');
+
+            return $this->successResponse($parentDetails, 'Parent records fetched successfully');
         }
     }
-
+    private function fetchParentDetails($branch_id, $status = null) {
+        $conn = $this->createNewConnection($branch_id);
+    
+        if ($status !== null) {
+            $parentDetails = $conn->table('parent')
+                ->select("id", 'email', 'occupation', DB::raw("CONCAT(last_name, ' ', first_name) as name"))
+                ->where('status', '=', $status)
+                ->get();
+        } else {
+            $parentDetails = $conn->table('parent')
+                ->select("id", 'email', 'occupation', DB::raw("CONCAT(last_name, ' ', first_name) as name"))
+                ->where('status', '=', '0')
+                ->get();
+        }
+    
+        return $parentDetails;
+    }
     // getParentStudentUpdateList
     public function getParentStudentUpdateInfoList(Request $request)
     {
@@ -27912,6 +27894,7 @@ class ApiController extends BaseController
     protected function clearCache($cache_name,$branchId)
     {
         $cacheKey = $cache_name . $branchId;
+        \Log::info('cacheClear ' . json_encode($cacheKey));
         Cache::forget($cacheKey);
     }
 }

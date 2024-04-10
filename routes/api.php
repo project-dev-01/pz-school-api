@@ -67,6 +67,7 @@ Route::post('register_number', [ApiController::class, 'registerNumber']);
 // Route::group(['middleware' => ['auth:api','check-single-session-api', 'logroute']], function () {
 // except log route start
 Route::post('all_logout', [AuthController::class, 'allLogout'])->middleware('auth:api', 'throttle:limit_per_user');
+Route::post('lastlogout', [AuthController::class, 'lastlogout'])->middleware('auth:api', 'throttle:limit_per_user');
 // except log route end
 Route::group(['middleware' => ['auth:api', 'throttle:limit_per_user', 'logroute']], function () {
     Route::get('logout', [AuthController::class, 'logout']);
@@ -773,7 +774,6 @@ Route::group(['middleware' => ['auth:api', 'throttle:limit_per_user', 'logroute'
     Route::get('student_leave_count', [ApiController::class, 'studentLeaveCount']);
 
 
-    Route::post('lastlogout', [AuthController::class, 'lastlogout']);
     // soap
     Route::post('soap/category/list', [ApiControllerOne::class, 'soapCategoryList']);
     Route::post('soap/sub_category/list', [ApiControllerOne::class, 'soapSubCategoryList']);
@@ -952,7 +952,6 @@ Route::group(['middleware' => ['auth:api', 'throttle:limit_per_user', 'logroute'
     Route::post('all_student/ranking', [ApiControllerOne::class, 'allStudentRanking']);
 
     // Activity Monitoring
-    Route::post('lastlogout', [AuthController::class, 'lastlogout']);
     Route::get('login_list', [AuthController::class, 'login_historylist']);
     // BankAccount routes
     Route::post('bank_account/add', [ApiController::class, 'addBankAccount']);
