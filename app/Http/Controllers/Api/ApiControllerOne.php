@@ -419,7 +419,7 @@ class ApiControllerOne extends BaseController
                             if ($importData[11] == "1") {
                                 $data = $Connection->table('staffs as s')->select(
                                     's.id',
-                                    DB::raw('CONCAT(s.first_name, " ", s.last_name) as name')
+                                    DB::raw('CONCAT(s.last_name, " ", s.first_name) as name')
                                 )
                                     ->where('id', $importData[12])
                                     ->first();
@@ -1527,7 +1527,7 @@ class ApiControllerOne extends BaseController
                     'en.student_id',
                     'en.semester_id',
                     'en.session_id',
-                    DB::raw("CONCAT(stud.first_name, ' ', stud.last_name) as student_name")
+                    DB::raw("CONCAT(stud.last_name, ' ', stud.first_name) as student_name")
                 )
                 ->join('classes as cl', 'en.class_id', '=', 'cl.id')
                 ->join('sections as sc', 'en.section_id', '=', 'sc.id')
@@ -1733,7 +1733,7 @@ class ApiControllerOne extends BaseController
                 'en.session_id',
                 'cl.name as class_name',
                 'sc.name as section_name',
-                DB::raw("CONCAT(stud.first_name, ' ', stud.last_name) as student_name"),
+                DB::raw("CONCAT(stud.last_name, ' ', stud.first_name) as student_name"),
                 'stud.birthday',
                 'stud.register_no'
             )
@@ -1755,7 +1755,7 @@ class ApiControllerOne extends BaseController
                         'en.student_id',
                         'en.semester_id',
                         'en.session_id',
-                        DB::raw("CONCAT(stud.first_name, ' ', stud.last_name) as student_name")
+                        DB::raw("CONCAT(stud.last_name, ' ', stud.first_name) as student_name")
                     )
                     ->join('classes as cl', 'en.class_id', '=', 'cl.id')
                     ->join('sections as sc', 'en.section_id', '=', 'sc.id')
@@ -2446,7 +2446,7 @@ class ApiControllerOne extends BaseController
                     'en.semester_id',
                     'en.session_id',
                     'en.academic_session_id',
-                    DB::raw("CONCAT(stud.first_name, ' ', stud.last_name) as student_name")
+                    DB::raw("CONCAT(stud.last_name, ' ', stud.first_name) as student_name")
                 )
                 ->join('classes as cl', 'en.class_id', '=', 'cl.id')
                 ->join('sections as sc', 'en.section_id', '=', 'sc.id')
@@ -2751,7 +2751,7 @@ class ApiControllerOne extends BaseController
                     'en.student_id',
                     'en.class_id',
                     'en.section_id',
-                    DB::raw("CONCAT(st.first_name, ' ', st.last_name) as name"),
+                    DB::raw("CONCAT(st.last_name, ' ', st.first_name) as name"),
                     'st.id as id',
                     'st.register_no',
                     'st.roll_no',
@@ -2917,7 +2917,7 @@ class ApiControllerOne extends BaseController
                     ->select(
                         "tp.id",
                         "tp.attendance_no",
-                        DB::raw("CONCAT(st1.first_name, ' ', st1.last_name) as name"),
+                        DB::raw("CONCAT(st1.last_name, ' ', st1.first_name) as name"),
                         "tp.register_no",
                         "d1.name as deptName",
                         "c1.name as className",
@@ -2946,7 +2946,7 @@ class ApiControllerOne extends BaseController
                     ->select(
                         "tp.id",
                         "tp.attendance_no",
-                        DB::raw("CONCAT(st1.first_name, ' ', st1.last_name) as name"),
+                        DB::raw("CONCAT(st1.last_name, ' ', st1.first_name) as name"),
                         "tp.register_no",
                         "d1.name as deptName",
                         "c1.name as className",
@@ -2975,7 +2975,7 @@ class ApiControllerOne extends BaseController
                     ->select(
                         "tp.id",
                         "tp.attendance_no",
-                        DB::raw("CONCAT(st1.first_name, ' ', st1.last_name) as name"),
+                        DB::raw("CONCAT(st1.last_name, ' ', st1.first_name) as name"),
                         "tp.register_no",
                         "d1.name as deptName",
                         "c1.name as className",
@@ -3028,7 +3028,7 @@ class ApiControllerOne extends BaseController
             $promotion_data_not_in_enroll = $conn->table('temp_promotion as tp')
                 ->select(
                     "tp.attendance_no",
-                    DB::raw("CONCAT(st1.first_name, ' ', st1.last_name) as name"),
+                    DB::raw("CONCAT(st1.last_name, ' ', st1.first_name) as name"),
                     "st1.admission_date",
                     "tp.register_no",
                     "d1.name as deptName",
@@ -3074,7 +3074,7 @@ class ApiControllerOne extends BaseController
             $promotion_data_not_in_enroll = $conn->table('temp_promotion as tp')
                 ->select(
                     "tp.attendance_no",
-                    DB::raw("CONCAT(st1.first_name, ' ', st1.last_name) as name"),
+                    DB::raw("CONCAT(st1.last_name, ' ', st1.first_name) as name"),
                     "st1.admission_date",
                     "tp.register_no",
                     "d1.name as deptName",
@@ -3123,7 +3123,7 @@ class ApiControllerOne extends BaseController
             $promotion_data_inactive_students = $conn->table('temp_promotion as tp')
                 ->select(
                     "tp.attendance_no",
-                    DB::raw("CONCAT(st1.first_name, ' ', st1.last_name) as name"),
+                    DB::raw("CONCAT(st1.last_name, ' ', st1.first_name) as name"),
                     "st1.admission_date",
                     "te1.date_of_termination",
                     "tp.register_no",
@@ -3292,7 +3292,7 @@ class ApiControllerOne extends BaseController
             $conn = $this->createNewConnection($request->branch_id);
             $class_id = $request->class_id;
             $section_id = $request->section_id;
-            $download_data = $conn->table('enrolls as en')->select( DB::raw('CONCAT(s.first_name, " ", s.last_name) as student_name'),
+            $download_data = $conn->table('enrolls as en')->select( DB::raw('CONCAT(s.last_name, " ", s.first_name) as student_name'),
             'd.name',
             'cl.name as class_name', 
             'se.name as section_name',
@@ -3341,7 +3341,7 @@ class ApiControllerOne extends BaseController
                 ->select(
                     'lev.id',
                     'lev.staff_id',
-                    DB::raw('CONCAT(stf.first_name, " ", stf.last_name) as name'),
+                    DB::raw('CONCAT(stf.last_name, " ", stf.first_name) as name'),
                     DB::raw('DATE_FORMAT(lev.from_leave, "%d-%m-%Y") as from_leave'),
                     DB::raw('DATE_FORMAT(lev.to_leave, "%d-%m-%Y") as to_leave'),
                     DB::raw('DATE_FORMAT(lev.created_at, "%d-%m-%Y") as created_at'),
@@ -4909,7 +4909,7 @@ class ApiControllerOne extends BaseController
             $getSubjectMarks = $Connection->table('enrolls as en')
                 ->select(
                     'en.student_id',
-                    DB::raw('CONCAT(st.first_name, " ", st.last_name) as name'),
+                    DB::raw('CONCAT(st.last_name, " ", st.first_name) as name'),
                     DB::raw("group_concat(sa.score ORDER BY sa.paper_id ASC) as score"),
                     DB::raw("group_concat(exp.subject_weightage ORDER BY sa.paper_id ASC) as subject_weightage"),
                     DB::raw("group_concat(exp.paper_name ORDER BY sa.paper_id ASC) as paper_name"),
@@ -5101,7 +5101,7 @@ class ApiControllerOne extends BaseController
             $section_id = $request->section_id;
 
             $SoapSubjectDetails = $conn->table('soap as sa')
-                ->select('s.id', 's.photo', DB::raw('CONCAT(s.first_name, " ", s.last_name) as name'), 'sections.name as section_name', 'classes.name as class_name', 's.email')
+                ->select('s.id', 's.photo', DB::raw('CONCAT(s.last_name, " ", s.first_name) as name'), 'sections.name as section_name', 'classes.name as class_name', 's.email')
                 ->leftJoin('students as s', 'sa.student_id', '=', 's.id')
                 ->leftJoin('enrolls as e', 's.id', '=', 'e.student_id')
                 ->leftJoin('sections', 'e.section_id', '=', 'sections.id')
@@ -5180,7 +5180,7 @@ class ApiControllerOne extends BaseController
             $session_id = $request->session_id;
             $section_id = $request->section_id;
 
-            $SoapSubjectDetails = $conn->table('students as s')->select('s.id', 's.photo', 'e.section_id', 'e.class_id', DB::raw('CONCAT(s.first_name, " ", s.last_name) as name'), 'sections.name as section_name', 'classes.name as class_name', 's.email')
+            $SoapSubjectDetails = $conn->table('students as s')->select('s.id', 's.photo', 'e.section_id', 'e.class_id', DB::raw('CONCAT(s.last_name, " ", s.first_name) as name'), 'sections.name as section_name', 'classes.name as class_name', 's.email')
                 ->leftJoin('enrolls as e', 's.id', '=', 'e.student_id')
                 ->leftJoin('sections', 'e.section_id', '=', 'sections.id')
                 ->leftJoin('classes', 'e.class_id', '=', 'classes.id')
@@ -5291,7 +5291,7 @@ class ApiControllerOne extends BaseController
             $studentData = $createConnection->table('enrolls as en')
                 ->select(
                     'st.id',
-                    DB::raw('CONCAT(st.first_name, " ", st.last_name) as name')
+                    DB::raw('CONCAT(st.last_name, " ", st.first_name) as name')
                 )
                 ->join('students as st', 'st.id', '=', 'en.student_id')
                 ->where([
@@ -6316,7 +6316,7 @@ class ApiControllerOne extends BaseController
                     'st.email',
                     'fa.id as allocation_id',
                     'fa.payment_mode_id',
-                    DB::raw('CONCAT(st.first_name, " ", st.last_name) as name')
+                    DB::raw('CONCAT(st.last_name, " ", st.first_name) as name')
                 )
                 ->leftJoin('students as st', 'en.student_id', '=', 'st.id')
                 ->leftJoin('fees_allocation as fa', function ($join) use ($fees_group_id, $academic_session_id) {
@@ -6358,7 +6358,7 @@ class ApiControllerOne extends BaseController
             $studentData = $conn->table('enrolls as e')
                 ->select(
                     'e.student_id',
-                    DB::raw('CONCAT(st.first_name, " ", st.last_name) as name'),
+                    DB::raw('CONCAT(st.last_name, " ", st.first_name) as name'),
                     'st.email',
                     'st.photo',
                     'st.roll_no'
@@ -6492,7 +6492,7 @@ class ApiControllerOne extends BaseController
                     'sc.name as section_name',
                     'st.photo',
                     // 'fa.id as allocation_id',
-                    DB::raw('CONCAT(st.first_name, " ", st.last_name) as name'),
+                    DB::raw('CONCAT(st.last_name, " ", st.first_name) as name'),
                     DB::raw("group_concat(fa.group_id) as all_group_id")
                 )
                 // ->join('enrolls as en', 'en.student_id', '=', 'fa.student_id')
@@ -6955,8 +6955,8 @@ class ApiControllerOne extends BaseController
                     'st.mobile_no',
                     'cl.name as class_name',
                     'sc.name as section_name',
-                    DB::raw('CONCAT(st.first_name, " ", st.last_name) as name'),
-                    DB::raw('CONCAT(p.first_name, " ", p.last_name) as parent_name'),
+                    DB::raw('CONCAT(st.last_name, " ", st.first_name) as name'),
+                    DB::raw('CONCAT(p.last_name, " ", p.first_name) as parent_name'),
                     'ay.name as academic_year',
                     'ay.id as academic_id'
                 )
@@ -8740,7 +8740,7 @@ class ApiControllerOne extends BaseController
                                 'en.student_id',
                                 'en.semester_id',
                                 'en.session_id',
-                                DB::raw('CONCAT(stu.first_name, " ", stu.last_name) as student_name'),
+                                DB::raw('CONCAT(stu.last_name, " ", stu.first_name) as student_name'),
                             )
                             ->join('students as stu', 'en.student_id', '=', 'stu.id')
                             ->where([
@@ -9066,7 +9066,7 @@ class ApiControllerOne extends BaseController
                 ->select(
                     'st.id',
                     'sa.session_id',
-                    \DB::raw("CONCAT(st.first_name, ' ', st.last_name) as name"),
+                    \DB::raw("CONCAT(st.last_name, ' ', st.first_name) as name"),
                     $attend,
                     DB::raw('COUNT(CASE WHEN sa.status = "present" then 1 ELSE NULL END) as "presentCount"'),
                     DB::raw('COUNT(CASE WHEN sa.status = "absent" then 1 ELSE NULL END) as "absentCount"'),
@@ -9165,8 +9165,8 @@ class ApiControllerOne extends BaseController
                 $excel = $Connection->table('student_attendances_day as sa')
                     ->select(
                         'sa.student_id',
-                        \DB::raw("CONCAT(stud.first_name, ' ', stud.last_name) as name"),
-                        DB::raw("CONCAT(stud.first_name_english, ' ', stud.last_name_english) as name_english"),
+                        \DB::raw("CONCAT(stud.last_name, ' ', stud.first_name) as name"),
+                        DB::raw("CONCAT(stud.last_name_english, ' ', stud.first_name_english) as name_english"),
                         'c.name as class_name',
                         's.name as section_name',
                         'sa.status',
@@ -9241,7 +9241,7 @@ class ApiControllerOne extends BaseController
                     $excel = $Connection->table('student_attendances_day as sa')
                         ->select(
                             'sa.student_id',
-                            \DB::raw("CONCAT(stud.first_name, ' ', stud.last_name) as name"),
+                            \DB::raw("CONCAT(stud.last_name, ' ', stud.first_name) as name"),
                             $attend,
                             DB::raw('COUNT(CASE WHEN sa.status = "present" then 1 ELSE NULL END) as "presentCount"'),
                             DB::raw('COUNT(CASE WHEN sa.status = "absent" then 1 ELSE NULL END) as "absentCount"'),
@@ -9262,7 +9262,7 @@ class ApiControllerOne extends BaseController
                     $excel = $Connection->table('student_attendances_day as sa')
                         ->select(
                             'sa.student_id',
-                            \DB::raw("CONCAT(stud.first_name, ' ', stud.last_name) as name"),
+                            \DB::raw("CONCAT(stud.last_name, ' ', stud.first_name) as name"),
                             $attend,
                             DB::raw('COUNT(CASE WHEN sa.status = "present" then 1 ELSE NULL END) as "presentCount"'),
                             DB::raw('COUNT(CASE WHEN sa.status = "absent" then 1 ELSE NULL END) as "absentCount"'),
@@ -9356,8 +9356,8 @@ class ApiControllerOne extends BaseController
                 $excel = $Connection->table('students as stud')
                     ->select(
                         'sa.student_id',
-                        \DB::raw("CONCAT(stud.first_name, ' ', stud.last_name) as name"),
-                        DB::raw("CONCAT(stud.first_name_english, ' ', stud.last_name_english) as name_english"),
+                        \DB::raw("CONCAT(stud.last_name, ' ', stud.first_name) as name"),
+                        DB::raw("CONCAT(stud.last_name_english, ' ', stud.first_name_english) as name_english"),
                         'c.name as class_name',
                         's.name as section_name',
                         's.name as semester_name',
@@ -9462,8 +9462,8 @@ class ApiControllerOne extends BaseController
                 $excel = $Connection->table('students as stud')
                     ->select(
                         'sa.student_id',
-                        \DB::raw("CONCAT(stud.first_name, ' ', stud.last_name) as name"),
-                        DB::raw("CONCAT(stud.first_name_english, ' ', stud.last_name_english) as name_english"),
+                        \DB::raw("CONCAT(stud.last_name, ' ', stud.first_name) as name"),
+                        DB::raw("CONCAT(stud.last_name_english, ' ', stud.first_name_english) as name_english"),
                         'c.name as class_name',
                         's.name as section_name',
                         DB::raw('COUNT(CASE WHEN sa.status = "present" then 1 ELSE NULL END) as "presentCount"'),
@@ -9560,8 +9560,8 @@ class ApiControllerOne extends BaseController
                 $excel = $Connection->table('student_attendances as sa')
                     ->select(
                         'sa.student_id',
-                        \DB::raw("CONCAT(stud.first_name, ' ', stud.last_name) as name"),
-                        DB::raw("CONCAT(stud.first_name_english, ' ', stud.last_name_english) as name_english"),
+                        \DB::raw("CONCAT(stud.last_name, ' ', stud.first_name) as name"),
+                        DB::raw("CONCAT(stud.last_name_english, ' ', stud.first_name_english) as name_english"),
                         'c.name as class_name',
                         's.name as section_name',
                         'sa.status',
@@ -9636,7 +9636,7 @@ class ApiControllerOne extends BaseController
                     $excel = $Connection->table('student_attendances as sa')
                         ->select(
                             'sa.student_id',
-                            \DB::raw("CONCAT(stud.first_name, ' ', stud.last_name) as name"),
+                            \DB::raw("CONCAT(stud.last_name, ' ', stud.first_name) as name"),
                             $attend,
                             DB::raw('COUNT(CASE WHEN sa.status = "present" then 1 ELSE NULL END) as "presentCount"'),
                             DB::raw('COUNT(CASE WHEN sa.status = "absent" then 1 ELSE NULL END) as "absentCount"'),
@@ -9657,7 +9657,7 @@ class ApiControllerOne extends BaseController
                     $excel = $Connection->table('student_attendances as sa')
                         ->select(
                             'sa.student_id',
-                            \DB::raw("CONCAT(stud.first_name, ' ', stud.last_name) as name"),
+                            \DB::raw("CONCAT(stud.last_name, ' ', stud.first_name) as name"),
                             $attend,
                             DB::raw('COUNT(CASE WHEN sa.status = "present" then 1 ELSE NULL END) as "presentCount"'),
                             DB::raw('COUNT(CASE WHEN sa.status = "absent" then 1 ELSE NULL END) as "absentCount"'),
@@ -9751,8 +9751,8 @@ class ApiControllerOne extends BaseController
                 $excel = $Connection->table('students as stud')
                     ->select(
                         'sa.student_id',
-                        \DB::raw("CONCAT(stud.first_name, ' ', stud.last_name) as name"),
-                        DB::raw("CONCAT(stud.first_name_english, ' ', stud.last_name_english) as name_english"),
+                        \DB::raw("CONCAT(stud.last_name, ' ', stud.first_name) as name"),
+                        DB::raw("CONCAT(stud.last_name_english, ' ', stud.first_name_english) as name_english"),
                         'c.name as class_name',
                         's.name as section_name',
                         's.name as semester_name',
@@ -9857,8 +9857,8 @@ class ApiControllerOne extends BaseController
                 $excel = $Connection->table('students as stud')
                     ->select(
                         'sa.student_id',
-                        \DB::raw("CONCAT(stud.first_name, ' ', stud.last_name) as name"),
-                        DB::raw("CONCAT(stud.first_name_english, ' ', stud.last_name_english) as name_english"),
+                        \DB::raw("CONCAT(stud.last_name, ' ', stud.first_name) as name"),
+                        DB::raw("CONCAT(stud.last_name_english, ' ', stud.first_name_english) as name_english"),
                         'c.name as class_name',
                         's.name as section_name',
                         DB::raw('COUNT(CASE WHEN sa.status = "present" then 1 ELSE NULL END) as "presentCount"'),
@@ -10165,7 +10165,7 @@ class ApiControllerOne extends BaseController
                                 'en.session_id',
                                 'cl.name as class_name',
                                 'sec.name as section_name',
-                                DB::raw('CONCAT(stu.first_name, " ", stu.last_name) as student_name'),
+                                DB::raw('CONCAT(stu.last_name, " ", stu.first_name) as student_name'),
                             )
                             ->join('students as stu', 'en.student_id', '=', 'stu.id')
                             ->join('classes as cl', 'en.class_id', '=', 'cl.id')
@@ -10450,7 +10450,7 @@ class ApiControllerOne extends BaseController
                     'st.photo',
                     'fa.group_id as all_group_id',
                     // 'fa.id as allocation_id',
-                    DB::raw('CONCAT(st.first_name, " ", st.last_name) as name'),
+                    DB::raw('CONCAT(st.last_name, " ", st.first_name) as name'),
                 )
                 // ->join('enrolls as en', 'en.student_id', '=', 'fa.student_id')
                 ->leftJoin('students as st', 'fa.student_id', '=', 'st.id')
@@ -10962,7 +10962,7 @@ class ApiControllerOne extends BaseController
             $studentData = $conn->table('enrolls as e')
                 ->select(
                     'e.student_id',
-                    DB::raw('CONCAT(st.first_name, " ", st.last_name) as name'),
+                    DB::raw('CONCAT(st.last_name, " ", st.first_name) as name'),
                     'st.email',
                     'st.photo',
                     'st.roll_no'
@@ -11056,7 +11056,7 @@ class ApiControllerOne extends BaseController
                     'cl.name as class_name',
                     'sc.name as section_name',
                     'd1.name as department_name',
-                    DB::raw('CONCAT(st.first_name, " ", st.last_name) as student_name')
+                    DB::raw('CONCAT(st.last_name, " ", st.first_name) as student_name')
                 )
                 ->join('classes as cl', 'pc.class_id', '=', 'cl.id')
                 ->join('sections as sc', 'pc.section_id', '=', 'sc.id')
@@ -11310,7 +11310,7 @@ class ApiControllerOne extends BaseController
             $date = $request->date;
             // get data
             $data = $Connection->table('health_logbooks_part_c as pc')->select(
-                DB::raw('CONCAT(st.first_name, " ", st.last_name) as name'),
+                DB::raw('CONCAT(st.last_name, " ", st.first_name) as name'),
                 'st.gender',
                 'pc.time',
                 'pc.event_notes_c',
@@ -11584,7 +11584,7 @@ class ApiControllerOne extends BaseController
                     'd1.name as department_name',
                     'se.name as section_name',
                     'cl.name as class_name',
-                    DB::raw('CONCAT(st.first_name, " ", st.last_name) as student_name'),
+                    DB::raw('CONCAT(st.last_name, " ", st.first_name) as student_name'),
                     DB::raw('MAX(sin.type) as latest_type'),
                     'sin.type',
                     'sin.comment',
@@ -11726,7 +11726,7 @@ class ApiControllerOne extends BaseController
                 $studentData = $conn->table('students as s')
                     ->select(
                         's.id',
-                        DB::raw('CONCAT(s.first_name, " ", s.last_name) as name'),
+                        DB::raw('CONCAT(s.last_name, " ", s.first_name) as name'),
                         's.email',
                         's.photo',
                         's.roll_no',
@@ -11739,7 +11739,7 @@ class ApiControllerOne extends BaseController
                 $query = $conn->table('enrolls as e')
                     ->select(
                         's.id',
-                        DB::raw('CONCAT(s.first_name, " ", s.last_name) as name'),
+                        DB::raw('CONCAT(s.last_name, " ", s.first_name) as name'),
                         's.email',
                         's.photo',
                         's.gender',
@@ -11811,7 +11811,7 @@ class ApiControllerOne extends BaseController
                     $health = $conn->table('child_health as ch')
                         ->select(
                             'ch.*',
-                            DB::raw('CONCAT(st.first_name, " ", st.last_name) as name'),
+                            DB::raw('CONCAT(st.last_name, " ", st.first_name) as name'),
                             'st.email',
                             'st.photo',
                             'st.roll_no',

@@ -14819,7 +14819,6 @@ class ApiController extends BaseController
                     'japan_emergency_sms' =>  isset($request->japan_emergency_sms) ? Crypt::encryptString($request->japan_emergency_sms) : "",
                     'japan_address' => $request->japan_address,
                     'stay_category' => $request->stay_category,
-
                     'created_at' => date("Y-m-d H:i:s")
                 ]);
 
@@ -15335,7 +15334,7 @@ class ApiController extends BaseController
                             ])->get();
     
                             $father_info_update = [];
-                            $father_info_update['parent_name'] = $request->father_first_name . ' ' .$request->father_last_name;
+                            $father_info_update['parent_name'] = $request->father_last_name . ' ' .$request->father_first_name;
                             $details = [
                                 'branch_id' => $request->branch_id,
                                 'parent_id' => $request->father_id,
@@ -15448,7 +15447,7 @@ class ApiController extends BaseController
                             ])->get();
     
                             $mother_info_update = [];
-                            $mother_info_update['parent_name'] = $request->mother_first_name . ' ' .$request->mother_last_name;
+                            $mother_info_update['parent_name'] = $request->mother_last_name . ' ' .$request->mother_first_name ;
                             $details = [
                                 'branch_id' => $request->branch_id,
                                 'parent_id' => $request->mother_id,
@@ -15600,7 +15599,7 @@ class ApiController extends BaseController
                             ])->get();
     
                             $guardian_info_update = [];
-                            $guardian_info_update['parent_name'] = $request->guardian_first_name . ' ' .$request->guardian_last_name;
+                            $guardian_info_update['parent_name'] = $request->guardian_last_name . ' ' .$request->guardian_first_name ;
                             $details = [
                                 'branch_id' => $request->branch_id,
                                 'parent_id' => $request->guardian_id,
@@ -16021,7 +16020,7 @@ class ApiController extends BaseController
                 $update_parent = $conn->table('parent')->where('id', '=', $id)->first();
                 $update_parent_email = $update_parent->guardian_email;
                 $data = array(
-                    'parent_name' => $update_parent->first_name . ' '. $update_parent->last_name,
+                    'parent_name' => $update_parent->last_name . ' '. $update_parent->first_name ,
                     'status' => $status_count, 
                 );
                 $mailFromAddress = env('MAIL_FROM_ADDRESS', config('constants.client_email'));
@@ -24048,7 +24047,7 @@ class ApiController extends BaseController
                     }
                 }
             }
-            $parent_name = $request->guardian_first_name. ' ' .$request->guardian_last_name;
+            $parent_name = $request->guardian_last_name. ' ' .$request->guardian_first_name ;
             if ($request->role_id == "2") {
                 if ($request->status == "Approved" && $request->phase_2_status == "Approved" && $request->status_after_approval == "Grade and class fixed") {
                     
@@ -24082,7 +24081,7 @@ class ApiController extends BaseController
                                 'company_name_local' => $request->guardian_company_name_local,
                                 'company_phone_number' => isset($request->guardian_company_phone_number) ? Crypt::encryptString($request->guardian_company_phone_number) : "",
                                 'employment_status' => $request->guardian_employment_status,
-                                
+                                'stay_category' => $request->stay_category,
                                 'japanese_association_membership_image_principal' => $image_principal_fileName,
                                 'japanese_association_membership_image_supplimental' => $image_supplimental_fileName,
                                 'status' => "0",
@@ -24297,7 +24296,6 @@ class ApiController extends BaseController
                         'nationality' => $request->nationality,
                         'dual_nationality' => $request->dual_nationality,
                         'email' => $studentEmail,
-                        'stay_category' => $request->stay_category,
                         'status' => "0",
                     ];
                     if ($conn->table('students')->where('email', '=', $studentEmail)->count() > 0) {
@@ -24509,8 +24507,8 @@ class ApiController extends BaseController
                     
                         $phase_1_email = $request->guardian_email;
                         $data = array(
-                            'parent_name' => $request->guardian_first_name .' '. $request->guardian_last_name,
-                            'child_name' => $request->first_name .' '. $request->last_name,
+                            'parent_name' => $request->guardian_last_name .' '. $request->guardian_first_name ,
+                            'child_name' => $request->last_name  .' '. $request->first_name,
                             'status' => $request->status, 
                             'phase' => "Phase 1", 
                         );
@@ -24531,9 +24529,9 @@ class ApiController extends BaseController
                     
                         $phase_2_email = $request->guardian_email;
                         $data = array(
-                            'parent_name' => $request->guardian_first_name .' '. $request->guardian_last_name,
-                            'child_name' => $request->first_name .' '. $request->last_name,
-                            'status' => $request->status,  
+                            'parent_name' => $request->guardian_last_name .' '. $request->guardian_first_name ,
+                            'child_name' => $request->last_name  .' '. $request->first_name,
+                            'status' => $request->phase_2_status,  
                             'phase' => "Phase 2", 
                         );
                         
@@ -24564,6 +24562,7 @@ class ApiController extends BaseController
                 "guardian_company_name_local" => $request->guardian_company_name_local,
                 "guardian_company_phone_number" => $request->guardian_company_phone_number,
                 "guardian_employment_status" => $request->guardian_employment_status,
+                "stay_category" => $request->stay_category,
             ]);
 
             $success = [];
@@ -25331,8 +25330,8 @@ class ApiController extends BaseController
                     DB::raw("c.name as grade_name"),
                     DB::raw("s.name as section_name"),
                     DB::raw("GROUP_CONCAT(DISTINCT  d.name) as department_name"),
-                    DB::raw('CONCAT(p.first_name, " ", p.last_name) as parent_name'),
-                    DB::raw('CONCAT(st.first_name, " ", st.last_name) as student_name')
+                    DB::raw('CONCAT(p.last_name, " ", p.first_name) as parent_name'),
+                    DB::raw('CONCAT(st.last_name, " ", st.first_name) as student_name')
                 )
                 ->leftJoin('' . $main_db . '.roles as rol', function ($join) {
                     $join->on(\DB::raw("FIND_IN_SET(rol.id,b.target_user)"), ">", \DB::raw("'0'"));
@@ -25446,7 +25445,7 @@ class ApiController extends BaseController
                 $class_id =   $request->class_id;
                 $section_id = $request->section_id;
                 $parent_id  = $request->parent_id;
-                $getParent = $conn->table('enrolls as e')->select('p.id', DB::raw('CONCAT(p.first_name, " ", p.last_name) as parent_name'))
+                $getParent = $conn->table('enrolls as e')->select('p.id', DB::raw('CONCAT(p.last_name, " ", p.first_name) as parent_name'))
                     ->leftJoin('students as s', 'e.student_id', '=', 's.id')
                     ->leftjoin('parent as p', function ($join) {
                         $join->on('s.father_id', '=', 'p.id');
@@ -25593,7 +25592,7 @@ class ApiController extends BaseController
                     DB::raw("GROUP_CONCAT(DISTINCT  c.name) as grade_name"),
                     DB::raw("GROUP_CONCAT(DISTINCT  s.name) as section_name"),
                     DB::raw("GROUP_CONCAT(DISTINCT  d.name) as department_name"),
-                    DB::raw('CONCAT(p.first_name, " ", p.last_name) as parent_name')
+                    DB::raw('CONCAT(p.last_name, " ", p.first_name) as parent_name')
                 )
                 ->leftJoin('' . $main_db . '.roles as rol', function ($join) {
                     $join->on(\DB::raw("FIND_IN_SET(rol.id,b.target_user)"), ">", \DB::raw("'0'"));
@@ -25715,7 +25714,7 @@ class ApiController extends BaseController
         } else {
             $con = $this->createNewConnection($request->branch_id);
             // get data
-            $parent = $con->table('enrolls as e')->select('p.id', DB::raw('CONCAT(p.first_name, " ", p.last_name) as parent_name'))
+            $parent = $con->table('enrolls as e')->select('p.id', DB::raw('CONCAT(p.last_name, " ", p.first_name) as parent_name'))
                 ->leftJoin('students as s', 'e.student_id', '=', 's.id')
                 ->leftjoin('parent as p', function ($join) {
                     // $join->on('s.father_id', '=', 'p.id');
@@ -26704,7 +26703,7 @@ class ApiController extends BaseController
                 // return $parent_name;
                 $info_update = [];
                 $info_update['parent_name'] = $parent_name->name;
-                $info_update['student_name'] = $old->first_name . ' ' . $old->last_name;
+                $info_update['student_name'] = $old->last_name . ' ' . $old->first_name;
                 $details = [
                     'branch_id' => $request->branch_id,
                     'parent_id' => $request->parent_id,
@@ -26901,9 +26900,9 @@ class ApiController extends BaseController
     {        
         $conn = $this->createNewConnection($request['branch_id']);
         $academic_year = $conn->table('academic_year')->where('id', $request['academic_year'])->first();
-        $start_end = explode('-', $academic_year->name);
+        // $start_end = explode('-', $academic_year->name);
                 
-        $current_year = $start_end[0];
+        $current_year = $academic_year->name;
         $yearStart = "9" .substr($current_year, 2);
         $application = $conn->table('student_applications')->where("register_number", 'LIKE', $yearStart.'%')->max("register_number");
         $admission = $conn->table('students')->where("register_no", 'LIKE', $yearStart.'%')->max("register_no");
@@ -26922,7 +26921,7 @@ class ApiController extends BaseController
 
         // $prevNumber = trim("92300002", "923");
         $applicationNumber = $prevNumber+1;
-        $assignedNumber = $yearStart. sprintf("%05d", $applicationNumber);
+        $assignedNumber = $yearStart. sprintf("%03d", $applicationNumber);
         $reverse_number  = array_reverse(array_map('intval', str_split($assignedNumber)));
         // dd(array_reverse($reverse_number));
 
