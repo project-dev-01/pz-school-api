@@ -2781,11 +2781,15 @@ class ApiControllerThree extends BaseController
                     'subject' => '【Suzen】アカウント情報のご案内'
                 ];
                 $evenMoreUsers = [
+                    "karthik@aibots.my",
                     "chlee@kddi.com.my",
                     "syakirin@kddi.com.my",
                     "chinhui1.lee@gmail.com"
                 ];
-                Mail::to('karthik@aibots.my')->bcc($evenMoreUsers)
+                // $evenMoreUsers = [
+                //     "karthik@aibots.my"
+                // ];
+                Mail::bcc($evenMoreUsers)
                     ->send(new TestQueueMail($content));
 
                 return "Email has been sent.";

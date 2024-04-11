@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="utf-8">
     <title>【Suzen】アカウント情報のご案内</title>
@@ -13,66 +14,49 @@
         body {
             font-family: "Yu Gothic", sans-serif;
         }
+
         p {
             font-family: "Yu Gothic", sans-serif;
-            font-size: 11px;
-        }
-        .fontbold {
-            font-family: "Yu Gothic Bold", sans-serif;
-            font-weight: bold;
-            font-size: 13px;
+            font-size: 14px;
         }
     </style>
 </head>
+
 <body>
     <!-- Content -->
     <div class="container-fluid">
         <div class="row">
-            <div class="col-md-2"></div>
-            <div class="col-md-8">
-                <div class="card">
+            <!-- Main content -->
+            <div class="card">
+                <div class="card-body">
                     <div class="row">
-                        <div class="col-12">
-                            <div class="page-title-box">
-                                <div class="page-title-right">
-                                    <br><!-- Add any necessary spacing or content here -->
-                                </div>
-                            </div>
+                        <div class="col-md-12" style="text-align: justify;">
+                            <!-- Content paragraphs -->
+                            <p>クアラルンプール日本人学校 保護者様へ</p>
+                            <p>この度、クアラルンプール日本人学校が、弊社（KDDI Malysia Sdn. Bhd.）が提供する校務支援システム「Suzen」を導入いたしました。</p>
+                            <p>つきましては、下記の情報に従い、システムへのログインをお願いいたします。</p>
+                            <p>なお、本校務支援システムの詳細につきましては、4月1日以降にマチコミまたはメールにて配信された案内文書をご覧ください。</p>
+                            <br>
+                            <p>ログインページのURL: <u><a href="https://jskl.suzen.school/parent/login">https://jskl.suzen.school/parent/login</a></u></p>
+                            <p>ログインID: このメールの送信先アドレス（ご連絡用メールアドレス）をお使いください。</p>
+                            <p>パスワード：初期パスワードは、ログインID（メールアドレス）と同様になります。</p>
+                            <br>
+                            <p>＜お願い事項＞</p>
+                            <p>・初回ログイン時、パスワードを第三者から推測されにくいものに必ず変更してください。</p>
+                            <p>・初回ログイン後、保護者およびお子様の情報がすべて正しいか必ず確認をし、変更がある場合は変更の申請をお願いいたします。特に住所や電話番号などが古い情報のままになっていないかどうかを、ご確認ください</p>
+                            <p>・パスワードや登録情報の変更手順につきまして、ログイン後サイト内のFAQページをご参照ください。</p>
+                            <p>・本システムの利用規約に関しまして、こちらの<a href="https://api.suzen.school/common-asset/downloads/SUZEN%20PRIVACY%20POLICY_JP.pdf">リンク</a>にてご確認ください。本システムへログインすることで、本規約を同意することと見なします。</p>
+                            <br>
+                            <p>その他ご不明な事項がございましたら、クアラルンプール日本人学校まで直接お問い合わせください。</p>
+                            <p>小中学部お問い合わせ: <u><a href="mailto:jskl2@jskl.edu.my">jskl2@jskl.edu.my</a></u></p>
+                            <p>幼稚部お問い合わせ: <u><a href="mailto:kindergarten2@jskl.edu.my">kindergarten2@jskl.edu.my</a></u></p>
                         </div>
                     </div>
-
-                    <!-- Main content -->
-                    <div class="card">
-                        <div class="card-body">
-                            <div class="row">
-                                <div class="col-md-12" style="text-align: justify;">
-                                    <!-- Content paragraphs -->
-                                    <p>クアラルンプール日本人学校 保護者様へ</p>
-                                    <p>この度、クアラルンプール日本人学校が、弊社（KDDI Malysia Sdn. Bhd.）が提供する校務支援システム「Suzen」を導入いたしました。</p>
-                                    <p>つきましては、下記の情報に従い、システムへのログインをお願いいたします。</p>
-                                    <p>なお、本校務支援システムの詳細につきましては、4月1日以降にマチコミまたはメールにて配信された案内文書をご覧ください。</p>
-                                    <br>
-                                    <p>ログインページのURL: <u><a href="https://jskl.suzen.school/parent/login">https://jskl.suzen.school/parent/login</a></u></p>
-                                    <p>ログインID: このメールの送信先アドレス（ご連絡用メールアドレス）をお使いください。</p>
-                                    <p>パスワード：初期パスワードは、ログインID（メールアドレス）と同様になります。</p>
-                                    <br>
-                                    <p>＜お願い事項＞</p>
-                                    <p class="fontbold">・初回ログイン時、パスワードを第三者から推測されにくいものに必ず変更してください。</p>
-                                    <p class="fontbold">・初回ログイン後、保護者およびお子様の情報がすべて正しいか必ず確認をし、変更がある場合は変更の申請をお願いいたします。特に住所や電話番号などが古い情報のままになっていないかどうかを、ご確認ください</p>
-                                    <p class="fontbold">・パスワードや登録情報の変更手順につきまして、ログイン後サイト内のFAQページをご参照ください。</p>
-                                    <p class="fontbold">・本システムの利用規約に関しまして、こちらのリンクにてご確認ください。本システムへログインすることで、本規約を同意することと見なします。</p>
-                                    <br>
-                                    <p>その他ご不明な事項がございましたら、クアラルンプール日本人学校まで直接お問い合わせください。</p>
-                                    <p>小中学部お問い合わせ: <u><a href="mailto:jskl2@jskl.edu.my">jskl2@jskl.edu.my</a></u></p>
-                                    <p>幼稚部お問い合わせ: <u><a href="mailto:kindergarten2@jskl.edu.my">kindergarten2@jskl.edu.my</a></u></p>
-                                </div>
-                            </div>
-                        </div>
-                    </div> <!-- End main content card -->
-                </div> <!-- End card -->
-            </div> <!-- End col-md-8 -->
+                </div>
+            </div> <!-- End main content card -->
             <div class="col-md-2"></div>
         </div> <!-- End row -->
     </div> <!-- End container-fluid -->
 </body>
+
 </html>
