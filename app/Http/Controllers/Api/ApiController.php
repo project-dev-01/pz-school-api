@@ -14983,6 +14983,7 @@ class ApiController extends BaseController
             return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
         } else {
             $id = $request->id;
+            $academic_session_id = $request->academic_session_id;
             // create new connection
             $conn = $this->createNewConnection($request->branch_id);
             // get data
@@ -15012,9 +15013,12 @@ class ApiController extends BaseController
                 ->leftJoin('enrolls as e', 'e.student_id', '=', 's.id')
                 ->leftJoin('classes as c', 'e.class_id', '=', 'c.id')
                 ->leftJoin('sections as sec', 'e.section_id', '=', 'sec.id')
-                ->where('father_id', $id)
-                ->orWhere('mother_id', $id)
-                ->orWhere('guardian_id', $id)->get();
+                ->where('e.active_status', '=', "0")
+                ->where('e.academic_session_id',$academic_session_id)
+                ->where('s.father_id', $id)
+                ->orWhere('s.mother_id', $id)
+                ->orWhere('s.guardian_id', $id)
+                ->groupBy('e.student_id')->get();
            /* $staffRoles = array('5');
             $sql = "";
             for ($x = 0; $x < count($staffRoles); $x++) {
@@ -15694,7 +15698,7 @@ class ApiController extends BaseController
                             ]);
                     }
                     if($request->father_id){
-                        $father_visa_fileName = null;
+                        $father_visa_fileName = $request->visa_father_photo_old;
                         if ($request->visa_father_photo) {
 
                             $father_visa_extension = $request->father_visa_file_extension;
@@ -15708,7 +15712,7 @@ class ApiController extends BaseController
                             $father_visa_file = base_path() . $father_visa_path . $father_visa_fileName;
                             $father_visa_suc = file_put_contents($father_visa_file, $father_visa_base64);
                         }
-                        $father_passport_fileName = null;
+                        $father_passport_fileName = $request->passport_father_photo_old;
                         if ($request->passport_father_photo) {
 
                             $father_passport_extension = $request->father_passport_file_extension;
@@ -15744,7 +15748,7 @@ class ApiController extends BaseController
                         ]);
                     }
                     if($request->mother_id){
-                        $mother_visa_fileName = null;
+                        $mother_visa_fileName = $request->visa_mother_photo_old;
                         if ($request->visa_mother_photo) {
 
                             $mother_visa_extension = $request->mother_visa_file_extension;
@@ -15758,7 +15762,7 @@ class ApiController extends BaseController
                             $mother_visa_file = base_path() . $mother_visa_path . $mother_visa_fileName;
                             $mother_visa_suc = file_put_contents($mother_visa_file, $mother_visa_base64);
                         }
-                        $mother_passport_fileName = null;
+                        $mother_passport_fileName =  $request->passport_mother_photo_old;
                         if ($request->passport_mother_photo) {
 
                             $mother_passport_extension = $request->mother_passport_file_extension;

@@ -2815,22 +2815,30 @@ class ApiControllerThree extends BaseController
                     $fatherDetails =  $conn->table('parent')
                         ->where('id', $parentIds->father_id)
                         ->first();
+                        if ($fatherDetails) {
+                            $fatherDetails->mobile_no = Helper::decryptStringData($fatherDetails->mobile_no);
+                            $parentDetails['father'] = $fatherDetails;
+                        }
                 
                     $motherDetails =  $conn->table('parent')
                         ->where('id', $parentIds->mother_id)
                         ->first();
+                        if ($motherDetails) {
+                            $motherDetails->mobile_no = Helper::decryptStringData($motherDetails->mobile_no);
+                            $parentDetails['mother'] = $motherDetails;
+                        }
                 
                     // $guardianDetails =  $conn->table('parent')
                     //     ->where('id', $parentIds->guardian_id)
                     //     ->first();
                 
                     // Prepare parent details array
-                    $parentDetails = [
-                        'father' => $fatherDetails,
-                        'mother' => $motherDetails,
-                        //'guardian' => $guardianDetails,
-                    ];
-                }
+                //     $parentDetails = [
+                //         'father' => $fatherDetails,
+                //         'mother' => $motherDetails,
+                //         //'guardian' => $guardianDetails,
+                //     ];
+                 }
             return $this->successResponse($parentDetails, 'Student details fetch successfully');
         }
     }
