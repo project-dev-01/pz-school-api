@@ -14576,9 +14576,9 @@ class ApiController extends BaseController
     
                     $image_principal_now = now();
                     $image_principal_name = strtotime($image_principal_now);
-                    $image_principal_extension = "principal_".$request->image_principal_file_extension;
+                    $image_principal_extension = $request->image_principal_file_extension;
     
-                    $image_principal_fileName = $image_principal_name . '.' . $image_principal_extension;
+                    $image_principal_fileName = "principal_".$image_principal_name . '.' . $image_principal_extension;
     
                     // return $fileName;
                     $image_principal_path = '/public/' . $request->branch_id . '/users/images/';
@@ -15484,9 +15484,9 @@ class ApiController extends BaseController
 
                             $image_principal_now = now();
                             $image_principal_name = strtotime($image_principal_now);
-                            $image_principal_extension = "principal_".$request->image_principal_file_extension;
+                            $image_principal_extension = $request->image_principal_file_extension;
 
-                            $image_principal_fileName = $image_principal_name . '.' . $image_principal_extension;
+                            $image_principal_fileName = "principal_".$image_principal_name . '.' . $image_principal_extension;
 
                             // return $fileName;
                             $image_principal_path = '/public/' . $request->branch_id . '/users/images/';
@@ -15627,9 +15627,9 @@ class ApiController extends BaseController
 
                         $image_principal_now = now();
                         $image_principal_name = strtotime($image_principal_now);
-                        $image_principal_extension = "principal_".$request->image_principal_file_extension;
+                        $image_principal_extension = $request->image_principal_file_extension;
 
-                        $image_principal_fileName = $image_principal_name . '.' . $image_principal_extension;
+                        $image_principal_fileName = "principal_".$image_principal_name . '.' . $image_principal_extension;
 
                         // return $fileName;
                         $image_principal_path = '/public/' . $request->branch_id . '/users/images/';
@@ -23904,9 +23904,9 @@ class ApiController extends BaseController
 
                 $image_principal_now = now();
                 $image_principal_name = strtotime($image_principal_now);
-                $image_principal_extension = "principal_".$request->image_principal_file_extension;
+                $image_principal_extension = $request->image_principal_file_extension;
 
-                $image_principal_fileName = $image_principal_name . '.' . $image_principal_extension;
+                $image_principal_fileName = "principal_".$image_principal_name . '.' . $image_principal_extension;
 
                 // return $fileName;
                 $image_principal_path = '/public/' . $request->branch_id . '/users/images/';
@@ -23926,9 +23926,9 @@ class ApiController extends BaseController
 
                 $image_supplimental_now = now();
                 $image_supplimental_name = strtotime($image_supplimental_now);
-                $image_supplimental_extension = "supplimental_".$request->image_supplimental_file_extension;
+                $image_supplimental_extension = $request->image_supplimental_file_extension;
 
-                $image_supplimental_fileName = $image_supplimental_name . '.' . $image_supplimental_extension;
+                $image_supplimental_fileName = "supplimental_".$image_supplimental_name . '.' . $image_supplimental_extension;
 
                 // return $fileName;
                 $image_supplimental_path = '/public/' . $request->branch_id . '/users/images/';
