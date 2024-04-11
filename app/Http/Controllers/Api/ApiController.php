@@ -17636,9 +17636,11 @@ class ApiController extends BaseController
                     'lev.nursing_leave_type',
                     'lev.home_teacher_status',
                     'lev.nursing_teacher_status',
-                    'lev.nursing_teacher_remarks'
+                    'lev.nursing_teacher_remarks',
+                    'en.attendance_no'
                 )
                 ->join('students as std', 'lev.student_id', '=', 'std.id')
+                ->join('enrolls as en', 'lev.student_id', '=', 'en.student_id')
                 ->join('classes as cl', 'lev.class_id', '=', 'cl.id')
                 ->join('sections as sc', 'lev.section_id', '=', 'sc.id')
                 ->leftJoin('student_leave_types as slt', 'lev.change_lev_type', '=', 'slt.id')
