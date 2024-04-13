@@ -41,6 +41,7 @@ use File;
 use Exception;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Cache;
 
 class MenuAccessController extends BaseController
 {
@@ -142,37 +143,83 @@ class MenuAccessController extends BaseController
         //dd($data);
         return $this->successResponse($data, 'Menu Informations get successfully');
     }
+    // public function getMenuAccessList(Request $request)
+    // {
+    //     $br_id = $request->br_id;
+    //     /* $data = DB::table('menus AS t1')
+    //     ->select('t1.*', 't2.menu_permission','t2.id as menuaccess_id')
+    //     ->leftJoin('menuaccess AS t2', 't1.menu_id', '=', 't2.menu_id')
+    //     ->where('t1.menu_type', $request->type)->where('t1.role_id', $request->role_id)->orderBy("t1.role_id", "asc")->get();
+    //     */
+    //     $br_id = $request->br_id;
+    //     $data = Menus::select('menus.*')
+    //         ->selectSub(function ($query) use ($br_id) {
+    //             $query->select('menu_permission')
+    //                 ->from('menuaccess')
+    //                 ->where('branch_id', $br_id)
+    //                 ->whereColumn('menus.menu_id', 'menuaccess.menu_id')
+    //                 ->limit(1);
+    //         }, 'menu_permission')
+    //         ->selectSub(function ($query) use ($br_id) {
+    //             $query->select('id')
+    //                 ->from('menuaccess')
+    //                 ->where('branch_id', $br_id)
+    //                 ->whereColumn('menus.menu_id', 'menuaccess.menu_id')
+    //                 ->limit(1);
+    //         }, 'menuaccess_id')
+    //         ->where('menu_type', $request->type)
+    //         ->where('role_id', $request->role_id)
+    //         ->where('flog', '0')
+    //         ->orderBy("menu_order", "asc")
+    //         ->get();
+    //     // dd($data);
+    //     return $this->successResponse($data, 'Menus fetch successfully');
+    // }
     public function getMenuAccessList(Request $request)
     {
-        $br_id = $request->br_id;
-        /* $data = DB::table('menus AS t1')
-        ->select('t1.*', 't2.menu_permission','t2.id as menuaccess_id')
-        ->leftJoin('menuaccess AS t2', 't1.menu_id', '=', 't2.menu_id')
-        ->where('t1.menu_type', $request->type)->where('t1.role_id', $request->role_id)->orderBy("t1.role_id", "asc")->get();
-        */
-        $br_id = $request->br_id;
-        $data = Menus::select('menus.*')
-            ->selectSub(function ($query) use ($br_id) {
-                $query->select('menu_permission')
-                    ->from('menuaccess')
-                    ->where('branch_id', $br_id)
-                    ->whereColumn('menus.menu_id', 'menuaccess.menu_id')
-                    ->limit(1);
-            }, 'menu_permission')
-            ->selectSub(function ($query) use ($br_id) {
-                $query->select('id')
-                    ->from('menuaccess')
-                    ->where('branch_id', $br_id)
-                    ->whereColumn('menus.menu_id', 'menuaccess.menu_id')
-                    ->limit(1);
-            }, 'menuaccess_id')
-            ->where('menu_type', $request->type)
-            ->where('role_id', $request->role_id)
-            ->where('flog', '0')
-            ->orderBy("menu_order", "asc")
-            ->get();
-        // dd($data);
-        return $this->successResponse($data, 'Menus fetch successfully');
+        $validator = \Validator::make($request->all(), [
+            'br_id' => 'required',
+            'type' => 'required',
+            'role_id' => 'required',
+        ]);
+        if (!$validator->passes()) {
+            return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
+        } else {
+            $br_id = $request->br_id;
+            $type = $request->type;
+            $role_id = $request->role_id;
+            $cacheKey = config('constants.cache_get_access_menu_list') . $br_id . $role_id . $type;
+            $cache_time = config('constants.cache_time');
+            // Check if the data is cached
+            if (Cache::has($cacheKey)) {
+                // If cached, return cached data
+                $get_access_menu_list = Cache::get($cacheKey);
+            } else {
+                $get_access_menu_list = Menus::select('menus.*')
+                    ->selectSub(function ($query) use ($br_id) {
+                        $query->select('menu_permission')
+                            ->from('menuaccess')
+                            ->where('branch_id', $br_id)
+                            ->whereColumn('menus.menu_id', 'menuaccess.menu_id')
+                            ->limit(1);
+                    }, 'menu_permission')
+                    ->selectSub(function ($query) use ($br_id) {
+                        $query->select('id')
+                            ->from('menuaccess')
+                            ->where('branch_id', $br_id)
+                            ->whereColumn('menus.menu_id', 'menuaccess.menu_id')
+                            ->limit(1);
+                    }, 'menuaccess_id')
+                    ->where('menu_type', $request->type)
+                    ->where('role_id', $request->role_id)
+                    ->where('flog', '0')
+                    ->orderBy("menu_order", "asc")
+                    ->get();
+                Cache::put($cacheKey, $get_access_menu_list, now()->addHours($cache_time)); // Cache for 24 hours 
+            }
+
+            return $this->successResponse($get_access_menu_list, 'Menus fetch successfully');
+        }
     }
     public function getmenupermission(Request $request)
     {

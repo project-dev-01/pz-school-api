@@ -1,6 +1,6 @@
 <?php
 return [
-    'main_db'=>'apaxsuzenapi',
+    'main_db'=>'aajskl',
     'client_email'=>'suzen-noreply@suzen.school',
     'student_email_domain' => "@jskl.edu.my",
     'cache_time'=>"24",
@@ -28,7 +28,8 @@ return [
     'cache_late_reasons' => "late_reasons_",
     'cache_excused_reasons' => "excused_reasons_", 
     'cache_holidays' => "holidays_", 
-    'cache_leave_types' => "leave_types_", 
+    'cache_leave_types' => "leave_types_",
+    'cache_get_access_menu_list' => "cache_get_access_menu_list_",
     
     
 ];

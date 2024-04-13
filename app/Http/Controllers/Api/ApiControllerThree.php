@@ -2155,13 +2155,13 @@ class ApiControllerThree extends BaseController
             $section_id = isset($request->section_id) ? $request->section_id : null;
             $academic_session_id = $request->academic_session_id;
 
-            
-        $academic_year = $Connection->table('academic_year')->where('id', $request->academic_session_id)->first();
-        // dd($academic_year);
-        // $start_end = explode('-', $academic_year->name);
-                
-        $current_year = $academic_year->name;
-        $yearStart = "9" .substr($current_year, 2);
+
+            $academic_year = $Connection->table('academic_year')->where('id', $request->academic_session_id)->first();
+            // dd($academic_year);
+            // $start_end = explode('-', $academic_year->name);
+
+            $current_year = $academic_year->name;
+            $yearStart = "9" . substr($current_year, 2);
             $data = $Connection->table('enrolls as en')
                 ->select(
                     'en.id',
@@ -2200,7 +2200,7 @@ class ApiControllerThree extends BaseController
                 ->when($section_id, function ($query, $section_id) {
                     return $query->where('en.section_id', $section_id);
                 })
-                ->where("register_no", 'LIKE', $yearStart.'%')
+                ->where("register_no", 'LIKE', $yearStart . '%')
                 ->groupBy("stud.id")
                 ->get();
             return $this->successResponse($data, 'student new joining list fetch successfully');
@@ -2781,7 +2781,6 @@ class ApiControllerThree extends BaseController
                     'subject' => '【Suzen】アカウント情報のご案内'
                 ];
                 $evenMoreUsers = [
-                    "karthik@aibots.my",
                     "chlee@kddi.com.my",
                     "syakirin@kddi.com.my",
                     "chinhui1.lee@gmail.com"
@@ -2798,6 +2797,53 @@ class ApiControllerThree extends BaseController
             }
         }
     }
+    // public function testQueueEmailAllUsers(Request $request)
+    // {
+    //     $validator = \Validator::make($request->all(), [
+    //         'email' => 'required'
+    //     ]);
+    //     if (!$validator->passes()) {
+    //         return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
+    //     } else 
+    //         try {
+    //             // echo "test";
+    //             $content = [
+    //                 'subject' => '【Suzen】アカウント情報のご案内'
+    //             ];
+                
+
+    //             // $allUsers = [
+    //             //     "karthik@aibots.my",
+    //             //     "karthiksure31@gmail.com",
+    //             //     // Add more email addresses here...
+    //             //     // "email1@example.com",
+    //             //     // "email2@example.com",
+    //             //     // ...
+    //             //     // "email544@example.com"
+    //             // ];
+    //             $bccUsers = [
+    //                 "chlee@kddi.com.my",
+    //                 "syakirin@kddi.com.my",
+    //                 "chinhui1.lee@gmail.com"
+    //             ];
+    //             // $bccUsers = [
+    //             //     "karthiksure1995@gmail.com",
+    //             //     "dhanushkarthikdhanush@gmail.com",
+    //             // ];
+    //             // foreach ($allUsers as $user) {
+    //             //     // dd($user);
+    //             //     Mail::to($user)
+    //             //         ->bcc($bccUsers) // Adding BCC recipient same as the email
+    //             //         ->send(new TestQueueMail($content));
+    //             // }
+
+    //             return "Emails have been sent.";
+    //         } catch (\Exception $e) {
+    //             return "Failed to send emails. Error: " . $e->getMessage();
+    //         }
+    //     }
+    // }
+
     protected function clearCache($cache_name, $branchId)
     {
         $cacheKey = $cache_name . $branchId;
@@ -2823,36 +2869,36 @@ class ApiControllerThree extends BaseController
                 ->join('enrolls as en', 'std.id', '=', 'en.student_id')
                 ->where('std.id', '=', $student_id)
                 ->first();
-               // dd($parentIds );
-                if ($parentIds) {
-                    // Fetch parent details from the 'parent' table using the retrieved IDs
-                    $fatherDetails =  $conn->table('parent')
-                        ->where('id', $parentIds->father_id)
-                        ->first();
-                        if ($fatherDetails) {
-                            $fatherDetails->mobile_no = Helper::decryptStringData($fatherDetails->mobile_no);
-                            $parentDetails['father'] = $fatherDetails;
-                        }
-                
-                    $motherDetails =  $conn->table('parent')
-                        ->where('id', $parentIds->mother_id)
-                        ->first();
-                        if ($motherDetails) {
-                            $motherDetails->mobile_no = Helper::decryptStringData($motherDetails->mobile_no);
-                            $parentDetails['mother'] = $motherDetails;
-                        }
-                
-                    // $guardianDetails =  $conn->table('parent')
-                    //     ->where('id', $parentIds->guardian_id)
-                    //     ->first();
-                
-                    // Prepare parent details array
+            // dd($parentIds );
+            if ($parentIds) {
+                // Fetch parent details from the 'parent' table using the retrieved IDs
+                $fatherDetails =  $conn->table('parent')
+                    ->where('id', $parentIds->father_id)
+                    ->first();
+                if ($fatherDetails) {
+                    $fatherDetails->mobile_no = Helper::decryptStringData($fatherDetails->mobile_no);
+                    $parentDetails['father'] = $fatherDetails;
+                }
+
+                $motherDetails =  $conn->table('parent')
+                    ->where('id', $parentIds->mother_id)
+                    ->first();
+                if ($motherDetails) {
+                    $motherDetails->mobile_no = Helper::decryptStringData($motherDetails->mobile_no);
+                    $parentDetails['mother'] = $motherDetails;
+                }
+
+                // $guardianDetails =  $conn->table('parent')
+                //     ->where('id', $parentIds->guardian_id)
+                //     ->first();
+
+                // Prepare parent details array
                 //     $parentDetails = [
                 //         'father' => $fatherDetails,
                 //         'mother' => $motherDetails,
                 //         //'guardian' => $guardianDetails,
                 //     ];
-                 }
+            }
             return $this->successResponse($parentDetails, 'Student details fetch successfully');
         }
     }
