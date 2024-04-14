@@ -30,6 +30,7 @@ return [
     'cache_holidays' => "holidays_", 
     'cache_leave_types' => "leave_types_",
     'cache_get_access_menu_list' => "cache_get_access_menu_list_",
+    'school_role_access' => "school_role_access_",
     
     
 ];

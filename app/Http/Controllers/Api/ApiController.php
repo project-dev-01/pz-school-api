@@ -14541,6 +14541,7 @@ class ApiController extends BaseController
             'occupation' => 'required',
             'mobile_no' => 'required',
             'email' => 'required',
+            'school_roleid' => 'required',
             'password' => 'required|min:6',
             'confirm_password' => 'required|same:password|min:6',
             'branch_id' => 'required',
@@ -14834,7 +14835,7 @@ class ApiController extends BaseController
                     $query->name = $name;
                     $query->user_id = $parentId;
                     $query->role_id = "5";
-                    $query->school_roleid=$request->school_roleid ;
+                    $query->school_roleid = $request->school_roleid ;
                     $query->branch_id = $request->branch_id;
                     $query->email = $request->email;
                     $query->status = $request->status;

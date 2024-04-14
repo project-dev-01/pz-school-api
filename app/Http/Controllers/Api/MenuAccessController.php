@@ -713,4 +713,53 @@ class MenuAccessController extends BaseController
         $schoolroleDetails = $conn->table('school_menuaccess')->where('menu_id', $menu_id1)->where('role_id', $role_id)->where('school_roleid', $school_roleid)->first();
         return $this->successResponse($schoolroleDetails, 'School Role row fetch successfully');
     }
+    public function getschoolroleaccessroute(Request $request)
+    {
+        // Generate cache key based on request parameters
+        $cache_time = config('constants.cache_time');
+        $school_role_access = config('constants.school_role_access');
+        $cacheKey = $school_role_access . $request->role_id . '_' . $request->school_roleid;
+        // Cache::forget($cacheKey);
+        // Check if the data is already cached
+        if (Cache::has($cacheKey)) {
+            // If data exists in cache, return cached data
+            return $this->successResponse(Cache::get($cacheKey), 'School Role row fetched successfully from cache');
+        }
+
+        // If data is not cached, proceed with fetching from the database
+
+        $currentRouteName = $request->currentRouteName;
+        $role_id = $request->role_id;
+        $school_roleid = $request->school_roleid;
+
+        // Assuming $request->branch_id is the branch ID for creating a new connection
+        $conn = $this->createNewConnection($request->branch_id);
+
+        // Fetching menu_id based on the current route name and role ID
+        $menuData = Menus::select('menu_id')->where('menu_url', $currentRouteName)
+            ->where('role_id', $role_id)->first();
+
+        if (!$menuData) {
+            return $this->errorResponse('Menu data not found for the current route', 404);
+        }
+
+        $menu_id1 = $menuData->menu_id;
+
+        // Fetching access details from the school_menuaccess table
+        $schoolroleDetails = $conn->table('school_menuaccess')
+            ->select('read')
+            ->where('menu_id', $menu_id1)
+            ->where('role_id', $role_id)
+            ->where('school_roleid', $school_roleid)
+            ->first();
+
+        if (!$schoolroleDetails) {
+            return $this->errorResponse('Access details not found for the provided parameters', 404);
+        }
+
+        // Cache the fetched data for future requests
+        Cache::put($cacheKey, $schoolroleDetails, now()->addMinutes($cache_time)); // Cache for 10 minutes
+
+        return $this->successResponse($schoolroleDetails, 'School Role row fetched successfully');
+    }
 }

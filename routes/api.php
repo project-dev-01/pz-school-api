@@ -1020,6 +1020,7 @@ Route::group(['middleware' => ['auth:api', 'throttle:limit_per_user', 'logroute'
     Route::post('menus/setschoolpermission', [MenuAccessController::class, 'setschoolpermission']);
     Route::post('menus/deleteschoolpermission', [MenuAccessController::class, 'deleteschoolpermission']);
     Route::post('menus/getschoolroleaccess', [MenuAccessController::class, 'getschoolroleaccess']);
+    Route::post('menus/getschoolroleaccessroute', [MenuAccessController::class, 'getschoolroleaccessroute']);
 
     Route::get('job_title/list', [ApiControllerOne::class, 'jobTitleList']);
     Route::get('employee_type/list', [ApiControllerOne::class, 'employeeTypeList']);
