@@ -12,6 +12,7 @@ use App\Http\Controllers\Api\ApiControllerThree;
 use App\Http\Controllers\Api\TwoFactorAuth;
 use App\Http\Controllers\Api\MenuAccessController;
 use App\Http\Controllers\Api\ExamreportController;
+use Illuminate\Support\Facades\Artisan;
 /*school_roles
 |--------------------------------------------------------------------------
 | API Routes
@@ -26,6 +27,16 @@ use App\Http\Controllers\Api\ExamreportController;
 // Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 //     return $request->user();
 // });
+Route::get('/clear-cache', function () {
+    Artisan::call('view:cache');
+    Artisan::call('view:clear');
+    Artisan::call('cache:clear');
+    Artisan::call('route:cache');
+    Artisan::call('route:clear');
+    Artisan::call('config:cache');
+    Artisan::call('config:clear');
+    return "clear artisan cache";
+});
 Route::post('indexing_migrate', [CommonController::class, 'indexingMigrate']);
 
 Route::post('login', [AuthController::class, 'authenticate']);
