@@ -1166,5 +1166,7 @@ Route::group(['middleware' => ['auth:api', 'throttle:limit_per_user', 'logroute'
     Route::get('password/update', [ApiControllerThree::class, 'passwordUpdate']);
     Route::post('test_queue_email', [ApiControllerThree::class, 'testQueueEmail']);
     Route::post('test_queue_email_all_users', [ApiControllerThree::class, 'testQueueEmailAllUsers']);
+    Route::post('emailPassword', [ApiControllerThree::class, 'decryptEmailPassword']);
+
     
 });

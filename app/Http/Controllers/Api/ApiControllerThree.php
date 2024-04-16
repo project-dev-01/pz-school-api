@@ -93,8 +93,8 @@ class ApiControllerThree extends BaseController
                 ->leftJoin('parent as p', 'p.id', '=', 'b.parent_id')
                 ->leftJoin('students as st', 'st.id', '=', 'b.student_id')
                 ->where("b.status", 1)
-                ->where("b.publish", 1)
-                ->where('b.publish_end_date', '>', $currentDateTime)
+               // ->where("b.publish", 1)
+               // ->where('b.publish_end_date', '>', $currentDateTime)
                 ->groupBy("b.id")
                 ->orderBy('b.id', 'desc')
                 ->get()->toArray();
@@ -145,7 +145,7 @@ class ApiControllerThree extends BaseController
                 'department_id' => $request->department_id,
                 'publish_date' => $request->publish_date,
                 'publish_end_date' => $request->publish_end_date,
-                'publish' => !empty($request->publish == "on") ? "1" : "0",
+               // 'publish' => !empty($request->publish == "on") ? "1" : "0",
                 'add_dashboard' =>  !empty($request->add_to_dash == "on") ? "1" : "0",
                 'created_by' => $request->created_by,
                 'created_at' => date("Y-m-d H:i:s")
@@ -413,7 +413,7 @@ class ApiControllerThree extends BaseController
                 'status' => 1,
                 'publish_date' => $request->publish_date,
                 'publish_end_date' => $request->publish_end_dates,
-                'publish' => !empty($request->publish == "on") ? "1" : "0",
+              //  'publish' => !empty($request->publish == "on") ? "1" : "0",
                 'updated_at' => date("Y-m-d H:i:s"),
                 'updated_by' => $request->updated_by,
             ]);
@@ -630,17 +630,17 @@ class ApiControllerThree extends BaseController
                     $query->where('b.section_id', $section_id)
                         ->orWhereNull('b.section_id');
                 })
-                ->where("b.publish", 1)
+               // ->where("b.publish", 1)
                 ->where("b.status", 1)
                 ->where(function ($query) use ($parent_id, $role_id) {
                     $query->where('b.parent_id', $parent_id)
                         ->orWhereNull('b.parent_id')
                         ->whereRaw("FIND_IN_SET('$role_id', b.target_user)");
                 })
-                ->where(function ($query) use ($currentDateTime) {
-                    $query->where('b.publish_end_date', '>', $currentDateTime)
-                        ->orWhereNull('b.publish_end_date');
-                })
+                // ->where(function ($query) use ($currentDateTime) {
+                //     $query->where('b.publish_end_date', '>', $currentDateTime)
+                //         ->orWhereNull('b.publish_end_date');
+                // })
                 // ->where('b.publish_date', '<=', now())
                 ->groupBy("b.id")
                 ->orderBy('b.id', 'desc')
@@ -753,17 +753,17 @@ class ApiControllerThree extends BaseController
                         ->orWhereNull('b.section_id');
                 })
                 ->where("b.status", 1)
-                ->where("b.publish", 1)
+              //  ->where("b.publish", 1)
                 ->where(function ($query) use ($parent_id, $role_id) {
                     $query->where('b.parent_id', $parent_id)
                         ->orWhereNull('b.parent_id')
                         ->whereRaw("FIND_IN_SET('$role_id', b.target_user)");
                 })
                 ->where("bi.parent_imp", '1')
-                ->where(function ($query) use ($currentDateTime) {
-                    $query->where('b.publish_end_date', '>', $currentDateTime)
-                        ->orWhereNull('b.publish_end_date');
-                })
+                // ->where(function ($query) use ($currentDateTime) {
+                //     $query->where('b.publish_end_date', '>', $currentDateTime)
+                //         ->orWhereNull('b.publish_end_date');
+                // })
                 // ->where('b.publish_date', '<=', now())
                 ->groupBy("b.id")
                 ->get()->toArray();
@@ -824,16 +824,16 @@ class ApiControllerThree extends BaseController
                         ->orWhereNull('b.section_id');
                 })
                 ->where("b.status", 1)
-                ->where("b.publish", 1)
+                //->where("b.publish", 1)
                 ->where(function ($query) use ($student_id, $role_id) {
                     $query->where('b.student_id', $student_id)
                         ->orWhereNull('b.student_id')
                         ->whereRaw("FIND_IN_SET('$role_id', b.target_user)");
                 })
-                ->where(function ($query) use ($currentDateTime) {
-                    $query->where('b.publish_end_date', '>', $currentDateTime)
-                        ->orWhereNull('b.publish_end_date');
-                })
+                // ->where(function ($query) use ($currentDateTime) {
+                //     $query->where('b.publish_end_date', '>', $currentDateTime)
+                //         ->orWhereNull('b.publish_end_date');
+                // })
                 // ->where('b.publish_date', '<=', now())
                 ->groupBy("b.id")
                 ->orderBy('b.id', 'desc')
@@ -939,17 +939,17 @@ class ApiControllerThree extends BaseController
                         ->orWhereNull('b.section_id');
                 })
                 ->where("b.status", 1)
-                ->where("b.publish", 1)
+                //->where("b.publish", 1)
                 ->where(function ($query) use ($student_id, $role_id) {
                     $query->where('b.student_id', $student_id)
                         ->orWhereNull('b.student_id')
                         ->whereRaw("FIND_IN_SET('$role_id', b.target_user)");
                 })
                 ->where("bi.parent_imp", '1')
-                ->where(function ($query) use ($currentDateTime) {
-                    $query->where('b.publish_end_date', '>', $currentDateTime)
-                        ->orWhereNull('b.publish_end_date');
-                })
+                // ->where(function ($query) use ($currentDateTime) {
+                //     $query->where('b.publish_end_date', '>', $currentDateTime)
+                //         ->orWhereNull('b.publish_end_date');
+                // })
                 // ->where('b.publish_date', '<=', now())
                 ->groupBy("b.id")
                 ->get()->toArray();
@@ -996,11 +996,11 @@ class ApiControllerThree extends BaseController
                         ->whereRaw("FIND_IN_SET('$role_id', b.target_user)");
                 })
                 ->where("b.status", 1)
-                ->where("b.publish", 1)
-                ->where(function ($query) use ($currentDateTime) {
-                    $query->where('b.publish_end_date', '>', $currentDateTime)
-                        ->orWhereNull('b.publish_end_date');
-                })
+                //->where("b.publish", 1)
+                // ->where(function ($query) use ($currentDateTime) {
+                //     $query->where('b.publish_end_date', '>', $currentDateTime)
+                //         ->orWhereNull('b.publish_end_date');
+                // })
                 // ->where('b.publish_date', '<=', now())
                 ->groupBy("b.id")
                 ->orderBy('b.id', 'desc')
@@ -1048,12 +1048,12 @@ class ApiControllerThree extends BaseController
                         ->whereRaw("FIND_IN_SET('$role_id', b.target_user)");
                 })
                 ->where("b.status", 1)
-                ->where("b.publish", 1)
+               // ->where("b.publish", 1)
                 ->where("bi.parent_imp", '1')
-                ->where(function ($query) use ($currentDateTime) {
-                    $query->where('b.publish_end_date', '>', $currentDateTime)
-                        ->orWhereNull('b.publish_end_date');
-                })
+                // ->where(function ($query) use ($currentDateTime) {
+                //     $query->where('b.publish_end_date', '>', $currentDateTime)
+                //         ->orWhereNull('b.publish_end_date');
+                // })
                 // ->where('b.publish_date', '<=', now())
                 ->groupBy("b.id")
                 ->orderBy('b.id', 'desc')
@@ -2900,6 +2900,25 @@ class ApiControllerThree extends BaseController
                 //     ];
             }
             return $this->successResponse($parentDetails, 'Student details fetch successfully');
+        }
+    }
+    public function decryptEmailPassword(Request $request)
+    {
+        $validator = \Validator::make($request->all(), [
+            'email' => 'required',
+            'password' => 'required',
+        ]);
+        if (!$validator->passes()) {
+            return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
+        } else {
+            // create new connection
+            $decrypt_email = Helper::decryptStringData($request->email);
+            $decrypt_password = Helper::decryptStringData($request->password);
+            $data = [
+                "decrypt_email" => $decrypt_email,
+                "decrypt_password" => $decrypt_password
+            ];
+            return $this->successResponse($data, 'Decrypt Email and password');
         }
     }
 }
