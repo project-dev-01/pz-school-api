@@ -2752,8 +2752,8 @@ class ApiControllerThree extends BaseController
         // Update passwords
         foreach ($users as $user) {
             if ($user->email != "N/A") {
-                $removeFourChar = substr($user->email, 4);
-                $update = User::find($user->id)->update(['password' => \Hash::make($removeFourChar)]);
+                // $removeFourChar = substr($user->email, 4);
+                $update = User::find($user->id)->update(['password' => \Hash::make($user->email)]);
                 if ($update) {
                     $success = true;
                 }
