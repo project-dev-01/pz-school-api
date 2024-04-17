@@ -18,16 +18,23 @@ class LogRoute
     public function handle(Request $request, Closure $next)
     {
         $response = $next($request);
+        
+        // Only log errors if we're in the local environment
         if (app()->environment('local')) {
-            $log = [
-                'URI' => $request->getUri(),
-                'METHOD' => $request->getMethod(),
-                'REQUEST_BODY' => $request->all(),
-                'RESPONSE' => $response->getContent()
-            ];
+            // Check if the response status code indicates an error (4xx or 5xx)
+            $statusCode = $response->status();
+            if ($statusCode >= 400 && $statusCode <= 599) {
+                $log = [
+                    'URI' => $request->getUri(),
+                    'METHOD' => $request->getMethod(),
+                    'REQUEST_BODY' => $request->all(),
+                    'RESPONSE' => $response->getContent()
+                ];
 
-            Log::info(json_encode($log));
+                Log::error(json_encode($log));
+            }
         }
+        
         return $response;
     }
 }
