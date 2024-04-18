@@ -158,11 +158,13 @@ class AuthController extends BaseController
                 if ($user->role->id == 5) {
                     $branch_id = $user->subsDetails->id;
                     $Connection = $this->createNewConnection($branch_id);
-                    $StudentID = $Connection->table('students')
+                    $StudentID = $Connection->table('students as std')
                         ->select(
-                            'id',
-                            DB::raw("CONCAT(first_name, ' ', last_name) as name")
+                            'std.id',
+                            DB::raw("CONCAT(std.first_name, ' ', std.last_name) as name")
                         )
+                        ->join('enrolls as en', 'std.id', '=', 'en.student_id')
+                        ->where('en.active_status','=','0')
                         ->where('father_id', '=', $user->user_id)
                         ->orWhere('mother_id', '=', $user->user_id)
                         ->orWhere('guardian_id', '=', $user->user_id)
@@ -468,9 +470,14 @@ class AuthController extends BaseController
             //     ->where('is_active', '0')
             //     ->where('role_id', $request->role_id)
             //     ->whereBetween('login_time', [$fromDate, $toDate])->get();
+            $requestRoleId = $request->role_id;
             $data = DB::table('log_history')
                 ->join('users', 'log_history.login_id', '=', 'users.id')
                 ->select('log_history.*', 'users.is_active')
+                ->where(function ($query) use ($requestRoleId) {
+                    // Check if the requested role ID is found within the saved role IDs
+                    $query->whereRaw("FIND_IN_SET(?, users.role_id)", [$requestRoleId]);
+                })
                 ->where('users.is_active', '0')
                 ->where('users.branch_id', $request->branch_id)
                 ->whereBetween('log_history.login_time', [$fromDate, $toDate])
