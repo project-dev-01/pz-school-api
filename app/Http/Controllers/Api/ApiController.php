@@ -14901,7 +14901,7 @@ class ApiController extends BaseController
         } else {
             $parentDetails = $conn->table('parent')
                 ->select("id", 'email', 'occupation', DB::raw("CONCAT(last_name, ' ', first_name) as name"))
-                ->where('status', '=', '0')
+                //->where('status', '=', '0')
                 ->get();
         }
     

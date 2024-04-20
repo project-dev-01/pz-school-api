@@ -93,8 +93,8 @@ class ApiControllerThree extends BaseController
                 ->leftJoin('parent as p', 'p.id', '=', 'b.parent_id')
                 ->leftJoin('students as st', 'st.id', '=', 'b.student_id')
                 ->where("b.status", 1)
-                // ->where("b.publish", 1)
-                // ->where('b.publish_end_date', '>', $currentDateTime)
+               // ->where("b.publish", 1)
+               // ->where('b.publish_end_date', '>', $currentDateTime)
                 ->groupBy("b.id")
                 ->orderBy('b.id', 'desc')
                 ->get()->toArray();
@@ -145,7 +145,7 @@ class ApiControllerThree extends BaseController
                 'department_id' => $request->department_id,
                 'publish_date' => $request->publish_date,
                 'publish_end_date' => $request->publish_end_date,
-                // 'publish' => !empty($request->publish == "on") ? "1" : "0",
+               // 'publish' => !empty($request->publish == "on") ? "1" : "0",
                 'add_dashboard' =>  !empty($request->add_to_dash == "on") ? "1" : "0",
                 'created_by' => $request->created_by,
                 'created_at' => date("Y-m-d H:i:s")
@@ -413,7 +413,7 @@ class ApiControllerThree extends BaseController
                 'status' => 1,
                 'publish_date' => $request->publish_date,
                 'publish_end_date' => $request->publish_end_dates,
-                //  'publish' => !empty($request->publish == "on") ? "1" : "0",
+              //  'publish' => !empty($request->publish == "on") ? "1" : "0",
                 'updated_at' => date("Y-m-d H:i:s"),
                 'updated_by' => $request->updated_by,
             ]);
@@ -630,7 +630,7 @@ class ApiControllerThree extends BaseController
                     $query->where('b.section_id', $section_id)
                         ->orWhereNull('b.section_id');
                 })
-                // ->where("b.publish", 1)
+               // ->where("b.publish", 1)
                 ->where("b.status", 1)
                 ->where(function ($query) use ($parent_id, $role_id) {
                     $query->where('b.parent_id', $parent_id)
@@ -753,7 +753,7 @@ class ApiControllerThree extends BaseController
                         ->orWhereNull('b.section_id');
                 })
                 ->where("b.status", 1)
-                //  ->where("b.publish", 1)
+              //  ->where("b.publish", 1)
                 ->where(function ($query) use ($parent_id, $role_id) {
                     $query->where('b.parent_id', $parent_id)
                         ->orWhereNull('b.parent_id')
@@ -1048,7 +1048,7 @@ class ApiControllerThree extends BaseController
                         ->whereRaw("FIND_IN_SET('$role_id', b.target_user)");
                 })
                 ->where("b.status", 1)
-                // ->where("b.publish", 1)
+               // ->where("b.publish", 1)
                 ->where("bi.parent_imp", '1')
                 // ->where(function ($query) use ($currentDateTime) {
                 //     $query->where('b.publish_end_date', '>', $currentDateTime)
@@ -2786,19 +2786,16 @@ class ApiControllerThree extends BaseController
         } else {
             try {
                 // echo "test";
-                // $content = [
-                //     'subject' => '【Suzen】アカウント情報のご案内'
-                // ];
+                $content = [
+                    'subject' => '【Suzen】アカウント情報のご案内'
+                ];
                 $evenMoreUsers = [
-                    "chlee@kddi.com.my",
-                    "syakirin@kddi.com.my",
-                    "chinhui1.lee@gmail.com",
-                    // "kalaivani@aibots.my",
+                    // "chlee@kddi.com.my",
+                    // "syakirin@kddi.com.my",
+                    // "chinhui1.lee@gmail.com",
+                    "kalaivani@aibots.my",
                     "karthik@aibots.my"
                 ];
-                // Define dynamic data
-                $loginId = 'abc@gmail.com';
-                $password = 'abc@gmail.comJ24';
                 // $evenMoreUsers = [
                 //     "karthik@aibots.my"
                 // ];
@@ -2807,7 +2804,7 @@ class ApiControllerThree extends BaseController
                 //     "karthiksure31@gmail.com"
                 // ];
                 Mail::bcc($evenMoreUsers)
-                    ->send(new TestQueueMail($loginId, $password));
+                    ->send(new TestQueueMail($content));
 
                 return "Email has been sent.";
             } catch (\Exception $e) {
@@ -2815,50 +2812,54 @@ class ApiControllerThree extends BaseController
             }
         }
     }
-    public function testQueueEmailAllUsers(Request $request)
-    {
-        $validator = \Validator::make($request->all(), [
-            'email' => 'required'
-        ]);
-        if (!$validator->passes()) {
-            return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
-        } else {
-            try {
-                // echo "test";
-                $content = [
-                    'subject' => '【Suzen】アカウント情報のご案内'
-                ];
+    // public function testQueueEmailAllUsers(Request $request)
+    // {
+    //     $validator = \Validator::make($request->all(), [
+    //         'email' => 'required'
+    //     ]);
+    //     if (!$validator->passes()) {
+    //         return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
+    //     } else 
+    //         try {
+    //             // echo "test";
+    //             $content = [
+    //                 'subject' => '【Suzen】アカウント情報のご案内'
+    //             ];
+                
 
+    //             // $allUsers = [
+    //             //     "karthik@aibots.my",
+    //             //     "karthiksure31@gmail.com",
+    //             //     // Add more email addresses here...
+    //             //     // "email1@example.com",
+    //             //     // "email2@example.com",
+    //             //     // ...
+    //             //     // "email544@example.com"
+    //             // ];
+    //             $bccUsers = [
+    //                 "chlee@kddi.com.my",
+    //                 "syakirin@kddi.com.my",
+    //                 "chinhui1.lee@gmail.com"
+    //             ];
+    //             // $bccUsers = [
+    //             //     "karthiksure1995@gmail.com",
+    //             //     "dhanushkarthikdhanush@gmail.com",
+    //             // ];
+    //             // foreach ($allUsers as $user) {
+    //             //     // dd($user);
+    //             //     Mail::to($user)
+    //             //         ->bcc($bccUsers) // Adding BCC recipient same as the email
+    //             //         ->send(new TestQueueMail($content));
+    //             // }
 
-                $allUsers = [
-                    "karthik@aibots.my",
-                    "karthiksure31@gmail.com"
-                ];
-                // $bccUsers = [
-                //     "chlee@kddi.com.my",
-                //     "syakirin@kddi.com.my",
-                //     "chinhui1.lee@gmail.com"
-                // ];
-                $bccUsers = [
-                    "karthiksure1995@gmail.com",
-                ];
-                $loginId = 'abc@gmail.com';
-                $password = 'abc@gmail.comJ24';
-                foreach ($allUsers as $user) {
-                    // dd($user);
-                    Mail::to($user)
-                        ->bcc($bccUsers) // Adding BCC recipient same as the email
-                        ->send(new TestQueueMail($loginId, $password));
-                }
+    //             return "Emails have been sent.";
+    //         } catch (\Exception $e) {
+    //             return "Failed to send emails. Error: " . $e->getMessage();
+    //         }
+    //     }
+    // }
 
-                return "Emails have been sent.";
-            } catch (\Exception $e) {
-                return "Failed to send emails. Error: " . $e->getMessage();
-            }
-        }
-    }
-
-    public function clearCache($cache_name, $branchId)
+    protected function clearCache($cache_name, $branchId)
     {
         $cacheKey = $cache_name . $branchId;
         Cache::forget($cacheKey);
@@ -2933,60 +2934,6 @@ class ApiControllerThree extends BaseController
                 "decrypt_password" => $decrypt_password
             ];
             return $this->successResponse($data, 'Decrypt Email and password');
-        }
-    }
-    public function clearApiCacheBranch(Request $request)
-    {
-        try {
-            $validator = \Validator::make($request->all(), [
-                'branch_id' => 'required'
-            ]);
-            if ($validator->fails()) {
-                return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
-            }
-
-            $dataClear = [
-                'cache_academic_years' => "academic_years_",
-                'cache_departments' => "departments_",
-                'cache_classes' => "classes_",
-                'cache_sections' => "sections_",
-                'cache_students' => "students_",
-                'cache_parentDetails' => "parentDetails_",
-                'cache_Staff' => "Staff_",
-                'cache_timetable' => "cache_timetable_",
-                'cache_leaveTypeWiseAllReason' => "cache_leaveTypeWiseAllReason_",
-                'cache_ReasonsByLeaveType' => "cache_ReasonsByLeaveType_",
-                'cache_semester' => "cache_semester_",
-                'cache_eventDetails' => "cache_eventDetails_",
-                'cache_student_leave_types' => "student_leave_types_",
-                'cache_subjects' => "subjects_",
-                'cache_exam_papers' => "exam_papers_",
-                'cache_exam_term' => "exam_term_",
-                'cache_exam' => "exam_",
-                'cache_educations' => "educations_",
-                'cache_religions' => "religions_",
-                'cache_race' => "race_",
-                'cache_absent_reasons' => "absent_reasons_",
-                'cache_late_reasons' => "late_reasons_",
-                'cache_excused_reasons' => "excused_reasons_",
-                'cache_holidays' => "holidays_",
-                'cache_leave_types' => "leave_types_",
-                'cache_get_access_menu_list' => "cache_get_access_menu_list_",
-                'school_role_access' => "school_role_access_"
-            ];
-
-            foreach ($dataClear as $key => $prefix) {
-                $cacheKey = $prefix . $request->branch_id;
-                Cache::forget($cacheKey);
-            }
-
-            return $this->successResponse([], 'Clear Api Cache Branch');
-        } catch (\Exception $e) {
-            // Log the error or handle it accordingly
-            // \Log::error('Error in clearApiCacheBranch: ' . $e->getMessage());
-
-            // You can return a response with the error message
-            return $this->sendErrorResponse('An error occurred while clearing cache.', 500);
         }
     }
 }
