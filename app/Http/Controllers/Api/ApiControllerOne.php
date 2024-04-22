@@ -5280,8 +5280,7 @@ class ApiControllerOne extends BaseController
         $validator = \Validator::make($request->all(), [
             'branch_id' => 'required',
             'class_id' => 'required',
-            'section_id' => 'required',
-            'academic_session_id' => 'required'
+            'section_id' => 'required'
         ]);
         if (!$validator->passes()) {
             return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
@@ -5297,8 +5296,7 @@ class ApiControllerOne extends BaseController
                 ->where([
                     ['en.class_id', '=', $request->class_id],
                     ['en.section_id', '=', $request->section_id],
-                    ['en.active_status', '=', '0'],
-                    ['en.academic_session_id', '=', $request->academic_session_id]
+                    ['en.active_status', '=', '0']
                 ])
                 ->get();
             return $this->successResponse($studentData, 'students data fetch successfully');

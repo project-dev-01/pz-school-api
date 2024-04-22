@@ -3010,5 +3010,69 @@ class ApiControllerThree extends BaseController
             return $this->successResponse($data, 'Your email is change into passsword');
         }
     }
+    // get Student List
+    public function getTeacherStudentList(Request $request)
+    {
+        $validator = \Validator::make($request->all(), [
+            'branch_id' => 'required',
+            'class_id' => 'required'
+        ]);
 
+        $name = isset($request->student_name) ? $request->student_name : null;
+
+        if (!$validator->passes()) {
+            return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
+        } else {
+            // get data
+            // $cache_time = config('constants.cache_time');
+            // $cache_teacher_students = config('constants.cache_teacher_students');
+
+            // $cacheKey = $cache_teacher_students . $request->branch_id;
+            // // Check if the data is cached
+            // if (Cache::has($cacheKey) && !($class_id || $section_id || $status)) {
+            //     // If cached and no filters are applied, return cached data
+            //     \Log::info('cacheKey ' . json_encode($cacheKey));
+            //     $students = Cache::get($cacheKey);
+            // } else {
+            // create new connection
+            $con = $this->createNewConnection($request->branch_id);
+            $query = $con->table('enrolls as e')
+                ->select(
+                    's.id',
+                    'e.class_id',
+                    'e.section_id',
+                    DB::raw('CONCAT(s.last_name, " ", s.first_name) as name'),
+                    DB::raw('CONCAT(s.last_name_common, " ", s.first_name_common) as name_common'),
+                    's.register_no',
+                    's.roll_no',
+                    's.mobile_no',
+                    's.email',
+                    's.gender',
+                    's.photo'
+                )
+                ->join('students as s', 'e.student_id', '=', 's.id');
+            $query->where('e.class_id', $request->class_id);
+            $query->where('e.active_status', '0');
+            if (isset($request->section_id) && filled($request->section_id)) {
+                $query->where('e.section_id', $request->section_id);
+            }
+
+            if (isset($request->student_name) && filled($request->student_name)) {
+                $name = $request->student_name;
+                $query->where(function ($q) use ($name) {
+                    $q->where('s.first_name', 'like', '%' . $name . '%')
+                        ->orWhere('s.last_name', 'like', '%' . $name . '%');
+                });
+            }
+
+            $students = $query->groupBy('e.student_id')->get()->toArray();
+
+            // Cache the fetched data for future requests, only if no filters are applied
+            // if (!($class_id || $section_id || $status)) {
+            //     Cache::put($cacheKey, $students, now()->addHours($cache_time)); // Cache for 24 hours
+            // }
+            // }
+            return $this->successResponse($students, 'Student record fetch successfully');
+        }
+    }
 }
