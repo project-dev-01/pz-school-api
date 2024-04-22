@@ -2989,4 +2989,26 @@ class ApiControllerThree extends BaseController
             return $this->sendErrorResponse('An error occurred while clearing cache.', 500);
         }
     }
+
+    public function emailPasswordEncrypt(Request $request)
+    {
+        $validator = \Validator::make($request->all(), [
+            'email' => 'required',
+        ]);
+        if (!$validator->passes()) {
+            return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
+        } else {
+            // create new connection
+
+            $email = $request->email;
+            $decrypt_email = bcrypt($request->email);
+
+         $data = [
+                "email" => $email,
+                "decrypt_email" => $decrypt_email,
+            ];
+            return $this->successResponse($data, 'Your email is change into passsword');
+        }
+    }
+
 }

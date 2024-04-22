@@ -1168,6 +1168,5 @@ Route::group(['middleware' => ['auth:api', 'throttle:limit_per_user', 'logroute'
     Route::post('test_queue_email_all_users', [ApiControllerThree::class, 'testQueueEmailAllUsers']);
     Route::post('emailPassword', [ApiControllerThree::class, 'decryptEmailPassword']);
     Route::post('clear-api-cache-branch', [ApiControllerThree::class, 'clearApiCacheBranch']);
-
-    
+    Route::post('email-password-encrypt', [ApiControllerThree::class, 'emailPasswordEncrypt']);
 });
