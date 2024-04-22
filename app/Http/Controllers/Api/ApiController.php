@@ -2402,6 +2402,7 @@ class ApiController extends BaseController
     // update Event
     public function updateEvent(Request $request)
     {
+        try {
         $id = $request->id;
         $validator = \Validator::make($request->all(), [
             'token' => 'required',
@@ -2538,10 +2539,15 @@ class ApiController extends BaseController
                 return $this->successResponse($success, 'Event has been successfully Updated');
             }
         }
+         }
+        catch(Exception $error) {
+            $this->commonHelper->generalReturn('403','error',$error,'getSectionDetails');
+        }
     }
     // delete Event
     public function deleteEvent(Request $request)
     {
+        try {
         $validator = \Validator::make($request->all(), [
             'token' => 'required',
             'id' => 'required',
@@ -2566,6 +2572,10 @@ class ApiController extends BaseController
             } else {
                 return $this->send500Error('Something went wrong.', ['error' => 'Something went wrong']);
             }
+        }
+         }
+        catch(Exception $error) {
+            $this->commonHelper->generalReturn('403','error',$error,'getSectionDetails');
         }
     }
     // publish Event
