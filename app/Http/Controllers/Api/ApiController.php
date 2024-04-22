@@ -56,115 +56,131 @@ use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Hash;
 use App\Models\Menus;
 use App\Models\Menuaccess;
-
+use App\Models\ViewModels\CommonReturnVM;
+use App\Helpers\CommonHelper;
 
 class ApiController extends BaseController
 {
-    //
+    protected CommonHelper $commonHelper;
+    public function __construct(CommonHelper $commonHelper) {
+        $this->commonHelper = $commonHelper;
+    }
     public function getRoles(Request $request)
     {
-        if($request->status=='All')			
+        if($request->status=='All')
 		{$data = Role::get();}
 		else
 		{$data = Role::where('status', $request->status)->get();}
-	
+
         //$data = Role::where('status', '!=', '1')->get();
         return $this->successResponse($data, 'Section record fetch successfully');
     }
     // add section
     public function addSection(Request $request)
     {
+        try {
+            $validator = \Validator::make($request->all(), [
+                'branch_id' => 'required',
+                'token' => 'required',
+                'name' => 'required'
+            ]);
 
-        $validator = \Validator::make($request->all(), [
-            'branch_id' => 'required',
-            'token' => 'required',
-            'name' => 'required'
-        ]);
-
-        if (!$validator->passes()) {
-            return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
-        } else {
-            // create new connection
-            $createConnection = $this->createNewConnection($request->branch_id);
-            // check exist name
-            if ($createConnection->table('sections')->where('name', '=', $request->name)->count() > 0) {
-                return $this->send422Error('Name Already Exist', ['error' => 'Name Already Exist']);
+            if (!$validator->passes()) {
+                return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
             } else {
-                // insert data
-                $query = $createConnection->table('sections')->insert([
-                    'name' => $request->name,
-                    'created_at' => date("Y-m-d H:i:s")
-                ]);
-                // cache clear start
-                $cache_sections = config('constants.cache_sections');
-                $this->clearCache($cache_sections,$request->branch_id);
-                // cache clear end
-                $success = [];
-                if (!$query) {
-                    return $this->send500Error('Something went wrong.', ['error' => 'Something went wrong']);
+                // create new connection
+                $createConnection = $this->createNewConnection($request->branch_id);
+                // check exist name
+                if ($createConnection->table('sections')->where('name', '=', $request->name)->count() > 0) {
+                    return $this->send422Error('Name Already Exist', ['error' => 'Name Already Exist']);
                 } else {
-                    return $this->successResponse($success, 'New Classes has been successfully saved');
+                    // insert data
+                    $query = $createConnection->table('sections')->insert([
+                        'name' => $request->name,
+                        'created_at' => date("Y-m-d H:i:s")
+                    ]);
+                    // cache clear start
+                    $cache_sections = config('constants.cache_sections');
+                    $this->clearCache($cache_sections,$request->branch_id);
+                    // cache clear end
+                    $success = [];
+                    if (!$query) {
+                        return $this->send500Error('Something went wrong.', ['error' => 'Something went wrong']);
+                    } else {
+                        return $this->successResponse($success, 'New Classes has been successfully saved');
+                    }
                 }
             }
         }
+        catch(Exception $error) {
+            $this->commonHelper->generalReturn('403','error',$error,'addSection');
+        }
     }
-    // get sections 
+    // get sections
     public function getSectionList(Request $request)
     {
-        $validator = \Validator::make($request->all(), [
-            'branch_id' => 'required',
-            'token' => 'required',
-        ]);
-        if (!$validator->passes()) {
-            return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
-        } else {
-                // get data
-                $cache_time = config('constants.cache_time');
-                $cache_sections = config('constants.cache_sections');
-                //dd($cache_academic_years);
-                //$Department = $Connection->table('academic_year')->get();
-                $cacheKey = $cache_sections . $request->branch_id;
-
-                // Check if the data is cached
-                if (Cache::has($cacheKey)) {
-                    // If cached, return cached data
-                    $section = Cache::get($cacheKey);
-                } else {
-                    // create new connection
-                    $secConn = $this->createNewConnection($request->branch_id);
+        try {
+            $validator = \Validator::make($request->all(), [
+                'branch_id' => 'required',
+                'token' => 'required',
+            ]);
+            if (!$validator->passes()) {
+                return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
+            } else {
                     // get data
-                    $section = $secConn->table('sections')->orderBy('name', 'asc')->get();
-                    Cache::put($cacheKey, $section, now()->addHours($cache_time)); // Cache for 24 hours  
-                    }
-           
-            return $this->successResponse($section, 'Classes record fetch successfully');
+                    $cache_time = config('constants.cache_time');
+                    $cache_sections = config('constants.cache_sections');
+                    //dd($cache_academic_years);
+                    //$Department = $Connection->table('academic_year')->get();
+                    $cacheKey = $cache_sections . $request->branch_id;
+
+                    // Check if the data is cached
+                    if (Cache::has($cacheKey)) {
+                        // If cached, return cached data
+                        $section = Cache::get($cacheKey);
+                    } else {
+                        // create new connection
+                        $secConn = $this->createNewConnection($request->branch_id);
+                        // get data
+                        $section = $secConn->table('sections')->orderBy('name', 'asc')->get();
+                        Cache::put($cacheKey, $section, now()->addHours($cache_time)); // Cache for 24 hours
+                        }
+
+                return $this->successResponse($section, 'Classes record fetch successfully');
+            }
         }
-        
+        catch(Exception $error) {
+            $this->commonHelper->generalReturn('403','error',$error,'getSectionList');
+        }
     }
     // get section row details
     public function getSectionDetails(Request $request)
     {
+        try {
+            $validator = \Validator::make($request->all(), [
+                'section_id' => 'required',
+                'token' => 'required',
+                'branch_id' => 'required',
+            ]);
 
-        $validator = \Validator::make($request->all(), [
-            'section_id' => 'required',
-            'token' => 'required',
-            'branch_id' => 'required',
-        ]);
-
-        if (!$validator->passes()) {
-            return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
-        } else {
-            // create new connection
-            $createConnection = $this->createNewConnection($request->branch_id);
-            // insert data
-            $sectionDetails = $createConnection->table('sections')->where('id', $request->section_id)->first();
-            return $this->successResponse($sectionDetails, 'Classes row fetch successfully');
+            if (!$validator->passes()) {
+                return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
+            } else {
+                // create new connection
+                $createConnection = $this->createNewConnection($request->branch_id);
+                // insert data
+                $sectionDetails = $createConnection->table('sections')->where('id', $request->section_id)->first();
+                return $this->successResponse($sectionDetails, 'Classes row fetch successfully');
+            }
+        }
+        catch(Exception $error) {
+            $this->commonHelper->generalReturn('403','error',$error,'getSectionDetails');
         }
     }
     // update section
     public function updateSectionDetails(Request $request)
     {
-
+        try {
         $validator = \Validator::make($request->all(), [
             'token' => 'required',
             'name' => 'required',
@@ -199,11 +215,15 @@ class ApiController extends BaseController
                 }
             }
         }
+        }
+        catch(Exception $error) {
+            $this->commonHelper->generalReturn('403','error',$error,'getSectionDetails');
+        }
     }
     // delete Section
     public function deleteSection(Request $request)
     {
-
+        try {
         $section_id = $request->sid;
         $validator = \Validator::make($request->all(), [
             'token' => 'required',
@@ -229,15 +249,19 @@ class ApiController extends BaseController
                 return $this->send500Error('Something went wrong.', ['error' => 'Something went wrong']);
             }
         }
+        }
+        catch(Exception $error) {
+            $this->commonHelper->generalReturn('403','error',$error,'getSectionDetails');
+        }
     }
-    // get School Type 
+    // get School Type
     public function getSchoolType(Request $request)
     {
         $branch_id = $request->branch_id;
         $validator = Validator::make($request->all(), [
             'branch_id' => 'required',
         ]);
-
+        $commonReturn = new CommonReturnVM();
         if (!$validator->passes()) {
             return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
         } else {
@@ -271,14 +295,16 @@ class ApiController extends BaseController
                     return $this->sendCommonError('School Type Not Found.', ['error' => 'School Type Not Found']);
                 }
             } catch (Exception $e) {
-                return $this->sendCommonError('No Data Found.', ['error' => $e->getMessage()]);
+                $result = null;
+                 return $this->sendCommonError('School Type Not Found.', ['error' => 'School Type Not Found']);
             }
         }
     }
 
-    // get Home Page 
+    // get Home Page
     public function getHomePageDetails(Request $request)
     {
+        try {
         $branch_id = $request->branch_id;
         $validator = Validator::make($request->all(), [
             'branch_id' => 'required',
@@ -293,12 +319,17 @@ class ApiController extends BaseController
                 ->first();
             return $this->successResponse($success, 'Branch record fetch successfully');
         }
+        }
+        catch(Exception $error) {
+            $this->commonHelper->generalReturn('403','error',$error,'getSectionDetails');
+        }
     }
 
 
-    // add branch 
+    // add branch
     public function addBranch(Request $request)
     {
+        try {
         $validator = \Validator::make($request->all(), [
             'token' => 'required',
             'first_name' => 'required',
@@ -411,10 +442,15 @@ class ApiController extends BaseController
                 return $this->send500Error('Users already exist', ['error' => 'Users already exist']);
             }
         }
+        }
+        catch(Exception $error) {
+            $this->commonHelper->generalReturn('403','error',$error,'getSectionDetails');
+        }
     }
-    // get branch 
+    // get branch
     public function getBranchList(Request $request)
     {
+        try {
         $country_id = $request->country_id;
         $state_id = $request->state_id;
         $city_id = $request->city_id;
@@ -443,10 +479,15 @@ class ApiController extends BaseController
                 ->get();
             return $this->successResponse($success, 'Branch record fetch successfully');
         }
+        }
+        catch(Exception $error) {
+            $this->commonHelper->generalReturn('403','error',$error,'getSectionDetails');
+        }
     }
     // get branch row details
     public function getBranchDetails(Request $request)
     {
+        try {
         $validator = \Validator::make($request->all(), [
             'id' => 'required',
             'token' => 'required',
@@ -458,10 +499,15 @@ class ApiController extends BaseController
             $branchDetails = Branches::find($id);
             return $this->successResponse($branchDetails, 'Branch row fetch successfully');
         }
+        }
+        catch(Exception $error) {
+            $this->commonHelper->generalReturn('403','error',$error,'getSectionDetails');
+        }
     }
     // update branch
     public function updateBranchDetails(Request $request)
     {
+        try {
         $id = $request->id;
 
         $validator = \Validator::make($request->all(), [
@@ -514,12 +560,17 @@ class ApiController extends BaseController
                 return $this->send500Error('Something went wrong.', ['error' => 'Something went wrong']);
             }
         }
+        }
+        catch(Exception $error) {
+            $this->commonHelper->generalReturn('403','error',$error,'getSectionDetails');
+        }
     }
 
     // delete Section
     public function deleteBranch(Request $request)
     {
 
+        try {
         $id = $request->id;
         $validator = \Validator::make($request->all(), [
             'token' => 'required',
@@ -541,11 +592,15 @@ class ApiController extends BaseController
                 return $this->send500Error('Something went wrong.', ['error' => 'Something went wrong']);
             }
         }
+        }
+        catch(Exception $error) {
+            $this->commonHelper->generalReturn('403','error',$error,'getSectionDetails');
+        }
     }
     // add class
     public function addClass(Request $request)
     {
-
+        try {
         $validator = \Validator::make($request->all(), [
             'name' => 'required',
             'department_id' => 'required',
@@ -582,11 +637,16 @@ class ApiController extends BaseController
                 }
             }
         }
+        }
+        catch(Exception $error) {
+            $this->commonHelper->generalReturn('403','error',$error,'getSectionDetails');
+        }
     }
 
-    // get classes 
+    // get classes
     public function getClassList(Request $request)
     {
+        try {
         $validator = \Validator::make($request->all(), [
             'branch_id' => 'required',
         ]);
@@ -618,11 +678,15 @@ class ApiController extends BaseController
             }
             return $this->successResponse($class, 'Grade record fetch successfully');
         }
+        }
+        catch(Exception $error) {
+            $this->commonHelper->generalReturn('403','error',$error,'getSectionDetails');
+        }
     }
     // get class row details
     public function getClassDetails(Request $request)
     {
-
+        try {
         $validator = \Validator::make($request->all(), [
             'class_id' => 'required',
             'token' => 'required',
@@ -639,10 +703,15 @@ class ApiController extends BaseController
             $sectionDetails = $createConnection->table('classes')->where('id', $request->class_id)->first();
             return $this->successResponse($sectionDetails, 'Grade row fetch successfully');
         }
+        }
+        catch(Exception $error) {
+            $this->commonHelper->generalReturn('403','error',$error,'getSectionDetails');
+        }
     }
     // update class
     public function updateClassDetails(Request $request)
     {
+        try {
         $validator = \Validator::make($request->all(), [
             'department_id' => 'required',
             'name' => 'required',
@@ -680,12 +749,16 @@ class ApiController extends BaseController
                 }
             }
         }
+        }
+        catch(Exception $error) {
+            $this->commonHelper->generalReturn('403','error',$error,'getSectionDetails');
+        }
     }
 
     // delete class
     public function deleteClass(Request $request)
     {
-
+        try {
         $validator = \Validator::make($request->all(), [
             'token' => 'required',
             'class_id' => 'required',
@@ -710,11 +783,15 @@ class ApiController extends BaseController
                 return $this->send500Error('Something went wrong.', ['error' => 'Something went wrong']);
             }
         }
+        }
+        catch(Exception $error) {
+            $this->commonHelper->generalReturn('403','error',$error,'getSectionDetails');
+        }
     }
     // add section allocations
     public function addSectionAllocation(Request $request)
     {
-
+        try {
         $validator = \Validator::make($request->all(), [
             'department_id' => 'required',
             'class_id' => 'required',
@@ -747,10 +824,15 @@ class ApiController extends BaseController
                 }
             }
         }
+        }
+        catch(Exception $error) {
+            $this->commonHelper->generalReturn('403','error',$error,'getSectionDetails');
+        }
     }
     // get sections allocation
     public function getSectionAllocationList(Request $request)
     {
+        try {
         $validator = \Validator::make($request->all(), [
             'branch_id' => 'required'
         ]);
@@ -771,11 +853,16 @@ class ApiController extends BaseController
                 ->get();
             return $this->successResponse($sectionAllocation, 'Section Allocation record fetch successfully');
         }
+        }
+        catch(Exception $error) {
+            $this->commonHelper->generalReturn('403','error',$error,'getSectionDetails');
+        }
     }
 
     // get getSectionAllocationDetails details
     public function getSectionAllocationDetails(Request $request)
     {
+        try {
         $validator = \Validator::make($request->all(), [
             'id' => 'required',
             'branch_id' => 'required'
@@ -790,11 +877,16 @@ class ApiController extends BaseController
             $sectionDetails = $createConnection->table('section_allocations')->where('id', $request->id)->first();
             return $this->successResponse($sectionDetails, 'Section Allocation row fetch successfully');
         }
+        }
+        catch(Exception $error) {
+            $this->commonHelper->generalReturn('403','error',$error,'getSectionDetails');
+        }
     }
     // update Section Allocations
 
     public function updateSectionAllocation(Request $request)
     {
+        try {
         $validator = \Validator::make($request->all(), [
             'id' => 'required',
             'department_id' => 'required',
@@ -829,10 +921,15 @@ class ApiController extends BaseController
                 }
             }
         }
+        }
+        catch(Exception $error) {
+            $this->commonHelper->generalReturn('403','error',$error,'getSectionDetails');
+        }
     }
     // delete deleteSectionAllocation
     public function deleteSectionAllocation(Request $request)
     {
+        try {
         $validator = \Validator::make($request->all(), [
             'id' => 'required',
             'branch_id' => 'required'
@@ -855,12 +952,16 @@ class ApiController extends BaseController
                 return $this->send500Error('Something went wrong.', ['error' => 'Something went wrong']);
             }
         }
+        }
+        catch(Exception $error) {
+            $this->commonHelper->generalReturn('403','error',$error,'getSectionDetails');
+        }
     }
 
     // add TeacherAllocation
     public function addTeacherAllocation(Request $request)
     {
-
+        try {
         $validator = \Validator::make($request->all(), [
             'department_id' => 'required',
             'branch_id' => 'required',
@@ -931,12 +1032,16 @@ class ApiController extends BaseController
 
 
         }
+        }
+        catch(Exception $error) {
+            $this->commonHelper->generalReturn('403','error',$error,'getSectionDetails');
+        }
     }
 
-    // get TeacherAllocation 
+    // get TeacherAllocation
     public function getTeacherAllocationList(Request $request)
     {
-
+        try {
         $validator = \Validator::make($request->all(), [
             'token' => 'required',
             'branch_id' => 'required',
@@ -970,11 +1075,15 @@ class ApiController extends BaseController
                 ->get();
             return $this->successResponse($success, 'Teacher Allocation record fetch successfully');
         }
+        }
+        catch(Exception $error) {
+            $this->commonHelper->generalReturn('403','error',$error,'getSectionDetails');
+        }
     }
     // get TeacherAllocation row details
     public function getTeacherAllocationDetails(Request $request)
     {
-
+        try {
         $validator = \Validator::make($request->all(), [
             'id' => 'required',
             'token' => 'required',
@@ -993,10 +1102,15 @@ class ApiController extends BaseController
             // $teacherAllocationDetails = TeacherAllocation::find($teacher_allocation__id);
             // return $this->successResponse($teacherAllocationDetails, 'Teacher Allocation row fetch successfully');
         }
+        }
+        catch(Exception $error) {
+            $this->commonHelper->generalReturn('403','error',$error,'getSectionDetails');
+        }
     }
     // update TeacherAllocation
     public function updateTeacherAllocation(Request $request)
     {
+        try {
         $validator = \Validator::make($request->all(), [
             'department_id' => 'required',
             'branch_id' => 'required',
@@ -1062,6 +1176,10 @@ class ApiController extends BaseController
                     return $this->send500Error('Something went wrong.', ['error' => 'Something went wrong']);
                 }
             }
+        }
+        }
+        catch(Exception $error) {
+            $this->commonHelper->generalReturn('403','error',$error,'getSectionDetails');
         }
     }
     // delete TeacherAllocation
@@ -1146,7 +1264,7 @@ class ApiController extends BaseController
             $cache_time = config('constants.cache_time');
             $cache_subjects = config('constants.cache_subjects');
             $cacheKey = $cache_subjects . $request->branch_id;
-        
+
             // Check if the data is cached
             if (Cache::has($cacheKey)) {
                 // If cached, return cached data
@@ -1596,7 +1714,7 @@ class ApiController extends BaseController
                         ]
                     )
                     ->count();
-                  
+
             }
             // dd($getCount);
             // $getCount = $createConnection->table('subject_assigns')
@@ -1689,7 +1807,7 @@ class ApiController extends BaseController
             return $this->successResponse($success, 'Get Assign class subjects fetch successfully');
         }
     }
-    // branchIdByTeacherAllocation 
+    // branchIdByTeacherAllocation
     public function branchIdByTeacherAllocation(Request $request)
     {
         $validator = \Validator::make($request->all(), [
@@ -1713,7 +1831,7 @@ class ApiController extends BaseController
         }
     }
 
-    // branchIdByClass 
+    // branchIdByClass
     public function branchIdByClass(Request $request)
     {
         $validator = \Validator::make($request->all(), [
@@ -1729,7 +1847,7 @@ class ApiController extends BaseController
             return $this->successResponse($branchBasedClass, 'Class row fetch successfully');
         }
     }
-    // branchIdBySection 
+    // branchIdBySection
     public function branchIdBySection(Request $request)
     {
         $validator = \Validator::make($request->all(), [
@@ -2009,7 +2127,7 @@ class ApiController extends BaseController
             }
         }
     }
-    // get Events 
+    // get Events
     public function getEventList(Request $request)
     {
 
@@ -2026,7 +2144,7 @@ class ApiController extends BaseController
             $cache_time = config('constants.cache_time');
             $cache_eventDetails = config('constants.cache_eventDetails');
             $cacheKey = $cache_eventDetails . $request->branch_id;
-    
+
             // Check if the data is cached
             if (Cache::has($cacheKey)) {
                 // If cached, return cached data
@@ -2237,7 +2355,7 @@ class ApiController extends BaseController
 
                 $conn->table('calendors')->where('event_id', $id)->delete();
             }
-            // 
+            //
 
             $eventId = $id;
             $title = $request->title;
@@ -2370,7 +2488,7 @@ class ApiController extends BaseController
             }
         }
     }
-    // branchIdByEvent 
+    // branchIdByEvent
     public function branchIdByEvent(Request $request)
     {
         $validator = \Validator::make($request->all(), [
@@ -2395,7 +2513,7 @@ class ApiController extends BaseController
             return $this->successResponse($response, 'Information fetch successfully');
         }
     }
-    // Qualification  start 
+    // Qualification  start
 
     // add qualification
     public function add_qualifications(Request $request)
@@ -2534,7 +2652,7 @@ class ApiController extends BaseController
     }
     // Qualifaication end
 
-    // staff category start 
+    // staff category start
     // add qualification
     public function add_staffcategory(Request $request)
     {
@@ -2697,7 +2815,7 @@ class ApiController extends BaseController
                     'created_at' => date("Y-m-d H:i:s")
                 ]);
                 // Cache clear Start
-                $cache_departments = config('constants.cache_departments');               
+                $cache_departments = config('constants.cache_departments');
                 $this->clearCache($cache_departments,$request->branch_id);
              // Cache clear End
                 $success = [];
@@ -2723,7 +2841,7 @@ class ApiController extends BaseController
             $cache_time = config('constants.cache_time');
             $cache_departments = config('constants.cache_departments');
              // get data
-            
+
             $cacheKey = $cache_departments . $request->branch_id;
             //$this->clearCache($cache_departments,$request->branch_id);
             // Check if the data is cached
@@ -2737,7 +2855,7 @@ class ApiController extends BaseController
                 $Department = $staffConn->table('staff_departments')->get();
                 // Cache the fetched data for future requests
                 Cache::put($cacheKey, $Department, now()->addHours($cache_time)); // Cache for 24 hours
-                
+
             }
             return $this->successResponse($Department, 'Department record fetch successfully');
         }
@@ -2789,7 +2907,7 @@ class ApiController extends BaseController
                     'updated_at' => date("Y-m-d H:i:s")
                 ]);
                 // Cache clear Start
-            $cache_departments = config('constants.cache_departments');               
+            $cache_departments = config('constants.cache_departments');
             $this->clearCache($cache_departments,$request->branch_id);
              // Cache clear End
                 $success = [];
@@ -2821,7 +2939,7 @@ class ApiController extends BaseController
             // get data
             $query = $staffConn->table('staff_departments')->where('id', $id)->delete();
             // Cache clear Start
-            $cache_departments = config('constants.cache_departments');               
+            $cache_departments = config('constants.cache_departments');
             $this->clearCache($cache_departments,$request->branch_id);
              // Cache clear End
 
@@ -3297,7 +3415,7 @@ class ApiController extends BaseController
                         ->distinct()
                         ->where('school_roleid', '=', $rid)
                         ->pluck('role_id');
-                        
+
                         $rarray=[];
                         foreach($roleIds1 as $role)
                         {
@@ -3344,7 +3462,7 @@ class ApiController extends BaseController
         $cache_time = config('constants.cache_time');
         $cache_Staff = config('constants.cache_Staff');
         $cacheKey = $cache_Staff . $request->branch_id;
-        
+
         // Check if the data is cached
         if (Cache::has($cacheKey)) {
             // If cached, return cached data
@@ -3513,14 +3631,14 @@ class ApiController extends BaseController
     }
      // getEmployeeDetails PAGE row details
     public function getEmployeePageDetails(Request $request)
-    {     
+    {
         $validator = \Validator::make($request->all(), [
             'email' => 'required',
             'branch_id' => 'required',
             'token' => 'required'
         ]);
-    
-    
+
+
         if (!$validator->passes()) {
             return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
         } else {
@@ -3537,8 +3655,8 @@ class ApiController extends BaseController
                 )
             ->where('s.email', $email)
                 ->get();
-        
-        
+
+
             return $this->successResponse($getEmpDetails, 'Employee row fetch successfully');
         }
     }
@@ -3746,21 +3864,21 @@ class ApiController extends BaseController
                     'updated_at' => date("Y-m-d H:i:s")
                 ];
                 $oldData = $Connection->table('staffs')->find($id);
-                $query = $Connection->table('staffs')->where('id', $id)->update($data); 
+                $query = $Connection->table('staffs')->where('id', $id)->update($data);
                 $changes = $this->getChanges($oldData, $data);
                 $table_modify=[];
                 $table_modify['type']='Staff';
-                $table_modify['id']=$id;                
-                $table_modify['name']=$request->first_name.' '.$request->last_name;                
+                $table_modify['id']=$id;
+                $table_modify['name']=$request->first_name.' '.$request->last_name;
                 $table_modify['email']=$request->email;
 
                 $Connection->table('modify_datas')->insert([
-                  
+
                     'table_name' => 'Staff',
                     'table_dbname' => 'staffs',
                     'table_dbid' => $id,
-                    'table_id_name' => 'id', 
-                    'table_modify' => json_encode($table_modify),                  
+                    'table_id_name' => 'id',
+                    'table_modify' => json_encode($table_modify),
                     'modifydata' => json_encode($changes),
                     'createdby_id' => $request->login_userid,
                     'createdby_role' => $request->login_roleid
@@ -3777,7 +3895,7 @@ class ApiController extends BaseController
                         ->distinct()
                         ->where('school_roleid', '=', $rid)
                         ->pluck('role_id');
-                        
+
                         $rarray=[];
                         foreach($roleIds1 as $role)
                         {
@@ -3823,7 +3941,7 @@ class ApiController extends BaseController
                         $bankRow = $Connection->table('staff_bank_accounts')->where('staff_id', $id)->first();
                         if (isset($bankRow->id)) {
                             $oldData1 = $Connection->table('staff_bank_accounts')->where('staff_id', $id)->first();
-                            
+
                             $data= [
                                 'staff_id' => $id,
                                 'bank_name' => $request->bank_name,
@@ -3836,14 +3954,14 @@ class ApiController extends BaseController
                             ];
                             $bank = $Connection->table('staff_bank_accounts')->where('staff_id', $id)->update($data);
                             $changes = $this->getChanges($oldData1, $data);
-                            
+
                            $Connection->table('modify_datas')->insert([
-                               
+
                                 'table_name'=>'Staff Bank Info',
                                 'table_dbname'=>'staff_bank_accounts',
                                 'table_dbid' => $id,
-                                'table_id_name' => 'staff_id', 
-                                'table_modify'=> json_encode($table_modify),                  
+                                'table_id_name' => 'staff_id',
+                                'table_modify'=> json_encode($table_modify),
                                 'modifydata' => json_encode($changes),
                                 'createdby_id'=> $request->login_userid,
                                 'createdby_role'=> $request->login_roleid
@@ -3917,7 +4035,7 @@ class ApiController extends BaseController
     }
 
 
-    // SectionByClass 
+    // SectionByClass
     public function sectionByClass(Request $request)
     {
 
@@ -3941,7 +4059,7 @@ class ApiController extends BaseController
             return $this->successResponse($class, 'Class record fetch successfully');
         }
     }
-    // by class all 
+    // by class all
     public function allstdlist(Request $request)
     {
         $validator = \Validator::make($request->all(), [
@@ -3956,7 +4074,7 @@ class ApiController extends BaseController
         } else {
             // create new connection
             $Connection = $this->createNewConnection($request->branch_id);
-            // get data             
+            // get data
 
             $grade_list_master = array();
             $allbysubject = array();
@@ -3978,7 +4096,7 @@ class ApiController extends BaseController
                 ->get();
             //array_push($teachers_list, $getteachername);
 
-            // common grade list 
+            // common grade list
             $getmastergrade = $Connection->table('grade_marks')
                 ->select(
                     'id',
@@ -4016,7 +4134,7 @@ class ApiController extends BaseController
                     ->get();
                 $object->totalstudentcount = $getstudentcount;
 
-                // subject division table check subject id is there 
+                // subject division table check subject id is there
                 $subject_division_tbl = $Connection->table('student_subjectdivision')
                     ->select('subject_division', 'credit_point', 'semester_id')
                     ->where('class_id', '=', $class_id)
@@ -4024,7 +4142,7 @@ class ApiController extends BaseController
                     ->where('subject_id', '=', $request->subject_id)
                     ->get();
                 $subject_division_matched = count($subject_division_tbl);
-                // Not matched subject division table go 2 if 
+                // Not matched subject division table go 2 if
                 if ($subject_division_matched == 0) {
                     $getexamattendance = $Connection->table('student_marks')
                         ->select(
@@ -4091,7 +4209,7 @@ class ApiController extends BaseController
             return $this->successResponse($allbysubject, 'byclass all Post record fetch successfully');
         }
     }
-    // by subject chart 
+    // by subject chart
     public function getGradebysubject(Request $request)
     {
         $validator = \Validator::make($request->all(), [
@@ -4108,10 +4226,10 @@ class ApiController extends BaseController
             // create new connection
             $Connection = $this->createNewConnection($request->branch_id);
 
-            // get data     
+            // get data
             $allbygradecount = array();
             $object = new \stdClass();
-            // common grade list 
+            // common grade list
             $getmastergrade = $Connection->table('grade_marks')
                 ->select(
                     'id',
@@ -4201,7 +4319,7 @@ class ApiController extends BaseController
         }
     }
 
-    // subjectByClass 
+    // subjectByClass
     public function subjectByClass(Request $request)
     {
 
@@ -4394,7 +4512,7 @@ class ApiController extends BaseController
             return $this->successResponse($examPapers, 'get papers fetch successfully');
         }
     }
-    // Timetable Subject 
+    // Timetable Subject
     public function timetableSubject(Request $request)
     {
         $validator = \Validator::make($request->all(), [
@@ -4452,7 +4570,7 @@ class ApiController extends BaseController
                 ->where('sa.academic_session_id', $request->academic_session_id)
                 ->where('sa.type', '=', '0')
                 // ->where('sa.exam_exclude', '=', '0')
-                // get teacher 
+                // get teacher
                 // ->where('sa.teacher_id', '!=', '0')
                 ->get();
             $output['exam_hall'] = $classConn->table('exam_hall')->get();
@@ -5085,7 +5203,7 @@ class ApiController extends BaseController
         }
     }
 
-    // edit 
+    // edit
     public function editTimetable(Request $request)
     {
         $validator = \Validator::make($request->all(), [
@@ -5736,7 +5854,7 @@ class ApiController extends BaseController
             }
         }
     }
-    // forum Create Post 
+    // forum Create Post
     public function forumCreatePost(Request $request)
     {
         $validator = \Validator::make($request->all(), [
@@ -5786,7 +5904,7 @@ class ApiController extends BaseController
             }
         }
     }
-    // forum Update Post 
+    // forum Update Post
     public function forumUpdatePost(Request $request)
     {
         $validator = \Validator::make($request->all(), [
@@ -5920,7 +6038,7 @@ class ApiController extends BaseController
                 ->get();
 
 
-            // $subjectdata = DB::table('forum_posts')->select()   
+            // $subjectdata = DB::table('forum_posts')->select()
 
             ////////////////////////////////////////////////
             // ->leftJoin('forum_count_details', function ($join) {
@@ -5932,10 +6050,10 @@ class ApiController extends BaseController
             //     $success = DB::query()->fromSub(function ($query) use ($branchid) {
             //         $query->from('forum_posts')
             //             ->select('id as created_post_id','topic_header,created_at','category')
-            //             ->where('forum_posts.branch_id','=',DB::raw("'$branchid'"))                              
+            //             ->where('forum_posts.branch_id','=',DB::raw("'$branchid'"))
             //             ->leftJoin('forum_count_details','forum_posts.id','=','forum_count_details.created_post_replies_id')
             //             ->select('created_post_id',DB::raw("SUM(forum_count_details.likes) as likes"),DB::raw("SUM(forum_count_details.dislikes) as dislikes"),DB::raw("SUM(forum_count_details.views) as views"),DB::raw("SUM(forum_count_details.replies) as replies"),DB::raw("SUM(forum_count_details.favorite) as favorite"),'activity')
-            //             ->Groupby('created_post_id') 
+            //             ->Groupby('created_post_id')
             //             ->leftJoin('forum_categorys','forum_posts.category','=','forum_categorys.category_id');
             //     },'aa')
             //     ->select('*');
@@ -5999,7 +6117,7 @@ class ApiController extends BaseController
                 ->first();
 
 
-            // $subjectdata = DB::table('forum_posts')->select()   
+            // $subjectdata = DB::table('forum_posts')->select()
 
             ////////////////////////////////////////////////
             // ->leftJoin('forum_count_details', function ($join) {
@@ -6011,10 +6129,10 @@ class ApiController extends BaseController
             //     $success = DB::query()->fromSub(function ($query) use ($branchid) {
             //         $query->from('forum_posts')
             //             ->select('id as created_post_id','topic_header,created_at','category')
-            //             ->where('forum_posts.branch_id','=',DB::raw("'$branchid'"))                              
+            //             ->where('forum_posts.branch_id','=',DB::raw("'$branchid'"))
             //             ->leftJoin('forum_count_details','forum_posts.id','=','forum_count_details.created_post_replies_id')
             //             ->select('created_post_id',DB::raw("SUM(forum_count_details.likes) as likes"),DB::raw("SUM(forum_count_details.dislikes) as dislikes"),DB::raw("SUM(forum_count_details.views) as views"),DB::raw("SUM(forum_count_details.replies) as replies"),DB::raw("SUM(forum_count_details.favorite) as favorite"),'activity')
-            //             ->Groupby('created_post_id') 
+            //             ->Groupby('created_post_id')
             //             ->leftJoin('forum_categorys','forum_posts.category','=','forum_categorys.category_id');
             //     },'aa')
             //     ->select('*');
@@ -6159,7 +6277,7 @@ class ApiController extends BaseController
             // ->where('forum_count_details.branch_id','=',$request->branch_id)
             // ->where('forum_count_details.created_post_id','=',$request->id)
             // ->groupBy('created_post_id')
-            // ->get();            
+            // ->get();
 
             // DB::table('forum_posts')
             //     ->select('forum_posts.id', 'forum_posts.category as category', 'forum_posts.topic_title as topic_title', 'forum_posts.topic_header as topic_header', 'forum_posts.body_content as body_content', 'forum_posts.user_name as user_name', DB::raw('DATE_FORMAT(forum_posts.created_at, "%b %e %Y") as date'), 'forum_count_details.likes as likes', 'forum_count_details.dislikes as dislikes', 'forum_count_details.favorite as favorite', 'forum_count_details.replies as replies', 'forum_count_details.views as views', 'forum_count_details.activity as activity', 'forum_count_details.id as pkcount_details_id', 'forum_categorys.category_names', 'forum_posts.created_at')
@@ -6175,7 +6293,7 @@ class ApiController extends BaseController
             return  $this->successResponse($success, 'Single Post list fetch successfully');
         }
     }
-    // forum post replies branch id and post id wise 
+    // forum post replies branch id and post id wise
     public function singlePostReplies(Request $request)
     {
         $validator = \Validator::make($request->all(), [
@@ -6216,7 +6334,7 @@ class ApiController extends BaseController
             return  $this->successResponse($success, 'Single Post replies fetch successfully');
         }
     }
-    // forum post all replies branch id and post id wise 
+    // forum post all replies branch id and post id wise
     public function PostAllReplies(Request $request)
     {
         $validator = \Validator::make($request->all(), [
@@ -6348,7 +6466,7 @@ class ApiController extends BaseController
             return $this->successResponse($getTeachersClassName, 'Teachers Subject Name record fetch successfully');
         }
     }
-    // forum view count insert 
+    // forum view count insert
     public function viewcountinsert(Request $request)
     {
         $validator = \Validator::make($request->all(), [
@@ -6437,7 +6555,7 @@ class ApiController extends BaseController
             ])->first();
 
             if (empty($checkExist)) {
-                // echo "update";         
+                // echo "update";
                 DB::table('forum_count_details')->insert($likesinsert);
             } else {
                 $checkdislikecount = $checkExist->likes;
@@ -6487,7 +6605,7 @@ class ApiController extends BaseController
             ])->first();
 
             if (empty($checkExist)) {
-                // echo "insert"; 
+                // echo "insert";
                 DB::table('forum_count_details')->insert($dislikesinsert);
             } else {
                 $checkdislikecount = $checkExist->dislikes;
@@ -6539,7 +6657,7 @@ class ApiController extends BaseController
             ])->first();
 
             if (empty($checkExist)) {
-                // echo "insert";             
+                // echo "insert";
                 DB::table('forum_count_details')->insert($favoritsinsert);
             } else {
                 $checkfavoritscount = $checkExist->favorite;
@@ -7663,7 +7781,7 @@ class ApiController extends BaseController
             ])->first();
 
             if (empty($checkExist)) {
-                // echo "update";         
+                // echo "update";
                 DB::table('forum_post_replie_counts')->insert($likesinsert);
             } else {
                 $checkdislikecount = $checkExist->likes;
@@ -7716,7 +7834,7 @@ class ApiController extends BaseController
             ])->first();
 
             if (empty($checkExist)) {
-                // echo "insert"; 
+                // echo "insert";
                 DB::table('forum_post_replie_counts')->insert($dislikesinsert);
             } else {
                 $checkdislikecount = $checkExist->dislikes;
@@ -7773,7 +7891,7 @@ class ApiController extends BaseController
             ])->first();
 
             if (empty($checkExist)) {
-                // echo "insert";             
+                // echo "insert";
                 DB::table('forum_post_replie_counts')->insert($favoritsinsert);
             } else {
                 $checkfavoritscount = $checkExist->favorits;
@@ -8005,7 +8123,7 @@ class ApiController extends BaseController
             return $this->successResponse($success, 'user vs category grid data fetch successfully');
         }
     }
-    // forum post replies branch id and post id wise 
+    // forum post replies branch id and post id wise
     public function userRepliespostall(Request $request)
     {
         $validator = \Validator::make($request->all(), [
@@ -8061,10 +8179,10 @@ class ApiController extends BaseController
         // if (!$validator->passes()) {
         //     return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
         // } else {
-        //        // create new connection              
+        //        // create new connection
         //     $success = DB::table('users')->select('id','name')
-        //     ->where('id','!=',1)  
-        //     ->where('id','!=',$request->user_id)           
+        //     ->where('id','!=',1)
+        //     ->where('id','!=',$request->user_id)
         //     ->get();
         //  //   $success = Category::all();
         //     return $this->successResponse($success, 'user name record fetch successfully');
@@ -8078,7 +8196,7 @@ class ApiController extends BaseController
         if (!$validator->passes()) {
             return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
         } else {
-            // create new connection              
+            // create new connection
             $success = DB::table('roles')->select('id', 'role_name as name')
                 ->where('id', '!=', 1)
                 ->where('id', '!=', $request->user_id)
@@ -8098,7 +8216,7 @@ class ApiController extends BaseController
         if (!$validator->passes()) {
             return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
         } else {
-            // create new connection              
+            // create new connection
             $success = DB::table('users')->select('id', 'name')
                 ->where('id', '!=', $request->branch_id)
                 ->get();
@@ -8422,7 +8540,7 @@ class ApiController extends BaseController
     // getAttendanceList
     function getAttendanceList(Request $request)
     {
-    //  return $request;   
+    //  return $request;
         $validator = \Validator::make($request->all(), [
             'token' => 'required',
             'branch_id' => 'required',
@@ -8468,7 +8586,7 @@ class ApiController extends BaseController
                         'st.first_name',
                         'st.last_name',
                         'sad.student_id',
-                        'c.name as class_name', 
+                        'c.name as class_name',
                         's.name as section_name',
                         'sad.date',
                         'sad.status',
@@ -8498,7 +8616,7 @@ class ApiController extends BaseController
                 ->where('en.academic_session_id', '=', $request->academic_session_id)
                 // ->groupBy('en.student_id')
                 ->get()->toArray();
-                
+
                 // dd($getAttendanceList);
                 $studentDetails = array();
                 if (!empty($getAttendanceList)) {
@@ -8573,16 +8691,16 @@ class ApiController extends BaseController
             $year_month = explode('-', $request->year_month);
             // create new connection
             $Connection = $this->createNewConnection($request->branch_id);
-            
-            
-                
+
+
+
             $student_name = isset($request->student_name) ? $request->student_name : null;
             $session_id = isset($request->session_id) ? $request->session_id : null;
             $student_id = isset($request->student_id) ? $request->student_id : null;
             $class_id = isset($request->class_id) ? $request->class_id : null;
             $section_id = isset($request->section_id) ? $request->section_id : null;
             $attendance_academic_year = isset($request->academic_session_id) ? $request->academic_session_id : null;
-           
+
             // return $request;
             if($request->pattern=="Month"){
 
@@ -8597,7 +8715,7 @@ class ApiController extends BaseController
                             'st.first_name',
                             'st.last_name',
                             'sad.student_id',
-                            'c.name as class_name', 
+                            'c.name as class_name',
                             's.name as section_name',
                             'sad.date',
                             'sad.status',
@@ -8634,13 +8752,13 @@ class ApiController extends BaseController
                         // ->where('en.active_status', '=', "0")
                         ->groupBy('en.student_id')
                         ->get()->toArray();
-            
-    
+
+
                     $studentDetails = array();
                     if (!empty($getAttendanceList)) {
                         foreach ($getAttendanceList as $value) {
                             $object = new \stdClass();
-    
+
                             $object->first_name = $value->first_name;
                             $object->last_name = $value->last_name;
                             $object->student_id = $value->student_id;
@@ -8653,7 +8771,7 @@ class ApiController extends BaseController
                             $date = $value->date;
                             $getStudentsAttData = $this->getAttendanceByDateStudentParent($request, $student_id, $date);
                             $object->attendance_details = $getStudentsAttData;
-    
+
                             array_push($studentDetails, $object);
                         }
                     }
@@ -8668,7 +8786,7 @@ class ApiController extends BaseController
                         'st.first_name',
                         'st.last_name',
                         'sad.student_id',
-                        'c.name as class_name', 
+                        'c.name as class_name',
                         's.name as section_name',
                         'sad.date',
                         'sad.status',
@@ -8704,12 +8822,12 @@ class ApiController extends BaseController
                 ->where('en.academic_session_id', '=', $attendance_academic_year)
                 ->groupBy('en.student_id')
                 ->get()->toArray();
-    
+
                     $studentDetails = array();
                     if (!empty($getAttendanceList)) {
                         foreach ($getAttendanceList as $value) {
                             $object = new \stdClass();
-    
+
                             $object->first_name = $value->first_name;
                             $object->last_name = $value->last_name;
                             $object->student_id = $value->student_id;
@@ -8723,7 +8841,7 @@ class ApiController extends BaseController
                             $getStudentsAttData = $this->getAttendanceByDateStudent($request, $student_id, $date);
                             // dd($getStudentsAttData);
                             $object->attendance_details = $getStudentsAttData;
-    
+
                             $object->remarks = $value->remarks;
                             $object->homeroom_teacher_remarks = $value->homeroom_teacher_remarks;
                             array_push($studentDetails, $object);
@@ -8752,7 +8870,7 @@ class ApiController extends BaseController
                     ->groupBy('sa.date')
                     ->get();
 
-                    
+
                 $data = [
                     'student_details' => $studentDetails,
                     'late_present_graph' => $getLatePresentData
@@ -8768,7 +8886,7 @@ class ApiController extends BaseController
                             'st.first_name',
                             'st.last_name',
                             'sad.student_id',
-                            'c.name as class_name', 
+                            'c.name as class_name',
                             's.name as section_name',
                             'sad.date',
                             'sad.status',
@@ -8800,7 +8918,7 @@ class ApiController extends BaseController
                     ->groupBy('en.student_id')
                     ->get()->toArray();
                 // dd($getAttendanceList);
-                
+
                 $presentCount = 0;
                 $absentCount = 0;
                 $totalCount = 0;
@@ -8818,11 +8936,11 @@ class ApiController extends BaseController
                         $object->student_id = $value->student_id;
                         $object->status = $value->status;
                         $object->remarks = $value->remarks;
-                        
+
                         $object->photo = $value->photo;
                         $student_id = $value->student_id;
                         $date = $value->date;
-                        
+
                             if($value->presentCount!=0){
                                 $presentCount++;
                             }
@@ -8831,7 +8949,7 @@ class ApiController extends BaseController
                             }
                             $totalCount++;
                         array_push($studentDetails, $object);
-                        
+
                     }
                 }
                 $count['totalCount'] = $totalCount;
@@ -8842,7 +8960,7 @@ class ApiController extends BaseController
                     'count' => $count,
                 ];
             }else if($request->pattern=="Term"){
-                
+
                 $semester = $Connection->table('semester as s')
                         ->select('start_date', 'end_date','name')
                         ->where('id', $request->year_month)
@@ -8881,7 +8999,7 @@ class ApiController extends BaseController
                         'st.first_name',
                         'st.last_name',
                         'sad.student_id',
-                        'c.name as class_name', 
+                        'c.name as class_name',
                         's.name as section_name',
                         'sad.date',
                         'sad.status',
@@ -8912,9 +9030,9 @@ class ApiController extends BaseController
                 ->whereBetween(DB::raw('date(date)'), [$start, $end])
                 ->groupBy('en.student_id')
                 ->get()->toArray();
-            
+
                 // dd($getAttendanceList);
-                
+
                 $presentCount = 0;
                 $absentCount = 0;
                 $totalCount = 0;
@@ -8934,12 +9052,12 @@ class ApiController extends BaseController
                         $object->semester_name = $semester->name;
                         $object->photo = $value->photo;
                         $student_id = $value->student_id;
-                        
+
                         $object->presentCount = $value->presentCount;
                         $object->absentCount = $value->absentCount;
                         $object->lateCount = $value->lateCount;
                         array_push($studentDetails, $object);
-                        
+
                     }
                 }
                 // dd(count($getAttendanceList));
@@ -8951,22 +9069,22 @@ class ApiController extends BaseController
                     'count' => $count,
                 ];
             }else if($request->pattern=="Year"){
-                
+
                 // $academic_year = $Connection->table('academic_year as ay')
                 //         ->select('id','name')
                 //         ->where('id', $request->year_month)
                 //         ->first();
-                        
+
                 $yearData = $Connection->table('semester as sm')
                 ->select(DB::raw('MIN(sm.start_date) AS year_start_date, MAX(sm.end_date) AS year_end_date'))
                 ->where([
                     ['sm.academic_session_id', '=', $request->academic_session_id],
                 ])
                 ->get();
-                        
+
                 // $start_end = explode('-', $academic_year->name);
                 // dd($yearData);
-                
+
                 $start = $yearData[0]->year_start_date;
                 $end = $yearData[0]->year_end_date;
 
@@ -9000,7 +9118,7 @@ class ApiController extends BaseController
                         'st.first_name',
                         'st.last_name',
                         'sad.student_id',
-                        'c.name as class_name', 
+                        'c.name as class_name',
                         's.name as section_name',
                         'sad.date',
                         'sad.status',
@@ -9031,7 +9149,7 @@ class ApiController extends BaseController
                 ->whereBetween(DB::raw('date(date)'), [$start, $end])
                 ->groupBy('en.student_id')
                 ->get()->toArray();
-                
+
                 $presentCount = 0;
                 $absentCount = 0;
                 $totalCount = 0;
@@ -9054,7 +9172,7 @@ class ApiController extends BaseController
                         $object->absentCount = $value->absentCount;
                         $object->lateCount = $value->lateCount;
                         array_push($studentDetails, $object);
-                        
+
                     }
                 }
                 $count['total_students'] = count($getAttendanceList);
@@ -9068,7 +9186,7 @@ class ApiController extends BaseController
             return $this->successResponse($data, 'attendance record fetch successfully');
         }
     }
-    
+
     // get attendance list teacher
     function getAttendanceListTeacherBySubject(Request $request)
     {
@@ -9084,16 +9202,16 @@ class ApiController extends BaseController
             $year_month = explode('-', $request->year_month);
             // create new connection
             $Connection = $this->createNewConnection($request->branch_id);
-            
-            
-                
+
+
+
             $student_name = isset($request->student_name) ? $request->student_name : null;
             $session_id = isset($request->session_id) ? $request->session_id : null;
             $student_id = isset($request->student_id) ? $request->student_id : null;
             $class_id = isset($request->class_id) ? $request->class_id : null;
             $section_id = isset($request->section_id) ? $request->section_id : null;
             $attendance_academic_year = isset($request->academic_session_id) ? $request->academic_session_id : null;
-           
+
             // return $request;
             if($request->pattern=="Month"){
 
@@ -9131,7 +9249,7 @@ class ApiController extends BaseController
                     // if (!empty($getAttendanceList)) {
                     //     foreach ($getAttendanceList as $value) {
                     //         $object = new \stdClass();
-    
+
                     //         $object->first_name = $value->first_name;
                     //         $object->last_name = $value->last_name;
                     //         $object->student_id = $value->student_id;
@@ -9144,7 +9262,7 @@ class ApiController extends BaseController
                     //         $date = $value->date;
                     //         $getStudentsAttData = $this->getAttendanceByDateStudentParent($request, $student_id, $date);
                     //         $object->attendance_details = $getStudentsAttData;
-    
+
                     //         array_push($studentDetails, $object);
                     //     }
                     // }
@@ -9189,7 +9307,7 @@ class ApiController extends BaseController
                     if (!empty($getAttendanceList)) {
                         foreach ($getAttendanceList as $value) {
                             $object = new \stdClass();
-    
+
                             $object->first_name = $value->first_name;
                             $object->last_name = $value->last_name;
                             $object->student_id = $value->student_id;
@@ -9203,7 +9321,7 @@ class ApiController extends BaseController
                             $getStudentsAttData = $this->getAttendanceByDateStudentBySubject($request, $student_id, $date);
                             // dd($getStudentsAttData);
                             $object->attendance_details = $getStudentsAttData;
-    
+
                             $object->remarks = $value->remarks;
                             $object->homeroom_teacher_remarks = $value->homeroom_teacher_remarks;
                             array_push($studentDetails, $object);
@@ -9234,7 +9352,7 @@ class ApiController extends BaseController
                     ->groupBy('sa.date')
                     ->get();
 
-                    
+
                 $data = [
                     'student_details' => $studentDetails,
                     'late_present_graph' => $getLatePresentData
@@ -9350,7 +9468,7 @@ class ApiController extends BaseController
             ->orderBy('sa.date', 'asc')
             ->get();
         return $studentList;
-        
+
     }
     // getReasonsByStudent
     function getReasonsByStudent(Request $request)
@@ -9397,7 +9515,7 @@ class ApiController extends BaseController
     }
 
 
-    // view Homework 
+    // view Homework
     public function viewHomework(Request $request)
     {
         // dd($request);
@@ -9408,7 +9526,7 @@ class ApiController extends BaseController
         if (!$validator->passes()) {
             return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
         } else {
-            // create new connection    
+            // create new connection
             $con = $this->createNewConnection($request->branch_id);
             // get data
             // $homework = $con->table('homework_evaluation as he')->select('he.*','s.first_name','s.last_name','s.register_no')->leftJoin('students as s', 'he.student_id', '=', 's.id')->where('he.homework_id',$request['homework_id'])->get();
@@ -9684,7 +9802,7 @@ class ApiController extends BaseController
     }
 
 
-    //  Student submits Homework 
+    //  Student submits Homework
     public function submitHomework(Request $request)
     {
         $validator = \Validator::make($request->all(), [
@@ -10545,7 +10663,7 @@ class ApiController extends BaseController
     {
         // Create new connection
         $Connection = $this->createNewConnection($request->branch_id);
-        
+
         // Delete existing calendar data
         $calendarsCount = $Connection->table('calendors')->where('time_table_id', $insertOrUpdateID)->where('sem_id', $request->semester_id)->count();
         if ($calendarsCount > 0) {
@@ -10623,7 +10741,7 @@ class ApiController extends BaseController
             $startDate->modify('+1 day');
         }
     }
-    // get semester 
+    // get semester
     public function getSemesterList(Request $request)
     {
 
@@ -10639,7 +10757,7 @@ class ApiController extends BaseController
             $cache_time = config('constants.cache_time');
             $cache_semester = config('constants.cache_semester');
             $cacheKey = $cache_semester . $request->branch_id;
-            
+
             // Check if the data is cached
             if (Cache::has($cacheKey)) {
                 // If cached, return cached data
@@ -10668,7 +10786,7 @@ class ApiController extends BaseController
         }
     }
 
-    // get Session 
+    // get Session
     public function getSessionList(Request $request)
     {
 
@@ -10766,7 +10884,7 @@ class ApiController extends BaseController
             $cache_time = config('constants.cache_time');
             $cache_exam_term = config('constants.cache_exam_term');
             $cacheKey = $cache_exam_term . $request->branch_id;
-        
+
             // Check if the data is cached
             if (Cache::has($cacheKey)) {
                 // If cached, return cached data
@@ -11044,7 +11162,7 @@ class ApiController extends BaseController
             $cache_time = config('constants.cache_time');
             $cache_exam = config('constants.cache_exam');
             $cacheKey = $cache_exam . $request->academic_session_id . $request->branch_id;
-        
+
             // Check if the data is cached
             if (Cache::has($cacheKey)) {
                 // If cached, return cached data
@@ -11258,7 +11376,7 @@ class ApiController extends BaseController
             }
         }
     }
-    // list Exam Timetable 
+    // list Exam Timetable
     public function listExamTimetable(Request $request)
     {
         $validator = \Validator::make($request->all(), [
@@ -11289,7 +11407,7 @@ class ApiController extends BaseController
         }
     }
 
-    // get Exam Timetable 
+    // get Exam Timetable
     public function getExamTimetable(Request $request)
     {
         $validator = \Validator::make($request->all(), [
@@ -11396,7 +11514,7 @@ class ApiController extends BaseController
         } else {
             // create new connection
             $con = $this->createNewConnection($request->branch_id);
-            // delete 
+            // delete
             $query = $con->table('timetable_exam')->where([
                 ['exam_id', $request->exam_id],
                 ['class_id', $request->class_id],
@@ -11566,12 +11684,12 @@ class ApiController extends BaseController
                     $score_type=$exampaper->score_type;
                     $grade = $Connection->table('grade_marks')->select('id','grade')
                     ->where('score_type', '=', $score_type)->get();
-                    $success=[]  ;     
+                    $success=[]  ;
                     $data = [
                         'get_subject_marks' => $getSubjectMarks,
                         'grade' => $grade,
                         'exampaper' => $exampaper
-                    ];   
+                    ];
                 return $this->successResponse($data, 'Subject vs marks record fetch successfully');
             }
         }
@@ -11593,10 +11711,10 @@ class ApiController extends BaseController
             $grade_category =  $request->grade_category;
 
             $Connection = $this->createNewConnection($branch_id);
-            // $success = $Connection->table('grade_marks')         
+            // $success = $Connection->table('grade_marks')
             // ->select('id','grade')
             // ->where([
-            //     ['min_mark', '>=', $marks_range]             
+            //     ['min_mark', '>=', $marks_range]
             // ])
             $success['grade_details'] = $Connection->table('grade_marks')
                 ->select('grade', 'status')
@@ -11635,7 +11753,7 @@ class ApiController extends BaseController
         if (!$validator->passes()) {
             return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
         } else {
-            // create new connection     
+            // create new connection
             $Connection = $this->createNewConnection($request->branch_id);
             $subjectmarks = $request->subjectmarks;
             $class_id = $request->class_id;
@@ -11653,7 +11771,7 @@ class ApiController extends BaseController
 
                 $student_id = (isset($value['student_id']) ? $value['student_id'] : "");
                 $score = (isset($value['score']) ? $value['score'] : "");
-                $points = (isset($value['points']) ? $value['points'] : "");								
+                $points = (isset($value['points']) ? $value['points'] : "");
                 $freetext = (isset($value['freetext']) ? $value['freetext'] : "");
                 $grade = (isset($value['grade']) ? $value['grade'] : "");
                 $ranking = (isset($value['score']) ? $value['ranking'] : "");
@@ -11731,21 +11849,21 @@ class ApiController extends BaseController
                         ];
                         $student_data=$Connection->table('students')->where('id', $value['student_id'])->first();
                         $oldData = $Connection->table('student_marks')->where('id', $row->id)->first();
-                $query = $Connection->table('student_marks')->where('id', $row->id)->update($data); 
+                $query = $Connection->table('student_marks')->where('id', $row->id)->update($data);
                 $changes = $this->getChanges($oldData, $data);
                 $table_modify=[];
                 $table_modify['type']='Student';
-                $table_modify['id']=$value['student_id'];                
-                $table_modify['name']=$student_data->first_name.' '.$student_data->last_name;                
+                $table_modify['id']=$value['student_id'];
+                $table_modify['name']=$student_data->first_name.' '.$student_data->last_name;
                 $table_modify['email']=$student_data->email;
 
                 $Connection->table('modify_datas')->insert([
-                    
+
                     'table_name' => 'Student Mark',
                     'table_dbname' => 'student_marks',
                     'table_dbid' => $row->id,
-                    'table_id_name' => 'id', 
-                    'table_modify' => json_encode($table_modify),                  
+                    'table_id_name' => 'id',
+                    'table_modify' => json_encode($table_modify),
                     'modifydata' => json_encode($changes),
                     'createdby_id' => $request->login_userid,
                     'createdby_role' => $request->login_roleid
@@ -11778,21 +11896,21 @@ class ApiController extends BaseController
                     ];
                     $student_data=$Connection->table('students')->where('id', $value['student_id'])->first();
                     $oldData = $Connection->table('student_marks')->where('id', $value['studentmarks_tbl_pk_id'])->first();
-                    $query = $Connection->table('student_marks')->where('id', $value['studentmarks_tbl_pk_id'])->update($data); 
+                    $query = $Connection->table('student_marks')->where('id', $value['studentmarks_tbl_pk_id'])->update($data);
                     $changes = $this->getChanges($oldData, $data);
                     $table_modify=[];
                     $table_modify['type']='Student';
-                    $table_modify['id']=$value['student_id'];                
-                    $table_modify['name']=$student_data->first_name.' '.$student_data->last_name;                
+                    $table_modify['id']=$value['student_id'];
+                    $table_modify['name']=$student_data->first_name.' '.$student_data->last_name;
                     $table_modify['email']=$student_data->email;
 
                     $Connection->table('modify_datas')->insert([
-                    
+
                         'table_name' => 'Student Mark',
                         'table_dbname' => 'student_marks',
                         'table_dbid' => $value['studentmarks_tbl_pk_id'],
-                        'table_id_name' => 'id', 
-                        'table_modify' => json_encode($table_modify),                  
+                        'table_id_name' => 'id',
+                        'table_modify' => json_encode($table_modify),
                         'modifydata' => json_encode($changes),
                         'createdby_id' => $request->login_userid,
                         'createdby_role' => $request->login_roleid
@@ -11843,8 +11961,8 @@ class ApiController extends BaseController
                 ->leftJoin('students as st', 'st.id', '=', 'en.student_id')
                 ->leftJoin('student_subjectdivision_inst as ssdiv', function ($q) use ($class_id, $subject_id, $exam_id) {
                     $q->on('ssdiv.student_id', '=', 'st.id')
-                        ->on('ssdiv.exam_id', '=', DB::raw("'$exam_id'")) //second join condition                           
-                        ->on('ssdiv.subject_id', '=', DB::raw("'$subject_id'")); //need to add subject id also later                           
+                        ->on('ssdiv.exam_id', '=', DB::raw("'$exam_id'")) //second join condition
+                        ->on('ssdiv.subject_id', '=', DB::raw("'$subject_id'")); //need to add subject id also later
                 })
                 ->where([
                     ['en.class_id', '=', $request->class_id],
@@ -12572,7 +12690,7 @@ class ApiController extends BaseController
         }
     }
 
-    // floor By Block 
+    // floor By Block
     public function floorByBlock(Request $request)
     {
 
@@ -12598,7 +12716,7 @@ class ApiController extends BaseController
         }
     }
 
-    // vehicle By Route 
+    // vehicle By Route
     public function vehicleByRoute(Request $request)
     {
 
@@ -12625,7 +12743,7 @@ class ApiController extends BaseController
         }
     }
 
-    // room By Hostel 
+    // room By Hostel
     public function roomByHostel(Request $request)
     {
 
@@ -12671,7 +12789,7 @@ class ApiController extends BaseController
             'section_id' => 'required',
 
             'branch_id' => 'required',
-            
+
         ]);
 
         $previous['school_name'] = $request->school_name;
@@ -12753,9 +12871,9 @@ class ApiController extends BaseController
                     $nric_now = now();
                     $nric_name = strtotime($nric_now);
                     $nric_extension = $request->nric_file_extension;
-    
+
                     $nric_fileName = "nric_".$nric_name . '.' . $nric_extension;
-    
+
                     // return $fileName;
                     $nric_path = '/public/' . $request->branch_id . '/users/images/';
                     $nric_base64 = base64_decode($request->nric_photo);
@@ -12775,7 +12893,7 @@ class ApiController extends BaseController
                 $permanent_address = isset($request->permanent_address) ? Crypt::encryptString($request->permanent_address) : "";
                 $father_mobile_no = isset($request->father_mobile_no) ? Crypt::encryptString($request->father_mobile_no) : "";
                 $mother_mobile_no = isset($request->mother_mobile_no) ? Crypt::encryptString($request->mother_mobile_no) : "";
-               
+
                 $father_id = "";
                 $mother_id = "";
                 $guardian_id = "";
@@ -12827,8 +12945,8 @@ class ApiController extends BaseController
                         }
                 }
 
-                        
-                    if ($request->mother_first_name) 
+
+                    if ($request->mother_first_name)
                     {
                             if($request->mother_id){
                                  $mother_id = $request->mother_id;
@@ -12893,8 +13011,8 @@ class ApiController extends BaseController
                             $query->password = bcrypt($request->guardian_email);
                             $query->save();
                     }
-                    
-                
+
+
                 $regData = [
                     'branch_id' => $request->branch_id,
                     'academic_year' => $request->year
@@ -13030,7 +13148,7 @@ class ApiController extends BaseController
              // return $request;
         }
     }
-    // get Teacher list 
+    // get Teacher list
     public function getTeacherList(Request $request)
     {
 
@@ -13669,7 +13787,7 @@ class ApiController extends BaseController
             ])->first();
 
             if (empty($checkExist)) {
-                // echo "update";         
+                // echo "update";
                 $query = $Connection->table('read_to_do_list')->insert([
                     'to_do_list_id' => $request->to_do_list_id,
                     'user_id' => $request->user_id,
@@ -13794,7 +13912,7 @@ class ApiController extends BaseController
             $now = Carbon::now()->format('Y-m-d');
             // 1st get assign teachers
             $Connection = $this->createNewConnection($request->branch_id);
-            // any one come 
+            // any one come
             if ($request->student_id) {
                 $getTeachersClassName = $Connection->table('enrolls as en')
                     ->select('en.class_id', 'en.section_id')
@@ -14105,13 +14223,13 @@ class ApiController extends BaseController
                 }
                 $nric_fileName = $request->nric_old_photo;
                 if ($request->nric_photo) {
-    
+
                     $nric_now = now();
                     $nric_name = strtotime($nric_now);
                     $nric_extension = $request->nric_file_extension;
-    
+
                     $nric_fileName = "nric_".$nric_name . '.' . $nric_extension;
-    
+
                     // return $fileName;
                     $nric_path = '/public/' . $request->branch_id . '/users/images/';
                     $nric_base64 = base64_decode($request->nric_photo);
@@ -14124,16 +14242,16 @@ class ApiController extends BaseController
                         }
                     }
                 }
-    
+
                 // $image_principal_fileName = $request->image_principal_old_photo;
                 // if ($request->image_principal_photo) {
-    
+
                 //     $image_principal_now = now();
                 //     $image_principal_name = strtotime($image_principal_now);
                 //     $image_principal_extension = "principal_".$request->image_principal_file_extension;
-    
+
                 //     $image_principal_fileName = $image_principal_name . '.' . $image_principal_extension;
-    
+
                 //     // return $fileName;
                 //     $image_principal_path = '/public/' . $request->branch_id . '/users/images/';
                 //     $image_principal_base64 = base64_decode($request->image_principal_photo);
@@ -14215,7 +14333,7 @@ class ApiController extends BaseController
                         'updated_at' => now()
                     ]);
                 }
-               
+
 
 
                 $data = [
@@ -14294,17 +14412,17 @@ class ApiController extends BaseController
                 $changes = $this->getChanges($oldData, $data);
                 $table_modify=[];
                 $table_modify['type']='Student';
-                $table_modify['id']=$request->student_id;                
-                $table_modify['name']=$request->first_name.' '.$request->last_name;                
+                $table_modify['id']=$request->student_id;
+                $table_modify['name']=$request->first_name.' '.$request->last_name;
                 $table_modify['email']=$request->email;
 
                 $conn->table('modify_datas')->insert([
-                    
+
                     'table_name' => 'Student',
                     'table_dbname' => 'students',
                     'table_dbid' => $request->student_id,
-                    'table_id_name' => 'id', 
-                    'table_modify' => json_encode($table_modify),                  
+                    'table_id_name' => 'id',
+                    'table_modify' => json_encode($table_modify),
                     'modifydata' => json_encode($changes),
                     'createdby_id' => $request->login_userid,
                     'createdby_role' => $request->login_roleid
@@ -14497,7 +14615,7 @@ class ApiController extends BaseController
                             ->leftJoin('enrolls as e', 's.id', '=', 'e.student_id')
                             ->where('s.id', $id)
                             ->first();
-    
+
             if (!$student) {
                 return $this->send404Error('Student not found.', ['error' => 'Student not found']);
             }
@@ -14513,19 +14631,19 @@ class ApiController extends BaseController
                                     ->where('role_id', 6)
                                     ->where('branch_id', $branch_id)
                                     ->delete();
-    
+
             // Delete enrollment records
             $enrollDeleteCount = $conn->table('enrolls')->where('student_id', $id)->delete();
-    
+
             // Delete student record
             $studentDeleteCount = $conn->table('students')->where('id', $id)->delete();
-    
+
             // Clear cache
             $cache_students = config('constants.cache_students');
             $this->clearCache($cache_students, $branch_id);
-    
+
             \Log::info("Deleted student with ID $id. User records deleted: $deletedUserCount, Enrollment records deleted: $enrollDeleteCount, Student records deleted: $studentDeleteCount");
-    
+
             return $this->successResponse([], 'Student has been deleted successfully');
         } catch (\Exception $e) {
             \Log::error('Error deleting student: ' . $e->getMessage());
@@ -14571,16 +14689,16 @@ class ApiController extends BaseController
                     $file = base_path() . $path . $fileName;
                     $suc = file_put_contents($file, $base64);
                 }*/
-                
+
                 $image_principal_fileName = "";
                 if ($request->image_principal_photo) {
-    
+
                     $image_principal_now = now();
                     $image_principal_name = strtotime($image_principal_now);
                     $image_principal_extension = $request->image_principal_file_extension;
-    
+
                     $image_principal_fileName = "principal_".$image_principal_name . '.' . $image_principal_extension;
-    
+
                     // return $fileName;
                     $image_principal_path = '/public/' . $request->branch_id . '/users/images/';
                     $image_principal_base64 = base64_decode($request->image_principal_photo);
@@ -14703,7 +14821,7 @@ class ApiController extends BaseController
 // return $request;
                 $name = $request->first_name . " " . $request->last_name;
                 // insert data
-               
+
                 $mobile_no = isset($request->mobile_no) ? Crypt::encryptString($request->mobile_no) : "";
                 /* $passport = isset($request->passport) ? Crypt::encryptString($request->passport) : "";
                 $nric = isset($request->nric) ? Crypt::encryptString($request->nric) : "";
@@ -14737,20 +14855,20 @@ class ApiController extends BaseController
                     'facebook_url' => $request->facebook_url,
                     'linkedin_url' => $request->linkedin_url,
                     'twitter_url' => $request->twitter_url,*/
-                    
+
                     'occupation' => $request->occupation,
                     'email' => $request->email,
                     'mobile_no' => $mobile_no,
                     'status' => $request->status,
-                    
-                    
+
+
                     'first_name_english' => $request->first_name_english,
-                    'middle_name_english' => $request->middle_name_english,                    
+                    'middle_name_english' => $request->middle_name_english,
                     'last_name_english' => $request->last_name_english,
                     'first_name_furigana' => $request->first_name_furigana,
-                    'middle_name_furigana' => $request->middle_name_furigana, 
+                    'middle_name_furigana' => $request->middle_name_furigana,
                     'last_name_furigana' => $request->last_name_furigana,
-                    
+
                     // 'nationality' => $request->nationality,
                    /* 'passport_number' => $passport,
                     'passport_expiry_date' => $request->passport_expiry_date,
@@ -14764,7 +14882,7 @@ class ApiController extends BaseController
                     'company_name_local' => $request->guardian_company_name_local,
                     'company_phone_number' => isset($request->guardian_company_phone_number) ? Crypt::encryptString($request->guardian_company_phone_number) : "",
                     'employment_status' => $request->guardian_employment_status,
-                    // 'guardian_remarks' => $request->guardian_remarks,                   
+                    // 'guardian_remarks' => $request->guardian_remarks,
 
 
                     // 'mother_last_name_furigana' => $request->mother_last_name_furigana,
@@ -14773,25 +14891,25 @@ class ApiController extends BaseController
                     // 'mother_last_name_english' => $request->mother_last_name_english,
                     // 'mother_middle_name_english' => $request->mother_middle_name_english,
                     // 'mother_first_name_english' => $request->mother_first_name_english,
-                    // 'mother_nationality' => $request->mother_nationality,           
+                    // 'mother_nationality' => $request->mother_nationality,
                     // 'mother_first_name' => $request->mother_first_name,
                     // 'mother_last_name' => $request->mother_last_name,
                     // 'mother_middle_name' => $request->mother_middle_name,
                     // 'mother_phone_number' => $request->mother_phone_number,
                     // 'mother_occupation' => $request->mother_occupation,
                     // 'mother_email' => $request->mother_email,
-                    // 'visa_mother_photo' => $mother_visa_fileName, 
-                    // 'passport_mother_photo' => $mother_passport_fileName, 
-                    /*     
+                    // 'visa_mother_photo' => $mother_visa_fileName,
+                    // 'passport_mother_photo' => $mother_passport_fileName,
+                    /*
                     'mother_nric' => $request->mother_nric,
                     'mother_visa_number' => $request->mother_visa_number,
                     'mother_visa_expiry_date' => $request->mother_visa_expiry_date,
-                                     
+
                     'mother_passport_number' => $request->mother_passport_number,
-                         
+
                     'mother_passport_expiry_date' => $request->mother_passport_expiry_date,*/
-        
-                    
+
+
                     // 'father_last_name_furigana' => $request->father_last_name_furigana,
                     // 'father_middle_name_furigana' => $request->father_middle_name_furigana,
                     // 'father_first_name_furigana' => $request->father_first_name_furigana,
@@ -14805,12 +14923,12 @@ class ApiController extends BaseController
                     // 'father_phone_number' => $request->father_phone_number,
                     // 'father_occupation' => $request->father_occupation,
                     // 'father_email' => $request->father_email,
-                    // 'visa_father_photo' => $father_visa_fileName, 
-                    // 'passport_father_photo' => $father_passport_fileName,                              
+                    // 'visa_father_photo' => $father_visa_fileName,
+                    // 'passport_father_photo' => $father_passport_fileName,
                    /* 'father_nric' => $request->father_nric,
                     'father_visa_number' => $request->father_visa_number,
-                    'father_visa_expiry_date' => $request->father_visa_expiry_date,     
-                    'father_passport_number' => $request->father_passport_number, 
+                    'father_visa_expiry_date' => $request->father_visa_expiry_date,
+                    'father_passport_number' => $request->father_passport_number,
                     'father_passport_expiry_date' => $request->father_passport_expiry_date,*/
 
                     'japanese_association_membership_image_principal' => $image_principal_fileName,
@@ -14871,10 +14989,10 @@ class ApiController extends BaseController
             $cache_time = config('constants.cache_time');
             $cache_parentDetails = config('constants.cache_parentDetails');
             $status = $request->status ?? null;
-            
+
             if ($status === null) {
                 // Cache enabled for status filtering
-                $cacheKey = $cache_parentDetails . $request->branch_id; 
+                $cacheKey = $cache_parentDetails . $request->branch_id;
 
                 if (Cache::has($cacheKey)) {
                     $parentDetails = Cache::get($cacheKey);
@@ -14892,7 +15010,7 @@ class ApiController extends BaseController
     }
     private function fetchParentDetails($branch_id, $status = null) {
         $conn = $this->createNewConnection($branch_id);
-    
+
         if ($status !== null) {
             $parentDetails = $conn->table('parent')
                 ->select("id", 'email', 'occupation', DB::raw("CONCAT(last_name, ' ', first_name) as name"))
@@ -14904,7 +15022,7 @@ class ApiController extends BaseController
                 ->where('status', '=', '0')
                 ->get();
         }
-    
+
         return $parentDetails;
     }
     // getParentStudentUpdateList
@@ -15116,7 +15234,7 @@ class ApiController extends BaseController
                             ${$key}['new_value'] =  Helper::decryptStringData($suc);
                         } else if ($key == "relation"){
                             $realtion = $conn->table('students')->select('relation')->where('guardian_id', '=', $parent_id)->first();
-                            
+
                             ${$key} = [];
                             ${$key}['old_value'] =  $realtion->$key;
                             ${$key}['new_value'] =  $suc;
@@ -15130,24 +15248,24 @@ class ApiController extends BaseController
                     }
                     // dd($parentObj);
                     // $date_of_birth = [];
-                    // $date_of_birth['old_value'] =  $old->date_of_birth; 
-                    // $date_of_birth['new_value'] = $suc->date_of_birth; 
+                    // $date_of_birth['old_value'] =  $old->date_of_birth;
+                    // $date_of_birth['new_value'] = $suc->date_of_birth;
 
 
                     // $passport = [];
-                    // $passport['old_value'] = Helper::decryptStringData($old->passport); 
-                    // $passport['new_value'] = Helper::decryptStringData($suc->passport); 
+                    // $passport['old_value'] = Helper::decryptStringData($old->passport);
+                    // $passport['new_value'] = Helper::decryptStringData($suc->passport);
 
 
 
                     // $nric = [];
-                    // $nric['old_value'] = Helper::decryptStringData($old->nric); 
-                    // $nric['new_value'] = Helper::decryptStringData($suc->nric); 
+                    // $nric['old_value'] = Helper::decryptStringData($old->nric);
+                    // $nric['new_value'] = Helper::decryptStringData($suc->nric);
 
 
                     // $mobile_no = [];
-                    // $mobile_no['old_value'] = Helper::decryptStringData($old->mobile_no); 
-                    // $mobile_no['new_value'] = Helper::decryptStringData($suc->mobile_no); 
+                    // $mobile_no['old_value'] = Helper::decryptStringData($old->mobile_no);
+                    // $mobile_no['new_value'] = Helper::decryptStringData($suc->mobile_no);
 
                     // $parentObj->date_of_birth = $date_of_birth;
                     // $parentObj->passport = $passport;
@@ -15227,7 +15345,7 @@ class ApiController extends BaseController
             // return $request;
             // create new connection
             $staffConn = $this->createNewConnection($request->branch_id);
-            
+
             // check exist email
             // if ($staffConn->table('parent')->where([['email', '=', $request->email], ['id', '!=', $id]])->count() > 0) {
             //     return $this->send422Error('Email Already Exist', ['error' => 'Email Already Exist']);
@@ -15235,7 +15353,7 @@ class ApiController extends BaseController
 
                 if ($request->role_id == "5") {
                     if($request->father_id){
-                        
+
                         $father_visa_fileName = null;
                         if ($request->visa_father_photo) {
 
@@ -15271,9 +15389,9 @@ class ApiController extends BaseController
                             'last_name_english','middle_name_english','first_name_english',
                             'nationality','mobile_no','occupation','passport_photo','visa_photo',
                             'email','id'
-    
+
                         )->where('id', '=', $request->father_id)->first();
-    
+
                         // dd($father_old);
                         $father_data = [
                             'id' => $request->father_id,
@@ -15283,7 +15401,7 @@ class ApiController extends BaseController
                             "last_name_english" => $request->father_last_name_english,
                             "middle_name_english" => $request->father_middle_name_english,
                             "first_name_english" => $request->father_first_name_english,
-                            "nationality" => $request->father_nationality,           
+                            "nationality" => $request->father_nationality,
                             'first_name' => $request->father_first_name,
                             'last_name' => $request->father_last_name,
                             "middle_name" => $request->father_middle_name,
@@ -15325,15 +15443,15 @@ class ApiController extends BaseController
                             }else{
                                 $father_query = $staffConn->table('parent_change_info')->insertGetId($father_insertArr);
                             }
-    
+
                             // dd($father_insertArr);
                             // send Termination notifications
-    
+
                             $father_user = User::where([
                                 ['branch_id', '=', $request->branch_id],
                                 ['role_id', '=', 2]
                             ])->get();
-    
+
                             $father_info_update = [];
                             $father_info_update['parent_name'] = $request->father_last_name . ' ' .$request->father_first_name;
                             $details = [
@@ -15345,7 +15463,7 @@ class ApiController extends BaseController
                             // notifications sent
                             Notification::send($father_user, new ParentInfoUpdate($details));
                         }
-    
+
                     }
 
                     if($request->mother_id){
@@ -15385,9 +15503,9 @@ class ApiController extends BaseController
                             'last_name_english','middle_name_english','first_name_english',
                             'nationality','mobile_no','occupation','passport_photo','visa_photo',
                             'email','id'
-    
+
                         )->where('id', '=', $request->mother_id)->first();
-    
+
                         // dd($mother_old);
                         $mother_data = [
                             'id' => $request->mother_id,
@@ -15397,7 +15515,7 @@ class ApiController extends BaseController
                             "last_name_english" => $request->mother_last_name_english,
                             "middle_name_english" => $request->mother_middle_name_english,
                             "first_name_english" => $request->mother_first_name_english,
-                            "nationality" => $request->mother_nationality,           
+                            "nationality" => $request->mother_nationality,
                             'first_name' => $request->mother_first_name,
                             'last_name' => $request->mother_last_name,
                             "middle_name" => $request->mother_middle_name,
@@ -15425,7 +15543,7 @@ class ApiController extends BaseController
                                         $mother_insertArr[$key] = $mother_data[$key];
                                     }
                                 }
-                                
+
                             }
                         }
                         if (count($mother_insertArr) > 0) {
@@ -15438,15 +15556,15 @@ class ApiController extends BaseController
                             }else{
                                 $mother_query = $staffConn->table('parent_change_info')->insertGetId($mother_insertArr);
                             }
-    
+
                             // dd($mother_insertArr);
                             // send Termination notifications
-    
+
                             $mother_user = User::where([
                                 ['branch_id', '=', $request->branch_id],
                                 ['role_id', '=', 2]
                             ])->get();
-    
+
                             $mother_info_update = [];
                             $mother_info_update['parent_name'] = $request->mother_last_name . ' ' .$request->mother_first_name ;
                             $details = [
@@ -15458,7 +15576,7 @@ class ApiController extends BaseController
                             // notifications sent
                             Notification::send($mother_user, new ParentInfoUpdate($details));
                         }
-    
+
                     }
                     if($request->student_id){
                         $namesArray= $request->full_name;
@@ -15467,7 +15585,7 @@ class ApiController extends BaseController
                         $dobString = implode(',', $dobArray);
                         $relationshipArray= $request->relationship;
                         $relationshipString = implode(',', $relationshipArray);
-                       
+
                         $staffConn->table('students')->where('id', '=', $request->student_id)->update([
                            'sibling_full_name' =>  $namesString ,
                            'sibling_dob' =>  $dobString,
@@ -15479,7 +15597,7 @@ class ApiController extends BaseController
 
                     if($request->guardian_id){
 
-                        
+
                         $image_principal_fileName = "";
                         if ($request->image_principal_photo) {
 
@@ -15504,9 +15622,9 @@ class ApiController extends BaseController
                         $supplimental_fileName = $request->japanese_association_membership_image_supplimental_old;
                         if ($request->japanese_association_membership_image_supplimental) {
                             $extension = $request->japanese_association_membership_image_supplimental_file_extension;
-    
+
                             $supplimental_fileName = 'JM-IMG_' . date('Ymd') . uniqid() . '.' . $extension;
-    
+
                             // return $supplimental_fileName;
                             $path = '/public/' . $request->branch_id . '/users/images/';
                             $base64 = base64_decode($request->japanese_association_membership_image_supplimental);
@@ -15519,7 +15637,7 @@ class ApiController extends BaseController
                             'p.middle_name_furigana','p.first_name_furigana','p.last_name_furigana',
                             'p.last_name_english','p.middle_name_english','p.first_name_english',
                             'p.mobile_no','p.occupation',
-                            'p.email','p.id','st.relation', 
+                            'p.email','p.id','st.relation',
                             'p.company_name_japan','p.company_name_local','p.company_phone_number',
                             'p.employment_status','p.japan_postalcode','p.japan_emergency_sms',
                             'p.japan_contact_no','p.japan_address','p.stay_category',
@@ -15529,7 +15647,7 @@ class ApiController extends BaseController
                         )
                         ->leftJoin('students as st', 'p.id', '=', 'st.guardian_id')
                         ->where('p.id', '=', $request->guardian_id)->first();
-    
+
                         // dd($guardian_old);
                         $guardian_data = [
                             'id' => $request->guardian_id,
@@ -15538,7 +15656,7 @@ class ApiController extends BaseController
                             "first_name_furigana" => $request->guardian_first_name_furigana,
                             "last_name_english" => $request->guardian_last_name_english,
                             "middle_name_english" => $request->guardian_middle_name_english,
-                            "first_name_english" => $request->guardian_first_name_english,        
+                            "first_name_english" => $request->guardian_first_name_english,
                             'first_name' => $request->guardian_first_name,
                             'last_name' => $request->guardian_last_name,
                             "middle_name" => $request->guardian_middle_name,
@@ -15554,8 +15672,8 @@ class ApiController extends BaseController
                             'japan_contact_no' => $request->japan_contact_no,
                             'japan_emergency_sms' => $request->japan_emergency_sms,
                             'japan_address' => $request->japan_address,
-                            'stay_category' => $request->stay_category,  
-                            
+                            'stay_category' => $request->stay_category,
+
                         ];
                         $guardian_insertArr = [];
                         foreach ($guardian_old as $key => $o) {
@@ -15577,7 +15695,7 @@ class ApiController extends BaseController
                                         $guardian_insertArr[$key] = $guardian_data[$key];
                                     }
                                 }
-                                
+
                             }
                         }
                         if (count($guardian_insertArr) > 0) {
@@ -15590,15 +15708,15 @@ class ApiController extends BaseController
                             }else{
                                 $guardian_query = $staffConn->table('parent_change_info')->insertGetId($guardian_insertArr);
                             }
-    
+
                             // dd($guardian_insertArr);
                             // send Termination notifications
-    
+
                             $guardian_user = User::where([
                                 ['branch_id', '=', $request->branch_id],
                                 ['role_id', '=', 2]
                             ])->get();
-    
+
                             $guardian_info_update = [];
                             $guardian_info_update['parent_name'] = $request->guardian_last_name . ' ' .$request->guardian_first_name ;
                             $details = [
@@ -15613,7 +15731,7 @@ class ApiController extends BaseController
                         $query = 1;
                     }
                 } else {
-                
+
                     // update data
                     $passport = isset($request->passport) ? Crypt::encryptString($request->passport) : "";
                     $nric = isset($request->nric) ? Crypt::encryptString($request->nric) : "";
@@ -15622,7 +15740,7 @@ class ApiController extends BaseController
                     $address_2 = isset($request->address_2) ? Crypt::encryptString($request->address_2) : "";
                     $father_mobile_no = isset($request->father_phone_number) ? Crypt::encryptString($request->father_phone_number) : "";
                     $mother_mobile_no = isset($request->mother_phone_number) ? Crypt::encryptString($request->mother_phone_number) : "";
-                    
+
                     $image_principal_fileName = $request->image_principal_old_photo;
                     if ($request->image_principal_photo) {
 
@@ -15741,8 +15859,8 @@ class ApiController extends BaseController
                             'middle_name_english' => $request->father_middle_name_english ?? '',
                             'first_name_english' => $request->father_first_name_english ?? '',
                             'mobile_no' =>  $father_mobile_no ,
-                           'visa_photo' => $father_visa_fileName, 
-                             'passport_photo' => $father_passport_fileName,  
+                           'visa_photo' => $father_visa_fileName,
+                             'passport_photo' => $father_passport_fileName,
                             'status' => '0', // Assuming you want to update the status as well
                             'updated_at' => now()
                         ]);
@@ -15790,8 +15908,8 @@ class ApiController extends BaseController
                             'nationality' => $request->mother_nationality,
                             'occupation' => $request->mother_occupation,
                             'mobile_no' =>   $mother_mobile_no,
-                            'passport_photo' => $mother_passport_fileName,  
-                            'visa_photo' => $mother_visa_fileName, 
+                            'passport_photo' => $mother_passport_fileName,
+                            'visa_photo' => $mother_visa_fileName,
                             'status' => '0', // Assuming you want to update the status as well
                             'updated_at' => now()
                         ]);
@@ -15803,7 +15921,7 @@ class ApiController extends BaseController
                         $dobString = implode(',', $dobArray);
                         $relationshipArray= $request->relationship;
                         $relationshipString = implode(',', $relationshipArray);
-                       
+
                         $staffConn->table('students')->where('id', '=', $request->student_id)->update([
                            'sibling_full_name' =>  $namesString ,
                            'sibling_dob' =>  $dobString,
@@ -15816,7 +15934,7 @@ class ApiController extends BaseController
 
 
                     $query = $staffConn->table('parent')->where('id', $id)->update([
-                        
+
                         'first_name' => isset($request->first_name) ? $request->first_name : "",
                         'last_name' => isset($request->last_name) ? $request->last_name : "",
                         'middle_name' => isset($request->middle_name) ? $request->middle_name : "",
@@ -15850,10 +15968,10 @@ class ApiController extends BaseController
                         'twitter_url' => $request->twitter_url,*/
                         'status' => $request->status,
                         'first_name_english' => $request->first_name_english,
-                        'middle_name_english' => $request->middle_name_english,                    
+                        'middle_name_english' => $request->middle_name_english,
                         'last_name_english' => $request->last_name_english,
                         'first_name_furigana' => $request->first_name_furigana,
-                        'middle_name_furigana' => $request->middle_name_furigana, 
+                        'middle_name_furigana' => $request->middle_name_furigana,
                         'last_name_furigana' => $request->last_name_furigana,
                        /* 'passport_expiry_date' => $request->passport_expiry_date,
                         'visa_number' => $request->visa_number,
@@ -15866,7 +15984,7 @@ class ApiController extends BaseController
                     'company_name_japan' => $request->guardian_company_name_japan,
                     'company_name_local' => $request->guardian_company_name_local,
                     'company_phone_number' => isset($request->guardian_company_phone_number) ? Crypt::encryptString($request->guardian_company_phone_number) : "",
-                    'employment_status' => $request->guardian_employment_status,               
+                    'employment_status' => $request->guardian_employment_status,
 
 
                     //'japanese_association_membership_image_principal' => $image_principal_fileName,
@@ -15882,24 +16000,24 @@ class ApiController extends BaseController
                     // 'mother_last_name_english' => $request->mother_last_name_english,
                     // 'mother_middle_name_english' => $request->mother_middle_name_english,
                     // 'mother_first_name_english' => $request->mother_first_name_english,
-                    // 'mother_nationality' => $request->mother_nationality,           
+                    // 'mother_nationality' => $request->mother_nationality,
                     // 'mother_first_name' => $request->mother_first_name,
                     // 'mother_last_name' => $request->mother_last_name,
                     // 'mother_middle_name' => $request->mother_middle_name,
                     // 'mother_phone_number' => $request->mother_phone_number,
                     // 'mother_occupation' => $request->mother_occupation,
                     // 'mother_email' => $request->mother_email,
-                    // 'passport_mother_photo' => $mother_passport_fileName,  
-                    // 'visa_mother_photo' => $mother_visa_fileName,       
+                    // 'passport_mother_photo' => $mother_passport_fileName,
+                    // 'visa_mother_photo' => $mother_visa_fileName,
                     /*'mother_nric' => $request->mother_nric,
                     'mother_visa_number' => $request->mother_visa_number,
                     'mother_visa_expiry_date' => $request->mother_visa_expiry_date,
-                    'visa_mother_photo' => $mother_visa_fileName,                    
+                    'visa_mother_photo' => $mother_visa_fileName,
                     'mother_passport_number' => $request->mother_passport_number,
-                    'passport_mother_photo' => $mother_passport_fileName,            
+                    'passport_mother_photo' => $mother_passport_fileName,
                     'mother_passport_expiry_date' => $request->mother_passport_expiry_date,*/
-        
-                    
+
+
                     // 'father_last_name_furigana' => $request->father_last_name_furigana,
                     // 'father_middle_name_furigana' => $request->father_middle_name_furigana,
                     // 'father_first_name_furigana' => $request->father_first_name_furigana,
@@ -15913,14 +16031,14 @@ class ApiController extends BaseController
                     // 'father_phone_number' => $request->father_phone_number,
                     // 'father_occupation' => $request->father_occupation,
                     // 'father_email' => $request->father_email,
-                    // 'visa_father_photo' => $father_visa_fileName, 
-                    // 'passport_father_photo' => $father_passport_fileName,  
+                    // 'visa_father_photo' => $father_visa_fileName,
+                    // 'passport_father_photo' => $father_passport_fileName,
                     /*'father_nric' => $request->father_nric,
                     'father_visa_number' => $request->father_visa_number,
                     'father_visa_expiry_date' => $request->father_visa_expiry_date,
-                    'visa_father_photo' => $father_visa_fileName,                         
+                    'visa_father_photo' => $father_visa_fileName,
                     'father_passport_number' => $request->father_passport_number,
-                    'passport_father_photo' => $father_passport_fileName,            
+                    'passport_father_photo' => $father_passport_fileName,
                     'father_passport_expiry_date' => $request->father_passport_expiry_date,*/
 
                         'updated_at' => date("Y-m-d H:i:s")
@@ -15930,14 +16048,14 @@ class ApiController extends BaseController
                 $cache_parentDetails = config('constants.cache_parentDetails');
                 $this->clearCache($cache_parentDetails,$request->branch_id);
                 // cache clear end
-                
+
                 $success = [];
                 if ($query) {
                     return $this->successResponse($success, 'Parent Details have Been updated');
                 } else {
                     return $this->send500Error('Something went wrong.', ['error' => 'Something went wrong']);
                 }
-            
+
         }
     }
     // update Parent Info
@@ -16014,15 +16132,15 @@ class ApiController extends BaseController
             $changeInfo['status_parent'] = $status_count;
 
             $relation['relation'] = isset($insertArr['relation']) ? $insertArr['relation'] : null;
-            
+
             unset($insertArr['relation']);
-            
+
             if($status_count == "Remand" || $status_count == "Reject"){
                 $update_parent = $conn->table('parent')->where('id', '=', $id)->first();
                 $update_parent_email = $update_parent->guardian_email;
                 $data = array(
                     'parent_name' => $update_parent->last_name . ' '. $update_parent->first_name ,
-                    'status' => $status_count, 
+                    'status' => $status_count,
                 );
                 $mailFromAddress = env('MAIL_FROM_ADDRESS', config('constants.client_email'));
                 $query = Mail::send('auth.parent_update_info', $data, function ($message) use ($update_parent_email,$mailFromAddress) {
@@ -16030,19 +16148,19 @@ class ApiController extends BaseController
                     $message->from($mailFromAddress, 'Parent Profile Details');
                 });
             }
-            
+
             // return $insertArr;
             // $query = true;
             if (!empty($insertArr)) {
                 // return $insertArr;
                 $query = $conn->table('parent')->where('id', '=', $id)->update($insertArr);
-                
+
             }
             if (!empty($changeInfo)) {
                 $query = $conn->table('parent_change_info')->where('parent_id', $id)->update($changeInfo);
             }
             // return $query;
-            
+
             // dd($relation);
             // dd($insertArr);
             // if (!empty($relation)) {
@@ -16189,57 +16307,61 @@ class ApiController extends BaseController
     // get all teacher list
     public function getAllTeacherList(Request $request)
     {
-        $validator = \Validator::make($request->all(), [
-            'branch_id' => 'required',
-            'token' => 'required',
-        ]);
+        try {
+            $validator = \Validator::make($request->all(), [
+                'branch_id' => 'required',
+                'token' => 'required',
+            ]);
 
-        if (!$validator->passes()) {
-            return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
-        } else {
-            $main_db = config('constants.main_db');
-            // create new connection
-            $conn = $this->createNewConnection($request->branch_id);
-            $branchID = $request->branch_id;
-            // get all teachers
-            $allTeachers = $conn->table('staffs as stf')
-                ->select(
-                    'us.id as uuid',
-                    'us.role_id',
-                    'us.branch_id',
-                    'stf.id',
-                    DB::raw("CONCAT(stf.last_name, ' ', stf.first_name) as name"),
-                    'us.role_id',
-                    'us.user_id',
-                    'us.email',
-                    'rol.role_name'
-                )
-                // ->join('' . $main_db . '.users as us', 'stf.id', '=', 'us.user_id')
-                // ->join('' . $main_db . '.roles as rol', 'rol.id', '=', 'us.role_id')
-                // // ->join('paxsuzen_pz-school.users as us', 'stf.id', '=', 'us.user_id')
-                // // ->join('paxsuzen_pz-school.roles as rol', 'rol.id', '=', 'us.role_id')
-                // ->where([
-                //     ['us.branch_id', '=', $request->branch_id],
-                //     ['stf.is_active', '=', '0']
-                // ])
-                // ->whereRaw('FIND_IN_SET(?,us.role_id)', ['4'])
-                ->join('' . $main_db . '.users as us', function ($join) use ($branchID) {
-                    $join->on('stf.id', '=', 'us.user_id')
-                        // ->on('us.branch_id', '=', DB::raw("'$branchID'"));
-                        ->where('us.branch_id', $branchID);
-                })
-                ->join('' . $main_db . '.roles as rol', 'rol.id', '=', 'us.role_id')
-                ->where(function ($query) use ($branchID) {
-                    // foreach ($search_terms as $item) {
-                    $query->whereRaw('FIND_IN_SET(?,us.role_id)', ['4'])
-                        ->orWhereRaw('FIND_IN_SET(?,us.role_id)', ['3']);
-                    // }
-                })
-                ->where('stf.is_active', '=', '0')
-                ->groupBy('stf.id')
-                ->get();
-            // $allTeachers = User::select('name', 'user_id')->where([['role_id', '=', "4"], ['branch_id', '=', $request->branch_id]])->get();
-            return $this->successResponse($allTeachers, 'get all record fetch successfully');
+            if (!$validator->passes()) {
+                return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
+            } else {
+                $main_db = config('constants.main_db');
+                // create new connection
+                $conn = $this->createNewConnection($request->branch_id);
+                $branchID = $request->branch_id;
+                // get all teachers
+                $allTeachers = $conn->table('staffs as stf')
+                    ->select(
+                        'us.id as uuid',
+                        'us.role_id',
+                        'us.branch_id',
+                        'stf.id',
+                        DB::raw("CONCAT(stf.last_name, ' ', stf.first_name) as name"),
+                        'us.role_id',
+                        'us.user_id',
+                        'us.email',
+                        'rol.role_name'
+                    )
+                    // ->join('' . $main_db . '.users as us', 'stf.id', '=', 'us.user_id')
+                    // ->join('' . $main_db . '.roles as rol', 'rol.id', '=', 'us.role_id')
+                    // // ->join('paxsuzen_pz-school.users as us', 'stf.id', '=', 'us.user_id')
+                    // // ->join('paxsuzen_pz-school.roles as rol', 'rol.id', '=', 'us.role_id')
+                    // ->where([
+                    //     ['us.branch_id', '=', $request->branch_id],
+                    //     ['stf.is_active', '=', '0']
+                    // ])
+                    // ->whereRaw('FIND_IN_SET(?,us.role_id)', ['4'])
+                    ->join('' . $main_db . '.users as us', function ($join) use ($branchID) {
+                        $join->on('stf.id', '=', 'us.user_id')
+                            // ->on('us.branch_id', '=', DB::raw("'$branchID'"));
+                            ->where('us.branch_id', $branchID);
+                    })
+                    ->join('' . $main_db . '.roles as rol', 'rol.id', '=', 'us.role_id')
+                    ->where(function ($query) use ($branchID) {
+                        // foreach ($search_terms as $item) {
+                        $query->whereRaw('FIND_IN_SET(?,us.role_id)', ['4'])
+                            ->orWhereRaw('FIND_IN_SET(?,us.role_id)', ['3']);
+                        // }
+                    })
+                    ->where('stf.is_active', '=', '0')
+                    ->groupBy('stf.id')
+                    ->get();
+                // $allTeachers = User::select('name', 'user_id')->where([['role_id', '=', "4"], ['branch_id', '=', $request->branch_id]])->get();
+                return $this->successResponse($allTeachers, 'get all record fetch successfully');
+            }
+        } catch(Exception $e) {
+            return $this->successResponse($allTeachers, 'Db Error');
         }
     }
     // getHomeworkListDashboard
@@ -16764,7 +16886,7 @@ class ApiController extends BaseController
             $cache_time = config('constants.cache_time');
             $cache_religions = config('constants.cache_religions');
             $cacheKey = $cache_religions . $request->branch_id;
-           
+
             // Check if the data is cached
             if (Cache::has($cacheKey)) {
                 // If cached, return cached data
@@ -17026,7 +17148,7 @@ class ApiController extends BaseController
             }
         }
     }
-    // studnet leave start 
+    // studnet leave start
     // parent dashboard : parent id wise get student
     public function get_studentsparentdashboard(Request $request)
     {
@@ -17064,7 +17186,7 @@ class ApiController extends BaseController
             return $this->successResponse($studentDetails, 'Student details fetch successfully');
         }
     }
-    // student leave apply insert 
+    // student leave apply insert
     public function student_leaveapply(Request $request)
     {
         $validator = \Validator::make($request->all(), [
@@ -17374,7 +17496,7 @@ class ApiController extends BaseController
             return $this->successResponse($reasons, 'Reasons record fetch successfully');
         }
     }
-    //get particular student leave 
+    //get particular student leave
     function get_particular_studentleave_list(Request $request)
     {
         $validator = \Validator::make($request->all(), [
@@ -17434,12 +17556,12 @@ class ApiController extends BaseController
             // create new connection
             $Conn = $this->createNewConnection($request->branch_id);
             $status = isset($request->status) ? $request->status : null;
-            // nursing teacher 
+            // nursing teacher
             $nursing_leave_type = isset($request->nursing_leave_type) ? $request->nursing_leave_type : null;
             $nursing_reason_id = isset($request->nursing_reason_id) ? $request->nursing_reason_id : null;
             $nursing_teacher_remarks = isset($request->nursing_teacher_remarks) ? $request->nursing_teacher_remarks : null;
             $nursing_teacher_status = isset($request->nursing_teacher_status) ? $request->nursing_teacher_status : null;
-            // homeroom teacher 
+            // homeroom teacher
             $teacher_leave_type = isset($request->teacher_leave_type) ? $request->teacher_leave_type : null;
             $teacher_reason_id = isset($request->teacher_reason_id) ? $request->teacher_reason_id : null;
             $teacher_remarks = isset($request->teacher_remarks) ? $request->teacher_remarks : null;
@@ -17574,7 +17696,7 @@ class ApiController extends BaseController
                             'date' => date("Y-m-d H:i:s"),
                         );
                         // return $data;
-                        
+
                         $mailFromAddress = env('MAIL_FROM_ADDRESS', config('constants.client_email'));
                         Mail::send('auth.absent_reason', $data, function ($message) use ($email,$mailFromAddress) {
                             $message->to($email, 'Parent')->subject('Absent Reason Suggestions');
@@ -17591,7 +17713,7 @@ class ApiController extends BaseController
             return false;
         }
     }
-    // studnet leave end 
+    // studnet leave end
     // get all student leave list
     function getAllStudentLeaves(Request $request)
     {
@@ -17781,9 +17903,9 @@ class ApiController extends BaseController
             // get data
             $cache_time = config('constants.cache_time');
             $cache_leave_types = config('constants.cache_leave_types');
-            
+
             $cacheKey = $cache_leave_types . $request->branch_id;
-        
+
             // Check if the data is cached
             if (Cache::has($cacheKey)) {
                 // If cached, return cached data
@@ -18956,7 +19078,7 @@ class ApiController extends BaseController
             if (isset($request->level_three_status)) {
                 $level_three_status = $request->level_three_status;
             }
-            
+
             $staff_id = $request->staff_id;
             // echo $level_one_status;
             // echo $level_two_status;
@@ -19065,7 +19187,7 @@ class ApiController extends BaseController
                         }
                         // reduce one level
                         $oneLevelReduce = $checkYourAllocatedLevel - 1;
-                        // $checkYourAllocatedLevel 
+                        // $checkYourAllocatedLevel
                         if ($oneLevelReduce == $approveOldStatusLevel) {
                             $levelToShowArray[] = $val; // Push the modified item to the new array
                         }
@@ -19622,20 +19744,20 @@ class ApiController extends BaseController
                     ];
                         $staff_data=$Connection->table('staffs')->where('id', $employee)->first();
                         $oldData = $Connection->table('staff_attendances')->where('id',  $att['id'])->first();
-                        $query =  $Connection->table('staff_attendances')->where('id',  $att['id'])->update($data); 
+                        $query =  $Connection->table('staff_attendances')->where('id',  $att['id'])->update($data);
                         $changes = $this->getChanges($oldData, $data);
                         $table_modify=[];
                         $table_modify['type']='Student Attentance';
-                        $table_modify['id']=$employee;                
-                        $table_modify['name']=$staff_data->first_name.' '.$staff_data->last_name;                
+                        $table_modify['id']=$employee;
+                        $table_modify['name']=$staff_data->first_name.' '.$staff_data->last_name;
                         $table_modify['email']=$staff_data->email;
                         $Connection->table('modify_datas')->insert([
-                        
+
                             'table_name' => 'Staff Attentance',
                             'table_dbname' => 'staff_attendances',
                             'table_dbid' => $att['id'],
-                            'table_id_name' => 'id', 
-                            'table_modify' => json_encode($table_modify),                  
+                            'table_id_name' => 'id',
+                            'table_modify' => json_encode($table_modify),
                             'modifydata' => json_encode($changes),
                             'createdby_id' => $request->login_userid,
                             'createdby_role' => $request->login_roleid
@@ -20071,7 +20193,7 @@ class ApiController extends BaseController
             $cache_time = config('constants.cache_time');
             $cache_educations = config('constants.cache_educations');
             $cacheKey = $cache_educations . $request->branch_id;
-            
+
             // Check if the data is cached
             if (Cache::has($cacheKey)) {
                 // If cached, return cached data
@@ -20294,7 +20416,7 @@ class ApiController extends BaseController
         if (!$validator->passes()) {
             return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
         } else {
-            // create new connection    
+            // create new connection
             $con = $this->createNewConnection($request->branch_id);
             // get data
             $homework = $con->table('homeworks as h')->select(
@@ -20327,10 +20449,10 @@ class ApiController extends BaseController
                     if (isset($home->date)) {
                         $submitDate = $home->date;
                         $submitDate = date('Y-m-d', strtotime($submitDate));
-                        // echo $submitDate; // echos today! 
+                        // echo $submitDate; // echos today!
                         // $date_of_homework = date('Y-m-d', strtotime($home->date_of_homework));
                         $date_of_submission = date('Y-m-d', strtotime($home->date_of_submission));
-                        // echo $date_of_submission; // echos today! 
+                        // echo $date_of_submission; // echos today!
 
                         if ($submitDate > $date_of_submission) {
                             $lateSubmission++; // late submited
@@ -20795,8 +20917,8 @@ class ApiController extends BaseController
                 )
                 ->join('timetable_exam as tex', function ($q) {
                     $q->on('tex.class_id', '=', 'sa.class_id')
-                        ->on('tex.section_id', '=', 'sa.section_id') //second join condition                           
-                        ->on('tex.subject_id', '=', 'sa.subject_id'); //need to add subject id also later                           
+                        ->on('tex.section_id', '=', 'sa.section_id') //second join condition
+                        ->on('tex.subject_id', '=', 'sa.subject_id'); //need to add subject id also later
                 })
                 ->join('classes as cl', 'tex.class_id', '=', 'cl.id')
                 ->join('sections as sc', 'tex.section_id', '=', 'sc.id')
@@ -21658,7 +21780,7 @@ class ApiController extends BaseController
             return $this->successResponse($data, 'reasons details fetch successfully');
         }
     }
-    // get teacher absent  excuse 
+    // get teacher absent  excuse
     public function getTeacherAbsentExcuse(Request $request)
     {
         $validator = \Validator::make($request->all(), [
@@ -21735,7 +21857,7 @@ class ApiController extends BaseController
             }
         }
     }
-    // get Groups 
+    // get Groups
     public function getGroupList(Request $request)
     {
 
@@ -22051,7 +22173,7 @@ class ApiController extends BaseController
                 if($record!=null)
                 {
                     return $this->send422Error('Exam Paper Already Exist.', ['error' => "Exam Paper Already Exist."]);
-                    
+
                 }
                 else
                 {
@@ -22063,8 +22185,8 @@ class ApiController extends BaseController
                 "paper_name" => $request->paper_name,
                 "paper_type" => isset($request->paper_type) ? $request->paper_type : "",
                 "grade_category" => $request->grade_category,
-                "academic_session_id" => $request->academic_session_id,               
-                "score_type" => $request->score_type,             
+                "academic_session_id" => $request->academic_session_id,
+                "score_type" => $request->score_type,
                 'pdf_report' => isset($request->pdf_report) ? $request->pdf_report : 0,
                 "subject_weightage" => isset($request->subject_weightage) ? $request->subject_weightage : "",
                 "notes" => isset($request->notes) ? $request->notes : "",
@@ -22101,7 +22223,7 @@ class ApiController extends BaseController
             $cache_time = config('constants.cache_time');
             $cache_exam_papers = config('constants.cache_exam_papers');
             $cacheKey = $cache_exam_papers . $request->academic_session_id . $request->branch_id;
-            
+
             // Check if the data is cached
             if (Cache::has($cacheKey)) {
                 // If cached, return cached data
@@ -22185,8 +22307,8 @@ class ApiController extends BaseController
                 "subject_id" => $request->subject_id,
                 "paper_name" => $request->paper_name,
                 "paper_type" => isset($request->paper_type) ? $request->paper_type : "",
-                "grade_category" => $request->grade_category,                
-                "score_type" => $request->score_type,                             
+                "grade_category" => $request->grade_category,
+                "score_type" => $request->score_type,
                 'pdf_report' => isset($request->pdf_report) ? $request->pdf_report : 0,
                 "academic_session_id" => $request->academic_session_id,
                 "subject_weightage" => isset($request->subject_weightage) ? $request->subject_weightage : "",
@@ -22278,7 +22400,7 @@ class ApiController extends BaseController
             }
         }
     }
-    // get HostelGroups 
+    // get HostelGroups
     public function getHostelGroupList(Request $request)
     {
 
@@ -22462,7 +22584,7 @@ class ApiController extends BaseController
             $cache_time = config('constants.cache_time');
             $cache_absent_reasons = config('constants.cache_absent_reasons');
             $cacheKey = $cache_absent_reasons . $request->branch_id;
-        
+
             // Check if the data is cached
             if (Cache::has($cacheKey)) {
                 // If cached, return cached data
@@ -22620,7 +22742,7 @@ class ApiController extends BaseController
             $cache_time = config('constants.cache_time');
             $cache_late_reasons = config('constants.cache_late_reasons');
             $cacheKey = $cache_late_reasons . $request->branch_id;
-        
+
             // Check if the data is cached
             if (Cache::has($cacheKey)) {
                 // If cached, return cached data
@@ -22779,7 +22901,7 @@ class ApiController extends BaseController
             $cache_time = config('constants.cache_time');
             $cache_excused_reasons = config('constants.cache_excused_reasons');
             $cacheKey = $cache_excused_reasons . $request->branch_id;
-           
+
             // Check if the data is cached
             if (Cache::has($cacheKey)) {
                 // If cached, return cached data
@@ -22984,7 +23106,7 @@ class ApiController extends BaseController
                 $cache_semester = config('constants.cache_semester');
                 $this->clearCache($cache_semester,$request->branch_id);
                 // cache clear end
-                
+
                 $success = [];
                 if ($query) {
                     return $this->successResponse($success, 'Semester Details have Been updated');
@@ -23568,7 +23690,7 @@ class ApiController extends BaseController
                     // return $update;
                     $link = $request->url . '/guest/login';
                     $data = array('link' => $link, 'email' => $email, 'password' => $guest->email);
-                    
+
                     $mailFromAddress = env('MAIL_FROM_ADDRESS', config('constants.client_email'));
                     $query = Mail::send('auth.login_credentials_mail', $data, function ($message) use ($email,$mailFromAddress) {
                         $message->to($email, 'Guest')->subject('Login Details');
@@ -23771,7 +23893,7 @@ class ApiController extends BaseController
             return $this->successResponse($getstudentDetails, 'Student row fetch successfully');
         }
     }
-    
+
     // student Application
     public function getApplicationGuardianDetails(Request $request)
     {
@@ -23831,7 +23953,7 @@ class ApiController extends BaseController
         } else {
             // create new connection
             $conn = $this->createNewConnection($request->branch_id);
-            
+
 
 
             $visa_fileName = $request->visa_old_photo;
@@ -24040,7 +24162,7 @@ class ApiController extends BaseController
 
                 $registerNumber = $request->register_number;
             }else{
-                
+
                 $registerNumber = null;
                 if ($request->role_id == "2") {
                     if ($request->status == "Approved" && $request->phase_2_status == "Approved") {
@@ -24051,7 +24173,7 @@ class ApiController extends BaseController
             $parent_name = $request->guardian_last_name. ' ' .$request->guardian_first_name ;
             if ($request->role_id == "2") {
                 if ($request->status == "Approved" && $request->phase_2_status == "Approved" && $request->status_after_approval == "Grade and class fixed") {
-                    
+
                     $email_space_remove = str_replace(' ', '', $request->last_name_english).str_replace(' ', '', $request->first_name_english);
                     $email_name_english = strtolower($email_space_remove);
                     $studentEmail = $registerNumber.$email_name_english. config('constants.student_email_domain');
@@ -24059,10 +24181,10 @@ class ApiController extends BaseController
                     $father_id = "";
                     $mother_id = "";
                     $guardian_id = "";
-                    
+
                     $relation = $conn->table('relations')->where('id',$request->guardian_relation)->first();
 
-                    
+
                     if ($request->guardian_first_name) {
                         // return $request;
                         $guardian_data = [
@@ -24087,13 +24209,13 @@ class ApiController extends BaseController
                                 'japanese_association_membership_image_supplimental' => $image_supplimental_fileName,
                                 'status' => "0",
                         ];
-                        
+
                         if($relation->parent == "1"){
-                            //father is guardian 
+                            //father is guardian
                             $guardian_data['passport_photo'] = $passport_father_fileName;
                             $guardian_data['visa_photo'] = $visa_father_fileName;
                         }else if($relation->parent == "2"){
-                            //mother is guardian 
+                            //mother is guardian
                             $guardian_data['passport_photo'] = $passport_mother_fileName;
                             $guardian_data['visa_photo'] = $visa_mother_fileName;
                         }
@@ -24106,16 +24228,16 @@ class ApiController extends BaseController
                         } else {
                             $guardian_data['created_at'] = date("Y-m-d H:i:s");
                             $guardian_id = $conn->table('parent')->insertGetId($guardian_data);
-                                
+
                             $guardian_name = $request->guardian_first_name . ' ' . $request->guardian_last_name;
                             if (!$guardian_id) {
                                 return $this->send500Error('Something went wrong.', ['error' => 'Something went wrong add Parent']);
                             } else {
 
                                 // add Userwhere([['email', '=', $request->guardian_email], ['branch_id', '=', $request->branch_id], ['role_id', '=', 5]])->count < 1
-                                
+
                                 if(User::where([['email', '=', $request->guardian_email],['branch_id', '=', $request->branch_id], ['role_id', '=', "5"]])->count() < 1){
-                                    
+
 
                                     $par_uppercase = Str::random(1,'ABCDEFGHIJKLMNOPQRSTUVWXYZ'); // Generate 1 random uppercase character
                                     $par_lowercase = Str::random(6,'abcdefghijklmnopqrstuvwxyz'); // Generate 6 random lowercase characters
@@ -24140,11 +24262,11 @@ class ApiController extends BaseController
                                     $parent_link = $request->url . '/parent/login';
                                     $data = array(
                                         'parent_name' => $parent_name,
-                                        'parent_link' => $parent_link, 
-                                        'parent_email' => $parent_email, 
+                                        'parent_link' => $parent_link,
+                                        'parent_email' => $parent_email,
                                         'parent_password' => $parent_password,
                                     );
-                                    
+
                                     $mailFromAddress = env('MAIL_FROM_ADDRESS', config('constants.client_email'));
                                     $query = Mail::send('auth.application', $data, function ($message) use ($parent_email,$mailFromAddress) {
                                         $message->to($parent_email, 'Parent')->subject('Login Details');
@@ -24165,9 +24287,9 @@ class ApiController extends BaseController
                         $conn->table('guest')->where('email', $request->guardian_email)->delete();
                         User::where('email',$request->guardian_email)->where('role_id',"7")->where('branch_id',$request->branch_id)->delete();
                     }
-                   
+
                     if($relation->parent == "1"){
-                        //father is guardian 
+                        //father is guardian
                         $father_id = $guardian_id;
                     }else{
 
@@ -24200,13 +24322,13 @@ class ApiController extends BaseController
                                 $father_data['created_at'] = date("Y-m-d H:i:s");
                                 $father_id = $conn->table('parent')->insertGetId($father_data);
                             }
-    
+
                             $father_name = $request->father_first_name . ' ' . $request->father_last_name;
                         }
                     }
 
                     if($relation->parent == "2"){
-                        //father is guardian 
+                        //father is guardian
                         $mother_id = $guardian_id;
                     }else{
                         if ($request->mother_first_name) {
@@ -24305,7 +24427,7 @@ class ApiController extends BaseController
                         $student_get = $conn->table('students')->where('email', '=', $studentEmail)->first();
                         $studentId = $student_get->id;
 
-                        
+
                         $session_id = 0;
                         $semester_id = 0;
                         $enroll = $conn->table('enrolls')->where('student_id', '=', $studentId)->where('active_status',"=","0")->update([
@@ -24348,7 +24470,7 @@ class ApiController extends BaseController
                             $user->password = bcrypt($student_password);
                             $query = $user->save();
                             // return $user->id;
-                            
+
                             $session_id = 0;
                             $semester_id = 0;
                             $enroll = $conn->table('enrolls')->insert([
@@ -24433,7 +24555,7 @@ class ApiController extends BaseController
                 'phase_1_reason' => $request->phase_1_reason,
                 'phase_2_reason' => $request->phase_2_reason,
                 'register_number' => $registerNumber,
-                
+
 
                 "middle_name" => $request->middle_name,
                 "middle_name_english" => $request->middle_name_english,
@@ -24473,7 +24595,7 @@ class ApiController extends BaseController
                 "expected_enroll_date" => $request->expected_enroll_date,
                 "remarks" => $request->remarks,
 
-                
+
                 "address_unit_no" => $request->address_unit_no,
                 "address_condominium" => $request->address_condominium,
                 "address_street" => $request->address_street,
@@ -24504,16 +24626,16 @@ class ApiController extends BaseController
             if ($request->role_id == "2") {
                 if ($request->status != $request->status_old){
                     if($request->status != "Applied"){
-                        
-                    
+
+
                         $phase_1_email = $request->guardian_email;
                         $data = array(
                             'parent_name' => $request->guardian_last_name .' '. $request->guardian_first_name ,
                             'child_name' => $request->last_name  .' '. $request->first_name,
-                            'status' => $request->status, 
-                            'phase' => "Phase 1", 
+                            'status' => $request->status,
+                            'phase' => "Phase 1",
                         );
-                        
+
                         $mailFromAddress = env('MAIL_FROM_ADDRESS', config('constants.client_email'));
                         $query = Mail::send('auth.application_status', $data, function ($message) use ($phase_1_email,$mailFromAddress) {
                             $message->to($phase_1_email, 'Parent')->subject('Student Application');
@@ -24526,16 +24648,16 @@ class ApiController extends BaseController
             if ($request->role_id == "2") {
                 if ($request->phase_2_status != $request->phase_2_status_old){
                     if($request->phase_2_status != "Process"){
-                        
-                    
+
+
                         $phase_2_email = $request->guardian_email;
                         $data = array(
                             'parent_name' => $request->guardian_last_name .' '. $request->guardian_first_name ,
                             'child_name' => $request->last_name  .' '. $request->first_name,
-                            'status' => $request->phase_2_status,  
-                            'phase' => "Phase 2", 
+                            'status' => $request->phase_2_status,
+                            'phase' => "Phase 2",
                         );
-                        
+
                         $mailFromAddress = env('MAIL_FROM_ADDRESS', config('constants.client_email'));
                         $query = Mail::send('auth.application_status', $data, function ($message) use ($phase_2_email,$mailFromAddress) {
                             $message->to($phase_2_email, 'Parent')->subject('Student Application');
@@ -25019,7 +25141,7 @@ class ApiController extends BaseController
             }
         }
     }
-    // get BankAccounts 
+    // get BankAccounts
     public function getBankAccountList(Request $request)
     {
 
@@ -25305,7 +25427,7 @@ class ApiController extends BaseController
         }
     }
 
-    // get bulletin 
+    // get bulletin
     public function getBuletinBoardList(Request $request)
     {
 
@@ -25528,7 +25650,7 @@ class ApiController extends BaseController
         if (!$validator->passes()) {
             return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
         } else {
-            // create new connection              
+            // create new connection
             $success = DB::table('roles')->select('id', 'role_name as name')
                 ->where('id', '!=', 1)
                 ->where('id', '!=', 3)
@@ -26297,11 +26419,11 @@ class ApiController extends BaseController
         $conn = $this->createNewConnection($request->branch_id);
         $grade = $conn->table('grade_marks')->select('id','grade','status')
         ->where('id', '=', $id)->first();
-        $success=[]  ;     
-        $data = [            
-            'grade' => $grade           
+        $success=[]  ;
+        $data = [
+            'grade' => $grade
         ];
-        return $this->successResponse($data, 'Exam Point Status Get Successfully'); 
+        return $this->successResponse($data, 'Exam Point Status Get Successfully');
     }
 
     // addEmailType
@@ -26598,7 +26720,7 @@ class ApiController extends BaseController
             'branch_id' => 'required',
             'token' => 'required',
         ]);
-       
+
 
         // return $request['old_photo'];
 
@@ -26898,11 +27020,11 @@ class ApiController extends BaseController
         }
     }
     public function registerNumber($request)
-    {        
+    {
         $conn = $this->createNewConnection($request['branch_id']);
         $academic_year = $conn->table('academic_year')->where('id', $request['academic_year'])->first();
         // $start_end = explode('-', $academic_year->name);
-                
+
         $current_year = $academic_year->name;
         $yearStart = "9" .substr($current_year, 2);
         $application = $conn->table('student_applications')->where("register_number", 'LIKE', $yearStart.'%')->max("register_number");
@@ -26912,7 +27034,7 @@ class ApiController extends BaseController
 
             if($application >= $admission){
                 $lastRemove = substr($application,0,-1);
-                
+
             }else{
                 $lastRemove = substr($admission,0,-1);
             }
@@ -27220,7 +27342,7 @@ class ApiController extends BaseController
             }
         }
     }
-    // get Terminations 
+    // get Terminations
     public function getTerminationList(Request $request)
     {
 
@@ -27360,7 +27482,7 @@ class ApiController extends BaseController
                 Notification::send($user, new ParentTermination($details));
             }
 
-            
+
             if ($request->role_id == "2") {
                 if ($request->termination_status != $request->termination_status_old){
                     if($request->termination_status != "Pending"){
@@ -27370,9 +27492,9 @@ class ApiController extends BaseController
                             $data = array(
                                 'parent_name' => $parent_name->name,
                                 'child_name' => $student_name->name,
-                                'status' => $request->status, 
+                                'status' => $request->status,
                             );
-                            
+
                             $mailFromAddress = env('MAIL_FROM_ADDRESS', config('constants.client_email'));
                             $query = Mail::send('auth.termination', $data, function ($message) use ($term_email,$mailFromAddress) {
                                 $message->to($term_email, 'Parent')->subject('Student Termination');
@@ -27499,12 +27621,12 @@ class ApiController extends BaseController
                 return $this->send500Error('Something went wrong.', ['error' => 'Something went wrong']);
             }
         }
-    }   
+    }
     public function addstupicture(Request $request)
     {
         $conn = $this->createNewConnection($request->branch_id);
         $success = [];
-        if ($conn->table('students')->where('register_no', '=', $request->register_no)->count() > 0) 
+        if ($conn->table('students')->where('register_no', '=', $request->register_no)->count() > 0)
         {
             $student=$conn->table('students')->where('register_no', '=', $request->register_no)->first();
             $fileName = "";
@@ -27520,22 +27642,22 @@ class ApiController extends BaseController
             }
             $studentId = $conn->table('students')->where('id', $student->id)->update([
 
-                'photo' => $fileName,                   
+                'photo' => $fileName,
                 'created_at' => date("Y-m-d H:i:s")
             ]);
             $query = User::where([['user_id', '=', $student->id], ['role_id', '=', "6"], ['branch_id', '=', $request->branch_id]])
                     ->update([
-                        'picture' => $fileName                            
+                        'picture' => $fileName
                     ]);
             return $this->successResponse($success, 'Student Photo uploaded successfully');
-        } 
+        }
         else
-        {  
+        {
             return $this->send422Error('Student Regsiter Number Exist', ['error' => 'Student Regsiter Number Not Exist']);
-            
+
         }
         return $this->successResponse($success, 'Student Photo uploaded successfully');
-    } 
+    }
     private function getChanges($oldData, $newData)
     {
         $changes = [];
@@ -27544,7 +27666,7 @@ class ApiController extends BaseController
             if($key!='updated_at')
             {
                 if ($oldData->$key != $value) {
-                    
+
                     $changes[$key] = [
                         'field'=> $key,
                         'old' => $oldData->$key,
@@ -27576,8 +27698,8 @@ class ApiController extends BaseController
             })
             ->groupBy('us.id', 'us.name', 'us.email')
             ->get();
-            
-            
+
+
             return $this->successResponse($logusers, 'Get Log Modify Users successfully');
         }
     }
@@ -27592,13 +27714,13 @@ class ApiController extends BaseController
             // create new connection
             $branchID=$request->branch_id;
             $Connection = $this->createNewConnection($request->branch_id);
-            
+
             $logusers = $Connection->table('modify_datas')
             ->select('table_name')
             ->distinct()
             ->get();
-            
-            
+
+
             return $this->successResponse($logusers, 'Get Log Modify Tables successfully');
         }
     }
@@ -27609,7 +27731,7 @@ class ApiController extends BaseController
         $branchID=$request->branch_id;
         $Connection = $this->createNewConnection($request->branch_id);
         $main_db = config('constants.main_db');
-        
+
         if ($request->user_id == 'All' && $request->tablename == 'All') {
             $data = $Connection->table('modify_datas as t1')
                 ->select('t1.*','us.id', 'us.name', 'us.email')
@@ -27619,7 +27741,7 @@ class ApiController extends BaseController
                 })
                 ->whereBetween('t1.created_at', [$fromDate, $toDate])
                 ->get();
-        } 
+        }
         else if ($request->user_id != 'All' && $request->tablename == 'All') {
             $data = $Connection->table('modify_datas as t1')
                 ->select('t1.*','us.id', 'us.name', 'us.email')
@@ -27641,9 +27763,9 @@ class ApiController extends BaseController
                 ->where('t1.table_name', $request->tablename)
                 ->whereBetween('t1.created_at', [$fromDate, $toDate])
                 ->get();
-        }  
+        }
         else {
-           
+
             $data = $Connection->table('modify_datas as t1')
             ->select('t1.*','us.id', 'us.name', 'us.email')
             ->join('' . $main_db . '.users as us', function ($join) use ($branchID) {
@@ -27673,28 +27795,28 @@ class ApiController extends BaseController
                     $new=($val['new']!=null)?Helper::decryptStringData($val['new']):'-';
                     $old=($val['old']!=null)?Helper::decryptStringData($val['old']):'-';
                 }
-                
-             
+
+
                 $mdatas.=$k.".".$val['field']."<br> Old : ".$old."<br> New : ".$new."<br><br>";
             }
             //dd($mdatas);
-            $items = array();   
-            $items['id'] = $j;         
+            $items = array();
+            $items['id'] = $j;
             $items['user_id'] = $item->id;
             $items['user_name'] = $item->name;
             $items['user_email'] = $item->email;
-            
+
             $items['tablename'] = $item->table_name;
             $items['user'] = "ID :".$item->createdby_id."<br>Name :".$item->name."<br>Email :".$item->email;
-           
+
             $items['table_user']="ID :".$table_modifydata['id']." <br>Name :".$table_modifydata['name']."<br>Email :".$table_modifydata['email'];
-            
+
             $items['modifydata'] =$mdatas;
             $items['created_at'] = date('d-m-Y h:i:a', strtotime($item->created_at));
             array_push($history, $items);
         }
         return $this->successResponse($history, 'Log Modify record fetch successfully');
-    }   
+    }
     public function getpdf_report(Request $request)
     {
         $validator = \Validator::make($request->all(), [
@@ -27706,13 +27828,13 @@ class ApiController extends BaseController
             // create new connection
             $branchID=$request->branch_id;
             $Connection = $this->createNewConnection($request->branch_id);
-            
+
             $pdflist = $Connection->table('pdf_report')->select('id','pdf_name')->get();
-            
-            
+
+
             return $this->successResponse($pdflist, 'Get Pdf Report successfully');
         }
-    } 
+    }
     // getChildHealthList
     public function getChildHealthList(Request $request)
     {
@@ -27755,7 +27877,7 @@ class ApiController extends BaseController
     {
 
         $validator = \Validator::make($request->all(), [
-            
+
             'branch_id' => 'required',
             'token' => 'required',
         ]);
@@ -27770,7 +27892,7 @@ class ApiController extends BaseController
             if($record!=null)
             {
                 $id=$record->id;
-                $query = $conn->table('student_interview')->where('id', $id)->update([                      
+                $query = $conn->table('student_interview')->where('id', $id)->update([
                     'interview_date' => $request->interview_date,
                     'question_situation' => $request->question_situation,
                     'question_improved' => $request->question_improved,
@@ -27781,7 +27903,7 @@ class ApiController extends BaseController
                     'updated_by' => $request->staff_id,
                     'updated_at' => date("Y-m-d H:i:s")
                 ]);
-            } 
+            }
             else
             {
                 // insert data
@@ -27809,7 +27931,7 @@ class ApiController extends BaseController
             } else {
                 return $this->successResponse($success, 'Student Persoanl Interview updated Successfully.');
             }
-            
+
         }
     }
     // getEventTypeList
@@ -27818,7 +27940,7 @@ class ApiController extends BaseController
         $validator = \Validator::make($request->all(), [
             'branch_id' => 'required',
             //'token' => 'required',
-        ]);     
+        ]);
         $conn = $this->createNewConnection($request->branch_id);
         $record=$conn->table('student_interview')->where([['academic_year', '=', $request->academic_year],['department_id', '=', $request->department_id],['class_id', '=', $request->class_id],['section_id', '=', $request->section_id],['student_id', '=', $request->student_id],['semester_id', '=', $request->semester_id]])->first();
         if($record!=null)
@@ -27827,75 +27949,75 @@ class ApiController extends BaseController
         }
         else
         {
-            
+
             return $this->successResponse([1], 'No Record Found');
         }
 
-        
+
     }
     public function personalinterviewlist(Request $request)
     {
         $validator = \Validator::make($request->all(), [
             'branch_id' => 'required',
             //'token' => 'required',
-        ]);     
-        $conn = $this->createNewConnection($request->branch_id);        
+        ]);
+        $conn = $this->createNewConnection($request->branch_id);
         $record=$conn->table('student_interview as int')
         ->select('int.id','int.interview_date','int.student_id','s.first_name as name','s.roll_no', 's.email')
         ->leftjoin("students as s", 's.id', '=', 'int.student_id')
         ->where([['int.academic_year', '=', $request->academic_year],['int.department_id', '=', $request->department_id],['int.class_id', '=', $request->class_id],['int.section_id', '=', $request->section_id],['int.semester_id', '=', $request->semester_id]])->get();
         return $this->successResponse($record, 'Personal Interview Informations get Successfully');
-        
+
     }
     public function personalinterview_individual(Request $request)
     {
         $validator = \Validator::make($request->all(), [
             'branch_id' => 'required',
             //'token' => 'required',
-        ]);     
-        $conn = $this->createNewConnection($request->branch_id);        
-        
+        ]);
+        $conn = $this->createNewConnection($request->branch_id);
+
         $record = $conn->table('student_interview as inter')
         ->select('inter.*', 's.first_name as name', 's.roll_no', 's.email', 'sem.name as semester_name',
-        $conn->raw('(SELECT t2.first_name FROM subject_assigns as t1 
-                    LEFT JOIN staffs as t2 ON t1.teacher_id = t2.id 
-                    WHERE t2.first_name != "" AND t2.teacher_type IS NULL 
-                    AND inter.academic_year = t1.academic_session_id 
-                    AND inter.class_id = t1.class_id 
-                    AND inter.section_id = t1.section_id 
-                    AND inter.department_id = t1.department_id 
+        $conn->raw('(SELECT t2.first_name FROM subject_assigns as t1
+                    LEFT JOIN staffs as t2 ON t1.teacher_id = t2.id
+                    WHERE t2.first_name != "" AND t2.teacher_type IS NULL
+                    AND inter.academic_year = t1.academic_session_id
+                    AND inter.class_id = t1.class_id
+                    AND inter.section_id = t1.section_id
+                    AND inter.department_id = t1.department_id
                     LIMIT 1) as home_teacher')
             )
-        ->leftJoin('students as s', 's.id', '=', 'inter.student_id')  
+        ->leftJoin('students as s', 's.id', '=', 'inter.student_id')
         ->leftJoin('semester as sem', 'sem.id', '=', 'inter.semester_id')
         ->where('inter.id', '=', $request->id)
-        ->first();        
+        ->first();
         return $this->successResponse($record, 'Personal Interview Informations get Successfully');
-        
+
     }
     public function personalinterview_overall(Request $request)
     {
         $validator = \Validator::make($request->all(), [
             'branch_id' => 'required',
             //'token' => 'required',
-        ]);     
-        $conn = $this->createNewConnection($request->branch_id);        
+        ]);
+        $conn = $this->createNewConnection($request->branch_id);
         $record = $conn->table('student_interview as inter')
         ->select('inter.*', 's.first_name as name', 's.roll_no', 's.email', 'sem.name as semester_name',
-        $conn->raw('(SELECT t2.first_name FROM subject_assigns as t1 
-                    LEFT JOIN staffs as t2 ON t1.teacher_id = t2.id 
-                    WHERE t2.first_name != "" AND t2.teacher_type IS NULL 
-                    AND inter.academic_year = t1.academic_session_id 
-                    AND inter.class_id = t1.class_id 
-                    AND inter.section_id = t1.section_id 
-                    AND inter.department_id = t1.department_id 
+        $conn->raw('(SELECT t2.first_name FROM subject_assigns as t1
+                    LEFT JOIN staffs as t2 ON t1.teacher_id = t2.id
+                    WHERE t2.first_name != "" AND t2.teacher_type IS NULL
+                    AND inter.academic_year = t1.academic_session_id
+                    AND inter.class_id = t1.class_id
+                    AND inter.section_id = t1.section_id
+                    AND inter.department_id = t1.department_id
                     LIMIT 1) as home_teacher')
         )
         ->leftjoin("students as s", 's.id', '=', 'inter.student_id')
         ->leftjoin("semester as sem", 'sem.id', '=', 'inter.semester_id')
         ->where([['inter.academic_year', '=', $request->academic_year],['inter.department_id', '=', $request->department_id],['inter.class_id', '=', $request->class_id],['inter.section_id', '=', $request->section_id],['inter.semester_id', '=', $request->semester_id]])->get();
         return $this->successResponse($record, 'Personal Interview Informations get Successfully');
-        
+
     }
     protected function clearCache($cache_name,$branchId)
     {
