@@ -2993,21 +2993,26 @@ class ApiControllerThree extends BaseController
     public function emailPasswordEncrypt(Request $request)
     {
         $validator = \Validator::make($request->all(), [
+            'branch_id' => 'required',
             'email' => 'required',
         ]);
         if (!$validator->passes()) {
             return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
         } else {
             // create new connection
-
-            $email = $request->email;
-            $decrypt_email = bcrypt($request->email);
-
-         $data = [
-                "email" => $email,
-                "decrypt_email" => $decrypt_email,
+            // Retrieve users matching criteria
+            $users = User::select('id', 'branch_id', 'password', 'email')
+                ->where('email',  $request->email)
+                ->where('branch_id', $request->branch_id)
+                ->first();
+            $decrypt_password = bcrypt($users->password);
+            $data = [
+                "decrypt_password" => $decrypt_password,
+                "id" => $users->id,
+                "branch_id" => $users->branch_id,
+                "email" => $users->email,
             ];
-            return $this->successResponse($data, 'Your email is change into passsword');
+            return $this->successResponse($data, 'Your decrypt password is above');
         }
     }
     // get Student List

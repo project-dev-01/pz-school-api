@@ -1833,8 +1833,8 @@ class ApiController extends BaseController
     // delete assign teacher subject
     public function deleteTeacherSubject(Request $request)
     {
-        try
-                $validator = \Validator::make($request->all(), [
+        try {
+        $validator = \Validator::make($request->all(), [
             'id' => 'required',
             'branch_id' => 'required'
         ]);
