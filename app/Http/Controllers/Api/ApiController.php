@@ -23508,7 +23508,7 @@ try{
     // addSemester
     public function addSemester(Request $request)
     {
-
+try{
         $validator = \Validator::make($request->all(), [
             'name' => 'required',
             'start_date' => 'required',
@@ -23547,11 +23547,15 @@ try{
                 }
             }
         }
+         }
+        catch(Exception $error) {
+            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+        }
     }
     // get Semester row details
     public function getSemesterDetails(Request $request)
     {
-
+try {
         $validator = \Validator::make($request->all(), [
             'id' => 'required',
             'branch_id' => 'required',
@@ -23568,10 +23572,15 @@ try{
             $raceDetails = $conn->table('semester')->where('id', $id)->first();
             return $this->successResponse($raceDetails, 'Semester row fetch successfully');
         }
+         }
+        catch(Exception $error) {
+            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+        }
     }
     // update Semester
     public function updateSemester(Request $request)
     {
+        try{
         $id = $request->id;
         $validator = \Validator::make($request->all(), [
             'name' => 'required',
@@ -23613,11 +23622,15 @@ try{
                 }
             }
         }
+         }
+        catch(Exception $error) {
+            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+        }
     }
     // delete Semester
     public function deleteSemester(Request $request)
     {
-
+try {
         $id = $request->id;
         $validator = \Validator::make($request->all(), [
             'token' => 'required',
@@ -23644,13 +23657,17 @@ try{
                 return $this->send500Error('Something went wrong.', ['error' => 'Something went wrong']);
             }
         }
+         }
+        catch(Exception $error) {
+            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+        }
     }
 
 
     // addGlobalSetting
     public function addGlobalSetting(Request $request)
     {
-
+        try {
         $validator = \Validator::make($request->all(), [
             'year_id' => 'required',
             'branch_id' => 'required',
@@ -23681,10 +23698,16 @@ try{
                 return $this->successResponse($success, 'Global Seeting has been successfully saved');
             }
         }
+         }
+        catch(Exception $error) {
+            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+        }
+
     }
     // getGlobalSettingList
     public function getGlobalSettingList(Request $request)
     {
+        try{
         $validator = \Validator::make($request->all(), [
             'branch_id' => 'required',
             'token' => 'required',
@@ -23699,11 +23722,15 @@ try{
             $leaveTypeDetails = $conn->table('global_settings as g')->select('g.*', 'ay.name as academic_year')->leftJoin('academic_year as ay', 'g.year_id', '=', 'ay.id')->get();
             return $this->successResponse($leaveTypeDetails, 'Global Seeting record fetch successfully');
         }
+         }
+        catch(Exception $error) {
+            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+        }
     }
     // get GlobalSetting row details
     public function getGlobalSettingDetails(Request $request)
     {
-
+    try {
         $validator = \Validator::make($request->all(), [
             'id' => 'required',
             'branch_id' => 'required',
@@ -23720,10 +23747,15 @@ try{
             $leaveTypeDetails = $conn->table('global_settings')->where('id', $id)->first();
             return $this->successResponse($leaveTypeDetails, 'Global Seeting row fetch successfully');
         }
+         }
+        catch(Exception $error) {
+            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+        }
     }
     // update GlobalSetting
     public function updateGlobalSetting(Request $request)
     {
+    try{
         $id = $request->id;
         $validator = \Validator::make($request->all(), [
             'year_id' => 'required',
@@ -23756,11 +23788,15 @@ try{
                 return $this->send500Error('Something went wrong.', ['error' => 'Something went wrong']);
             }
         }
+         }
+        catch(Exception $error) {
+            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+        }
     }
     // delete GlobalSetting
     public function deleteGlobalSetting(Request $request)
     {
-
+        try {
         $id = $request->id;
         $validator = \Validator::make($request->all(), [
             'token' => 'required',
@@ -23783,10 +23819,15 @@ try{
                 return $this->send500Error('Something went wrong.', ['error' => 'Something went wrong']);
             }
         }
+         }
+        catch(Exception $error) {
+            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+        }
     }
 
     function classRoomCheck(Request $request)
     {
+        try{
         $validator = \Validator::make($request->all(), [
             'token' => 'required',
             'branch_id' => 'required',
@@ -23821,11 +23862,16 @@ try{
                 ->get();
             return $this->successResponse($getClassName, 'Class Name record fetch successfully');
         }
+         }
+        catch(Exception $error) {
+            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+        }
     }
 
     // studentLeaveCount
     public function studentLeaveCount(Request $request)
     {
+        try {
         $validator = \Validator::make($request->all(), [
             'token' => 'required',
             'branch_id' => 'required'
@@ -23891,10 +23937,15 @@ try{
             $count['reject'] = $reject;
             return $this->successResponse($count, 'Student Leave Count has been Fetched Successfully');
         }
+         }
+        catch(Exception $error) {
+            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+        }
     }
     // employeeCount
     public function employeeCount(Request $request)
     {
+        try{
         $validator = \Validator::make($request->all(), [
             'token' => 'required',
             'branch_id' => 'required'
@@ -23910,10 +23961,15 @@ try{
             $query = $createConnection->table('staffs')->where('is_active', '=', '0')->count();
             return $this->successResponse($query, 'Staff Count has been Fetched Successfully');
         }
+         }
+        catch(Exception $error) {
+            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+        }
     }
     // studentCount
     public function studentCount(Request $request)
     {
+    try {
         $validator = \Validator::make($request->all(), [
             'token' => 'required',
             'branch_id' => 'required'
@@ -23928,10 +23984,15 @@ try{
             $query = $createConnection->table('students')->count();
             return $this->successResponse($query, 'Student Count has been Fetched Successfully');
         }
+         }
+        catch(Exception $error) {
+            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+        }
     }
     // parentCount
     public function parentCount(Request $request)
     {
+        try{
         $validator = \Validator::make($request->all(), [
             'token' => 'required',
             'branch_id' => 'required'
@@ -23946,10 +24007,15 @@ try{
             $query = $createConnection->table('parent')->count();
             return $this->successResponse($query, 'Staff Count has been Fetched Successfully');
         }
+         }
+        catch(Exception $error) {
+            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+        }
     }
     // teacherCount
     public function teacherCount(Request $request)
     {
+        try{
         $validator = \Validator::make($request->all(), [
             'token' => 'required',
             'branch_id' => 'required'
@@ -23987,11 +24053,16 @@ try{
                 ->get()->count();
             return $this->successResponse($query, 'Student Count has been Fetched Successfully');
         }
+         }
+        catch(Exception $error) {
+            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+        }
     }
 
     // add Application
     public function addApplication(Request $request)
     {
+        try{
         $validator = \Validator::make($request->all(), [
             'first_name' => 'required',
             // 'mobile_no' => 'required',
@@ -24133,12 +24204,16 @@ try{
 
             // return $request;
         }
+         }
+        catch(Exception $error) {
+            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+        }
     }
 
     // email Application
     public function emailApplication(Request $request)
     {
-
+try{
         // return 1;
         $validator = \Validator::make($request->all(), [
             'token' => 'required',
@@ -24206,10 +24281,15 @@ try{
                 return $this->successResponse($success, 'Email Verified Successfully');
             }
         }
+         }
+        catch(Exception $error) {
+            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+        }
     }
     public function verifyApplication(Request $request)
     {
 
+try{
         $validator = \Validator::make($request->all(), [
             'branch_id' => 'required',
             'email' => 'required'
@@ -24256,13 +24336,17 @@ try{
                 return $this->successResponse($success, 'Verification has been Sended Successfully');
             }
         }
+         }
+        catch(Exception $error) {
+            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+        }
     }
 
 
     // get application list
     public function getApplicationList(Request $request)
     {
-
+        try{
         $validator = \Validator::make($request->all(), [
             'branch_id' => 'required'
         ]);
@@ -24364,11 +24448,16 @@ try{
 
             return $this->successResponse($applications, 'Application record fetch successfully');
         }
+         }
+        catch(Exception $error) {
+            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+        }
     }
 
     // student Application
     public function getApplicationDetails(Request $request)
     {
+    try{
         $validator = \Validator::make($request->all(), [
             'id' => 'required',
             'branch_id' => 'required',
@@ -24390,11 +24479,17 @@ try{
                 ->first();
             return $this->successResponse($getstudentDetails, 'Student row fetch successfully');
         }
+         }
+        catch(Exception $error) {
+            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+        }
+
     }
 
     // student Application
     public function getApplicationGuardianDetails(Request $request)
     {
+    try{
         $validator = \Validator::make($request->all(), [
             'email' => 'required',
             'branch_id' => 'required',
@@ -24415,10 +24510,15 @@ try{
                 ->first();
             return $this->successResponse($getstudentDetails, 'Guardian Details Fetched Successfully');
         }
+         }
+        catch(Exception $error) {
+            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+        }
     }
     // update Application
     public function updateApplication(Request $request)
     {
+        try{
         // return $request;
         $validator = \Validator::make($request->all(), [
             // 'first_name' => 'required',
@@ -25195,11 +25295,16 @@ try{
 
             // return $request;
         }
+         }
+        catch(Exception $error) {
+            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+        }
     }
 
     // approve Application
     public function approveApplication(Request $request)
     {
+        try{
         $validator = \Validator::make($request->all(), [
             'token' => 'required',
             'id' => 'required',
@@ -25233,10 +25338,15 @@ try{
                 return $this->send500Error('Something went wrong.', ['error' => 'Something went wrong']);
             }
         }
+         }
+        catch(Exception $error) {
+            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+        }
     }
     // delete Application
     public function deleteApplication(Request $request)
     {
+    try{
         $id = $request->id;
         $validator = \Validator::make($request->all(), [
             'token' => 'required',
@@ -25258,12 +25368,17 @@ try{
                 return $this->send500Error('Something went wrong.', ['error' => 'Something went wrong']);
             }
         }
+         }
+        catch(Exception $error) {
+            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+        }
     }
 
 
     // getRelationList
     public function getApplicationRelationList(Request $request)
     {
+    try{
         $validator = \Validator::make($request->all(), [
             'branch_id' => 'required',
         ]);
@@ -25277,13 +25392,18 @@ try{
             $relationDetails = $conn->table('relations')->get();
             return $this->successResponse($relationDetails, 'Relation record fetch successfully');
         }
+         }
+        catch(Exception $error) {
+            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+        }
     }
 
 
     // academic Year List
     public function applicationAcademicYearList(Request $request)
     {
-        $validator = \Validator::make($request->all(), [
+    try{
+            $validator = \Validator::make($request->all(), [
             'branch_id' => 'required',
         ]);
 
@@ -25312,11 +25432,16 @@ try{
             return $this->successResponse($academicYears, 'Academic year records fetched successfully');
             //return $this->successResponse($Department, 'Academic year record fetch successfully');
         }
+         }
+        catch(Exception $error) {
+            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+        }
     }
 
     // get Application GradeList
     public function getApplicationGradeList(Request $request)
     {
+        try{
         $validator = \Validator::make($request->all(), [
             'branch_id' => 'required',
         ]);
@@ -25330,11 +25455,16 @@ try{
             $gradeDetails = $conn->table('classes')->get();
             return $this->successResponse($gradeDetails, 'Grade record fetch successfully');
         }
+         }
+        catch(Exception $error) {
+            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+        }
     }
 
     // updatePicture settings
     public function forumImageStore(Request $request)
     {
+        try{
         $path = '/public/' . $request->branch_id . '/forum/upload/';
 
         $fileName = $request->filename . '_' . time() . '.' .  $request->file_extension;
@@ -25345,10 +25475,15 @@ try{
         $data['path'] = $path;
         $data['file_name'] = $fileName;
         return  $data;
+         }
+        catch(Exception $error) {
+            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+        }
     }
     // student Profile
     public function getStudentProfileInfo(Request $request)
     {
+        try{
         $validator = \Validator::make($request->all(), [
             'branch_id' => 'required',
             'student_id' => 'required'
@@ -25376,11 +25511,15 @@ try{
             }
             return $this->successResponse($studentObj, 'Student details fetch successfully');
         }
+         }
+        catch(Exception $error) {
+            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+        }
     }
     // update Student profile info
     public function updateStudentProfileInfo(Request $request)
     {
-
+try{
         $validator = \Validator::make($request->all(), [
             'id' => "required",
             'student_id' => "required",
@@ -25420,11 +25559,16 @@ try{
                 return $this->successResponse([], 'Your profile info has been update successfuly.');
             }
         }
+         }
+        catch(Exception $error) {
+            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+        }
     }
 
     // update Student Picture settings
     public function updateStudentPicture(Request $request)
     {
+        try{
         $validator = \Validator::make($request->all(), [
             'id' => 'required',
             'token' => 'required',
@@ -25470,10 +25614,15 @@ try{
                 }
             }
         }
+         }
+        catch(Exception $error) {
+            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+        }
     }
     // update parent Picture settings
     public function updateParentPicture(Request $request)
     {
+        try{
         $validator = \Validator::make($request->all(), [
             'id' => 'required',
             'token' => 'required',
@@ -25519,10 +25668,15 @@ try{
                 }
             }
         }
+         }
+        catch(Exception $error) {
+            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+        }
     }
     // getCheckInOutTimeList
     public function getCheckInOutTimeList(Request $request)
     {
+        try{
         $validator = \Validator::make($request->all(), [
             'branch_id' => 'required',
             'token' => 'required',
@@ -25537,11 +25691,15 @@ try{
             $leaveTypeDetails = $conn->table('check_in_out_time as c')->select('c.*')->get();
             return $this->successResponse($leaveTypeDetails, 'Check In/Out Time record fetch successfully');
         }
+         }
+        catch(Exception $error) {
+            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+        }
     }
     // get CheckInOutTime row details
     public function getCheckInOutTimeDetails(Request $request)
     {
-
+        try{
         $validator = \Validator::make($request->all(), [
             'id' => 'required',
             'branch_id' => 'required',
@@ -25558,10 +25716,15 @@ try{
             $leaveTypeDetails = $conn->table('check_in_out_time')->where('id', $id)->first();
             return $this->successResponse($leaveTypeDetails, 'Check In/Out Time row fetch successfully');
         }
+         }
+        catch(Exception $error) {
+            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+        }
     }
     // update CheckInOutTime
     public function updateCheckInOutTime(Request $request)
     {
+        try{
         $id = $request->id;
         $validator = \Validator::make($request->all(), [
             'branch_id' => 'required',
@@ -25589,12 +25752,17 @@ try{
                 return $this->send500Error('Something went wrong.', ['error' => 'Something went wrong']);
             }
         }
+
+         }
+        catch(Exception $error) {
+            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+        }
     }
 
     // add BankAccount
     public function addBankAccount(Request $request)
     {
-
+        try{
         $validator = \Validator::make($request->all(), [
             'token' => 'required',
             'branch_id' => 'required',
@@ -25638,11 +25806,15 @@ try{
                 return $this->successResponse($success, 'Bank Account has been successfully saved');
             }
         }
+         }
+        catch(Exception $error) {
+            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+        }
     }
     // get BankAccounts
     public function getBankAccountList(Request $request)
     {
-
+        try{
         $validator = \Validator::make($request->all(), [
             'token' => 'required',
             'branch_id' => 'required',
@@ -25659,11 +25831,15 @@ try{
                 ->leftJoin('banks as b', 'ba.bank_name', '=', 'b.id')->whereNull('ba.deleted_at')->get()->toArray();
             return $this->successResponse($bankAccountDetails, 'Bank Account record fetch successfully');
         }
+         }
+        catch(Exception $error) {
+            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+        }
     }
     // get Bank Account row details
     public function getBankAccountDetails(Request $request)
     {
-
+        try{
         $validator = \Validator::make($request->all(), [
             'id' => 'required',
             'branch_id' => 'required',
@@ -25680,10 +25856,15 @@ try{
             $bankAccountDetails = $conn->table('bank_account')->where('id', $bank_account_id)->first();
             return $this->successResponse($bankAccountDetails, 'Bank Account row fetch successfully');
         }
+         }
+        catch(Exception $error) {
+            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+        }
     }
     // update BankAccount
     public function updateBankAccount(Request $request)
     {
+        try{
         $id = $request->id;
         $validator = \Validator::make($request->all(), [
             'token' => 'required',
@@ -25729,10 +25910,16 @@ try{
                 return $this->successResponse($success, 'Bank Account has been successfully Updated');
             }
         }
+         }
+        catch(Exception $error) {
+            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+        }
+
     }
     // delete BankAccount
     public function deleteBankAccount(Request $request)
     {
+    try{
         $validator = \Validator::make($request->all(), [
             'token' => 'required',
             'id' => 'required',
@@ -25756,10 +25943,15 @@ try{
                 return $this->send500Error('Something went wrong.', ['error' => 'Something went wrong']);
             }
         }
+         }
+        catch(Exception $error) {
+            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+        }
     }
     // bank Account Status
     public function bankAccountStatus(Request $request)
     {
+        try{
         $validator = \Validator::make($request->all(), [
             'token' => 'required',
             'id' => 'required',
@@ -25789,13 +25981,17 @@ try{
                 return $this->send500Error('Something went wrong.', ['error' => 'Something went wrong']);
             }
         }
+         }
+        catch(Exception $error) {
+            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+        }
     }
 
 
     // addBank
     public function addBank(Request $request)
     {
-
+try{
         $validator = \Validator::make($request->all(), [
             'name' => 'required',
             'country' => 'required',
@@ -25822,10 +26018,15 @@ try{
                 return $this->successResponse($success, 'Bank has been successfully saved');
             }
         }
+         }
+        catch(Exception $error) {
+            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+        }
     }
     // getBankList
     public function getBankList(Request $request)
     {
+        try{
         $validator = \Validator::make($request->all(), [
             'branch_id' => 'required',
             'token' => 'required',
@@ -25844,11 +26045,15 @@ try{
                 })->get();
             return $this->successResponse($bankDetails, 'Bank record fetch successfully');
         }
+         }
+        catch(Exception $error) {
+            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+        }
     }
     // get Bank row details
     public function getBankDetails(Request $request)
     {
-
+    try{
         $validator = \Validator::make($request->all(), [
             'id' => 'required',
             'branch_id' => 'required',
@@ -25865,10 +26070,16 @@ try{
             $bankDetails = $conn->table('banks')->where('id', $id)->first();
             return $this->successResponse($bankDetails, 'Bank row fetch successfully');
         }
+         }
+        catch(Exception $error) {
+            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+        }
+
     }
     // update Bank
     public function updateBank(Request $request)
     {
+    try{
         $id = $request->id;
         $validator = \Validator::make($request->all(), [
             'name' => 'required',
@@ -25896,11 +26107,15 @@ try{
                 return $this->send500Error('Something went wrong.', ['error' => 'Something went wrong']);
             }
         }
+         }
+        catch(Exception $error) {
+            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+        }
     }
     // delete Bank
     public function deleteBank(Request $request)
     {
-
+        try{
         $id = $request->id;
         $validator = \Validator::make($request->all(), [
             'token' => 'required',
@@ -25923,12 +26138,16 @@ try{
                 return $this->send500Error('Something went wrong.', ['error' => 'Something went wrong']);
             }
         }
+         }
+        catch(Exception $error) {
+            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+        }
     }
 
     // get bulletin
     public function getBuletinBoardList(Request $request)
     {
-
+        try{
         $validator = \Validator::make($request->all(), [
             // 'token' => 'required',
             'branch_id' => 'required',
@@ -25972,9 +26191,14 @@ try{
 
             return $this->successResponse($buletinDetails, 'Bulletin record fetch successfully');
         }
+         }
+        catch(Exception $error) {
+            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+        }
     }
     public function addBuletinBoard(Request $request)
     {
+        try{
 
         $validator = \Validator::make($request->all(), [
             // 'token' => 'required',
@@ -26136,9 +26360,14 @@ try{
                 return $this->successResponse($success, 'Bulliten Board has been successfully saved');
             }
         }
+         }
+        catch(Exception $error) {
+            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+        }
     }
     public function usernameBuletin(Request $request)
     {
+        try{
         $validator = \Validator::make($request->all(), [
 
             'token' => 'required'
@@ -26157,9 +26386,14 @@ try{
             //   $success = Category::all();
             return $this->successResponse($success, 'user name record fetch successfully');
         }
+         }
+        catch(Exception $error) {
+            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+        }
     }
     public function deleteBuletinBoard(Request $request)
     {
+        try{
         $validator = \Validator::make($request->all(), [
             'token' => 'required',
             'id' => 'required',
@@ -26186,11 +26420,15 @@ try{
                 return $this->send500Error('Something went wrong.', ['error' => 'Something went wrong']);
             }
         }
+         }
+        catch(Exception $error) {
+            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+        }
     }
     // get Event row details
     public function getBuletinBoardDetails(Request $request)
     {
-
+try{
         $validator = \Validator::make($request->all(), [
             'id' => 'required',
             'branch_id' => 'required',
@@ -26234,6 +26472,10 @@ try{
                 ->orderBy('b.id', 'desc')
                 ->where('b.id', $buletin_id)->first();
             return $this->successResponse($buletinDetails, 'Bulletin board row fetch successfully');
+        }
+         }
+        catch(Exception $error) {
+            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
         }
     }
     public function updateBuletinBoard(Request $request)
