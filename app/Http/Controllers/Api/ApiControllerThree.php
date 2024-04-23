@@ -150,121 +150,156 @@ class ApiControllerThree extends BaseController
                 'created_by' => $request->created_by,
                 'created_at' => date("Y-m-d H:i:s")
             ]);
-            $target_user = $request->target_user; // Assuming $target_user is "2,5"
-            $target_user_array = explode(',', $target_user);
-            $target_user_array = array_map('intval', $target_user_array);
-
-            if ($target_user_array == [2, 6]) {
-                $class_id =   $request->class_id;
-                $section_id = $request->section_id;
-                $student_id  = $request->student_id;
-                $getStudent = $conn->table('enrolls as e')->select('s.id', DB::raw('CONCAT(s.last_name, " ", s.first_name) as name'), 's.register_no', 's.roll_no', 's.mobile_no', 's.email', 's.gender', 's.photo')
-                    ->leftJoin('students as s', 'e.student_id', '=', 's.id')
-                    ->when($class_id, function ($query, $class_id) {
-                        return $query->where('e.class_id', $class_id);
-                    })
-                    ->when($section_id, function ($query, $section_id) {
-                        return $query->where('e.section_id', $section_id);
-                    })
-                    ->when($student_id, function ($query, $student_id) {
-                        return $query->where('e.section_id', $student_id);
-                    })
-                    ->where('e.active_status', '=', "0")
-                    ->groupBy('e.student_id')
-                    ->get()->toArray();
-                $assignerID = [];
-                if (isset($getStudent)) {
-                    foreach ($getStudent as $key => $value) {
-                        array_push($assignerID, $value->id);
-                    }
-                }
-                //dd($assignerID);
-                // send leave notifications
-                $user = User::whereIn('user_id', $assignerID)->where([
-                    ['branch_id', '=', $request->branch_id]
-                ])->where(function ($q) {
-                    $q->where('role_id', 'like', '%6%');
-                })->get();
-                // Before sending the notification
-                //\Log::info('Sending notification to users: ' . json_encode($user));
-                Notification::send($user, new StudentEmail($request->branch_id));
-                // After sending the notification
-                //\Log::info('Notification sent successfully to users: ' . json_encode($user));
-            }
-            if ($target_user_array == [2, 5]) {
-                $class_id =   $request->class_id;
-                $section_id = $request->section_id;
-                $parent_id  = $request->parent_id;
-                $getParent = $conn->table('enrolls as e')->select('p.id', DB::raw('CONCAT(p.last_name, " ", p.first_name) as parent_name'))
-                    ->leftJoin('students as s', 'e.student_id', '=', 's.id')
-                    ->leftjoin('parent as p', function ($join) {
-                        $join->on('s.father_id', '=', 'p.id');
-                        $join->orOn('s.mother_id', '=', 'p.id');
-                        $join->orOn('s.guardian_id', '=', 'p.id');
-                    })
-                    ->when($class_id, function ($query, $class_id) {
-                        return $query->where('e.class_id', $class_id);
-                    })
-                    ->when($section_id, function ($query, $section_id) {
-                        return $query->where('e.section_id', $section_id);
-                    })
-                    ->when($parent_id, function ($query, $parent_id) {
-                        return $query->where('p.id', $parent_id);
-                    })
-                    ->where('e.active_status', '=', "0")
-                    ->groupBy('p.id')
-                    ->get()->toArray();
-                $assignerID = [];
-                if (isset($getParent)) {
-                    foreach ($getParent as $key => $value) {
-                        array_push($assignerID, $value->id);
-                    }
-                }
-                //dd($assignerID);
-                // send leave notifications
-                $user = User::whereIn('user_id', $assignerID)->where([
-                    ['branch_id', '=', $request->branch_id]
-                ])->where(function ($q) {
-                    $q->where('role_id', 'like', '%5%');
-                })->get();
-                //  dd( $user);
-                // Before sending the notification
-                // \Log::info('Sending notification to users: ' . json_encode($user));
-                Notification::send($user, new ParentEmail($request->branch_id));
-                // After sending the notification
-                //\Log::info('Notification sent successfully to users: ' . json_encode($user));
-            }
-            if ($target_user_array == [2, 4]) {
-                $deptId = $request->department_id;
-                $getStaff = $conn->table('staffs as stf')
-                    ->select(
-                        'stf.id'
-                    )->when($deptId, function ($query, $deptId) {
-                        return $query->where('stf.department_id', $deptId);
-                    })
-                    ->where('stf.is_active', '=', '0')
-                    ->groupBy('stf.id')
-                    ->get()->toArray();
-                $assignerID = [];
-                if (isset($getStaff)) {
-                    foreach ($getStaff as $key => $value) {
-                        array_push($assignerID, $value->id);
-                    }
-                }
-                $user = User::whereIn('user_id', $assignerID)->where([
-                    ['branch_id', '=', $request->branch_id]
-                ])->where(function ($q) {
-                    $q->where('role_id', 'like', '%4%');
-                })->get();
-
-                Notification::send($user, new TeacherEmail($request->branch_id));
-            }
             $success = [];
             if (!$query) {
                 return $this->send500Error('Something went wrong.', ['error' => 'Something went wrong']);
             } else {
                 return $this->successResponse($success, 'Bulliten Board has been successfully saved');
             }
+        }
+    }
+    public function bulletinCronJob(Request $request)
+    {
+        if ($request->secret_key !== 'S6rSMVixPeupH51AO5mVFjkQJ88bnjOO') {
+            return response()->json(['error' => 'Unauthorized.'], 401);
+        }
+        $validator = \Validator::make($request->all(), [
+            'branch_id' => 'required',
+        ]);
+         if (!$validator->passes()) {
+            return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
+        } else {
+
+            $currentDateTime = now();
+            // create new connection
+            $conn = $this->createNewConnection($request->branch_id);
+
+            $itemsToPublish = $conn->table('bulletin_boards')->where('publish_date', '<=', $currentDateTime)
+                ->whereNull('notification_sent')
+                ->get();
+        // dd($itemsToPublish);
+            foreach ($itemsToPublish as $item) {
+                
+                $target_user = $item->target_user; // Assuming $target_user is "2,5"
+                $target_user_array = explode(',', $target_user);
+                $target_user_array = array_map('intval', $target_user_array);
+                if ($target_user_array == [2, 6]) {
+                    $class_id =   $item->class_id;
+                    $section_id = $item->section_id;
+                    $student_id  = $item->student_id;
+                    $getStudent = $conn->table('enrolls as e')->select('s.id', DB::raw('CONCAT(s.last_name, " ", s.first_name) as name'), 's.register_no', 's.roll_no', 's.mobile_no', 's.email', 's.gender', 's.photo')
+                        ->leftJoin('students as s', 'e.student_id', '=', 's.id')
+                        ->when($class_id, function ($query, $class_id) {
+                            return $query->where('e.class_id', $class_id);
+                        })
+                        ->when($section_id, function ($query, $section_id) {
+                            return $query->where('e.section_id', $section_id);
+                        })
+                        ->when($student_id, function ($query, $student_id) {
+                            return $query->where('e.section_id', $student_id);
+                        })
+                        ->where('e.active_status', '=', "0")
+                        ->groupBy('e.student_id')
+                        ->get()->toArray();
+                    $assignerID = [];
+                    if (isset($getStudent)) {
+                        foreach ($getStudent as $key => $value) {
+                            array_push($assignerID, $value->id);
+                        }
+                    }
+                    //dd($assignerID);
+                    // send leave notifications
+                    $user = User::whereIn('user_id', $assignerID)->where([
+                        ['branch_id', '=', $request->branch_id]
+                    ])->where(function ($q) {
+                        $q->where('role_id', 'like', '%6%');
+                    })->get();
+                
+                 Notification::send($user, new StudentEmail($request->branch_id));
+                 // Update item to mark notification as sent
+                 $conn->table('bulletin_boards')->where('id', $item->id)->update([
+                    'notification_sent' => true,
+                ]);
+                
+                }
+                if ($target_user_array == [2, 5]) {
+                 //  dd("testing");
+                    $class_id =   $item->class_id;
+                    $section_id = $item->section_id;
+                    $parent_id  = $item->parent_id;
+                    $getParent = $conn->table('enrolls as e')->select('p.id', DB::raw('CONCAT(p.last_name, " ", p.first_name) as parent_name'))
+                        ->leftJoin('students as s', 'e.student_id', '=', 's.id')
+                        ->leftjoin('parent as p', function ($join) {
+                            $join->on('s.father_id', '=', 'p.id');
+                            $join->orOn('s.mother_id', '=', 'p.id');
+                            $join->orOn('s.guardian_id', '=', 'p.id');
+                        })
+                        ->when($class_id, function ($query, $class_id) {
+                            return $query->where('e.class_id', $class_id);
+                        })
+                        ->when($section_id, function ($query, $section_id) {
+                            return $query->where('e.section_id', $section_id);
+                        })
+                        ->when($parent_id, function ($query, $parent_id) {
+                            return $query->where('p.id', $parent_id);
+                        })
+                        ->where('e.active_status', '=', "0")
+                        ->groupBy('p.id')
+                        ->get()->toArray();
+                    $assignerID = [];
+                    if (isset($getParent)) {
+                        foreach ($getParent as $key => $value) {
+                            array_push($assignerID, $value->id);
+                        }
+                    }
+                    //dd($assignerID);
+                    // send leave notifications
+                    $user = User::whereIn('user_id', $assignerID)->where([
+                        ['branch_id', '=', $request->branch_id]
+                    ])->where(function ($q) {
+                        $q->where('role_id', 'like', '%5%');
+                    })->get();
+                
+                    Notification::send($user, new ParentEmail($request->branch_id));
+                     // Update item to mark notification as sent
+                $conn->table('bulletin_boards')->where('id', $item->id)->update([
+                    'notification_sent' => true,
+                ]);
+                }
+                if ($target_user_array == [2, 4]) {
+                    $deptId = $item->department_id;
+                    $getStaff = $conn->table('staffs as stf')
+                        ->select(
+                            'stf.id'
+                        )->when($deptId, function ($query, $deptId) {
+                            return $query->where('stf.department_id', $deptId);
+                        })
+                        ->where('stf.is_active', '=', '0')
+                        ->groupBy('stf.id')
+                        ->get()->toArray();
+                    $assignerID = [];
+                    if (isset($getStaff)) {
+                        foreach ($getStaff as $key => $value) {
+                            array_push($assignerID, $value->id);
+                        }
+                    }
+                    $user = User::whereIn('user_id', $assignerID)->where([
+                        ['branch_id', '=', $request->branch_id]
+                    ])->where(function ($q) {
+                        $q->where('role_id', 'like', '%4%');
+                    })->get();
+
+                  Notification::send($user, new TeacherEmail($request->branch_id));
+                 // Update item to mark notification as sent
+                 $conn->table('bulletin_boards')->where('id', $item->id)->update([
+                    'notification_sent' => true,
+                ]);
+                }
+
+               
+            }
+            
+            return $this->successResponse([], 'Notifications sent successfully.');
         }
     }
     public function usernameBuletin(Request $request)

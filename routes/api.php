@@ -73,6 +73,7 @@ Route::post('application/grade/list', [ApiController::class, 'getApplicationGrad
 Route::post('application/email/', [ApiController::class, 'emailApplication']);
 Route::post('application/verify', [ApiController::class, 'verifyApplication']);
 Route::post('register_number', [ApiController::class, 'registerNumber']);
+Route::post('bulletin_board/cronJob', [ApiControllerThree::class, 'bulletinCronJob']);
 // 2fa end
 // Route::group(['middleware' => ['auth:api', 'logroute']], function () {
 // Route::group(['middleware' => ['auth:api','check-single-session-api', 'logroute']], function () {

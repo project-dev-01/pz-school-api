@@ -11577,7 +11577,7 @@ class ApiControllerOne extends BaseController
                 $id =  $conn->table('classes')->select("department_id")->where("id", $class_id)->first();
                 $department_id = $id->department_id;
             }
-            $studentInterviewDetails = $conn->table('student_interview as si')
+            $studentInterviewDetails = $conn->table('student_interview_record as si')
                 ->select(
                     'd1.name as department_name',
                     'se.name as section_name',
@@ -11637,7 +11637,7 @@ class ApiControllerOne extends BaseController
             $class_id = $request->class_id;
             $dept_id =  $conn->table('classes')->select("department_id")->where("id", $class_id)->first();
 
-            $interviewId  = $conn->table('student_interview')->insertGetId([
+            $interviewId  = $conn->table('student_interview_record')->insertGetId([
                 'title' => $request->title,
                 'type' =>  $request->type,
                 'attachment' => $fileName,
