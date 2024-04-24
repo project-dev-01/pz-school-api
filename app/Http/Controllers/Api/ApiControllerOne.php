@@ -11558,6 +11558,7 @@ class ApiControllerOne extends BaseController
     }
     public function getStudentInterviewList(Request $request)
     {
+        //return $request;
         $validator = \Validator::make($request->all(), [
             // 'token' => 'required',
             'branch_id' => 'required',
@@ -11574,19 +11575,19 @@ class ApiControllerOne extends BaseController
             $conn = $this->createNewConnection($request->branch_id);
             if (empty($department_id)) {
                 $class_id = $request->class_id;
-                $id =  $conn->table('classes')->select("department_id")->where("id", $class_id)->first();
-                $department_id = $id->department_id;
+                $department  =  $conn->table('classes')->select("department_id")->where("id", $class_id)->first();
+                $department_id = $department->department_id;
             }
             $studentInterviewDetails = $conn->table('student_interview_record as si')
                 ->select(
                     'd1.name as department_name',
                     'se.name as section_name',
                     'cl.name as class_name',
-                    DB::raw('CONCAT(st.last_name, " ", st.first_name) as student_name'),
+                    DB::raw('CONCAT(s.last_name, " ", s.first_name) as student_name'),
                     DB::raw('MAX(sin.type) as latest_type'),
                     'sin.type',
                     'sin.comment',
-                    'sin.title',
+                    'si.title',
                     'sin.id'
                 )
                 ->leftJoin('students as s', 'si.student_id', '=', 's.id')
@@ -11598,7 +11599,7 @@ class ApiControllerOne extends BaseController
                 ->where('si.section_id', $section_id)
                 ->where('si.department_id', $department_id)
                 ->where('si.student_id', $student_id)
-                ->groupBy('d1.name', 'se.name', 'cl.name', 'name', 'sin.comment', 'sin.title')
+               // ->groupBy('d1.name', 'se.name', 'cl.name', 'sin.comment', 'sin.title')
                 ->get();
 
 
