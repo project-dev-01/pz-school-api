@@ -296,7 +296,7 @@ class ApiController extends BaseController
                 }
             } catch (Exception $e) {
                 $result = null;
-                 return $this->sendCommonError('School Type Not Found.', ['error' => 'School Type Not Found']);
+                return $this->sendCommonError('School Type Not Found.', ['error' => 'School Type Not Found']);
             }
         }
     }
@@ -14193,7 +14193,8 @@ class ApiController extends BaseController
                         's.mobile_no',
                         's.email',
                         's.gender',
-                        's.photo'
+                        's.photo',
+                        'e.attendance_no'
                     )
                     ->join('students as s', 'e.student_id', '=', 's.id');
 
@@ -14528,7 +14529,7 @@ class ApiController extends BaseController
                     "japanese_association_membership_number_student" => $request->japanese_association_membership_number_student,
                     'nric_photo' => $nric_fileName,
                     // 'japanese_association_membership_image_principal' => $image_principal_fileName,
-                    'created_at' => date("Y-m-d H:i:s")
+                    'updated_at' => date("Y-m-d H:i:s")
                 ];
                 $oldData = $conn->table('students')->find($request->student_id);
                 $conn->table('students')->where('id', $request->student_id)->update($data);
@@ -14665,7 +14666,8 @@ class ApiController extends BaseController
                     'e.class_id',
                     'e.section_id',
                     'e.session_id',
-                    'e.semester_id'
+                    'e.semester_id',
+                    'e.attendance_no'
                 )
                 ->leftJoin('enrolls as e', 's.id', '=', 'e.student_id')
                 ->leftJoin('classes as c', 'e.class_id', '=', 'c.id')
