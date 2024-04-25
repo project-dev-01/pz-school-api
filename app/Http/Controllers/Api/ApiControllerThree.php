@@ -1775,15 +1775,15 @@ class ApiControllerThree extends BaseController
                 }
             }
             // enableSchoolInfo
-            if ($enableSchoolInfo == "1") {
-                $SchoolInfo = $Connection->table('global_settings')
-                    ->select(
-                        'address as school_address',
-                        'mobile_no as school_mobile_no',
-                        'email as school_email'
-                    )
-                    ->first();
-            }
+            // if ($enableSchoolInfo == "1") {
+            //     $SchoolInfo = $Connection->table('global_settings')
+            //         ->select(
+            //             'address as school_address',
+            //             'mobile_no as school_mobile_no',
+            //             'email as school_email'
+            //         )
+            //         ->first();
+            // }
             // attendance information
             // if ($attendance_info == "1") {
             //     $attendanceInfo = $Connection->table('enrolls as en')
