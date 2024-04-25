@@ -23477,6 +23477,7 @@ try{
     // delete ExcusedReason
     public function deleteExcusedReason(Request $request)
     {
+       try {
 
         $id = $request->id;
         $validator = \Validator::make($request->all(), [
@@ -23502,6 +23503,10 @@ try{
             } else {
                 return $this->send500Error('Something went wrong.', ['error' => 'Something went wrong']);
             }
+        }
+           }
+        catch(Exception $error) {
+            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
         }
     }
 
