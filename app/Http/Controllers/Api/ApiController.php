@@ -13928,7 +13928,8 @@ class ApiController extends BaseController
 
         if (!$validator->passes()) {
             return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
-        } else {
+        }
+         else {
             // get data
             $cache_time = config('constants.cache_time');
             $cache_students = config('constants.cache_students');
@@ -13937,25 +13938,52 @@ class ApiController extends BaseController
             // Check if the data is cached
             if (Cache::has($cacheKey) && !($department_id || $class_id || $session_id || $section_id || $status)) {
                 // If cached and no filters are applied, return cached data
-                \Log::info('cacheKey ' . json_encode($cacheKey));
-                $students = Cache::get($cacheKey);
-            } else {
-                // create new connection
+                // \Log::info('cacheKey ' . json_encode($cacheKey));
+                // $student = Cache::get($cacheKey);
+                $con = $this->createNewConnection($request->branch_id);
+                $students =  $con->table('enrolls as e')
+                ->select(
+                    's.id',
+                    DB::raw('CONCAT(s.last_name, " ", s.first_name) as name'),
+                    DB::raw('CONCAT(s.last_name_common, " ", s.first_name_common) as name_common'),
+                    's.register_no',
+                    's.roll_no',
+                    's.mobile_no',
+                    's.email',
+                    's.gender',
+                    's.photo',
+                    'e.attendance_no'
+                )
+                ->join('students as s', 'e.student_id', '=', 's.id')
+                ->leftJoin('termination as t', function ($join) {
+                    $join->on('e.student_id', '=', 't.student_id'); // Corrected join condition
+                })
+                ->whereNull('t.student_id')
+                ->groupBy('e.student_id')->get()->toArray();
+            } 
+            else{
+                //  create new connection
                 $con = $this->createNewConnection($request->branch_id);
                 $query = $con->table('enrolls as e')
-                    ->select(
-                        's.id',
-                        DB::raw('CONCAT(s.last_name, " ", s.first_name) as name'),
-                        DB::raw('CONCAT(s.last_name_common, " ", s.first_name_common) as name_common'),
-                        's.register_no',
-                        's.roll_no',
-                        's.mobile_no',
-                        's.email',
-                        's.gender',
-                        's.photo'
-                    )
-                    ->join('students as s', 'e.student_id', '=', 's.id');
-
+                ->select(
+                    's.id',
+                    DB::raw('CONCAT(s.last_name, " ", s.first_name) as name'),
+                    DB::raw('CONCAT(s.last_name_common, " ", s.first_name_common) as name_common'),
+                    's.register_no',
+                    's.roll_no',
+                    's.mobile_no',
+                    's.email',
+                    's.gender',
+                    's.photo',
+                    't.student_id'
+                )
+                ->join('students as s', 'e.student_id', '=', 's.id')
+                ->join('termination as t' ,'s.id','=','t.student_id')
+              
+                ;
+               
+                // Corrected join condition
+            
                 if (isset($request->department_id) && filled($request->department_id)) {
                     $query->where('e.department_id', $request->department_id);
                 }
@@ -13994,6 +14022,7 @@ class ApiController extends BaseController
             return $this->successResponse($students, 'Student record fetch successfully');
         }
     }
+
 
 
     // update Student
@@ -26745,6 +26774,7 @@ class ApiController extends BaseController
     // get Student row details
     public function getStudentUpdateInfoDetails(Request $request)
     {
+
         $validator = \Validator::make($request->all(), [
             'id' => 'required',
             'branch_id' => 'required',
@@ -26811,26 +26841,9 @@ class ApiController extends BaseController
                             ${$key}['old_value'] =  Helper::decryptStringData($old->$key);
                             ${$key}['new_value'] =  Helper::decryptStringData($suc);
                         } else {
-                            if($key == "religion")
-                            {
-                                $religionOldValue = $conn->table('religions')
-                                ->select('id','name')
-                                ->where('id', $old->$key)
-                                ->first();
-                                $religionNewValue = $conn->table('religions')
-                                ->select('id','name')
-                                ->where('id', $suc)
-                                ->first();
-                                ${$key} = [];
-                                ${$key}['old_value'] =  $religionOldValue->name;
-                                ${$key}['new_value'] =  $religionNewValue->name;
-                            }
-                            else
-                            {
-                                ${$key} = [];
-                                ${$key}['old_value'] =  $old->$key;
-                                ${$key}['new_value'] =  $suc;
-                            }
+                            ${$key} = [];
+                            ${$key}['old_value'] =  $old->$key;
+                            ${$key}['new_value'] =  $suc;
                         }
 
                         $studentObj->$key = ${$key};
@@ -26847,7 +26860,6 @@ class ApiController extends BaseController
         }
     }
 
-    
     // getFormFieldList
     public function getFormFieldList(Request $request)
     {
