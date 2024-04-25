@@ -93,8 +93,8 @@ class ApiControllerThree extends BaseController
                 ->leftJoin('parent as p', 'p.id', '=', 'b.parent_id')
                 ->leftJoin('students as st', 'st.id', '=', 'b.student_id')
                 ->where("b.status", 1)
-               // ->where("b.publish", 1)
-               // ->where('b.publish_end_date', '>', $currentDateTime)
+                // ->where("b.publish", 1)
+                // ->where('b.publish_end_date', '>', $currentDateTime)
                 ->groupBy("b.id")
                 ->orderBy('b.id', 'desc')
                 ->get()->toArray();
@@ -145,126 +145,161 @@ class ApiControllerThree extends BaseController
                 'department_id' => $request->department_id,
                 'publish_date' => $request->publish_date,
                 'publish_end_date' => $request->publish_end_date,
-               // 'publish' => !empty($request->publish == "on") ? "1" : "0",
+                // 'publish' => !empty($request->publish == "on") ? "1" : "0",
                 'add_dashboard' =>  !empty($request->add_to_dash == "on") ? "1" : "0",
                 'created_by' => $request->created_by,
                 'created_at' => date("Y-m-d H:i:s")
             ]);
-            $target_user = $request->target_user; // Assuming $target_user is "2,5"
-            $target_user_array = explode(',', $target_user);
-            $target_user_array = array_map('intval', $target_user_array);
-
-            if ($target_user_array == [2, 6]) {
-                $class_id =   $request->class_id;
-                $section_id = $request->section_id;
-                $student_id  = $request->student_id;
-                $getStudent = $conn->table('enrolls as e')->select('s.id', DB::raw('CONCAT(s.last_name, " ", s.first_name) as name'), 's.register_no', 's.roll_no', 's.mobile_no', 's.email', 's.gender', 's.photo')
-                    ->leftJoin('students as s', 'e.student_id', '=', 's.id')
-                    ->when($class_id, function ($query, $class_id) {
-                        return $query->where('e.class_id', $class_id);
-                    })
-                    ->when($section_id, function ($query, $section_id) {
-                        return $query->where('e.section_id', $section_id);
-                    })
-                    ->when($student_id, function ($query, $student_id) {
-                        return $query->where('e.section_id', $student_id);
-                    })
-                    ->where('e.active_status', '=', "0")
-                    ->groupBy('e.student_id')
-                    ->get()->toArray();
-                $assignerID = [];
-                if (isset($getStudent)) {
-                    foreach ($getStudent as $key => $value) {
-                        array_push($assignerID, $value->id);
-                    }
-                }
-                //dd($assignerID);
-                // send leave notifications
-                $user = User::whereIn('user_id', $assignerID)->where([
-                    ['branch_id', '=', $request->branch_id]
-                ])->where(function ($q) {
-                    $q->where('role_id', 'like', '%6%');
-                })->get();
-                // Before sending the notification
-                //\Log::info('Sending notification to users: ' . json_encode($user));
-                Notification::send($user, new StudentEmail($request->branch_id));
-                // After sending the notification
-                //\Log::info('Notification sent successfully to users: ' . json_encode($user));
-            }
-            if ($target_user_array == [2, 5]) {
-                $class_id =   $request->class_id;
-                $section_id = $request->section_id;
-                $parent_id  = $request->parent_id;
-                $getParent = $conn->table('enrolls as e')->select('p.id', DB::raw('CONCAT(p.last_name, " ", p.first_name) as parent_name'))
-                    ->leftJoin('students as s', 'e.student_id', '=', 's.id')
-                    ->leftjoin('parent as p', function ($join) {
-                        $join->on('s.father_id', '=', 'p.id');
-                        $join->orOn('s.mother_id', '=', 'p.id');
-                        $join->orOn('s.guardian_id', '=', 'p.id');
-                    })
-                    ->when($class_id, function ($query, $class_id) {
-                        return $query->where('e.class_id', $class_id);
-                    })
-                    ->when($section_id, function ($query, $section_id) {
-                        return $query->where('e.section_id', $section_id);
-                    })
-                    ->when($parent_id, function ($query, $parent_id) {
-                        return $query->where('p.id', $parent_id);
-                    })
-                    ->where('e.active_status', '=', "0")
-                    ->groupBy('p.id')
-                    ->get()->toArray();
-                $assignerID = [];
-                if (isset($getParent)) {
-                    foreach ($getParent as $key => $value) {
-                        array_push($assignerID, $value->id);
-                    }
-                }
-                //dd($assignerID);
-                // send leave notifications
-                $user = User::whereIn('user_id', $assignerID)->where([
-                    ['branch_id', '=', $request->branch_id]
-                ])->where(function ($q) {
-                    $q->where('role_id', 'like', '%5%');
-                })->get();
-                //  dd( $user);
-                // Before sending the notification
-                // \Log::info('Sending notification to users: ' . json_encode($user));
-                Notification::send($user, new ParentEmail($request->branch_id));
-                // After sending the notification
-                //\Log::info('Notification sent successfully to users: ' . json_encode($user));
-            }
-            if ($target_user_array == [2, 4]) {
-                $deptId = $request->department_id;
-                $getStaff = $conn->table('staffs as stf')
-                    ->select(
-                        'stf.id'
-                    )->when($deptId, function ($query, $deptId) {
-                        return $query->where('stf.department_id', $deptId);
-                    })
-                    ->where('stf.is_active', '=', '0')
-                    ->groupBy('stf.id')
-                    ->get()->toArray();
-                $assignerID = [];
-                if (isset($getStaff)) {
-                    foreach ($getStaff as $key => $value) {
-                        array_push($assignerID, $value->id);
-                    }
-                }
-                $user = User::whereIn('user_id', $assignerID)->where([
-                    ['branch_id', '=', $request->branch_id]
-                ])->where(function ($q) {
-                    $q->where('role_id', 'like', '%4%');
-                })->get();
-
-                Notification::send($user, new TeacherEmail($request->branch_id));
-            }
             $success = [];
             if (!$query) {
                 return $this->send500Error('Something went wrong.', ['error' => 'Something went wrong']);
             } else {
                 return $this->successResponse($success, 'Bulliten Board has been successfully saved');
             }
+        }
+    }
+    public function bulletinCronJob(Request $request)
+    {
+        if ($request->secret_key !== 'S6rSMVixPeupH51AO5mVFjkQJ88bnjOO') {
+            return response()->json(['error' => 'Unauthorized.'], 401);
+        }
+        $validator = \Validator::make($request->all(), [
+            'branch_id' => 'required',
+        ]);
+         if (!$validator->passes()) {
+            return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
+        } else {
+
+            $currentDateTime = now();
+            // create new connection
+            $conn = $this->createNewConnection($request->branch_id);
+
+            $itemsToPublish = $conn->table('bulletin_boards')->where('publish_date', '<=', $currentDateTime)
+                ->whereNull('notification_sent')
+                ->get();
+        // dd($itemsToPublish);
+            foreach ($itemsToPublish as $item) {
+                
+                $target_user = $item->target_user; // Assuming $target_user is "2,5"
+                $target_user_array = explode(',', $target_user);
+                $target_user_array = array_map('intval', $target_user_array);
+                if ($target_user_array == [2, 6]) {
+                    $class_id =   $item->class_id;
+                    $section_id = $item->section_id;
+                    $student_id  = $item->student_id;
+                    $getStudent = $conn->table('enrolls as e')->select('s.id', DB::raw('CONCAT(s.last_name, " ", s.first_name) as name'), 's.register_no', 's.roll_no', 's.mobile_no', 's.email', 's.gender', 's.photo')
+                        ->leftJoin('students as s', 'e.student_id', '=', 's.id')
+                        ->when($class_id, function ($query, $class_id) {
+                            return $query->where('e.class_id', $class_id);
+                        })
+                        ->when($section_id, function ($query, $section_id) {
+                            return $query->where('e.section_id', $section_id);
+                        })
+                        ->when($student_id, function ($query, $student_id) {
+                            return $query->where('e.section_id', $student_id);
+                        })
+                        ->where('e.active_status', '=', "0")
+                        ->groupBy('e.student_id')
+                        ->get()->toArray();
+                    $assignerID = [];
+                    if (isset($getStudent)) {
+                        foreach ($getStudent as $key => $value) {
+                            array_push($assignerID, $value->id);
+                        }
+                    }
+                    //dd($assignerID);
+                    // send leave notifications
+                    $user = User::whereIn('user_id', $assignerID)->where([
+                        ['branch_id', '=', $request->branch_id]
+                    ])->where(function ($q) {
+                        $q->where('role_id', 'like', '%6%');
+                    })->get();
+                
+                 Notification::send($user, new StudentEmail($request->branch_id));
+                 // Update item to mark notification as sent
+                 $conn->table('bulletin_boards')->where('id', $item->id)->update([
+                    'notification_sent' => true,
+                ]);
+                
+                }
+                if ($target_user_array == [2, 5]) {
+                 //  dd("testing");
+                    $class_id =   $item->class_id;
+                    $section_id = $item->section_id;
+                    $parent_id  = $item->parent_id;
+                    $getParent = $conn->table('enrolls as e')->select('p.id', DB::raw('CONCAT(p.last_name, " ", p.first_name) as parent_name'))
+                        ->leftJoin('students as s', 'e.student_id', '=', 's.id')
+                        ->leftjoin('parent as p', function ($join) {
+                            $join->on('s.father_id', '=', 'p.id');
+                            $join->orOn('s.mother_id', '=', 'p.id');
+                            $join->orOn('s.guardian_id', '=', 'p.id');
+                        })
+                        ->when($class_id, function ($query, $class_id) {
+                            return $query->where('e.class_id', $class_id);
+                        })
+                        ->when($section_id, function ($query, $section_id) {
+                            return $query->where('e.section_id', $section_id);
+                        })
+                        ->when($parent_id, function ($query, $parent_id) {
+                            return $query->where('p.id', $parent_id);
+                        })
+                        ->where('e.active_status', '=', "0")
+                        ->groupBy('p.id')
+                        ->get()->toArray();
+                    $assignerID = [];
+                    if (isset($getParent)) {
+                        foreach ($getParent as $key => $value) {
+                            array_push($assignerID, $value->id);
+                        }
+                    }
+                    //dd($assignerID);
+                    // send leave notifications
+                    $user = User::whereIn('user_id', $assignerID)->where([
+                        ['branch_id', '=', $request->branch_id]
+                    ])->where(function ($q) {
+                        $q->where('role_id', 'like', '%5%');
+                    })->get();
+                
+                    Notification::send($user, new ParentEmail($request->branch_id));
+                     // Update item to mark notification as sent
+                $conn->table('bulletin_boards')->where('id', $item->id)->update([
+                    'notification_sent' => true,
+                ]);
+                }
+                if ($target_user_array == [2, 4]) {
+                    $deptId = $item->department_id;
+                    $getStaff = $conn->table('staffs as stf')
+                        ->select(
+                            'stf.id'
+                        )->when($deptId, function ($query, $deptId) {
+                            return $query->where('stf.department_id', $deptId);
+                        })
+                        ->where('stf.is_active', '=', '0')
+                        ->groupBy('stf.id')
+                        ->get()->toArray();
+                    $assignerID = [];
+                    if (isset($getStaff)) {
+                        foreach ($getStaff as $key => $value) {
+                            array_push($assignerID, $value->id);
+                        }
+                    }
+                    $user = User::whereIn('user_id', $assignerID)->where([
+                        ['branch_id', '=', $request->branch_id]
+                    ])->where(function ($q) {
+                        $q->where('role_id', 'like', '%4%');
+                    })->get();
+
+                  Notification::send($user, new TeacherEmail($request->branch_id));
+                 // Update item to mark notification as sent
+                 $conn->table('bulletin_boards')->where('id', $item->id)->update([
+                    'notification_sent' => true,
+                ]);
+                }
+
+               
+            }
+            
+            return $this->successResponse([], 'Notifications sent successfully.');
         }
     }
     public function usernameBuletin(Request $request)
@@ -413,7 +448,7 @@ class ApiControllerThree extends BaseController
                 'status' => 1,
                 'publish_date' => $request->publish_date,
                 'publish_end_date' => $request->publish_end_dates,
-              //  'publish' => !empty($request->publish == "on") ? "1" : "0",
+                //  'publish' => !empty($request->publish == "on") ? "1" : "0",
                 'updated_at' => date("Y-m-d H:i:s"),
                 'updated_by' => $request->updated_by,
             ]);
@@ -630,7 +665,7 @@ class ApiControllerThree extends BaseController
                     $query->where('b.section_id', $section_id)
                         ->orWhereNull('b.section_id');
                 })
-               // ->where("b.publish", 1)
+                // ->where("b.publish", 1)
                 ->where("b.status", 1)
                 ->where(function ($query) use ($parent_id, $role_id) {
                     $query->where('b.parent_id', $parent_id)
@@ -753,7 +788,7 @@ class ApiControllerThree extends BaseController
                         ->orWhereNull('b.section_id');
                 })
                 ->where("b.status", 1)
-              //  ->where("b.publish", 1)
+                //  ->where("b.publish", 1)
                 ->where(function ($query) use ($parent_id, $role_id) {
                     $query->where('b.parent_id', $parent_id)
                         ->orWhereNull('b.parent_id')
@@ -1048,7 +1083,7 @@ class ApiControllerThree extends BaseController
                         ->whereRaw("FIND_IN_SET('$role_id', b.target_user)");
                 })
                 ->where("b.status", 1)
-               // ->where("b.publish", 1)
+                // ->where("b.publish", 1)
                 ->where("bi.parent_imp", '1')
                 // ->where(function ($query) use ($currentDateTime) {
                 //     $query->where('b.publish_end_date', '>', $currentDateTime)
@@ -1653,26 +1688,35 @@ class ApiControllerThree extends BaseController
                 $getParentInfo = $Connection->table('enrolls as en')
                     ->select(
                         'en.student_id',
-                        DB::raw("CASE WHEN st.father_id IS NOT NULL THEN CONCAT(pf.first_name, ' ', pf.last_name) END as father_name"),
-                        DB::raw("CASE WHEN st.father_id IS NOT NULL THEN CONCAT(pf.first_name_furigana, ' ', pf.last_name_furigana) END as father_fur_name"),
-                        DB::raw("CASE WHEN st.father_id IS NOT NULL THEN CONCAT(pf.first_name_english, ' ', pf.last_name_english) END as father_eng_name"),
+                        DB::raw("CASE WHEN st.father_id IS NOT NULL THEN pf.first_name  END as father_first_name"),
+                        DB::raw("CASE WHEN st.father_id IS NOT NULL THEN pf.last_name END as father_last_name"),
+                        DB::raw("CASE WHEN st.father_id IS NOT NULL THEN pf.first_name_furigana END as father_fur_first_name"),
+                        DB::raw("CASE WHEN st.father_id IS NOT NULL THEN pf.last_name_furigana END as father_fur_last_name"),
+                        DB::raw("CASE WHEN st.father_id IS NOT NULL THEN pf.first_name_english END as father_eng_first_name"),
+                        DB::raw("CASE WHEN st.father_id IS NOT NULL THEN pf.last_name_english END as father_eng_last_name"),
                         DB::raw("CASE WHEN st.father_id IS NOT NULL THEN pf.nationality END as father_nationality"),
                         DB::raw("CASE WHEN st.father_id IS NOT NULL THEN pf.email END as father_email"),
                         DB::raw("CASE WHEN st.father_id IS NOT NULL THEN pf.occupation END as father_occupation"),
                         DB::raw("CASE WHEN st.father_id IS NOT NULL THEN pf.mobile_no END as father_mobile_no"),
 
                         // Mother's details
-                        DB::raw("CASE WHEN st.mother_id IS NOT NULL THEN CONCAT(pm.first_name, ' ', pm.last_name) END as mother_name"),
-                        DB::raw("CASE WHEN st.mother_id IS NOT NULL THEN CONCAT(pm.first_name_furigana, ' ', pm.last_name_furigana) END as mother_fur_name"),
-                        DB::raw("CASE WHEN st.mother_id IS NOT NULL THEN CONCAT(pm.first_name_english, ' ', pm.last_name_english) END as mother_eng_name"),
+                        DB::raw("CASE WHEN st.mother_id IS NOT NULL THEN pm.first_name  END as mother_first_name"),
+                        DB::raw("CASE WHEN st.mother_id IS NOT NULL THEN pm.last_name END as mother_last_name"),
+                        DB::raw("CASE WHEN st.mother_id IS NOT NULL THEN pm.first_name_furigana END as mother_fur_first_name"),
+                        DB::raw("CASE WHEN st.mother_id IS NOT NULL THEN pm.last_name_furigana END as mother_fur_last_name"),
+                        DB::raw("CASE WHEN st.mother_id IS NOT NULL THEN pm.first_name_english END as mother_eng_first_name"),
+                        DB::raw("CASE WHEN st.mother_id IS NOT NULL THEN pm.last_name_english END as mother_eng_last_name"),
                         DB::raw("CASE WHEN st.mother_id IS NOT NULL THEN pm.nationality END as mother_nationality"),
                         DB::raw("CASE WHEN st.mother_id IS NOT NULL THEN pm.email END as mother_email"),
                         DB::raw("CASE WHEN st.mother_id IS NOT NULL THEN pm.occupation END as mother_occupation"),
                         DB::raw("CASE WHEN st.mother_id IS NOT NULL THEN pm.mobile_no END as mother_mobile_no"),
                         // Guardian's details
-                        DB::raw("CASE WHEN st.guardian_id IS NOT NULL THEN CONCAT(pg.first_name, ' ', pg.last_name) END as guardian_name"),
-                        DB::raw("CASE WHEN st.guardian_id IS NOT NULL THEN CONCAT(pg.first_name_furigana, ' ', pg.last_name_furigana) END as guardian_fur_name"),
-                        DB::raw("CASE WHEN st.guardian_id IS NOT NULL THEN CONCAT(pg.first_name_english, ' ', pg.last_name_english) END as guardian_eng_name"),
+                        DB::raw("CASE WHEN st.guardian_id IS NOT NULL THEN pg.first_name  END as guardian_first_name"),
+                        DB::raw("CASE WHEN st.guardian_id IS NOT NULL THEN pg.last_name END as guardian_last_name"),
+                        DB::raw("CASE WHEN st.guardian_id IS NOT NULL THEN pg.first_name_furigana END as guardian_fur_first_name"),
+                        DB::raw("CASE WHEN st.guardian_id IS NOT NULL THEN pg.last_name_furigana END as guardian_fur_last_name"),
+                        DB::raw("CASE WHEN st.guardian_id IS NOT NULL THEN pg.first_name_english END as guardian_eng_first_name"),
+                        DB::raw("CASE WHEN st.guardian_id IS NOT NULL THEN pg.last_name_english END as guardian_eng_last_name"),
                         DB::raw("CASE WHEN st.guardian_id IS NOT NULL THEN pg.email END as guardian_email"),
                         DB::raw("CASE WHEN st.guardian_id IS NOT NULL THEN pg.occupation END as guardian_occupation"),
                         DB::raw("CASE WHEN st.guardian_id IS NOT NULL THEN pg.mobile_no END as guardian_mobile_no"),
@@ -1731,15 +1775,15 @@ class ApiControllerThree extends BaseController
                 }
             }
             // enableSchoolInfo
-            if ($enableSchoolInfo == "1") {
-                $SchoolInfo = $Connection->table('global_settings')
-                    ->select(
-                        'address as school_address',
-                        'mobile_no as school_mobile_no',
-                        'email as school_email'
-                    )
-                    ->first();
-            }
+            // if ($enableSchoolInfo == "1") {
+            //     $SchoolInfo = $Connection->table('global_settings')
+            //         ->select(
+            //             'address as school_address',
+            //             'mobile_no as school_mobile_no',
+            //             'email as school_email'
+            //         )
+            //         ->first();
+            // }
             // attendance information
             // if ($attendance_info == "1") {
             //     $attendanceInfo = $Connection->table('enrolls as en')
@@ -2777,16 +2821,19 @@ class ApiControllerThree extends BaseController
         } else {
             try {
                 // echo "test";
-                $content = [
-                    'subject' => '【Suzen】アカウント情報のご案内'
-                ];
+                // $content = [
+                //     'subject' => '【Suzen】アカウント情報のご案内'
+                // ];
                 $evenMoreUsers = [
-                    // "chlee@kddi.com.my",
-                    // "syakirin@kddi.com.my",
-                    // "chinhui1.lee@gmail.com",
-                    "kalaivani@aibots.my",
+                    "chlee@kddi.com.my",
+                    "syakirin@kddi.com.my",
+                    "chinhui1.lee@gmail.com",
+                    // "kalaivani@aibots.my",
                     "karthik@aibots.my"
                 ];
+                // Define dynamic data
+                $loginId = 'abc@gmail.com';
+                $password = 'abc@gmail.comJ24';
                 // $evenMoreUsers = [
                 //     "karthik@aibots.my"
                 // ];
@@ -2795,7 +2842,7 @@ class ApiControllerThree extends BaseController
                 //     "karthiksure31@gmail.com"
                 // ];
                 Mail::bcc($evenMoreUsers)
-                    ->send(new TestQueueMail($content));
+                    ->send(new TestQueueMail($loginId, $password));
 
                 return "Email has been sent.";
             } catch (\Exception $e) {
@@ -2803,54 +2850,50 @@ class ApiControllerThree extends BaseController
             }
         }
     }
-    // public function testQueueEmailAllUsers(Request $request)
-    // {
-    //     $validator = \Validator::make($request->all(), [
-    //         'email' => 'required'
-    //     ]);
-    //     if (!$validator->passes()) {
-    //         return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
-    //     } else 
-    //         try {
-    //             // echo "test";
-    //             $content = [
-    //                 'subject' => '【Suzen】アカウント情報のご案内'
-    //             ];
-                
+    public function testQueueEmailAllUsers(Request $request)
+    {
+        $validator = \Validator::make($request->all(), [
+            'email' => 'required'
+        ]);
+        if (!$validator->passes()) {
+            return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
+        } else {
+            try {
+                // echo "test";
+                $content = [
+                    'subject' => '【Suzen】アカウント情報のご案内'
+                ];
 
-    //             // $allUsers = [
-    //             //     "karthik@aibots.my",
-    //             //     "karthiksure31@gmail.com",
-    //             //     // Add more email addresses here...
-    //             //     // "email1@example.com",
-    //             //     // "email2@example.com",
-    //             //     // ...
-    //             //     // "email544@example.com"
-    //             // ];
-    //             $bccUsers = [
-    //                 "chlee@kddi.com.my",
-    //                 "syakirin@kddi.com.my",
-    //                 "chinhui1.lee@gmail.com"
-    //             ];
-    //             // $bccUsers = [
-    //             //     "karthiksure1995@gmail.com",
-    //             //     "dhanushkarthikdhanush@gmail.com",
-    //             // ];
-    //             // foreach ($allUsers as $user) {
-    //             //     // dd($user);
-    //             //     Mail::to($user)
-    //             //         ->bcc($bccUsers) // Adding BCC recipient same as the email
-    //             //         ->send(new TestQueueMail($content));
-    //             // }
 
-    //             return "Emails have been sent.";
-    //         } catch (\Exception $e) {
-    //             return "Failed to send emails. Error: " . $e->getMessage();
-    //         }
-    //     }
-    // }
+                $allUsers = [
+                    "karthik@aibots.my",
+                    "karthiksure31@gmail.com"
+                ];
+                // $bccUsers = [
+                //     "chlee@kddi.com.my",
+                //     "syakirin@kddi.com.my",
+                //     "chinhui1.lee@gmail.com"
+                // ];
+                $bccUsers = [
+                    "karthiksure1995@gmail.com",
+                ];
+                $loginId = 'abc@gmail.com';
+                $password = 'abc@gmail.comJ24';
+                foreach ($allUsers as $user) {
+                    // dd($user);
+                    Mail::to($user)
+                        ->bcc($bccUsers) // Adding BCC recipient same as the email
+                        ->send(new TestQueueMail($loginId, $password));
+                }
 
-    protected function clearCache($cache_name, $branchId)
+                return "Emails have been sent.";
+            } catch (\Exception $e) {
+                return "Failed to send emails. Error: " . $e->getMessage();
+            }
+        }
+    }
+
+    public function clearCache($cache_name, $branchId)
     {
         $cacheKey = $cache_name . $branchId;
         Cache::forget($cacheKey);
@@ -2925,6 +2968,151 @@ class ApiControllerThree extends BaseController
                 "decrypt_password" => $decrypt_password
             ];
             return $this->successResponse($data, 'Decrypt Email and password');
+        }
+    }
+    public function clearApiCacheBranch(Request $request)
+    {
+        try {
+            $validator = \Validator::make($request->all(), [
+                'branch_id' => 'required'
+            ]);
+            if ($validator->fails()) {
+                return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
+            }
+
+            $dataClear = [
+                'cache_academic_years' => "academic_years_",
+                'cache_departments' => "departments_",
+                'cache_classes' => "classes_",
+                'cache_sections' => "sections_",
+                'cache_students' => "students_",
+                'cache_parentDetails' => "parentDetails_",
+                'cache_Staff' => "Staff_",
+                'cache_timetable' => "cache_timetable_",
+                'cache_leaveTypeWiseAllReason' => "cache_leaveTypeWiseAllReason_",
+                'cache_ReasonsByLeaveType' => "cache_ReasonsByLeaveType_",
+                'cache_semester' => "cache_semester_",
+                'cache_eventDetails' => "cache_eventDetails_",
+                'cache_student_leave_types' => "student_leave_types_",
+                'cache_subjects' => "subjects_",
+                'cache_exam_papers' => "exam_papers_",
+                'cache_exam_term' => "exam_term_",
+                'cache_exam' => "exam_",
+                'cache_educations' => "educations_",
+                'cache_religions' => "religions_",
+                'cache_race' => "race_",
+                'cache_absent_reasons' => "absent_reasons_",
+                'cache_late_reasons' => "late_reasons_",
+                'cache_excused_reasons' => "excused_reasons_",
+                'cache_holidays' => "holidays_",
+                'cache_leave_types' => "leave_types_",
+                'cache_get_access_menu_list' => "cache_get_access_menu_list_",
+                'school_role_access' => "school_role_access_"
+            ];
+
+            foreach ($dataClear as $key => $prefix) {
+                $cacheKey = $prefix . $request->branch_id;
+                Cache::forget($cacheKey);
+            }
+
+            return $this->successResponse([], 'Clear Api Cache Branch');
+        } catch (\Exception $e) {
+            // Log the error or handle it accordingly
+            // \Log::error('Error in clearApiCacheBranch: ' . $e->getMessage());
+
+            // You can return a response with the error message
+            return $this->sendErrorResponse('An error occurred while clearing cache.', 500);
+        }
+    }
+
+    public function emailPasswordEncrypt(Request $request)
+    {
+        $validator = \Validator::make($request->all(), [
+            'branch_id' => 'required',
+            'email' => 'required',
+        ]);
+        if (!$validator->passes()) {
+            return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
+        } else {
+            // create new connection
+            // Retrieve users matching criteria
+            $users = User::select('id', 'branch_id', 'password', 'email')
+                ->where('email',  $request->email)
+                ->where('branch_id', $request->branch_id)
+                ->first();
+            $decrypt_password = bcrypt($users->password);
+            $data = [
+                "decrypt_password" => $decrypt_password,
+                "id" => $users->id,
+                "branch_id" => $users->branch_id,
+                "email" => $users->email,
+            ];
+            return $this->successResponse($data, 'Your decrypt password is above');
+        }
+    }
+    // get Student List
+    public function getTeacherStudentList(Request $request)
+    {
+        $validator = \Validator::make($request->all(), [
+            'branch_id' => 'required',
+            'class_id' => 'required'
+        ]);
+
+        $name = isset($request->student_name) ? $request->student_name : null;
+
+        if (!$validator->passes()) {
+            return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
+        } else {
+            // get data
+            // $cache_time = config('constants.cache_time');
+            // $cache_teacher_students = config('constants.cache_teacher_students');
+
+            // $cacheKey = $cache_teacher_students . $request->branch_id;
+            // // Check if the data is cached
+            // if (Cache::has($cacheKey) && !($class_id || $section_id || $status)) {
+            //     // If cached and no filters are applied, return cached data
+            //     \Log::info('cacheKey ' . json_encode($cacheKey));
+            //     $students = Cache::get($cacheKey);
+            // } else {
+            // create new connection
+            $con = $this->createNewConnection($request->branch_id);
+            $query = $con->table('enrolls as e')
+                ->select(
+                    's.id',
+                    'e.class_id',
+                    'e.section_id',
+                    DB::raw('CONCAT(s.last_name, " ", s.first_name) as name'),
+                    DB::raw('CONCAT(s.last_name_common, " ", s.first_name_common) as name_common'),
+                    's.register_no',
+                    's.roll_no',
+                    's.mobile_no',
+                    's.email',
+                    's.gender',
+                    's.photo'
+                )
+                ->join('students as s', 'e.student_id', '=', 's.id');
+            $query->where('e.class_id', $request->class_id);
+            $query->where('e.active_status', '0');
+            if (isset($request->section_id) && filled($request->section_id)) {
+                $query->where('e.section_id', $request->section_id);
+            }
+
+            if (isset($request->student_name) && filled($request->student_name)) {
+                $name = $request->student_name;
+                $query->where(function ($q) use ($name) {
+                    $q->where('s.first_name', 'like', '%' . $name . '%')
+                        ->orWhere('s.last_name', 'like', '%' . $name . '%');
+                });
+            }
+
+            $students = $query->groupBy('e.student_id')->get()->toArray();
+
+            // Cache the fetched data for future requests, only if no filters are applied
+            // if (!($class_id || $section_id || $status)) {
+            //     Cache::put($cacheKey, $students, now()->addHours($cache_time)); // Cache for 24 hours
+            // }
+            // }
+            return $this->successResponse($students, 'Student record fetch successfully');
         }
     }
 }

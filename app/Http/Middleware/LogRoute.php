@@ -25,12 +25,11 @@ class LogRoute
             $statusCode = $response->status();
             if ($statusCode >= 400 && $statusCode <= 599) {
                 $log = [
+                    'CODE' => $statusCode,
                     'URI' => $request->getUri(),
                     'METHOD' => $request->getMethod(),
-                    'REQUEST_BODY' => $request->all(),
-                    'RESPONSE' => $response->getContent()
+                    'REQUEST_BODY' => $request->all()
                 ];
-
                 Log::error(json_encode($log));
             }
         }

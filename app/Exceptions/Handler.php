@@ -45,6 +45,14 @@ class Handler extends ExceptionHandler
             return;
         }
 
+        // Check if the exception should not be reported
+        if ($this->shouldntReport($e)) {
+            return;
+        }
+
+        // Log the exception without stack trace
+        Log::error($e->getMessage());
+
         parent::report($e);
     }
 
@@ -62,8 +70,8 @@ class Handler extends ExceptionHandler
             'code' => $exception->getCode(),
             // Add any other relevant information
         ];
-
         Log::error(json_encode($logData));
+        return $logData;
     }
 
     /**

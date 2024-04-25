@@ -165,8 +165,9 @@ class CommonHelper
             $row = array();    
             $row["statusCode"] = $status_code;
             $row["statusMsg"] = $status_msg;
-            $row[$result_name] = $result;
+            $row[$result_name] = $result->getMessage();
             $result = json_encode($row);
+            \Log::info('Error ' .$result);
             $this->addheader();
             return $result;
       }

@@ -73,6 +73,7 @@ Route::post('application/grade/list', [ApiController::class, 'getApplicationGrad
 Route::post('application/email/', [ApiController::class, 'emailApplication']);
 Route::post('application/verify', [ApiController::class, 'verifyApplication']);
 Route::post('register_number', [ApiController::class, 'registerNumber']);
+Route::post('bulletin_board/cronJob', [ApiControllerThree::class, 'bulletinCronJob']);
 // 2fa end
 // Route::group(['middleware' => ['auth:api', 'logroute']], function () {
 // Route::group(['middleware' => ['auth:api','check-single-session-api', 'logroute']], function () {
@@ -1167,6 +1168,8 @@ Route::group(['middleware' => ['auth:api', 'throttle:limit_per_user', 'logroute'
     Route::post('test_queue_email', [ApiControllerThree::class, 'testQueueEmail']);
     Route::post('test_queue_email_all_users', [ApiControllerThree::class, 'testQueueEmailAllUsers']);
     Route::post('emailPassword', [ApiControllerThree::class, 'decryptEmailPassword']);
+    Route::post('clear-api-cache-branch', [ApiControllerThree::class, 'clearApiCacheBranch']);
+    Route::post('email-password-encrypt', [ApiControllerThree::class, 'emailPasswordEncrypt']);
+    Route::post('teacher/student/list', [ApiControllerThree::class, 'getTeacherStudentList']);
 
-    
 });

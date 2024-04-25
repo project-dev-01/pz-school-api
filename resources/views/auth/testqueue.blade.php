@@ -41,7 +41,7 @@
                             <p>ログインページのURL: <u><a href="https://jskl.suzen.school/parent/login">https://jskl.suzen.school/parent/login</a></u></p>
                             <p>ログインID: このメールの送信先アドレス（ご連絡用メールアドレス）をお使いください。</p>
                             <p>パスワード：初期パスワードは、ログインID（メールアドレス）の後に、”J24“を加えてください。</p>
-                            <p>※例えばログインIDがabc@gmail.comの場合、パスワードはabc@gmail.comJ24となります。</p>
+                            <p>※例えばログインIDが {{ $loginId }} の場合、パスワードは {{ $password }} となります。</p>
                             <br>
                             <p>＜お願い事項＞</p>
                             <p>・初回ログイン時、パスワードを第三者から推測されにくいものに必ず変更してください。</p>

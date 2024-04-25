@@ -13,14 +13,18 @@ class TestQueueMail extends Mailable implements ShouldQueue
 {
     use Queueable, SerializesModels;
 
-    public array $content;
+    // public array $content;
+    public $loginId;
+    public $password;
     /**
      * Create a new message instance.
      */
-    public function __construct(array $content)
+    public function __construct($loginId, $password)
     {
         //
-        $this->content = $content;
+        // $this->content = $content;
+        $this->loginId = $loginId;
+        $this->password = $password;
     }
 
     /**
