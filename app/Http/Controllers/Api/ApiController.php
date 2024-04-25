@@ -26745,7 +26745,6 @@ class ApiController extends BaseController
     // get Student row details
     public function getStudentUpdateInfoDetails(Request $request)
     {
-
         $validator = \Validator::make($request->all(), [
             'id' => 'required',
             'branch_id' => 'required',
@@ -26812,9 +26811,26 @@ class ApiController extends BaseController
                             ${$key}['old_value'] =  Helper::decryptStringData($old->$key);
                             ${$key}['new_value'] =  Helper::decryptStringData($suc);
                         } else {
-                            ${$key} = [];
-                            ${$key}['old_value'] =  $old->$key;
-                            ${$key}['new_value'] =  $suc;
+                            if($key == "religion")
+                            {
+                                $religionOldValue = $conn->table('religions')
+                                ->select('id','name')
+                                ->where('id', $old->$key)
+                                ->first();
+                                $religionNewValue = $conn->table('religions')
+                                ->select('id','name')
+                                ->where('id', $suc)
+                                ->first();
+                                ${$key} = [];
+                                ${$key}['old_value'] =  $religionOldValue->name;
+                                ${$key}['new_value'] =  $religionNewValue->name;
+                            }
+                            else
+                            {
+                                ${$key} = [];
+                                ${$key}['old_value'] =  $old->$key;
+                                ${$key}['new_value'] =  $suc;
+                            }
                         }
 
                         $studentObj->$key = ${$key};
@@ -26831,6 +26847,7 @@ class ApiController extends BaseController
         }
     }
 
+    
     // getFormFieldList
     public function getFormFieldList(Request $request)
     {
