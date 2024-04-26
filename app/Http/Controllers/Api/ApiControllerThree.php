@@ -1713,6 +1713,7 @@ class ApiControllerThree extends BaseController
                 ->first();
             // dd($info);
             $student_name = isset($request->student_name) ? $request->student_name : null;
+            $department_id = isset($request->department_id) ? $request->department_id : null;
             $session_id = isset($request->session_id) ? $request->session_id : null;
             $class_id = isset($request->class_id) ? $request->class_id : null;
             $section_id = isset($request->section_id) ? $request->section_id : null;
@@ -1797,6 +1798,9 @@ class ApiControllerThree extends BaseController
                     ->leftJoin('classes as cl', 'en.class_id', '=', 'cl.id')
                     ->leftJoin('sections as sc', 'en.section_id', '=', 'sc.id')
                     ->join('students as st', 'en.student_id', '=', 'st.id')
+                    ->when($department_id, function ($q)  use ($department_id) {
+                        $q->where('en.department_id', $department_id);
+                    })
                     ->when($class_id, function ($q)  use ($class_id) {
                         $q->where('en.class_id', $class_id);
                     })
@@ -1884,6 +1888,9 @@ class ApiControllerThree extends BaseController
                     ->leftJoin('parent as pm', 'st.mother_id', '=', 'pm.id')
                     // Join for guardian
                     ->leftJoin('parent as pg', 'st.guardian_id', '=', 'pg.id')
+                    ->when($department_id, function ($q)  use ($department_id) {
+                        $q->where('en.department_id', $department_id);
+                    })
                     ->when($class_id, function ($q)  use ($class_id) {
                         $q->where('en.class_id', $class_id);
                     })
