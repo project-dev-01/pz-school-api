@@ -63,7 +63,7 @@ class MenuAccessController extends BaseController
 
             return $this->successResponse($data, 'Section record fetch successfully');
         } catch (Exception $error) {
-            $this->commonHelper->generalReturn('403', 'error', $error, 'getRoles');
+            return  $this->commonHelper->generalReturn('403', 'error', $error, 'getRoles');
         }
     }
     //
@@ -102,7 +102,7 @@ class MenuAccessController extends BaseController
                 }
             }
         } catch (Exception $error) {
-            $this->commonHelper->generalReturn('403', 'error', $error, 'addMenu');
+            return $this->commonHelper->generalReturn('403', 'error', $error, 'addMenu');
         }
     }
     public function updateMenuDetails(Request $request)
@@ -143,7 +143,7 @@ class MenuAccessController extends BaseController
                 }
             }
         } catch (Exception $error) {
-            $this->commonHelper->generalReturn('403', 'error', $error, 'updateMenuDetails');
+            return $this->commonHelper->generalReturn('403', 'error', $error, 'updateMenuDetails');
         }
     }
 
@@ -160,7 +160,7 @@ class MenuAccessController extends BaseController
             //dd($data);
             return $this->successResponse($data, 'Menu Informations get successfully');
         } catch (Exception $error) {
-            $this->commonHelper->generalReturn('403', 'error', $error, 'getMenuList');
+            return $this->commonHelper->generalReturn('403', 'error', $error, 'getMenuList');
         }
     }
     // public function getMenuAccessList(Request $request)
@@ -242,7 +242,7 @@ class MenuAccessController extends BaseController
                 return $this->successResponse($get_access_menu_list, 'Menus fetch successfully');
             }
         } catch (Exception $error) {
-            $this->commonHelper->generalReturn('403', 'error', $error, 'getMenuAccessList');
+            return $this->commonHelper->generalReturn('403', 'error', $error, 'getMenuAccessList');
         }
     }
     public function getmenupermission(Request $request)
@@ -266,7 +266,7 @@ class MenuAccessController extends BaseController
                 ->first();
             return $this->successResponse($data, 'Get Menus Permission   successfully');
         } catch (Exception $error) {
-            $this->commonHelper->generalReturn('403', 'error', $error, 'getmenupermission');
+            return  $this->commonHelper->generalReturn('403', 'error', $error, 'getmenupermission');
         }
     }
     public function setmenupermission(Request $request)
@@ -300,7 +300,7 @@ class MenuAccessController extends BaseController
                 return $this->successResponse($success, 'Menu Access Permission Assigned has been Updated successfully ');
             }
         } catch (Exception $error) {
-            $this->commonHelper->generalReturn('403', 'error', $error, 'getmenupermission');
+            return  $this->commonHelper->generalReturn('403', 'error', $error, 'getmenupermission');
         }
     }
 
@@ -319,7 +319,7 @@ class MenuAccessController extends BaseController
                 return $this->successResponse($MenuDetails, 'Menu row fetch successfully');
             }
         } catch (Exception $error) {
-            $this->commonHelper->generalReturn('403', 'error', $error, 'getMenuDetails');
+            return $this->commonHelper->generalReturn('403', 'error', $error, 'getMenuDetails');
         }
     }
     public function addschool_role(Request $request)
@@ -357,7 +357,7 @@ class MenuAccessController extends BaseController
                 }
             }
         } catch (Exception $error) {
-            $this->commonHelper->generalReturn('403', 'error', $error, 'addschool_role');
+            return $this->commonHelper->generalReturn('403', 'error', $error, 'addschool_role');
         }
     }
     // getEventTypeList
@@ -387,7 +387,7 @@ class MenuAccessController extends BaseController
                 return $this->successResponse($schoolroleDetails, 'School Role record fetch successfully');
             }
         } catch (Exception $error) {
-            $this->commonHelper->generalReturn('403', 'error', $error, 'getschool_roleList');
+            return $this->commonHelper->generalReturn('403', 'error', $error, 'getschool_roleList');
         }
     }
     public function getschool_roleLists(Request $request)
@@ -441,7 +441,7 @@ class MenuAccessController extends BaseController
                 return $this->successResponse($school_array, 'School Role record fetch successfully');
             }
         } catch (Exception $error) {
-            $this->commonHelper->generalReturn('403', 'error', $error, 'getschool_roleLists');
+            return $this->commonHelper->generalReturn('403', 'error', $error, 'getschool_roleLists');
         }
     }
     public function portal_roles(Request $request)
@@ -468,7 +468,7 @@ class MenuAccessController extends BaseController
                 return $this->successResponse($portal_roleDetails, 'Portal Role record fetch successfully');
             }
         } catch (Exception $error) {
-            $this->commonHelper->generalReturn('403', 'error', $error, 'portal_roles');
+            return $this->commonHelper->generalReturn('403', 'error', $error, 'portal_roles');
         }
     }
     // get EventType row details
@@ -494,7 +494,7 @@ class MenuAccessController extends BaseController
                 return $this->successResponse($schoolroleDetails, 'School Role row fetch successfully');
             }
         } catch (Exception $error) {
-            $this->commonHelper->generalReturn('403', 'error', $error, 'getschool_roleDetails');
+            return $this->commonHelper->generalReturn('403', 'error', $error, 'getschool_roleDetails');
         }
     }
     // update EventType
@@ -535,7 +535,7 @@ class MenuAccessController extends BaseController
                 }
             }
         } catch (Exception $error) {
-            $this->commonHelper->generalReturn('403', 'error', $error, 'updateschool_role');
+            return $this->commonHelper->generalReturn('403', 'error', $error, 'updateschool_role');
         }
     }
     // delete EventType
@@ -576,7 +576,7 @@ class MenuAccessController extends BaseController
                 }
             }
         } catch (Exception $error) {
-            $this->commonHelper->generalReturn('403', 'error', $error, 'deleteschool_role');
+            return $this->commonHelper->generalReturn('403', 'error', $error, 'deleteschool_role');
         }
     }
     public function getschool_menuroleDetails(Request $request)
@@ -603,7 +603,7 @@ class MenuAccessController extends BaseController
                 return $this->successResponse($roles, 'School Role row fetch successfully');
             }
         } catch (Exception $error) {
-            $this->commonHelper->generalReturn('403', 'error', $error, 'getschool_menuroleDetails');
+            return $this->commonHelper->generalReturn('403', 'error', $error, 'getschool_menuroleDetails');
         }
     }
     public function getschoolmenuaccesslist(Request $request)
@@ -671,7 +671,7 @@ class MenuAccessController extends BaseController
             // dd($data);
             return $this->successResponse($data, 'Menus fetch successfully');
         } catch (Exception $error) {
-            $this->commonHelper->generalReturn('403', 'error', $error, 'getschoolmenuaccesslist');
+            return $this->commonHelper->generalReturn('403', 'error', $error, 'getschoolmenuaccesslist');
         }
     }
     public function setschoolpermission(Request $request)
@@ -733,7 +733,7 @@ class MenuAccessController extends BaseController
                 return $this->successResponse($success, 'Menu Access Permission Assigned has been successfully');
             }
         } catch (Exception $error) {
-            $this->commonHelper->generalReturn('403', 'error', $error, 'setschoolpermission');
+            return $this->commonHelper->generalReturn('403', 'error', $error, 'setschoolpermission');
         }
     }
     public function deleteschoolpermission(Request $request)
@@ -771,7 +771,7 @@ class MenuAccessController extends BaseController
                 return $this->successResponse($success, 'Menu Access Permission Deleted has been successfully');
             }
         } catch (Exception $error) {
-            $this->commonHelper->generalReturn('403', 'error', $error, 'deleteschoolpermission');
+            return $this->commonHelper->generalReturn('403', 'error', $error, 'deleteschoolpermission');
         }
     }
     public function getschoolroleaccess(Request $request)
@@ -792,7 +792,7 @@ class MenuAccessController extends BaseController
             }
         } catch (\Exception $error) {
 
-            $this->commonHelper->generalReturn('403', 'error', $error, 'getschoolroleaccess');
+            return  $this->commonHelper->generalReturn('403', 'error', $error, 'getschoolroleaccess');
         }
     }
     public function getschoolroleaccessroute(Request $request)
@@ -845,7 +845,7 @@ class MenuAccessController extends BaseController
 
             return $this->successResponse($schoolroleDetails, 'School Role row fetched successfully');
         } catch (Exception $error) {
-            $this->commonHelper->generalReturn('403', 'error', $error, 'getschoolroleaccessroute');
+            return $this->commonHelper->generalReturn('403', 'error', $error, 'getschoolroleaccessroute');
         }
     }
     public function get_login_menuroute(Request $request)
@@ -905,7 +905,7 @@ class MenuAccessController extends BaseController
             
             return $this->successResponse($login_route, 'Menus fetch successfully');
         } catch (Exception $error) {
-            $this->commonHelper->generalReturn('403', 'error', $error, 'getschoolmenuaccesslist');
+            return $this->commonHelper->generalReturn('403', 'error', $error, 'getschoolmenuaccesslist');
         }
     }
 }

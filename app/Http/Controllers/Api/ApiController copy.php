@@ -143,7 +143,7 @@ class ApiController extends BaseController
                     // get data
                     $section = $secConn->table('sections')->orderBy('name', 'asc')->get();
                     Cache::put($cacheKey, $section, now()->addHours($cache_time)); // Cache for 24 hours  
-                    }                    
+                    }
             return $this->successResponse($section, 'Classes record fetch successfully');
         }
         
@@ -13035,6 +13035,7 @@ try{
     // add Admission
     public function addAdmission(Request $request)
     {
+        //return $request;
         $validator = \Validator::make($request->all(), [
             'year' => 'required',
             // 'register_no' => 'required',
@@ -13054,27 +13055,25 @@ try{
             'branch_id' => 'required',
             
         ]);
-        
-        
+
         $previous['school_name'] = $request->school_name;
         $previous['qualification'] = $request->qualification;
         $previous['remarks'] = $request->remarks;
 
         $previous_details = json_encode($previous);
-        
+
 
         if (!$validator->passes()) {
-          
             return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
         } else {
             // create new connection
             $conn = $this->createNewConnection($request->branch_id);
             // insert data
-           
+
             if ($conn->table('students')->where('email', '=', $request->email)->count() > 0) {
                 return $this->send422Error('Student Email Already Exist', ['error' => 'Student Email Already Exist']);
             } else {
-                
+
                 $fileName = "";
                 if ($request->photo) {
                     $path = '/public/' . $request->branch_id . '/users/images/';
@@ -13158,7 +13157,7 @@ try{
                 $permanent_address = isset($request->permanent_address) ? Crypt::encryptString($request->permanent_address) : "";
                 $father_mobile_no = isset($request->father_mobile_no) ? Crypt::encryptString($request->father_mobile_no) : "";
                 $mother_mobile_no = isset($request->mother_mobile_no) ? Crypt::encryptString($request->mother_mobile_no) : "";
-                
+               
                 $father_id = "";
                 $mother_id = "";
                 $guardian_id = "";
@@ -13186,7 +13185,6 @@ try{
                                     'status' => '0', // Assuming you want to update the status as well
                                     'updated_at' => now()
                                 ]);
-                               
                             }else {
                                     $father_id = $conn->table('parent')->insertGetId([
 
@@ -13211,7 +13209,7 @@ try{
                         }
                 }
 
-                
+                        
                     if ($request->mother_first_name) 
                     {
                             if($request->mother_id){
@@ -13296,11 +13294,6 @@ try{
                     'register_no' => $registerNumber,
                     // 'roll_no' => $request->roll_no,
                     'admission_date' => $request->admission_date,
-
-                    'enrollment' => isset($request->enrollment) ? $request->enrollment : "",
-                    'trail_date' => isset($request->trail_date) ? $request->trail_date : "",
-                    'official_date' => isset($request->official_date) ? $request->official_date : "",
-
                     'category_id' => $request->category_id,
                     'first_name' => isset($request->first_name) ? $request->first_name : "",
                     'last_name' => isset($request->last_name) ? $request->last_name : "",
@@ -24875,11 +24868,6 @@ try{
                         "visa_type_others" => $request->visa_type_others,
                         "japanese_association_membership_number_student" => $request->japanese_association_membership_number_student,
                         'nric_photo' => $nric_fileName,
-
-                        'enrollment' => $request->enrollment,
-                        'trail_date' => $request->trail_date,
-                        'official_date' => $request->official_date,
-
                         // 'japanese_association_membership_image_principal' => $image_principal_fileName,
                         // 'japanese_association_membership_image_supplimental' => $image_supplimental_fileName,
                         'passport' => isset($request->passport) ? Crypt::encryptString($request->passport) : "",
