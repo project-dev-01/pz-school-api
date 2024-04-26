@@ -1001,6 +1001,7 @@ Route::group(['middleware' => ['auth:api', 'throttle:limit_per_user', 'logroute'
     Route::post('menus/menu_details', [MenuAccessController::class, 'getMenuDetails']);
     Route::post('menus/update', [MenuAccessController::class, 'updateMenuDetails']);
     Route::post('menus/getpermission', [MenuAccessController::class, 'getmenupermission']);
+    Route::post('menus/get_login_menuroute', [MenuAccessController::class, 'get_login_menuroute']);
 
     // School Role routes
     Route::post('school_role/add', [MenuAccessController::class, 'addschool_role']);

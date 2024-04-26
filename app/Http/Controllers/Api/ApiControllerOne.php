@@ -5971,6 +5971,10 @@ try {
             return $this->successResponse($PaymentStatusDetails, 'Payment Status row fetch successfully');
         }
     }
+    catch(Exception $error) {
+        return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+    }
+    }
     // update PaymentStatus
     public function updatePaymentStatus(Request $request)
     {
@@ -6003,10 +6007,6 @@ try {
                     return $this->send500Error('Something went wrong.', ['error' => 'Something went wrong']);
                 }
             }
-        }
-         }
-        catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
         }
     }
     // delete PaymentStatus
@@ -12349,7 +12349,6 @@ try {
     }
     public function getStudentInterviewList(Request $request)
     {
-        //return $request;
         $validator = \Validator::make($request->all(), [
             // 'token' => 'required',
             'branch_id' => 'required',

@@ -116,7 +116,6 @@ class ApiController extends BaseController
             }
         }
     }
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
     // get sections 
     public function getSectionList(Request $request)
     {
@@ -1052,6 +1051,7 @@ class ApiController extends BaseController
                     'class_id' => $request->class_id,
                     'section_id' => $request->section_id,
                     'teacher_id' => $request->teacher_id,
+                    'type' => $request->type,
                     'academic_session_id' => $request->academic_session_id,
                     'updated_at' => date("Y-m-d H:i:s")
                 );
@@ -1669,6 +1669,9 @@ class ApiController extends BaseController
             } else {
                 return $this->send500Error('Something went wrong.', ['error' => 'Something went wrong']);
             }
+        }
+        }catch(\Exception $error) {
+            $this->commonHelper->generalReturn('403','error',$error,'getSectionDetails');
         }
     }
     // getAssignClassSubjects
@@ -14318,31 +14321,10 @@ try{
             // Check if the data is cached
             if (Cache::has($cacheKey) && !($department_id || $class_id || $session_id || $section_id || $status)) {
                 // If cached and no filters are applied, return cached data
-                // \Log::info('cacheKey ' . json_encode($cacheKey));
-                // $student = Cache::get($cacheKey);
-                $con = $this->createNewConnection($request->branch_id);
-                $students =  $con->table('enrolls as e')
-                ->select(
-                    's.id',
-                    DB::raw('CONCAT(s.last_name, " ", s.first_name) as name'),
-                    DB::raw('CONCAT(s.last_name_common, " ", s.first_name_common) as name_common'),
-                    's.register_no',
-                    's.roll_no',
-                    's.mobile_no',
-                    's.email',
-                    's.gender',
-                    's.photo',
-                    'e.attendance_no'
-                )
-                ->join('students as s', 'e.student_id', '=', 's.id')
-                ->leftJoin('termination as t', function ($join) {
-                    $join->on('e.student_id', '=', 't.student_id'); // Corrected join condition
-                })
-                ->whereNull('t.student_id')
-                ->groupBy('e.student_id')->get()->toArray();
-            } 
-            else{
-                //  create new connection
+                \Log::info('cacheKey ' . json_encode($cacheKey));
+                $students = Cache::get($cacheKey);
+            } else {
+                // create new connection
                 $con = $this->createNewConnection($request->branch_id);
                 $query = $con->table('enrolls as e')
                 ->select(
@@ -14358,9 +14340,7 @@ try{
                     't.student_id'
                 )
                 ->join('students as s', 'e.student_id', '=', 's.id')
-                ->join('termination as t' ,'s.id','=','t.student_id')
-              
-                ;
+                ->join('termination as t' ,'s.id','=','t.student_id');
                
                 // Corrected join condition
             
@@ -14402,7 +14382,6 @@ try{
             return $this->successResponse($students, 'Student record fetch successfully');
         }
     }
-
 
 
     // update Student
@@ -27591,10 +27570,27 @@ try{
                             ${$key}['old_value'] =  Helper::decryptStringData($old->$key);
                             ${$key}['new_value'] =  Helper::decryptStringData($suc);
                         } else {
-                            ${$key} = [];
-                            ${$key}['old_value'] =  $old->$key;
-                            ${$key}['new_value'] =  $suc;
-                        }
+                            if($key == "religion")
+                            {
+                                $religionOldValue = $conn->table('religions')
+                                ->select('id','name')
+                                ->where('id', $old->$key)
+                                ->first();
+                                $religionNewValue = $conn->table('religions')
+                                ->select('id','name')
+                                ->where('id', $suc)
+                                ->first();
+                                ${$key} = [];
+                                ${$key}['old_value'] =  $religionOldValue->name;
+                                ${$key}['new_value'] =  $religionNewValue->name;
+                            }
+                            else
+                            {
+                                ${$key} = [];
+                                ${$key}['old_value'] =  $old->$key;
+                                ${$key}['new_value'] =  $suc;
+                            }
+                                                }
 
                         $studentObj->$key = ${$key};
                     }

@@ -784,12 +784,14 @@ class MenuAccessController extends BaseController
             $conn = $this->createNewConnection($request->branch_id);
             $data = Menus::select('menu_id')->where('menu_routename', $menu_id)->where('role_id', $role_id)->first();
 
-            $menu_id1 = $data['menu_id'];
-            //dd($menu_id1);
-            $schoolroleDetails = $conn->table('school_menuaccess')->where('menu_id', $menu_id1)->where('role_id', $role_id)->where('school_roleid', $school_roleid)->first();
-            return $this->successResponse($schoolroleDetails, 'School Role row fetch successfully');
+            if ($data !== null) {
+                $menu_id1 = $data['menu_id'];
+                //dd($menu_id1);
+                $schoolroleDetails = $conn->table('school_menuaccess')->where('menu_id', $menu_id1)->where('role_id', $role_id)->where('school_roleid', $school_roleid)->first();
+                return $this->successResponse($schoolroleDetails, 'School Role row fetch successfully');
+            }
         } catch (\Exception $error) {
-            
+
             $this->commonHelper->generalReturn('403', 'error', $error, 'getschoolroleaccess');
         }
     }
@@ -844,6 +846,66 @@ class MenuAccessController extends BaseController
             return $this->successResponse($schoolroleDetails, 'School Role row fetched successfully');
         } catch (Exception $error) {
             $this->commonHelper->generalReturn('403', 'error', $error, 'getschoolroleaccessroute');
+        }
+    }
+    public function get_login_menuroute(Request $request)
+    {
+        try {
+            $branch_id = $request->branch_id;
+            $role_id = $request->role_id;
+            $school_roleid = $request->school_roleid;
+            $main_db = config('constants.main_db');
+
+            $conn = $this->createNewConnection($request->branch_id);            
+
+            $data =  $conn->table($main_db . '.menus as ms')->select('ms.menu_id','ms.menu_routename','ms.menu_url')
+                ->leftJoin($main_db . '.menuaccess as ma', 'ma.menu_id', '=', 'ms.menu_id')
+                ->leftJoin('school_menuaccess as sm', 'sm.menu_id', '=', 'ms.menu_id')
+                ->where('ma.role_id', $role_id)
+                ->where('ma.branch_id', $branch_id)                
+                ->where('ma.menu_permission', 'Access')
+                ->where('sm.role_id', $role_id)
+                ->where('sm.school_roleid', $school_roleid)
+                ->where('sm.read', 'Access')
+                ->where('ms.menu_type', 'Mainmenu')                
+                ->where('ms.flog', 0)
+                ->orderBy("ms.menu_order", "asc")
+                ->limit(1)
+                ->first();
+            if($data)
+            {
+                $menu_url=$data->menu_url;
+                $menu_id=$data->menu_id;
+                if($menu_url[0]=='#')
+                {
+                    $data1 =  $conn->table($main_db . '.menus as ms')->select('ms.menu_id','ms.menu_routename','ms.menu_url')
+                    ->leftJoin($main_db . '.menuaccess as ma', 'ma.menu_id', '=', 'ms.menu_id')
+                    ->leftJoin('school_menuaccess as sm', 'sm.menu_id', '=', 'ms.menu_id')
+                    ->where('ma.role_id', $role_id)
+                    ->where('ma.branch_id', $branch_id)                
+                    ->where('ma.menu_permission', 'Access')
+                    ->where('sm.role_id', $role_id)
+                    ->where('sm.school_roleid', $school_roleid)
+                    ->where('sm.read', 'Access')
+                    ->where('ms.menu_type', 'Submenu')                
+                    ->where('ms.flog', 0)
+                    ->where('ms.menu_refid', $menu_id)
+                    ->orderBy("ms.menu_order", "asc")
+                    ->limit(1)
+                    ->first();
+                    $login_route=$data1->menu_routename;
+                }
+                else
+                {
+                    $login_route=$data->menu_routename;
+                }
+            }
+            
+            // dd($data);
+            
+            return $this->successResponse($login_route, 'Menus fetch successfully');
+        } catch (Exception $error) {
+            $this->commonHelper->generalReturn('403', 'error', $error, 'getschoolmenuaccesslist');
         }
     }
 }
