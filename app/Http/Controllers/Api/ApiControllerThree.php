@@ -57,6 +57,7 @@ class ApiControllerThree extends BaseController
     public function getBuletinBoardList(Request $request)
     {
 
+        try {
         $validator = \Validator::make($request->all(), [
             // 'token' => 'required',
             'branch_id' => 'required',
@@ -101,10 +102,15 @@ class ApiControllerThree extends BaseController
 
             return $this->successResponse($buletinDetails, 'Bulletin record fetch successfully');
         }
+         }
+        catch(Exception $error) {
+            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+        }
     }
     public function addBuletinBoard(Request $request)
     {
 
+        try {
         $validator = \Validator::make($request->all(), [
             // 'token' => 'required',
             'branch_id' => 'required',
@@ -157,9 +163,14 @@ class ApiControllerThree extends BaseController
                 return $this->successResponse($success, 'Bulliten Board has been successfully saved');
             }
         }
+         }
+        catch(Exception $error) {
+            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+        }
     }
     public function bulletinCronJob(Request $request)
     {
+        try {
         if ($request->secret_key !== 'S6rSMVixPeupH51AO5mVFjkQJ88bnjOO') {
             return response()->json(['error' => 'Unauthorized.'], 401);
         }
@@ -301,9 +312,14 @@ class ApiControllerThree extends BaseController
             
             return $this->successResponse([], 'Notifications sent successfully.');
         }
+         }
+        catch(Exception $error) {
+            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+        }
     }
     public function usernameBuletin(Request $request)
     {
+        try {
         $validator = \Validator::make($request->all(), [
 
             'token' => 'required'
@@ -323,9 +339,14 @@ class ApiControllerThree extends BaseController
             //   $success = Category::all();
             return $this->successResponse($success, 'user name record fetch successfully');
         }
+         }
+        catch(Exception $error) {
+            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+        }
     }
     public function deleteBuletinBoard(Request $request)
     {
+        try {
         $validator = \Validator::make($request->all(), [
             'token' => 'required',
             'id' => 'required',
@@ -352,11 +373,15 @@ class ApiControllerThree extends BaseController
                 return $this->send500Error('Something went wrong.', ['error' => 'Something went wrong']);
             }
         }
+         }
+        catch(Exception $error) {
+            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+        }
     }
     // get Event row details
     public function getBuletinBoardDetails(Request $request)
     {
-
+        try {
         $validator = \Validator::make($request->all(), [
             'id' => 'required',
             'branch_id' => 'required',
@@ -405,9 +430,14 @@ class ApiControllerThree extends BaseController
                 ->where('b.id', $buletin_id)->first();
             return $this->successResponse($buletinDetails, 'Bulletin board row fetch successfully');
         }
+         }
+        catch(Exception $error) {
+            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+        }
     }
     public function updateBuletinBoard(Request $request)
     {
+        try {
         $id = $request->id;
         $validator = \Validator::make($request->all(), [
             'token' => 'required',
@@ -459,10 +489,15 @@ class ApiControllerThree extends BaseController
                 return $this->successResponse($success, 'Bulliten Board has been successfully updated');
             }
         }
+         }
+        catch(Exception $error) {
+            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+        }
     }
     // get Student List
     public function getStudentListForBulletinBoard(Request $request)
     {
+        try {
         $validator = \Validator::make($request->all(), [
             'branch_id' => 'required',
             'token' => 'required',
@@ -492,9 +527,14 @@ class ApiControllerThree extends BaseController
 
             return $this->successResponse($student, 'Student record fetch successfully');
         }
+         }
+        catch(Exception $error) {
+            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+        }
     }
     public function getParentListForBulletinBoard(Request $request)
     {
+        try {
         $validator = \Validator::make($request->all(), [
             'branch_id' => 'required',
             // 'token' => 'required',
@@ -527,10 +567,15 @@ class ApiControllerThree extends BaseController
                 ->get()->toArray();
             return $this->successResponse($parent, 'Parent record fetch successfully');
         }
+         }
+        catch(Exception $error) {
+            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+        }
     }
     // get Student List
     public function getRetiredList(Request $request)
     {
+        try {
         $validator = \Validator::make($request->all(), [
             'branch_id' => 'required',
 
@@ -607,9 +652,14 @@ class ApiControllerThree extends BaseController
             // dd($studentData);
             return $this->successResponse($studentData, 'Employee record fetch successfully');
         }
+         }
+        catch(Exception $error) {
+            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+        }
     }
     public function getBulletinParent(Request $request)
     {
+        try {
         $validator = \Validator::make($request->all(), [
             'branch_id' => 'required',
         ]);
@@ -684,10 +734,15 @@ class ApiControllerThree extends BaseController
             // dd($eventDetails);
             return $this->successResponse($buletinDetails, 'Bulletin record fetch successfully');
         }
+         }
+        catch(Exception $error) {
+            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+        }
     }
 
     public function bulletinParentStar(Request $request)
     {
+        try {
         $validator = \Validator::make($request->all(), [
             'token' => 'required',
             'branch_id' => 'required',
@@ -733,9 +788,14 @@ class ApiControllerThree extends BaseController
                 return $this->successResponse($success, 'Important Bulliten Board has been successfully updated');
             }
         }
+         }
+        catch(Exception $error) {
+            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+        }
     }
     public function getBulletinImpParent(Request $request)
     {
+        try {
         $validator = \Validator::make($request->all(), [
             'branch_id' => 'required',
         ]);
@@ -806,9 +866,14 @@ class ApiControllerThree extends BaseController
             // dd($eventDetails);
             return $this->successResponse($buletinDetails, 'Bulletin Important record fetch successfully');
         }
+         }
+        catch(Exception $error) {
+            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+        }
     }
     public function getBulletinStudent(Request $request)
     {
+        try {
         $validator = \Validator::make($request->all(), [
             'token' => 'required',
             'branch_id' => 'required',
@@ -877,10 +942,15 @@ class ApiControllerThree extends BaseController
             // dd($eventDetails);
             return $this->successResponse($buletinDetails, 'Bulletin record fetch successfully');
         }
+         }
+        catch(Exception $error) {
+            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+        }
     }
 
     public function bulletinStudentStar(Request $request)
     {
+        try {
         $validator = \Validator::make($request->all(), [
             'token' => 'required',
             'branch_id' => 'required',
@@ -926,9 +996,14 @@ class ApiControllerThree extends BaseController
                 return $this->successResponse($success, 'Important Bulliten Board has been successfully updated');
             }
         }
+         }
+        catch(Exception $error) {
+            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+        }
     }
     public function getBulletinImpStudent(Request $request)
     {
+        try {
         $validator = \Validator::make($request->all(), [
             'branch_id' => 'required',
         ]);
@@ -992,10 +1067,15 @@ class ApiControllerThree extends BaseController
             // dd($eventDetails);
             return $this->successResponse($buletinDetails, 'Bulletin Important record fetch successfully');
         }
+         }
+        catch(Exception $error) {
+            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+        }
     }
     public function getBulletinTeacher(Request $request)
     {
 
+        try {
         $validator = \Validator::make($request->all(), [
             'token' => 'required',
             'branch_id' => 'required',
@@ -1044,10 +1124,15 @@ class ApiControllerThree extends BaseController
             // dd($eventDetails);
             return $this->successResponse($buletinDetails, 'Bulletin record fetch successfully');
         }
+         }
+        catch(Exception $error) {
+            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+        }
     }
     public function getBulletinImpTeacher(Request $request)
     {
 
+        try {
         $validator = \Validator::make($request->all(), [
             'token' => 'required',
             'branch_id' => 'required',
@@ -1097,9 +1182,14 @@ class ApiControllerThree extends BaseController
             // dd($eventDetails);
             return $this->successResponse($buletinDetails, 'Bulletin record fetch successfully');
         }
+         }
+        catch(Exception $error) {
+            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+        }
     }
     public function bulletinTeacherStar(Request $request)
     {
+        try {
         $validator = \Validator::make($request->all(), [
             'token' => 'required',
             'branch_id' => 'required',
@@ -1145,12 +1235,17 @@ class ApiControllerThree extends BaseController
                 return $this->successResponse($success, 'Important Bulliten Board has been successfully updated');
             }
         }
+         }
+        catch(Exception $error) {
+            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+        }
     }
     // getStudentLeaveTypes
     public function getStudentLeaveTypes(Request $request)
     {
 
         // Data not found in cache, fetch from database
+        try {
         $validator = Validator::make($request->all(), [
             'branch_id' => 'required'
         ]);
@@ -1183,10 +1278,15 @@ class ApiControllerThree extends BaseController
             Cache::put($cacheKey, $getAllTypes, now()->addDay());
         }
         return $this->successResponse($getAllTypes, 'Student leave types fetched successfully');
+         }
+        catch(Exception $error) {
+            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+        }
     }
     // get Reasons By LeaveType
     public function getReasonsByLeaveType(Request $request)
     {
+        try {
         $validator = \Validator::make($request->all(), [
             'branch_id' => 'required',
             'student_leave_type_id' => 'required'
@@ -1214,10 +1314,15 @@ class ApiControllerThree extends BaseController
             }
             return $this->successResponse($getAllReason, 'reasons by leave types fetch successfully');
         }
+         }
+        catch(Exception $error) {
+            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+        }
     }
     // viewStudentLeaveDetailsRow
     function viewStudentLeaveDetailsRow(Request $request)
     {
+        try {
         $validator = \Validator::make($request->all(), [
             'branch_id' => 'required',
             'student_leave_id' => 'required'
@@ -1274,10 +1379,15 @@ class ApiControllerThree extends BaseController
                 ->first();
             return $this->successResponse($studentDetails, 'Student row details fetch successfully');
         }
+         }
+        catch(Exception $error) {
+            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+        }
     }
     // nursingOrHomeroom
     function nursingOrHomeroom(Request $request)
     {
+        try {
         $validator = \Validator::make($request->all(), [
             'branch_id' => 'required',
             'teacher_id' => 'required'
@@ -1297,9 +1407,14 @@ class ApiControllerThree extends BaseController
                 ->first();
             return $this->successResponse($studentDetails, 'home or nusing fetch successfully');
         }
+         }
+        catch(Exception $error) {
+            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+        }
     }
     public function leaveTypeWiseAllReason(Request $request)
     {
+        try {
         $validator = \Validator::make($request->all(), [
             'branch_id' => 'required'
         ]);
@@ -1337,10 +1452,15 @@ class ApiControllerThree extends BaseController
             }
             return $this->successResponse($jsonResult, 'student leave types fetch successfully');
         }
+         }
+        catch(Exception $error) {
+            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+        }
     }
     // callViaLeaveDirectApprove 
     public function callViaLeaveDirectApprove(Request $request)
     {
+        try {
         $validator = \Validator::make($request->all(), [
             'branch_id' => 'required',
             'student_id' => 'required',
@@ -1437,9 +1557,14 @@ class ApiControllerThree extends BaseController
                 }
             }
         }
+         }
+        catch(Exception $error) {
+            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+        }
     }
     public function getClassListByDept(Request $request)
     {
+        try {
         $validator = \Validator::make($request->all(), [
             'branch_id' => 'required',
             'teacher_id' => 'required'
@@ -1475,9 +1600,14 @@ class ApiControllerThree extends BaseController
                 ->get();
             return $this->successResponse($class, 'class by department record fetch successfully');
         }
+         }
+        catch(Exception $error) {
+            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+        }
     }
     public function saveStudentSetting(Request $request)
     {
+        try {
         $validator = \Validator::make($request->all(), [
             'branch_id' => 'required',
             'staff_id' => 'required'
@@ -1531,9 +1661,14 @@ class ApiControllerThree extends BaseController
                 return $this->successResponse($success, 'Student Settings has been successfully saved');
             }
         }
+         }
+        catch(Exception $error) {
+            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+        }
     }
     public function getStudentSownloadSettings(Request $request)
     {
+        try {
         $validator = \Validator::make($request->all(), [
             'branch_id' => 'required',
             'staff_id' => 'required'
@@ -1550,10 +1685,15 @@ class ApiControllerThree extends BaseController
                 ->first();
             return $this->successResponse($classAssign, 'Student download row fetch successfully');
         }
+         }
+        catch(Exception $error) {
+            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+        }
     }
     public function downloadStudentListInformation(Request $request)
     {
         // return $request;
+        try {
         $validator = \Validator::make($request->all(), [
             'branch_id' => 'required',
             'staff_id' => 'required',
@@ -1920,10 +2060,15 @@ class ApiControllerThree extends BaseController
             }, []);
             return $this->successResponse($merged, 'get all subject record fetch successfully');
         }
+         }
+        catch(Exception $error) {
+            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+        }
     }
     // getStudentAttendenceByDay
     function getStudentAttendenceByDay(Request $request)
     {
+        try {
         $validator = \Validator::make($request->all(), [
             'branch_id' => 'required',
             'class_id' => 'required',
@@ -2012,10 +2157,15 @@ class ApiControllerThree extends BaseController
             // dd($getTeachersClassName);
             return $this->successResponse($data, 'Attendance by day record fetch successfully');
         }
+         }
+        catch(Exception $error) {
+            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+        }
     }
     //add attendance by day
     function addStudentAttendenceByDay(Request $request)
     {
+        try {
         $validator = \Validator::make($request->all(), [
             'branch_id' => 'required',
             'class_id' => 'required',
@@ -2182,10 +2332,15 @@ class ApiControllerThree extends BaseController
             }
             return $this->successResponse([], 'Attendance added successfuly.');
         }
+         }
+        catch(Exception $error) {
+            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+        }
     }
     // studentNewJoiningList 
     public function studentNewJoiningList(Request $request)
     {
+        try {
         $validator = \Validator::make($request->all(), [
             'branch_id' => 'required'
         ]);
@@ -2249,9 +2404,14 @@ class ApiControllerThree extends BaseController
                 ->get();
             return $this->successResponse($data, 'student new joining list fetch successfully');
         }
+         }
+        catch(Exception $error) {
+            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+        }
     }
     public function saveAttendanceReportSetting(Request $request)
     {
+        try {
         $validator = \Validator::make($request->all(), [
             'branch_id' => 'required',
             'staff_id' => 'required'
@@ -2293,9 +2453,14 @@ class ApiControllerThree extends BaseController
                 return $this->successResponse($success, 'Attendance Report Settings has been successfully saved');
             }
         }
+         }
+        catch(Exception $error) {
+            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+        }
     }
     public function getAttendanceReportSetting(Request $request)
     {
+        try {
         $validator = \Validator::make($request->all(), [
             'branch_id' => 'required',
             'staff_id' => 'required'
@@ -2312,9 +2477,14 @@ class ApiControllerThree extends BaseController
                 ->first();
             return $this->successResponse($attRep, 'Attendance report row fetch successfully');
         }
+         }
+        catch(Exception $error) {
+            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+        }
     }
     public function absentAttendanceReport(Request $request)
     {
+        try {
         $validator = \Validator::make($request->all(), [
             'branch_id' => 'required',
             'staff_id' => 'required',
@@ -2493,9 +2663,14 @@ class ApiControllerThree extends BaseController
             ];
             return $this->successResponse($data, 'Attendance report row fetch successfully');
         }
+         }
+        catch(Exception $error) {
+            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+        }
     }
     public function studentPlanToLeave(Request $request)
     {
+        try {
         $validator = \Validator::make($request->all(), [
             'branch_id' => 'required'
         ]);
@@ -2537,9 +2712,14 @@ class ApiControllerThree extends BaseController
                 ->get();
             return $this->successResponse($attRep, 'student plan to leave list fetch successfully');
         }
+         }
+        catch(Exception $error) {
+            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+        }
     }
     public function studentTransferList(Request $request)
     {
+        try {
         $validator = \Validator::make($request->all(), [
             'branch_id' => 'required'
         ]);
@@ -2586,9 +2766,14 @@ class ApiControllerThree extends BaseController
 
             return $this->successResponse($attRep, 'transfer student list fetch successfully');
         }
+         }
+        catch(Exception $error) {
+            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+        }
     }
     function hideUnhideSave(Request $request)
     {
+        try {
         $validator = \Validator::make($request->all(), [
             'branch_id' => 'required',
             'staff_id' => 'required',
@@ -2652,9 +2837,14 @@ class ApiControllerThree extends BaseController
             }
             return $this->successResponse([], 'hide unhide data added successfuly.');
         }
+         }
+        catch(Exception $error) {
+            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+        }
     }
     function getDataHideUnhideDashboard(Request $request)
     {
+        try {
         $validator = \Validator::make($request->all(), [
             'branch_id' => 'required',
             'staff_id' => 'required'
@@ -2673,9 +2863,14 @@ class ApiControllerThree extends BaseController
                 ->get();
             return $this->successResponse($whuData, 'widget list fetch successfully');
         }
+         }
+        catch(Exception $error) {
+            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+        }
     }
     public function staffLeaveHistoryDashboard(Request $request)
     {
+        try {
         // dd($request);
         $validator = \Validator::make($request->all(), [
             'branch_id' => 'required',
@@ -2724,9 +2919,14 @@ class ApiControllerThree extends BaseController
                 ->get();
             return $this->successResponse($leaveDetails, 'Staff leave details fetch successfully');
         }
+         }
+        catch(Exception $error) {
+            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+        }
     }
     private function getChanges($oldData, $newData)
-    {
+    { 
+        try {
         $changes = [];
 
         foreach ($newData as $key => $value) {
@@ -2743,9 +2943,14 @@ class ApiControllerThree extends BaseController
         }
 
         return $changes;
+         }
+        catch(Exception $error) {
+            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+        }
     }
     public function encryptVariable(Request $request)
     {
+        try {
         $validator = \Validator::make($request->all(), [
             'name' => 'required'
         ]);
@@ -2761,9 +2966,14 @@ class ApiControllerThree extends BaseController
             ];
             return $this->successResponse($data, 'encrypt and decrypt values');
         }
+         }
+        catch(Exception $error) {
+            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+        }
     }
     public function decryptVariable(Request $request)
     {
+        try {
         $validator = \Validator::make($request->all(), [
             'name' => 'required'
         ]);
@@ -2777,9 +2987,14 @@ class ApiControllerThree extends BaseController
             ];
             return $this->successResponse($data, 'decrypt values');
         }
+         }
+        catch(Exception $error) {
+            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+        }
     }
     public function passwordUpdate(Request $request)
     {
+        try {
         // Set branch ID and role ID
         $branchID = "6";
         $roleID = "5";
@@ -2810,9 +3025,14 @@ class ApiControllerThree extends BaseController
         } else {
             return $this->send500Error('Something went wrong.', ['error' => 'Something went wrong']);
         }
+         }
+        catch(Exception $error) {
+            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+        }
     }
     public function testQueueEmail(Request $request)
     {
+        try {
         $validator = \Validator::make($request->all(), [
             'email' => 'required'
         ]);
@@ -2849,9 +3069,14 @@ class ApiControllerThree extends BaseController
                 return "Failed to send email. Error: " . $e->getMessage();
             }
         }
+         }
+        catch(Exception $error) {
+            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+        }
     }
     public function testQueueEmailAllUsers(Request $request)
     {
+        try {
         $validator = \Validator::make($request->all(), [
             'email' => 'required'
         ]);
@@ -2891,6 +3116,10 @@ class ApiControllerThree extends BaseController
                 return "Failed to send emails. Error: " . $e->getMessage();
             }
         }
+         }
+        catch(Exception $error) {
+            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+        }
     }
 
     public function clearCache($cache_name, $branchId)
@@ -2900,6 +3129,7 @@ class ApiControllerThree extends BaseController
     }
     public function getParentDetailsAccStudentId(Request $request)
     {
+        try {
         $validator = \Validator::make($request->all(), [
             //'token' => 'required',
             'branch_id' => 'required',
@@ -2950,9 +3180,14 @@ class ApiControllerThree extends BaseController
             }
             return $this->successResponse($parentDetails, 'Student details fetch successfully');
         }
+         }
+        catch(Exception $error) {
+            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+        }
     }
     public function decryptEmailPassword(Request $request)
     {
+        try {
         $validator = \Validator::make($request->all(), [
             'email' => 'required',
             'password' => 'required',
@@ -2968,6 +3203,10 @@ class ApiControllerThree extends BaseController
                 "decrypt_password" => $decrypt_password
             ];
             return $this->successResponse($data, 'Decrypt Email and password');
+        }
+         }
+        catch(Exception $error) {
+            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
         }
     }
     public function clearApiCacheBranch(Request $request)
@@ -3027,6 +3266,7 @@ class ApiControllerThree extends BaseController
 
     public function emailPasswordEncrypt(Request $request)
     {
+        try {
         $validator = \Validator::make($request->all(), [
             'branch_id' => 'required',
             'email' => 'required',
@@ -3049,10 +3289,15 @@ class ApiControllerThree extends BaseController
             ];
             return $this->successResponse($data, 'Your decrypt password is above');
         }
+         }
+        catch(Exception $error) {
+            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+        }
     }
     // get Student List
     public function getTeacherStudentList(Request $request)
     {
+        try {
         $validator = \Validator::make($request->all(), [
             'branch_id' => 'required',
             'class_id' => 'required'
@@ -3113,6 +3358,10 @@ class ApiControllerThree extends BaseController
             // }
             // }
             return $this->successResponse($students, 'Student record fetch successfully');
+        }
+         }
+        catch(Exception $error) {
+            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
         }
     }
 }

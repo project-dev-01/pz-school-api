@@ -56,11 +56,14 @@ use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Hash;
 use App\Models\Menus;
 use App\Models\Menuaccess;
-
+use App\Helpers\CommonHelper;
 
 class ApiController extends BaseController
 {
-    //
+    protected CommonHelper $commonHelper;
+    public function __construct(CommonHelper $commonHelper) {
+        $this->commonHelper = $commonHelper;
+    }
     public function getRoles(Request $request)
     {
         try {
