@@ -14894,7 +14894,8 @@ try{
                     'e.class_id',
                     'e.section_id',
                     'e.session_id',
-                    'e.semester_id'
+                    'e.semester_id',
+                    'e.attendance_no'
                 )
                 ->leftJoin('enrolls as e', 's.id', '=', 'e.student_id')
                 ->leftJoin('classes as c', 'e.class_id', '=', 'c.id')
