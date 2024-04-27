@@ -46,6 +46,8 @@ use App\Notifications\AdminTermination;
 use App\Notifications\ParentInfoUpdate;
 use App\Notifications\StudentInfoUpdate;
 use App\Notifications\LeaveReasonNotification;
+use App\Notifications\newApplication;
+
 use Illuminate\Support\Facades\Notification;
 // encrypt and decrypt
 use Illuminate\Support\Facades\Crypt;
@@ -24056,6 +24058,28 @@ try {
                     'created_at' => date("Y-m-d H:i:s")
                 ]);
 
+                $user = User::where([
+                    ['branch_id', '=', $request->branch_id],
+                    ['role_id', '=', 2]
+                ])->get();
+
+               
+
+                // return $parent_name;
+                $info_update = [];
+                // $info_update['parent_name'] = $parent_name->name;
+                // $info_update['student_name'] = $old->last_name . ' ' . $old->first_name;
+                $details = [
+                    'branch_id' => $request->branch_id,
+                    'parent_id' => $request->parent_id,
+                    'application_id' => $query,
+                    'student_name' => $request->last_name. ' ' . $request->first_name,
+                    // 'info_update' => $info_update
+                ];
+                // return $details;
+                // notifications sent
+                Notification::send($user, new NewApplication($details));
+
                 $success = [];
                 if (!$query) {
                     return $this->send500Error('Something went wrong.', ['error' => 'Something went wrong']);
@@ -27457,7 +27481,7 @@ try{
             'token' => 'required',
         ]);
        
-
+        
         // return $request['old_photo'];
 
         $id = $request->student_id;
