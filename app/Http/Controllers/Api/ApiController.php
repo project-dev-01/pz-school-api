@@ -18082,6 +18082,7 @@ try{
             // return $request;
             // create new connection
             $conn = $this->createNewConnection($request->branch_id);
+            $department_id = isset($request->department_id) ? $request->department_id : null;
             $class_id = isset($request->class_id) ? $request->class_id : null;
             $section_id = isset($request->section_id) ? $request->section_id : null;
             $student_name = isset($request->student_name) ? $request->student_name : null;
@@ -18118,7 +18119,8 @@ try{
                     'lev.home_teacher_status',
                     'lev.nursing_teacher_status',
                     'lev.nursing_teacher_remarks',
-                    'en.attendance_no'
+                    'en.attendance_no',
+                    'sd.name as department_name'
                 )
                 ->join('students as std', 'lev.student_id', '=', 'std.id')
                 ->join('enrolls as en', 'lev.student_id', '=', 'en.student_id')
@@ -18126,7 +18128,11 @@ try{
                 ->join('sections as sc', 'lev.section_id', '=', 'sc.id')
                 ->leftJoin('student_leave_types as slt', 'lev.change_lev_type', '=', 'slt.id')
                 ->leftJoin('absent_reasons as ar', 'lev.reasonId', '=', 'ar.id')
+                ->join('staff_departments as sd', 'cl.department_id', '=', 'sd.id')
                 // ->leftJoin('students as std', 'lev.student_id', '=', 'std.id')
+                ->when($department_id, function ($query, $department_id) {
+                    return $query->where('cl.department_id', $department_id);
+                })
                 ->when($class_id, function ($query, $class_id) {
                     return $query->where('lev.class_id', $class_id);
                 })
@@ -18139,7 +18145,7 @@ try{
                 ->when($student_name, function ($query, $student_name) {
                     return $query->where(function ($query) use ($student_name) {
                         $query->where("std.first_name", "LIKE", "%{$student_name}%")
-                              ->orWhere("std.last_name", "LIKE", "%{$student_name}%");
+                            ->orWhere("std.last_name", "LIKE", "%{$student_name}%");
                     });
                 })
                 // ->when($date, function ($query, $date) {
@@ -25122,7 +25128,7 @@ try{
             }
             if ($request->role_id == "2") {
                 if ($request->phase_2_status != $request->phase_2_status_old){
-                    if($request->phase_2_status != "Process"){
+                    if($request->phase_2_status != "Applied"){
                         
                     
                         $phase_2_email = $request->guardian_email;
@@ -27838,7 +27844,7 @@ try{
                     $multiply = $value * $evenNumber;
                 }
             }
-            if ($multiply > 10) {
+            if ($multiply >= 10) {
                 $multiply  = 1 + ($multiply % 10);
             }
             $modifiedNumber[] = $multiply;
