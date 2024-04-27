@@ -12341,8 +12341,8 @@ try {
             $buletinDetails = $conn->table('bulletin_boards as b')
                 ->select("b.file")
                 ->where("b.status", 1)
-                ->where("b.publish", 1)
-                ->where('b.publish_end_date', '>', $currentDateTime)
+                //->where("b.publish", 1)
+                //->where('b.publish_end_date', '>', $currentDateTime)
                 ->get();
             return $this->successResponse($buletinDetails, 'Bulletin record fetch successfully');
         }

@@ -968,7 +968,7 @@ class ApiController extends BaseController
                     'ta.type',
                     's.name as section_name',
                     'c.name as class_name',
-                    DB::raw("CONCAT(st.first_name, ' ', st.last_name) as teacher_name")
+                    DB::raw("CONCAT(st.last_name, ' ', st.first_name) as teacher_name")
                 )
                 ->join('sections as s', 'ta.section_id', '=', 's.id')
                 ->join('staffs as st', 'ta.teacher_id', '=', 'st.id')
@@ -15349,6 +15349,7 @@ try{
         } else {
             $cache_time = config('constants.cache_time');
             $cache_parentDetails = config('constants.cache_parentDetails');
+            $academic_session_id = $request->academic_session_id;
             $status = $request->status ?? null;
             
             if ($status === null) {
@@ -15363,24 +15364,43 @@ try{
                 }
             } else {
                 // No caching for status filtering
-                $parentDetails = $this->fetchParentDetails($request->branch_id, $status);
+                $parentDetails = $this->fetchParentDetails($request->branch_id, $status,$academic_session_id);
             }
 
             return $this->successResponse($parentDetails, 'Parent records fetched successfully');
         }
     }
-    private function fetchParentDetails($branch_id, $status = null) {
+    private function fetchParentDetails($branch_id, $status = null, $academic_session_id) {
         $conn = $this->createNewConnection($branch_id);
     
-        if ($status !== null) {
-            $parentDetails = $conn->table('parent')
-                ->select("id", 'email', 'occupation', DB::raw("CONCAT(last_name, ' ', first_name) as name"))
-                ->where('status', '=', $status)
-                ->get();
+        if ($status == "1") {
+            $inactive1 = $conn->table('parent as pt')
+                        ->select("pt.id", 'pt.email', 'pt.occupation', DB::raw("CONCAT(pt.last_name, ' ', pt.first_name) as name"))
+                        ->join('students as st', 'pt.id', '=', 'st.guardian_id')
+                        ->leftJoin('enrolls as e', 'st.id', '=', 'e.student_id')
+                        ->where('e.active_status', '!=' , "0")
+                        ->where('pt.status', '=', '0')
+                        ->get()->toArray();
+
+
+            $inactive2 = $conn->table('parent as pt')
+                        ->select("pt.id", 'pt.email', 'pt.occupation', DB::raw("CONCAT(pt.last_name, ' ', pt.first_name) as name"))
+                        ->leftJoin('students as st', 'pt.id', '=', 'st.guardian_id')
+                        ->leftJoin('enrolls as e', 'st.id', '=', 'e.student_id')
+                        ->whereNull('st.guardian_id')
+                        ->where('pt.status', '=', '0')
+                        ->get()->toArray();
+
+            
+            $parentDetails = array_merge($inactive2, $inactive1);
         } else {
-            $parentDetails = $conn->table('parent')
-                ->select("id", 'email', 'occupation', DB::raw("CONCAT(last_name, ' ', first_name) as name"))
-                //->where('status', '=', '0')
+            $parentDetails = $conn->table('parent as pt')
+                ->select("pt.id", 'pt.email', 'pt.occupation', DB::raw("CONCAT(pt.last_name, ' ', pt.first_name) as name"))
+                ->join('students as st', 'pt.id', '=', 'st.guardian_id')
+                ->leftJoin('enrolls as e', 'st.id', '=', 'e.student_id')
+                ->where('e.academic_session_id', '=' , $academic_session_id)
+                ->where('e.active_status', '=' , "0")
+                ->where('pt.status', '=', '0')
                 ->get();
         }
     
@@ -18084,6 +18104,7 @@ try{
             // return $request;
             // create new connection
             $conn = $this->createNewConnection($request->branch_id);
+            $department_id = isset($request->department_id) ? $request->department_id : null;
             $class_id = isset($request->class_id) ? $request->class_id : null;
             $section_id = isset($request->section_id) ? $request->section_id : null;
             $student_name = isset($request->student_name) ? $request->student_name : null;
@@ -18120,7 +18141,8 @@ try{
                     'lev.home_teacher_status',
                     'lev.nursing_teacher_status',
                     'lev.nursing_teacher_remarks',
-                    'en.attendance_no'
+                    'en.attendance_no',
+                    'sd.name as department_name'
                 )
                 ->join('students as std', 'lev.student_id', '=', 'std.id')
                 ->join('enrolls as en', 'lev.student_id', '=', 'en.student_id')
@@ -18128,7 +18150,11 @@ try{
                 ->join('sections as sc', 'lev.section_id', '=', 'sc.id')
                 ->leftJoin('student_leave_types as slt', 'lev.change_lev_type', '=', 'slt.id')
                 ->leftJoin('absent_reasons as ar', 'lev.reasonId', '=', 'ar.id')
+                ->join('staff_departments as sd', 'cl.department_id', '=', 'sd.id')
                 // ->leftJoin('students as std', 'lev.student_id', '=', 'std.id')
+                ->when($department_id, function ($query, $department_id) {
+                    return $query->where('cl.department_id', $department_id);
+                })
                 ->when($class_id, function ($query, $class_id) {
                     return $query->where('lev.class_id', $class_id);
                 })
@@ -18141,7 +18167,7 @@ try{
                 ->when($student_name, function ($query, $student_name) {
                     return $query->where(function ($query) use ($student_name) {
                         $query->where("std.first_name", "LIKE", "%{$student_name}%")
-                              ->orWhere("std.last_name", "LIKE", "%{$student_name}%");
+                            ->orWhere("std.last_name", "LIKE", "%{$student_name}%");
                     });
                 })
                 // ->when($date, function ($query, $date) {
@@ -25146,7 +25172,7 @@ try{
             }
             if ($request->role_id == "2") {
                 if ($request->phase_2_status != $request->phase_2_status_old){
-                    if($request->phase_2_status != "Process"){
+                    if($request->phase_2_status != "Applied"){
                         
                     
                         $phase_2_email = $request->guardian_email;
@@ -27690,17 +27716,23 @@ try{
                         } else {
                             if($key == "religion")
                             {
-                                $religionOldValue = $conn->table('religions')
-                                ->select('id','name')
-                                ->where('id', $old->$key)
-                                ->first();
+                                $religion_old_name = "";
+                                if($old->$key){
+
+                                    $religionOldValue = $conn->table('religions')
+                                    ->select('id','name')
+                                    ->where('id', $old->$key)
+                                    ->first();
+                                    $religion_old_name = $religionOldValue->name;
+                                }
                                 $religionNewValue = $conn->table('religions')
                                 ->select('id','name')
                                 ->where('id', $suc)
                                 ->first();
                                 ${$key} = [];
-                                ${$key}['old_value'] =  $religionOldValue->name;
+                                ${$key}['old_value'] =  $religion_old_name;
                                 ${$key}['new_value'] =  $religionNewValue->name;
+                                // dd($key);
                             }
                             else
                             {
@@ -27708,7 +27740,7 @@ try{
                                 ${$key}['old_value'] =  $old->$key;
                                 ${$key}['new_value'] =  $suc;
                             }
-                                                }
+                        }
 
                         $studentObj->$key = ${$key};
                     }
@@ -27862,7 +27894,7 @@ try{
                     $multiply = $value * $evenNumber;
                 }
             }
-            if ($multiply > 10) {
+            if ($multiply >= 10) {
                 $multiply  = 1 + ($multiply % 10);
             }
             $modifiedNumber[] = $multiply;

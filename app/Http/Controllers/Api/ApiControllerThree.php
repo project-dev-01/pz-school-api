@@ -2410,7 +2410,7 @@ class ApiControllerThree extends BaseController
                 ->when($section_id, function ($query, $section_id) {
                     return $query->where('en.section_id', $section_id);
                 })
-                ->where("register_no", 'LIKE', $yearStart . '%')
+                ->where("stud.register_no", 'LIKE', $yearStart . '%')
                 ->groupBy("stud.id")
                 ->get();
             return $this->successResponse($data, 'student new joining list fetch successfully');
@@ -2744,38 +2744,47 @@ class ApiControllerThree extends BaseController
             $currentDate = Carbon::now()->toDateString();
             // Clone the current date to avoid modifying the original object
             $addTwoMonth = Carbon::parse($currentDate)->addMonths(2)->toDateString();
-            $attRep = $createConnection->table('termination as t')
-                ->select(
-                    'e.id as en_id',
-                    'e.class_id',
-                    'e.section_id',
-                    't.*',
-                    'c.name as class_name',
-                    'sc.name as section_name',
-                    'ay.name as academic_year',
-                    's.gender',
-                    DB::raw("CONCAT(s.last_name_english, ' ', s.first_name_english) as name_english"),
-                    DB::raw("CONCAT(s.last_name, ' ', s.first_name) as name")
-                )
+            $parent_id = $request->parent_id;
+            // $attRep = $createConnection->table('termination as t')
+            //     ->select(
+            //         'e.id as en_id',
+            //         'e.class_id',
+            //         'e.section_id',
+            //         't.*',
+            //         'c.name as class_name',
+            //         'sc.name as section_name',
+            //         'ay.name as academic_year',
+            //         's.gender',
+            //         DB::raw("CONCAT(s.last_name_english, ' ', s.first_name_english) as name_english"),
+            //         DB::raw("CONCAT(s.last_name, ' ', s.first_name) as name")
+            //     )
+            //     ->leftJoin('students as s', 's.id', '=', 't.student_id')
+            //     ->leftJoin('enrolls as e', function ($join) {
+            //         $join->on('e.student_id', '=', 's.id')
+            //             ->where('e.id', '=', function ($query) {
+            //                 $query->select(DB::raw('MAX(id)'))
+            //                     ->from('enrolls')
+            //                     ->whereColumn('enrolls.student_id', '=', 'e.student_id');
+            //             });
+            //     })->get();
+
+                $terminationDetails = $createConnection->table('termination as t')
+                ->select('t.*', 'ay.name as academic_year', 's.gender',
+                 DB::raw("CONCAT(s.last_name_english, ' ', s.first_name_english) as name_english"),
+                 DB::raw("CONCAT(s.last_name, ' ', s.first_name) as name"), 
+                  'c.name as class_name', 'sc.name as section_name')
                 ->leftJoin('students as s', 's.id', '=', 't.student_id')
-                ->leftJoin('enrolls as e', function ($join) {
-                    $join->on('e.student_id', '=', 's.id')
-                        ->where('e.id', '=', function ($query) {
-                            $query->select(DB::raw('MAX(id)'))
-                                ->from('enrolls')
-                                ->whereColumn('enrolls.student_id', '=', 'e.student_id');
-                        });
-                })
+                ->leftJoin('enrolls as e', 'e.student_id', '=', 's.id')
                 ->leftJoin('classes as c', 'e.class_id', '=', 'c.id')
                 ->leftJoin('sections as sc', 'e.section_id', '=', 'sc.id')
                 ->leftJoin('academic_year as ay', 'e.academic_session_id', '=', 'ay.id')
-                ->where('t.termination_status', '=', 'Approved')
-                ->whereDate('t.date_of_termination', '>=', $currentDate)
-                ->whereDate('t.date_of_termination', '<=', $addTwoMonth)
-                ->orderByDesc('e.id')
-                ->get();
+                ->where('e.active_status', '=', '0')
+                ->when($parent_id, function ($query, $parent_id) {
+                    return $query->where('t.created_by', $parent_id);
+                })->orderBy('t.created_by', 'desc')->get()->toArray();
 
-            return $this->successResponse($attRep, 'transfer student list fetch successfully');
+            return $this->successResponse($terminationDetails, 'transfer student list fetch successfully');
+
         }
          }
         catch(Exception $error) {

@@ -339,7 +339,10 @@ class MenuAccessController extends BaseController
                 $conn = $this->createNewConnection($request->branch_id);
                 // check exist name
                 if ($conn->table('school_roles')->where('fullname', '=', $request->fullname)->count() > 0) {
-                    return $this->send422Error('Name Already Exist', ['error' => 'Name Already Exist']);
+                    $success = [];
+                    return $this->successResponse($success, 'Name Already Exist');
+            
+                    //return $this->send422Error('Name Already Exist', ['error' => 'Name Already Exist']);
                 } else {
                     // insert data
                     $query = $conn->table('school_roles')->insert([
@@ -516,7 +519,7 @@ class MenuAccessController extends BaseController
                 // create new connection
                 $conn = $this->createNewConnection($request->branch_id);
                 // check exist name
-                if ($conn->table('school_roles')->where([['fullname', '=', $request->fullname], ['id', '!=', $id]])->count() > 0) {
+                if ($conn->table('school_roles')->where([['fullname', '=', $request->fullname], ['id', '!=', $id],['flag', '=', '0']])->count() > 0) {
                     return $this->send422Error('Name Already Exist', ['error' => 'Name Already Exist']);
                 } else {
                     // update data
