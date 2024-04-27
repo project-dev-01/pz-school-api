@@ -15347,6 +15347,7 @@ try{
         } else {
             $cache_time = config('constants.cache_time');
             $cache_parentDetails = config('constants.cache_parentDetails');
+            $academic_session_id = $request->academic_session_id;
             $status = $request->status ?? null;
             
             if ($status === null) {
@@ -15361,24 +15362,43 @@ try{
                 }
             } else {
                 // No caching for status filtering
-                $parentDetails = $this->fetchParentDetails($request->branch_id, $status);
+                $parentDetails = $this->fetchParentDetails($request->branch_id, $status,$academic_session_id);
             }
 
             return $this->successResponse($parentDetails, 'Parent records fetched successfully');
         }
     }
-    private function fetchParentDetails($branch_id, $status = null) {
+    private function fetchParentDetails($branch_id, $status = null, $academic_session_id) {
         $conn = $this->createNewConnection($branch_id);
     
-        if ($status !== null) {
-            $parentDetails = $conn->table('parent')
-                ->select("id", 'email', 'occupation', DB::raw("CONCAT(last_name, ' ', first_name) as name"))
-                ->where('status', '=', $status)
-                ->get();
+        if ($status == "1") {
+            $inactive1 = $conn->table('parent as pt')
+                        ->select("pt.id", 'pt.email', 'pt.occupation', DB::raw("CONCAT(pt.last_name, ' ', pt.first_name) as name"))
+                        ->join('students as st', 'pt.id', '=', 'st.guardian_id')
+                        ->leftJoin('enrolls as e', 'st.id', '=', 'e.student_id')
+                        ->where('e.active_status', '!=' , "0")
+                        ->where('pt.status', '=', '0')
+                        ->get()->toArray();
+
+
+            $inactive2 = $conn->table('parent as pt')
+                        ->select("pt.id", 'pt.email', 'pt.occupation', DB::raw("CONCAT(pt.last_name, ' ', pt.first_name) as name"))
+                        ->leftJoin('students as st', 'pt.id', '=', 'st.guardian_id')
+                        ->leftJoin('enrolls as e', 'st.id', '=', 'e.student_id')
+                        ->whereNull('st.guardian_id')
+                        ->where('pt.status', '=', '0')
+                        ->get()->toArray();
+
+            
+            $parentDetails = array_merge($inactive2, $inactive1);
         } else {
-            $parentDetails = $conn->table('parent')
-                ->select("id", 'email', 'occupation', DB::raw("CONCAT(last_name, ' ', first_name) as name"))
-                //->where('status', '=', '0')
+            $parentDetails = $conn->table('parent as pt')
+                ->select("pt.id", 'pt.email', 'pt.occupation', DB::raw("CONCAT(pt.last_name, ' ', pt.first_name) as name"))
+                ->join('students as st', 'pt.id', '=', 'st.guardian_id')
+                ->leftJoin('enrolls as e', 'st.id', '=', 'e.student_id')
+                ->where('e.academic_session_id', '=' , $academic_session_id)
+                ->where('e.active_status', '=' , "0")
+                ->where('pt.status', '=', '0')
                 ->get();
         }
     
@@ -27672,17 +27692,23 @@ try{
                         } else {
                             if($key == "religion")
                             {
-                                $religionOldValue = $conn->table('religions')
-                                ->select('id','name')
-                                ->where('id', $old->$key)
-                                ->first();
+                                $religion_old_name = "";
+                                if($old->$key){
+
+                                    $religionOldValue = $conn->table('religions')
+                                    ->select('id','name')
+                                    ->where('id', $old->$key)
+                                    ->first();
+                                    $religion_old_name = $religionOldValue->name;
+                                }
                                 $religionNewValue = $conn->table('religions')
                                 ->select('id','name')
                                 ->where('id', $suc)
                                 ->first();
                                 ${$key} = [];
-                                ${$key}['old_value'] =  $religionOldValue->name;
+                                ${$key}['old_value'] =  $religion_old_name;
                                 ${$key}['new_value'] =  $religionNewValue->name;
+                                // dd($key);
                             }
                             else
                             {
@@ -27690,7 +27716,7 @@ try{
                                 ${$key}['old_value'] =  $old->$key;
                                 ${$key}['new_value'] =  $suc;
                             }
-                                                }
+                        }
 
                         $studentObj->$key = ${$key};
                     }
