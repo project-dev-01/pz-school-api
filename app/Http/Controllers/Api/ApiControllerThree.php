@@ -2410,7 +2410,7 @@ class ApiControllerThree extends BaseController
                 ->when($section_id, function ($query, $section_id) {
                     return $query->where('en.section_id', $section_id);
                 })
-                ->where("register_no", 'LIKE', $yearStart . '%')
+                ->where("stud.register_no", 'LIKE', $yearStart . '%')
                 ->groupBy("stud.id")
                 ->get();
             return $this->successResponse($data, 'student new joining list fetch successfully');

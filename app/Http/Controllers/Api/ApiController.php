@@ -25122,7 +25122,7 @@ try{
             }
             if ($request->role_id == "2") {
                 if ($request->phase_2_status != $request->phase_2_status_old){
-                    if($request->phase_2_status != "Process"){
+                    if($request->phase_2_status != "Applied"){
                         
                     
                         $phase_2_email = $request->guardian_email;
@@ -27838,7 +27838,7 @@ try{
                     $multiply = $value * $evenNumber;
                 }
             }
-            if ($multiply > 10) {
+            if ($multiply >= 10) {
                 $multiply  = 1 + ($multiply % 10);
             }
             $modifiedNumber[] = $multiply;
