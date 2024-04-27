@@ -966,7 +966,7 @@ class ApiController extends BaseController
                     'ta.type',
                     's.name as section_name',
                     'c.name as class_name',
-                    DB::raw("CONCAT(st.first_name, ' ', st.last_name) as teacher_name")
+                    DB::raw("CONCAT(st.last_name, ' ', st.first_name) as teacher_name")
                 )
                 ->join('sections as s', 'ta.section_id', '=', 's.id')
                 ->join('staffs as st', 'ta.teacher_id', '=', 'st.id')
