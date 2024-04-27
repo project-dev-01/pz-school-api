@@ -966,7 +966,7 @@ class ApiController extends BaseController
                     'ta.type',
                     's.name as section_name',
                     'c.name as class_name',
-                    DB::raw("CONCAT(st.last_name, ' ', st.first_name) as teacher_name")
+                    DB::raw("CONCAT(st.first_name, ' ', st.last_name) as teacher_name")
                 )
                 ->join('sections as s', 'ta.section_id', '=', 's.id')
                 ->join('staffs as st', 'ta.teacher_id', '=', 'st.id')
@@ -25128,7 +25128,7 @@ try{
             }
             if ($request->role_id == "2") {
                 if ($request->phase_2_status != $request->phase_2_status_old){
-                    if($request->phase_2_status != "Applied"){
+                    if($request->phase_2_status != "Process"){
                         
                     
                         $phase_2_email = $request->guardian_email;
@@ -27844,7 +27844,7 @@ try{
                     $multiply = $value * $evenNumber;
                 }
             }
-            if ($multiply >= 10) {
+            if ($multiply > 10) {
                 $multiply  = 1 + ($multiply % 10);
             }
             $modifiedNumber[] = $multiply;
