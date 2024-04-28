@@ -172,7 +172,7 @@ class AuthController extends BaseController
                         $StudentID = $Connection->table('students as std')
                             ->select(
                                 'std.id',
-                                DB::raw("CONCAT(std.first_name, ' ', std.last_name) as name")
+                                DB::raw("CONCAT(std.last_name, ' ', std.first_name) as name")
                             )
                             ->join('enrolls as en', 'std.id', '=', 'en.student_id')
                             ->where('en.active_status', '=', '0')

@@ -1126,6 +1126,7 @@ Route::group(['middleware' => ['auth:api', 'throttle:limit_per_user', 'logroute'
     Route::post('shortcutLink/update', [ApiControllerOne::class, 'updateShortcut']);
     Route::post('shortcutLink/delete', [ApiControllerOne::class, 'deleteShortcut']);
     Route::get('bulletinBoard_Dashboard', [ApiControllerOne::class, 'getBulletinDashboard']);
+    Route::post('bulletinBoard_teacher_Dashboard', [ApiControllerOne::class, 'getBulletinTeacherDashboard']);
     Route::post('student_new_joining_list', [ApiControllerThree::class, 'studentNewJoiningList']);
     Route::post('settings_attendance_report', [ApiControllerThree::class, 'saveAttendanceReportSetting']);
     Route::post('get_settings_attendance_report', [ApiControllerThree::class, 'getAttendanceReportSetting']);
