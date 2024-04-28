@@ -15340,8 +15340,7 @@ try{
     public function getParentList(Request $request)
     {
         $validator = \Validator::make($request->all(), [
-            'branch_id' => 'required',
-            'token' => 'required',
+            'branch_id' => 'required'
         ]);
 
         if (!$validator->passes()) {
@@ -15351,21 +15350,20 @@ try{
             $cache_parentDetails = config('constants.cache_parentDetails');
             $academic_session_id = $request->academic_session_id;
             $status = $request->status ?? null;
-            
-            if ($status === null) {
-                // Cache enabled for status filtering
-                $cacheKey = $cache_parentDetails . $request->branch_id; 
-
-                if (Cache::has($cacheKey)) {
-                    $parentDetails = Cache::get($cacheKey);
-                } else {
-                    $parentDetails = $this->fetchParentDetails($request->branch_id);
-                    Cache::put($cacheKey, $parentDetails, now()->addHours($cache_time));
-                }
-            } else {
+            // dd($request);
+            // if ($status === null) {
+            //     // Cache enabled for status filtering
+            //     $cacheKey = $cache_parentDetails . $request->branch_id; 
+            //     if (Cache::has($cacheKey)) {
+            //         $parentDetails = Cache::get($cacheKey);
+            //     } else {
+            //         $parentDetails = $this->fetchParentDetails($request->branch_id, $status,$academic_session_id);
+            //         Cache::put($cacheKey, $parentDetails, now()->addHours($cache_time));
+            //     }
+            // } else {
                 // No caching for status filtering
                 $parentDetails = $this->fetchParentDetails($request->branch_id, $status,$academic_session_id);
-            }
+            // }
 
             return $this->successResponse($parentDetails, 'Parent records fetched successfully');
         }
@@ -15376,19 +15374,33 @@ try{
         if ($status == "1") {
             $inactive1 = $conn->table('parent as pt')
                         ->select("pt.id", 'pt.email', 'pt.occupation', DB::raw("CONCAT(pt.last_name, ' ', pt.first_name) as name"))
-                        ->join('students as st', 'pt.id', '=', 'st.guardian_id')
+                        // ->join('students as st', 'pt.id', '=', 'st.guardian_id')
+                        ->join('students as st', 'pt.id', '=', 'st.father_id')
+                        // ->leftjoin('students as st', function ($join) {
+                        //     $join->on('st.father_id', '=', 'pt.id');
+                        //     $join->orOn('st.mother_id', '=', 'pt.id');
+                        //     $join->orOn('st.guardian_id', '=', 'pt.id');
+                        // })
                         ->leftJoin('enrolls as e', 'st.id', '=', 'e.student_id')
                         ->where('e.active_status', '!=' , "0")
                         ->where('pt.status', '=', '0')
+                        ->groupBy('st.father_id')
                         ->get()->toArray();
 
 
             $inactive2 = $conn->table('parent as pt')
                         ->select("pt.id", 'pt.email', 'pt.occupation', DB::raw("CONCAT(pt.last_name, ' ', pt.first_name) as name"))
-                        ->leftJoin('students as st', 'pt.id', '=', 'st.guardian_id')
+                        // ->leftJoin('students as st', 'pt.id', '=', 'st.guardian_id')
+                        ->leftJoin('students as st', 'pt.id', '=', 'st.father_id')
+                        // ->leftjoin('students as st', function ($join) {
+                        //     $join->on('st.father_id', '=', 'pt.id');
+                        //     $join->orOn('st.mother_id', '=', 'pt.id');
+                        //     $join->orOn('st.guardian_id', '=', 'pt.id');
+                        // })
                         ->leftJoin('enrolls as e', 'st.id', '=', 'e.student_id')
                         ->whereNull('st.guardian_id')
                         ->where('pt.status', '=', '0')
+                        ->groupBy('st.father_id')
                         ->get()->toArray();
 
             
@@ -15396,11 +15408,18 @@ try{
         } else {
             $parentDetails = $conn->table('parent as pt')
                 ->select("pt.id", 'pt.email', 'pt.occupation', DB::raw("CONCAT(pt.last_name, ' ', pt.first_name) as name"))
-                ->join('students as st', 'pt.id', '=', 'st.guardian_id')
+                // ->join('students as st', 'pt.id', '=', 'st.guardian_id')
+                ->join('students as st', 'pt.id', '=', 'st.father_id')
+                // ->leftjoin('students as st', function ($join) {
+                //     $join->on('st.father_id', '=', 'pt.id');
+                //     $join->orOn('st.mother_id', '=', 'pt.id');
+                //     $join->orOn('st.guardian_id', '=', 'pt.id');
+                // })
                 ->leftJoin('enrolls as e', 'st.id', '=', 'e.student_id')
                 ->where('e.academic_session_id', '=' , $academic_session_id)
                 ->where('e.active_status', '=' , "0")
                 ->where('pt.status', '=', '0')
+                ->groupBy('st.father_id')
                 ->get();
         }
     
@@ -17559,6 +17578,7 @@ try{
                 ->where('std.father_id', '=', $parent_id)
                 ->orWhere('std.mother_id', '=', $parent_id)
                 ->orWhere('std.guardian_id', '=', $parent_id)
+                ->groupBy("std.id")
                 ->get();
             return $this->successResponse($studentDetails, 'Student details fetch successfully');
         }
@@ -24462,8 +24482,7 @@ try{
             // 'school_state' => 'required',
             // 'school_postal_code' => 'required',
 
-            'branch_id' => 'required',
-            'token' => 'required',
+            'branch_id' => 'required'
         ]);
 
 
@@ -25224,7 +25243,7 @@ try{
         }
          }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'updateApplication');
         }
     }
 
@@ -27650,8 +27669,7 @@ try{
 try{
         $validator = \Validator::make($request->all(), [
             'id' => 'required',
-            'branch_id' => 'required',
-            'token' => 'required'
+            'branch_id' => 'required'
         ]);
 
         if (!$validator->passes()) {
@@ -27674,8 +27692,10 @@ try{
                     'sci.visa_expiry_date',
                     'sci.nationality',
                     'sci.nric',
-                    'sci.religion',
-                    'sci.race',
+                    // 'sci.religion',
+                    're.name as religion',
+                    // 'sci.race',
+                    'rc.name as race',
                     'sci.blood_group',
                     'sci.mother_tongue',
                     'sci.current_address',
@@ -27687,6 +27707,8 @@ try{
                     'sci.mobile_no',
                     // DB::raw("CONCAT(s.last_name, ' ', s.first_name) as name")
                 )
+                ->leftJoin('religions as re', 'sci.religion', '=', 're.id')
+                ->leftJoin('races as rc', 'sci.race', '=', 'rc.id')
                 ->where('sci.id', $id)
                 ->first();
             $student_id = $getstudentDetails->student_id;
@@ -27714,32 +27736,32 @@ try{
                             ${$key}['old_value'] =  Helper::decryptStringData($old->$key);
                             ${$key}['new_value'] =  Helper::decryptStringData($suc);
                         } else {
-                            if($key == "religion")
-                            {
-                                $religion_old_name = "";
-                                if($old->$key){
+                            // if($key == "religion")
+                            // {
+                            //     $religion_old_name = "";
+                            //     if($old->$key){
 
-                                    $religionOldValue = $conn->table('religions')
-                                    ->select('id','name')
-                                    ->where('id', $old->$key)
-                                    ->first();
-                                    $religion_old_name = $religionOldValue->name;
-                                }
-                                $religionNewValue = $conn->table('religions')
-                                ->select('id','name')
-                                ->where('id', $suc)
-                                ->first();
-                                ${$key} = [];
-                                ${$key}['old_value'] =  $religion_old_name;
-                                ${$key}['new_value'] =  $religionNewValue->name;
-                                // dd($key);
-                            }
-                            else
-                            {
+                            //         $religionOldValue = $conn->table('religions')
+                            //         ->select('id','name')
+                            //         ->where('id', $old->$key)
+                            //         ->first();
+                            //         $religion_old_name = isset($religionOldValue->name)?$religionOldValue->name:"";
+                            //     }
+                            //     $religionNewValue = $conn->table('religions')
+                            //     ->select('id','name')
+                            //     ->where('id', $suc)
+                            //     ->first();
+                            //     ${$key} = [];
+                            //     ${$key}['old_value'] =  $religion_old_name;
+                            //     ${$key}['new_value'] =  isset($religionOldValue->name)?$religionOldValue->name:"";
+                            //     // dd($key);
+                            // }
+                            // else
+                            // {
                                 ${$key} = [];
                                 ${$key}['old_value'] =  $old->$key;
                                 ${$key}['new_value'] =  $suc;
-                            }
+                            // }
                         }
 
                         $studentObj->$key = ${$key};
@@ -27756,7 +27778,7 @@ try{
         }
         }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'getStudentUpdateInfoDetails');
         }
     }
 

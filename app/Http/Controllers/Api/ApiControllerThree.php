@@ -2100,7 +2100,7 @@ class ApiControllerThree extends BaseController
             $getStudentAttendence = $Connection->table('enrolls as en')
                 ->select(
                     'en.student_id',
-                    'en.roll',
+                    // 'en.roll_no',
                     DB::raw('CONCAT(st.last_name, " ", st.first_name) as name'),
                     'st.register_no',
                     'sa.id as att_id',
@@ -2359,62 +2359,59 @@ class ApiControllerThree extends BaseController
         if (!$validator->passes()) {
             return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
         } else {
-            // create new connection
-            $Connection = $this->createNewConnection($request->branch_id);
-            $class_id = isset($request->class_id) ? $request->class_id : null;
-            $section_id = isset($request->section_id) ? $request->section_id : null;
-            $academic_session_id = $request->academic_session_id;
+        // create new connection
+        $Connection = $this->createNewConnection($request->branch_id);
+        $class_id = isset($request->class_id) ? $request->class_id : null;
+        $section_id = isset($request->section_id) ? $request->section_id : null;
+        $academic_session_id = $request->academic_session_id;
 
-
-            $academic_year = $Connection->table('academic_year')->where('id', $request->academic_session_id)->first();
-            // dd($academic_year);
-            // $start_end = explode('-', $academic_year->name);
-
-            $current_year = $academic_year->name;
-            $yearStart = "9" . substr($current_year, 2);
-            $data = $Connection->table('enrolls as en')
-                ->select(
-                    'en.id',
-                    'en.student_id',
-                    'stud.register_no',
-                    // 'en.class_id',
-                    // 'en.section_id',
-                    // 'en.academic_session_id',
-                    // 'en.semester_id',
-                    // 'en.session_id',
-                    // 'en.active_status',
-                    DB::raw("CONCAT(stud.last_name, ' ', stud.first_name) as student_name"),
-                    'stud.admission_date',
-                    'cl.name as class_name',
-                    'sc.name as section_name',
-                    'emd.name as dept_name',
-                    'stud.gender',
-                    'stud.gender',
-                    'stud.email'
-                )
-                ->join('classes as cl', 'en.class_id', '=', 'cl.id')
-                ->join('sections as sc', 'en.section_id', '=', 'sc.id')
-                ->join('students as stud', 'en.student_id', '=', 'stud.id')
-                ->leftJoin('emp_department as emd', 'en.department_id', '=', 'emd.id')
-                ->where('en.academic_session_id', $academic_session_id)
-                // Not in to other academic id to get new joinee studens
-                ->whereNotIn('en.student_id', function ($query) use ($request) {
-                    $query->select('ens.student_id')
-                        ->from('enrolls as ens')
-                        ->where('ens.academic_session_id', '!=', $request->academic_session_id)
-                        ->distinct();
-                })
-                ->when($class_id, function ($query, $class_id) {
-                    return $query->where('en.class_id', $class_id);
-                })
-                ->when($section_id, function ($query, $section_id) {
-                    return $query->where('en.section_id', $section_id);
-                })
-                ->where("stud.register_no", 'LIKE', $yearStart . '%')
-                ->groupBy("stud.id")
-                ->get();
-            return $this->successResponse($data, 'student new joining list fetch successfully');
+        // Get the current year
+        $currentYear = date('Y');
+        // If yes, increment the year for the end date
+        if (date('n') > 3) {
+            $endYear = $currentYear + 1;
+        } else {
+            $endYear = $currentYear;
         }
+        // Set the start and end dates
+        $startDate = date('Y-m-d', strtotime('April 1st, ' . $currentYear));
+        $endDate = date('Y-m-d', strtotime('March 31st, ' . $endYear));
+
+        $data = $Connection->table('enrolls as en')
+            ->select(
+                'en.id',
+                'en.student_id',
+                'stud.register_no',
+                // 'en.class_id',
+                // 'en.section_id',
+                // 'en.academic_session_id',
+                // 'en.semester_id',
+                // 'en.session_id',
+                // 'en.active_status',
+                DB::raw("CONCAT(stud.last_name, ' ', stud.first_name) as student_name"),
+                'stud.admission_date',
+                'cl.name as class_name',
+                'sc.name as section_name',
+                'emd.name as dept_name',
+                'stud.gender',
+                'stud.email'
+            )
+            ->join('classes as cl', 'en.class_id', '=', 'cl.id')
+            ->join('sections as sc', 'en.section_id', '=', 'sc.id')
+            ->join('students as stud', 'en.student_id', '=', 'stud.id')
+            ->join('emp_department as emd', 'en.department_id', '=', 'emd.id')
+            ->when($class_id, function ($query, $class_id) {
+                return $query->where('en.class_id', $class_id);
+            })
+            ->when($section_id, function ($query, $section_id) {
+                return $query->where('en.section_id', $section_id);
+            })
+            ->whereBetween('stud.admission_date', [$startDate, $endDate])                
+            ->groupBy("stud.id")
+            ->get();
+        return $this->successResponse($data, 'Student new joining list fetched successfully');
+
+    }
          }
         catch(Exception $error) {
             return $this->commonHelper->generalReturn('403','error',$error,'addSection');
@@ -2738,53 +2735,28 @@ class ApiControllerThree extends BaseController
         if (!$validator->passes()) {
             return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
         } else {
-            // create new connection
-            $createConnection = $this->createNewConnection($request->branch_id);
-            // Get the current date
-            $currentDate = Carbon::now()->toDateString();
-            // Clone the current date to avoid modifying the original object
-            $addTwoMonth = Carbon::parse($currentDate)->addMonths(2)->toDateString();
-            $parent_id = $request->parent_id;
-            // $attRep = $createConnection->table('termination as t')
-            //     ->select(
-            //         'e.id as en_id',
-            //         'e.class_id',
-            //         'e.section_id',
-            //         't.*',
-            //         'c.name as class_name',
-            //         'sc.name as section_name',
-            //         'ay.name as academic_year',
-            //         's.gender',
-            //         DB::raw("CONCAT(s.last_name_english, ' ', s.first_name_english) as name_english"),
-            //         DB::raw("CONCAT(s.last_name, ' ', s.first_name) as name")
-            //     )
-            //     ->leftJoin('students as s', 's.id', '=', 't.student_id')
-            //     ->leftJoin('enrolls as e', function ($join) {
-            //         $join->on('e.student_id', '=', 's.id')
-            //             ->where('e.id', '=', function ($query) {
-            //                 $query->select(DB::raw('MAX(id)'))
-            //                     ->from('enrolls')
-            //                     ->whereColumn('enrolls.student_id', '=', 'e.student_id');
-            //             });
-            //     })->get();
-
-                $terminationDetails = $createConnection->table('termination as t')
-                ->select('t.*', 'ay.name as academic_year', 's.gender',
-                 DB::raw("CONCAT(s.last_name_english, ' ', s.first_name_english) as name_english"),
-                 DB::raw("CONCAT(s.last_name, ' ', s.first_name) as name"), 
-                  'c.name as class_name', 'sc.name as section_name')
-                ->leftJoin('students as s', 's.id', '=', 't.student_id')
-                ->leftJoin('enrolls as e', 'e.student_id', '=', 's.id')
-                ->leftJoin('classes as c', 'e.class_id', '=', 'c.id')
-                ->leftJoin('sections as sc', 'e.section_id', '=', 'sc.id')
-                ->leftJoin('academic_year as ay', 'e.academic_session_id', '=', 'ay.id')
-                ->where('e.active_status', '=', '0')
-                ->when($parent_id, function ($query, $parent_id) {
-                    return $query->where('t.created_by', $parent_id);
-                })->orderBy('t.created_by', 'desc')->get()->toArray();
-
-            return $this->successResponse($terminationDetails, 'transfer student list fetch successfully');
-
+             // create new connection
+             $conn = $this->createNewConnection($request->branch_id);
+             $termination_status_flag = isset($request->termination_status_flag)?$request->termination_status_flag:null;
+             // get data
+             $parent_id = $request->parent_id;
+             $terminationDetails = $conn->table('termination as t')->select('t.*', 'ay.name as academic_year', 's.gender', DB::raw("CONCAT(s.last_name_english, ' ', s.first_name_english) as name_english"), DB::raw("CONCAT(s.last_name, ' ', s.first_name) as name"), 'c.name as class_name', 'sc.name as section_name')
+                 ->leftJoin('students as s', 's.id', '=', 't.student_id')
+                 ->leftJoin('enrolls as e', 'e.student_id', '=', 's.id')
+                 ->leftJoin('classes as c', 'e.class_id', '=', 'c.id')
+                 ->leftJoin('sections as sc', 'e.section_id', '=', 'sc.id')
+                 ->leftJoin('academic_year as ay', 'e.academic_session_id', '=', 'ay.id')
+                 ->where('e.active_status', '=', '0')
+                 ->when($parent_id, function ($query, $parent_id) {
+                     return $query->where('t.created_by', $parent_id);
+                 })
+                 ->when($termination_status_flag, function ($querys, $termination_status_flag) {
+                    return $querys->where('t.termination_status', $termination_status_flag);
+                })
+                ->orderBy('t.created_by', 'desc')->get()->toArray();
+ 
+             // $groupDetails = $conn->table('termination')->get()->toArray();
+             return $this->successResponse($terminationDetails, 'Termination record fetch successfully');
         }
          }
         catch(Exception $error) {
@@ -3266,7 +3238,8 @@ class ApiControllerThree extends BaseController
                 'cache_holidays' => "holidays_",
                 'cache_leave_types' => "leave_types_",
                 'cache_get_access_menu_list' => "cache_get_access_menu_list_",
-                'school_role_access' => "school_role_access_"
+                'school_role_access' => "school_role_access_",
+                'school_role_access' => "school_role_access_",
             ];
 
             foreach ($dataClear as $key => $prefix) {
