@@ -15430,7 +15430,7 @@ try{
     {
         $validator = \Validator::make($request->all(), [
             'branch_id' => 'required',
-            'token' => 'required',
+            // 'token' => 'required',
         ]);
 
         if (!$validator->passes()) {
@@ -15440,8 +15440,22 @@ try{
             $conn = $this->createNewConnection($request->branch_id);
             // get data
             $parent_id = $request->parent_id;
-            $parentDetails = $conn->table('parent_change_info as pi')->select("p.email","pi.status", "pi.status_parent", "p.id as parent_id", "pi.id", "p.occupation", DB::raw("CONCAT(p.last_name, ' ', p.first_name) as name"))
-                ->leftJoin('parent as p', 'pi.parent_id', '=', 'p.id')->where('pi.parent_id', $parent_id)->get()->toArray();
+            $student_id = $request->student_id;
+            // $parentDetails = $conn->table('parent_change_info as pi')->select("p.email","pi.status", "pi.status_parent", "p.id as parent_id", "pi.id", "p.occupation", DB::raw("CONCAT(p.last_name, ' ', p.first_name) as name"))
+            //     ->leftJoin('parent as p', 'pi.parent_id', '=', 'p.id')->where('pi.parent_id', $parent_id)->get()->toArray();
+            
+            $parentDetails = $conn->table('parent_change_info as pi')
+                            ->select("p.email", "pi.status", "pi.status_parent", "p.id as parent_id", "pi.id", "p.occupation", DB::raw("CONCAT(p.last_name, ' ', p.first_name) as name"))
+                            ->leftJoin('students as s', function($join) {
+                                $join->on('pi.parent_id', '=', 's.guardian_id')
+                                    ->orOn('pi.parent_id', '=', 's.father_id')
+                                    ->orOn('pi.parent_id', '=', 's.mother_id');
+                            })
+                            ->leftJoin('parent as p', 'pi.parent_id', '=', 'p.id')
+                            ->where('s.guardian_id', $parent_id)
+                            ->get()
+                            ->toArray();
+
             $studentDetails = $conn->table('student_change_info as si')->select("s.email","si.status", "si.status_parent", "s.id as student_id", 'si.id', "s.roll_no", DB::raw("CONCAT(s.last_name, ' ', s.first_name) as name"))
                 ->leftJoin('students as s', 'si.student_id', '=', 's.id')->where('si.parent_id', $parent_id)->get()->toArray();
             $details = array_merge($parentDetails, $studentDetails);
@@ -15577,11 +15591,6 @@ try{
                 ->select(
                     'id',
                     'parent_id',
-                    'occupation',
-                    'mobile_no',
-                    'nationality',
-                    'passport_photo',
-                    'visa_photo',
                     'first_name',
                     'last_name',
                     'middle_name',
@@ -15591,22 +15600,28 @@ try{
                     'first_name_english',
                     'last_name_english',
                     'middle_name_english',
+                    'nationality',
                     'email',
-                    'visa_father_photo',
-                    'passport_father_photo',
-                    'visa_mother_photo',
-                    'passport_mother_photo',
-                    'relation',
+                    'mobile_no',
+                    'occupation',
                     'company_name_japan',
                     'company_name_local',
                     'company_phone_number',
                     'employment_status',
-                    'japanese_association_membership_image_supplimental',
+                    'relation',
+                    'passport_photo',
+                    'visa_photo',
+                    // 'visa_father_photo',
+                    // 'passport_father_photo',
+                    // 'visa_mother_photo',
+                    // 'passport_mother_photo',
                     'japan_postalcode',
                     'japan_contact_no',
                     'japan_emergency_sms',
                     'japan_address',
                     'stay_category',
+                    'japanese_association_membership_image_principal',
+                    'japanese_association_membership_image_supplimental',
 
                     // DB::raw("CONCAT(s.last_name, ' ', s.first_name) as name")
                 )
@@ -15782,7 +15797,6 @@ try{
                             $father_passport_file = base_path() . $father_passport_path . $father_passport_fileName;
                             $father_passport_suc = file_put_contents($father_passport_file, $father_passport_base64);
                         }
-
                         $father_old = $staffConn->table('parent')->select(
                             'middle_name','first_name','last_name',
                             'middle_name_furigana','first_name_furigana','last_name_furigana',
@@ -15792,7 +15806,6 @@ try{
     
                         )->where('id', '=', $request->father_id)->first();
     
-                        // dd($father_old);
                         $father_data = [
                             'id' => $request->father_id,
                             "last_name_furigana" => $request->father_last_name_furigana,
@@ -15811,7 +15824,7 @@ try{
                         ];
                         $father_insertArr = [];
                         foreach ($father_old as $key => $o) {
-                            if (isset($father_data[$key])) {
+                            // if (isset($father_data[$key])) {
                                 if ($key == "mobile_no") {
                                     // $encrypt = Helper::decryptStringData($old->$key);
                                     // dd(Crypt::encryptString($old->$key));
@@ -15831,19 +15844,23 @@ try{
                                         $father_insertArr[$key] = $father_data[$key];
                                     }
                                 }
-                            }
+                            // }
                         }
                         if (count($father_insertArr) > 0) {
                             $father_insertArr['status'] = "Admin";
                             $father_insertArr['parent_id'] = $request->father_id;
-                            if ($staffConn->table('parent_change_info')->where('parent_id', $request->father_id)->count() > 0) {
-                                $staffConn->table('parent_change_info')->where('parent_id', '=', $request->father_id)->update($father_insertArr);
-                                $father_update_id = $staffConn->table('parent_change_info')->where('parent_id', '=', $request->father_id)->first();
-                                $father_query = $father_update_id->id;
-                            }else{
-                                $father_query = $staffConn->table('parent_change_info')->insertGetId($father_insertArr);
-                            }
+                            // if ($staffConn->table('parent_change_info')->where('parent_id', $request->father_id)->count() > 0) {
+                            //     $staffConn->table('parent_change_info')->where('parent_id', '=', $request->father_id)->update($father_insertArr);
+                            //     $father_update_id = $staffConn->table('parent_change_info')->where('parent_id', '=', $request->father_id)->first();
+                            //     $father_query = $father_update_id->id;
+                            // }else{
+                            //     $father_query = $staffConn->table('parent_change_info')->insertGetId($father_insertArr);
+                            // }
     
+                            if ($staffConn->table('parent_change_info')->where('parent_id', $request->father_id)->count() > 0) {
+                                $staffConn->table('parent_change_info')->where('parent_id', '=', $request->father_id)->delete();
+                            }
+                            $father_query = $staffConn->table('parent_change_info')->insertGetId($father_insertArr);
                             // dd($father_insertArr);
                             // send Termination notifications
     
@@ -15925,7 +15942,7 @@ try{
                         ];
                         $mother_insertArr = [];
                         foreach ($mother_old as $key => $o) {
-                            if (isset($mother_data[$key])) {
+                            // if (isset($mother_data[$key])) {
                                 if ($key == "mobile_no") {
                                     if (Helper::decryptStringData($mother_old->$key) != $mother_data[$key]) {
                                         $mother_insertArr[$key] = Crypt::encryptString($mother_data[$key]);
@@ -15939,24 +15956,30 @@ try{
                                         $mother_insertArr[$key] = $mother_visa_fileName;
                                     }
                                 }  else {
+
                                     if ($mother_old->$key != $mother_data[$key]) {
                                         $mother_insertArr[$key] = $mother_data[$key];
                                     }
                                 }
                                 
-                            }
+                            // }
                         }
                         if (count($mother_insertArr) > 0) {
                             $mother_insertArr['status'] = "Admin";
                             $mother_insertArr['parent_id'] = $request->mother_id;
-                            if ($staffConn->table('parent_change_info')->where('parent_id', $request->mother_id)->count() > 0) {
-                                $staffConn->table('parent_change_info')->where('parent_id', '=', $request->mother_id)->update($mother_insertArr);
-                                $mother_update_id = $staffConn->table('parent_change_info')->where('parent_id', '=', $request->mother_id)->first();
-                                $mother_query = $mother_update_id->id;
-                            }else{
-                                $mother_query = $staffConn->table('parent_change_info')->insertGetId($mother_insertArr);
-                            }
+                            // if ($staffConn->table('parent_change_info')->where('parent_id', $request->mother_id)->count() > 0) {
+                            //     $staffConn->table('parent_change_info')->where('parent_id', '=', $request->mother_id)->update($mother_insertArr);
+                            //     $mother_update_id = $staffConn->table('parent_change_info')->where('parent_id', '=', $request->mother_id)->first();
+                            //     $mother_query = $mother_update_id->id;
+                            // }else{
+                            //     $mother_query = $staffConn->table('parent_change_info')->insertGetId($mother_insertArr);
+                            // }
     
+                            if ($staffConn->table('parent_change_info')->where('parent_id', $request->mother_id)->count() > 0) {
+                                $staffConn->table('parent_change_info')->where('parent_id', '=', $request->mother_id)->delete();
+                            }
+                            $mother_query = $staffConn->table('parent_change_info')->insertGetId($mother_insertArr);
+
                             // dd($mother_insertArr);
                             // send Termination notifications
     
@@ -16013,13 +16036,13 @@ try{
                             File::ensureDirectoryExists(base_path() . $image_principal_path);
                             $image_principal_file = base_path() . $image_principal_path . $image_principal_fileName;
                             $image_principal_suc = file_put_contents($image_principal_file, $image_principal_base64);
-                            if ($request->image_principal_old_photo) {
-                                if (\File::exists(base_path($nric_path . $request->image_principal_old_photo))) {
-                                    \File::delete(base_path($nric_path . $request->image_principal_old_photo));
-                                }
-                            }
+                            // if ($request->image_principal_old_photo) {
+                            //     if (\File::exists(base_path($nric_path . $request->image_principal_old_photo))) {
+                            //         \File::delete(base_path($nric_path . $request->image_principal_old_photo));
+                            //     }
+                            // }
                         }
-                        $supplimental_fileName = $request->japanese_association_membership_image_supplimental_old;
+                        $supplimental_fileName = "";
                         if ($request->japanese_association_membership_image_supplimental) {
                             $extension = $request->japanese_association_membership_image_supplimental_file_extension;
     
@@ -16077,7 +16100,7 @@ try{
                         ];
                         $guardian_insertArr = [];
                         foreach ($guardian_old as $key => $o) {
-                            if (isset($guardian_data[$key])) {
+                            // if (isset($guardian_data[$key])) {
                                 if ($key == "mobile_no" || $key == "company_phone_number"  || $key == "japan_contact_no" || $key == "japan_emergency_sms") {
                                     if (Helper::decryptStringData($guardian_old->$key) != $guardian_data[$key]) {
                                         $guardian_insertArr[$key] = Crypt::encryptString($guardian_data[$key]);
@@ -16096,7 +16119,7 @@ try{
                                     }
                                 }
                                 
-                            }
+                            // }
                         }
                         if (count($guardian_insertArr) > 0) {
                             $guardian_insertArr['status'] = "Admin";
@@ -16108,6 +16131,12 @@ try{
                             }else{
                                 $guardian_query = $staffConn->table('parent_change_info')->insertGetId($guardian_insertArr);
                             }
+    
+                            // if ($staffConn->table('parent_change_info')->where('parent_id', $request->guardian_id)->count() > 0) {
+                            //     $staffConn->table('parent_change_info')->where('parent_id', '=', $request->guardian_id)->delete();
+                            // }
+                            // $guardian_query = $staffConn->table('parent_change_info')->insertGetId($guardian_insertArr);
+
     
                             // dd($guardian_insertArr);
                             // send Termination notifications
@@ -27580,25 +27609,49 @@ try{
                 File::ensureDirectoryExists(base_path() . $nric_path);
                 $nric_file = base_path() . $nric_path . $nric_fileName;
                 $nric_suc = file_put_contents($nric_file, $nric_base64);
-                if ($request->nric_old_photo) {
-                    if (\File::exists(base_path($nric_path . $request->nric_old_photo))) {
-                        \File::delete(base_path($nric_path . $request->nric_old_photo));
-                    }
-                }
+                // if ($request->nric_old_photo) {
+                //     if (\File::exists(base_path($nric_path . $request->nric_old_photo))) {
+                //         \File::delete(base_path($nric_path . $request->nric_old_photo));
+                //     }
+                // }
             }
-            $old = $conn->table('students')->where('id', '=', $id)->first();
+            $old = $conn->table('students')
+            ->select(
+                'last_name','middle_name','first_name',
+                'last_name_english','middle_name_english','first_name_english',
+                'last_name_furigana','middle_name_furigana','first_name_furigana',
+                'last_name_common','first_name_common','birthday',
+                'gender','religion','post_code',
+                'address_unit_no','address_condominium','address_street',
+                'address_district','city','state',
+                'country','nationality','dual_nationality',
+                'passport','passport_photo','passport_expiry_date',
+                'visa_photo','visa_type','visa_type_others','visa_expiry_date',
+                'japanese_association_membership_number_student','nric','nric_photo',
+                'school_name','school_country','school_state',
+                'school_city','school_postal_code','school_enrollment_status',
+                'school_enrollment_status_tendency'
+
+            )
+            ->where('id', '=', $id)->first();
             $insertArr = [];
             $insertArr['status'] = "Admin";
             // return Helper::decryptStringData($old->$passport);
             foreach ($old as $key => $o) {
                 if ($request->has($key)) {
-                    if ($key == "passport" || $key == "nric" || $key == "mobile_no" || $key == "current_address" || $key == "permanent_address") {
+                    if ($key == "passport" || $key == "nric") {
                         // $encrypt = Helper::decryptStringData($old->$key);
                         // dd(Crypt::encryptString($old->$key));
                         if (Helper::decryptStringData($old->$key) != $request->$key) {
                             $insertArr[$key] = Crypt::encryptString($request->$key);
                         }
-                    } else {
+                    } else if ($key == "passport_photo") {
+                        $insertArr[$key] = $passport_fileName;
+                    } else if ($key == "visa_photo") {
+                        $insertArr[$key] = $visa_fileName;
+                    }  else if ($key == "nric_photo") {
+                        $insertArr[$key] = $nric_fileName;
+                    }  else {
                         if ($old->$key != $request->$key) {
                             $insertArr[$key] = $request->$key;
                         }
@@ -27684,31 +27737,54 @@ try{
                     'sci.id',
                     'sci.student_id',
                     'sci.parent_id',
+                    'sci.last_name',
+                    'sci.middle_name',
+                    'sci.first_name',
+                    'sci.last_name_english',
+                    'sci.middle_name_english',
+                    'sci.first_name_english',
+                    'sci.last_name_furigana',
+                    'sci.middle_name_furigana',
+                    'sci.first_name_furigana',
+                    'sci.last_name_common',
+                    'sci.first_name_common',
+                    'sci.birthday',
+                    'sci.gender',
+                    'sci.religion',
+                    'sci.post_code',
+                    'sci.address_unit_no',
+                    'sci.address_condominium',
+                    'sci.address_street',
+                    'sci.address_district',
+                    'sci.city',
+                    'sci.state',
+                    'sci.country',
+                    'sci.nationality',
+                    'sci.dual_nationality',
                     'sci.passport',
                     'sci.passport_photo',
                     'sci.passport_expiry_date',
-                    'sci.visa_number',
                     'sci.visa_photo',
+                    'sci.visa_type',
+                    'sci.visa_type_others',
                     'sci.visa_expiry_date',
-                    'sci.nationality',
+                    'sci.japanese_association_membership_number_student',
                     'sci.nric',
-                    // 'sci.religion',
+                    'sci.nric_photo',
+                    'sci.school_name',
+                    'sci.school_country',
+                    'sci.school_state',
+                    'sci.school_city',
+                    'sci.school_postal_code',
+                    'sci.school_enrollment_status',
+                    'sci.school_enrollment_status_tendency',
+                    
                     're.name as religion',
-                    // 'sci.race',
-                    'rc.name as race',
-                    'sci.blood_group',
-                    'sci.mother_tongue',
-                    'sci.current_address',
-                    'sci.permanent_address',
-                    'sci.country',
-                    'sci.state',
-                    'sci.city',
-                    'sci.post_code',
-                    'sci.mobile_no',
+                    // 'rc.name as race',
                     // DB::raw("CONCAT(s.last_name, ' ', s.first_name) as name")
                 )
                 ->leftJoin('religions as re', 'sci.religion', '=', 're.id')
-                ->leftJoin('races as rc', 'sci.race', '=', 'rc.id')
+                // ->leftJoin('races as rc', 'sci.race', '=', 'rc.id')
                 ->where('sci.id', $id)
                 ->first();
             $student_id = $getstudentDetails->student_id;
@@ -27718,17 +27794,18 @@ try{
             if (!empty($getstudentDetails)) {
                 foreach ($getstudentDetails as $key => $suc) {
 
-                    $old = $conn->table('students as s')->select('s.*', DB::raw("CONCAT(s.last_name, ' ', s.first_name) as name"), 'c.name as class_name', 'sc.name as section_name')
+                    $old = $conn->table('students as s')->select('s.*','re.name as religion', DB::raw("CONCAT(s.last_name, ' ', s.first_name) as name"), 'c.name as class_name', 'sc.name as section_name')
                         ->leftJoin('enrolls as e', 'e.student_id', '=', 's.id')
                         ->leftJoin('classes as c', 'e.class_id', '=', 'c.id')
                         ->leftJoin('sections as sc', 'e.section_id', '=', 'sc.id')
+                        ->leftJoin('religions as re', 'S.religion', '=', 're.id')
                         ->where('s.id', '=', $student_id)->first();
                     // dd($old);
                     // dd(${$key});
                     if ($suc) {
                         // dd($key);
 
-                        if ($key == "passport" || $key == "nric" || $key == "mobile_no" || $key == "current_address" || $key == "permanent_address") {
+                        if ($key == "passport" || $key == "nric" ) {
                             // $encrypt = Helper::decryptStringData($old->$key);
                             // dd(Crypt::encryptString($old->$key));
 
@@ -27745,7 +27822,7 @@ try{
                             //         ->select('id','name')
                             //         ->where('id', $old->$key)
                             //         ->first();
-                            //         $religion_old_name = isset($religionOldValue->name)?$religionOldValue->name:"";
+                            //         $religion_old_name = $religionOldValue->name;
                             //     }
                             //     $religionNewValue = $conn->table('religions')
                             //     ->select('id','name')
@@ -27753,7 +27830,7 @@ try{
                             //     ->first();
                             //     ${$key} = [];
                             //     ${$key}['old_value'] =  $religion_old_name;
-                            //     ${$key}['new_value'] =  isset($religionOldValue->name)?$religionOldValue->name:"";
+                            //     ${$key}['new_value'] =  $religionNewValue->name;
                             //     // dd($key);
                             // }
                             // else
@@ -27770,7 +27847,8 @@ try{
             }
             $studentDetails['student'] = $studentObj;
             $profile = $old;
-            $profile->current_address = Helper::decryptStringData($old->current_address);
+            $profile->passport = Helper::decryptStringData($old->passport);
+            $profile->nric = Helper::decryptStringData($old->nric);
             $profile->mobile_no = Helper::decryptStringData($old->mobile_no);
             $studentDetails['profile'] = $profile;
 
@@ -27960,31 +28038,39 @@ try{
                     ->select(
                         'id',
                         'parent_id',
-                        'passport',
-                        'nric',
-                        'blood_group',
-                        'occupation',
-                        'income',
-                        'education',
-                        'mobile_no',
-                        'race',
-                        'religion',
-                        'address',
-                        'address_2',
-                        'country',
-                        'city',
-                        'state',
-                        'post_code',
-                        'photo',
-                        'facebook_url',
-                        'linkedin_url',
-                        'twitter_url',
+                        'first_name',
+                        'last_name',
+                        'middle_name',
+                        'first_name_furigana',
+                        'last_name_furigana',
+                        'middle_name_furigana',
+                        'first_name_english',
+                        'last_name_english',
+                        'middle_name_english',
                         'nationality',
+                        'email',
+                        'mobile_no',
+                        'occupation',
+                        'company_name_japan',
+                        'company_name_local',
+                        'company_phone_number',
+                        'employment_status',
+                        'relation',
                         'passport_photo',
-                        'passport_expiry_date',
-                        'visa_number',
                         'visa_photo',
-                        'visa_expiry_date',
+                        // 'visa_father_photo',
+                        // 'passport_father_photo',
+                        // 'visa_mother_photo',
+                        // 'passport_mother_photo',
+                        'japan_postalcode',
+                        'japan_contact_no',
+                        'japan_emergency_sms',
+                        'japan_address',
+                        'stay_category',
+                        'japanese_association_membership_image_principal',
+                        'japanese_association_membership_image_supplimental',
+
+
                         // DB::raw("CONCAT(s.last_name, ' ', s.first_name) as name")
                     )
                     ->where('pci.id', $id)
@@ -28003,7 +28089,7 @@ try{
                         if ($suc) {
                             // dd($key);
 
-                            if ($key == "passport" || $key == "nric" || $key == "mobile_no" || $key == "address" || $key == "address_2") {
+                            if ($key == "company_phone_number" || $key == "japan_contact_no" || $key == "mobile_no" || $key == "japan_emergency_sms") {
                                 // $encrypt = Helper::decryptStringData($old->$key);
                                 // dd(Crypt::encryptString($old->$key));
 
@@ -28017,9 +28103,8 @@ try{
                             }
                             $column = $key . "_status";
                             $details = json_decode($new->$column);
-                            ${$key}['status'] =  $details->status;
-                            ${$key}['remark'] =  $details->remark;
-
+                            ${$key}['status'] =  isset($details->status) ? $details->status : "";
+                            ${$key}['remark'] =  isset($details->remark) ? $details->remark : "";
                             $parentObj->$key = ${$key};
                         }
                     }
@@ -28036,27 +28121,52 @@ try{
                         'sci.id',
                         'sci.student_id',
                         'sci.parent_id',
-                        'sci.passport',
-                        'sci.passport_photo',
-                        'sci.passport_expiry_date',
-                        'sci.visa_number',
-                        'sci.visa_photo',
-                        'sci.visa_expiry_date',
-                        'sci.nationality',
-                        'sci.nric',
-                        'sci.religion',
-                        'sci.race',
-                        'sci.blood_group',
-                        'sci.mother_tongue',
-                        'sci.current_address',
-                        'sci.permanent_address',
-                        'sci.country',
-                        'sci.state',
-                        'sci.city',
-                        'sci.post_code',
-                        'sci.mobile_no',
+                        
+                    'sci.last_name',
+                    'sci.middle_name',
+                    'sci.first_name',
+                    'sci.last_name_english',
+                    'sci.middle_name_english',
+                    'sci.first_name_english',
+                    'sci.last_name_furigana',
+                    'sci.middle_name_furigana',
+                    'sci.first_name_furigana',
+                    'sci.last_name_common',
+                    'sci.first_name_common',
+                    'sci.birthday',
+                    'sci.gender',
+                    'sci.religion',
+                    'sci.post_code',
+                    'sci.address_unit_no',
+                    'sci.address_condominium',
+                    'sci.address_street',
+                    'sci.address_district',
+                    'sci.city',
+                    'sci.state',
+                    'sci.country',
+                    'sci.nationality',
+                    'sci.dual_nationality',
+                    'sci.passport',
+                    'sci.passport_photo',
+                    'sci.passport_expiry_date',
+                    'sci.visa_photo',
+                    'sci.visa_type',
+                    'sci.visa_type_others',
+                    'sci.visa_expiry_date',
+                    'sci.japanese_association_membership_number_student',
+                    'sci.nric',
+                    'sci.nric_photo',
+                    'sci.school_name',
+                    'sci.school_country',
+                    'sci.school_state',
+                    'sci.school_city',
+                    'sci.school_postal_code',
+                    'sci.school_enrollment_status',
+                    'sci.school_enrollment_status_tendency',
+                    're.name as religion',
                         // DB::raw("CONCAT(s.last_name, ' ', s.first_name) as name")
                     )
+                    ->leftJoin('religions as re', 'sci.religion', '=', 're.id')
                     ->where('sci.id', $id)
                     ->first();
                 // return $getstudentDetails;
@@ -28069,10 +28179,11 @@ try{
 
 
                         $new = $conn->table('student_change_info')->where('id', '=', $id)->first();
-                        $old = $conn->table('students as s')->select('s.*', DB::raw("CONCAT(s.last_name, ' ', s.first_name) as name"), 'c.name as class_name', 'sc.name as section_name')
+                        $old = $conn->table('students as s')->select('s.*','re.name as religion', DB::raw("CONCAT(s.last_name, ' ', s.first_name) as name"), 'c.name as class_name', 'sc.name as section_name')
                             ->leftJoin('enrolls as e', 'e.student_id', '=', 's.id')
                             ->leftJoin('classes as c', 'e.class_id', '=', 'c.id')
                             ->leftJoin('sections as sc', 'e.section_id', '=', 'sc.id')
+                            ->leftJoin('religions as re', 's.religion', '=', 're.id')
                             ->where('s.id', '=', $student_id)->first();
                         $remarks = $new->remarks;
                         // dd($old);
@@ -28080,7 +28191,7 @@ try{
                         if ($suc) {
                             // dd($key);
 
-                            if ($key == "passport" || $key == "nric" || $key == "mobile_no" || $key == "current_address" || $key == "permanent_address") {
+                            if ($key == "passport" || $key == "nric" ) {
                                 // $encrypt = Helper::decryptStringData($old->$key);
                                 // dd(Crypt::encryptString($old->$key));
 
@@ -28088,14 +28199,37 @@ try{
                                 ${$key}['old_value'] =  Helper::decryptStringData($old->$key);
                                 ${$key}['new_value'] =  Helper::decryptStringData($suc);
                             } else {
-                                ${$key} = [];
-                                ${$key}['old_value'] =  $old->$key;
-                                ${$key}['new_value'] =  $suc;
+                                
+                                // if($key == "religion")
+                                // {
+                                //     $religion_old_name = "";
+                                //     if($old->$key){
+
+                                //         $religionOldValue = $conn->table('religions')
+                                //         ->select('id','name')
+                                //         ->where('id', $old->$key)
+                                //         ->first();
+                                //         $religion_old_name = $religionOldValue->name;
+                                //     }
+                                //     $religionNewValue = $conn->table('religions')
+                                //     ->select('id','name')
+                                //     ->where('id', $suc)
+                                //     ->first();
+                                //     ${$key} = [];
+                                //     ${$key}['old_value'] =  $religion_old_name;
+                                //     ${$key}['new_value'] =  $religionNewValue->name;
+                                //     // dd($key);
+                                // }else{
+                                    
+                                    ${$key} = [];
+                                    ${$key}['old_value'] =  $old->$key;
+                                    ${$key}['new_value'] =  $suc;
+                                // }
                             }
                             $column = $key . "_status";
                             $details = json_decode($new->$column);
-                            ${$key}['status'] =  $details->status;
-                            ${$key}['remark'] =  $details->remark;
+                            ${$key}['status'] =  isset($details->status) ? $details->status : "";
+                            ${$key}['remark'] =  isset($details->remark) ? $details->remark : "";
 
                             $studentObj->$key = ${$key};
                         }
