@@ -15430,7 +15430,6 @@ try{
     {
         $validator = \Validator::make($request->all(), [
             'branch_id' => 'required',
-            // 'token' => 'required',
         ]);
 
         if (!$validator->passes()) {
@@ -18195,8 +18194,8 @@ try{
                 )
                 ->join('students as std', 'lev.student_id', '=', 'std.id')
                 ->join('enrolls as en', 'lev.student_id', '=', 'en.student_id')
-                ->join('classes as cl', 'lev.class_id', '=', 'cl.id')
-                ->join('sections as sc', 'lev.section_id', '=', 'sc.id')
+                ->join('classes as cl', 'en.class_id', '=', 'cl.id')
+                ->join('sections as sc', 'en.section_id', '=', 'sc.id')
                 ->leftJoin('student_leave_types as slt', 'lev.change_lev_type', '=', 'slt.id')
                 ->leftJoin('absent_reasons as ar', 'lev.reasonId', '=', 'ar.id')
                 ->join('staff_departments as sd', 'cl.department_id', '=', 'sd.id')
@@ -18236,6 +18235,7 @@ try{
                         });
                     });
                 })
+                ->where('en.active_status', '=', '0')
                 ->orderBy('lev.from_leave', 'desc')
                 ->get();
             return $this->successResponse($studentDetails, 'Student details fetch successfully');
@@ -27798,7 +27798,7 @@ try{
                         ->leftJoin('enrolls as e', 'e.student_id', '=', 's.id')
                         ->leftJoin('classes as c', 'e.class_id', '=', 'c.id')
                         ->leftJoin('sections as sc', 'e.section_id', '=', 'sc.id')
-                        ->leftJoin('religions as re', 'S.religion', '=', 're.id')
+                        ->leftJoin('religions as re', 's.religion', '=', 're.id')
                         ->where('s.id', '=', $student_id)->first();
                     // dd($old);
                     // dd(${$key});

@@ -6,8 +6,9 @@ use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
+use Illuminate\Support\Facades\Log;
 
-class TeacherEmail extends Notification
+class TeacherEmail extends Notification implements ShouldQueue
 {
     use Queueable;
 
@@ -36,6 +37,7 @@ class TeacherEmail extends Notification
      */
     public function toMail($notifiable)
     {
+        Log::info('notifiable email for teacher ' . $notifiable->email);
         return (new MailMessage)
         ->subject('New Bulletin Board Notification')
         ->line('Hello!')

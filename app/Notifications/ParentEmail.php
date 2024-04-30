@@ -6,9 +6,10 @@ use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
+use Illuminate\Support\Facades\Log;
 
 
-class ParentEmail extends Notification
+class ParentEmail extends Notification implements ShouldQueue
 {
     use Queueable;
 
@@ -38,6 +39,7 @@ class ParentEmail extends Notification
     public function toMail($notifiable)
     {
       //  $url = url('/bulletin-board'); // Adjust the URL accordingly
+      Log::info('notifiable email for parent ' . $notifiable->email);
 
         return (new MailMessage)
             ->subject('New Bulletin Board Notification')
