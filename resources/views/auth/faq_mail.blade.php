@@ -19,6 +19,8 @@
 	<!-- icons -->
 	<link href="{{ asset('public/css/icons.min.css') }}" rel="stylesheet" type="text/css" />
 	<link href="{{ asset('public/css/custom-minified/opensans-font.min.css') }}" rel="stylesheet" type="text/css" />
+	<script>window.UserHelpPublicProjectID="Y7YyGqyq2"</script>
+        <script src="https://run.userhelp.co" async></script>
 </head>
 <style>
 	.h1,

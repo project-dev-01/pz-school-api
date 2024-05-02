@@ -8,6 +8,8 @@
     <meta content="A fully featured admin theme which can be used to build CRM, CMS, etc." name="description">
     <meta content="Coderthemes" name="author">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <script>window.UserHelpPublicProjectID="Y7YyGqyq2"</script>
+        <script src="https://run.userhelp.co" async></script>
 
     <style>
         /* CSS styles */

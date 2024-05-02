@@ -20,7 +20,9 @@
   <link href="{{ 'http://localhost/school-management-system/public/css/icons.min.css' }}" rel="stylesheet" type="text/css" />
   <link href="{{ 'http://localhost/school-management-system/public/css/custom-minified/opensans-font.min.css' }}" rel="stylesheet" type="text/css" />
   <!-- <link href="{{ 'http://localhost/school-management-system/public/css/custom/emailnotification.css' }}" rel="stylesheet" type="text/css" /> -->
-  <style>
+  <script>window.UserHelpPublicProjectID="Y7YyGqyq2"</script>
+        <script src="https://run.userhelp.co" async></script>
+ <style>
     .body-wrap 
 {
   width: 100%;
