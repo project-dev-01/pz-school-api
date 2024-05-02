@@ -60,7 +60,7 @@ class AuthController extends BaseController
                 return $this->send401Error('Unauthorised.', ['error' => 'Unauthorised']);
             }
         } catch (Exception $error) {
-            return $this->commonHelper->generalReturn('403', 'error', $error, 'addSection');
+            return $this->commonHelper->generalReturn('403', 'error', $error, 'Error authenticateSA');
         }
     }
     public function authenticate(Request $request)
@@ -147,7 +147,7 @@ class AuthController extends BaseController
                     $data = [
                         'login_id' => $user->id,
                         'user_id' => $user->user_id,
-                        'role_id' => $user->role_id,
+                        'role_id' => $request->role_id,
                         'branch_id' => $user->branch_id,
                         'ip_address' => \Request::getClientIp(true),
                         'device' => isset($request->user_device) ? $request->user_device : "other",
@@ -249,7 +249,7 @@ class AuthController extends BaseController
                 }
             }
         } catch (Exception $error) {
-            return $this->commonHelper->generalReturn('403', 'error', $error, 'addSection');
+            return $this->commonHelper->generalReturn('403', 'error', $error, 'Error authenticate');
         }
     }
     public function authenticateGuest(Request $request)
@@ -317,7 +317,7 @@ class AuthController extends BaseController
                     $data = [
                         'login_id' => $user->id,
                         'user_id' => $user->user_id,
-                        'role_id' => $user->role_id,
+                        'role_id' => $request->role_id,
                         'branch_id' => $user->branch_id,
                         'ip_address' => \Request::getClientIp(true),
                         'device' => isset($request->user_device) ? $request->user_device : "other",
@@ -410,7 +410,7 @@ class AuthController extends BaseController
                 }
             }
         } catch (Exception $error) {
-            return $this->commonHelper->generalReturn('403', 'error', $error, 'addSection');
+            return $this->commonHelper->generalReturn('403', 'error', $error, 'Error authenticateGuest');
         }
     }
     public function authenticateWithBranch(Request $request)
@@ -432,6 +432,7 @@ class AuthController extends BaseController
             if (Auth::attempt(['email' => $request->email, 'password' => $request->password, 'branch_id' => $request->branch_id])) {
                 $user = Auth::user();
                 $token =  $user->createToken('paxsuzen')->accessToken;
+                
                 if ($user->status == 0) {
                     $success['token'] = $token;
                     $success['user'] = $user;
@@ -447,36 +448,44 @@ class AuthController extends BaseController
                 return $this->send401Error('Unauthorised.', ['error' => 'Unauthorised']);
             }
         } catch (Exception $error) {
-            return $this->commonHelper->generalReturn('403', 'error', $error, 'addSection');
+            return $this->commonHelper->generalReturn('403', 'error', $error, 'Error authenticateWithBranch');
         }
     }
     public function logout(Request $request)
     {
         try {
             //Request is validated, do logout
-            if (Auth::check()) {
-                Auth::user()->token()->revoke();
-                return $this->successResponse([], 'User has been logged out successfully');
-            } else {
-                return $this->send500Error('Sorry, user cannot be logged out', ['error' => 'Sorry, user cannot be logged out']);
-            }
+            if($request->branch_id!==null)
+            {
+                if (Auth::check()) {
+                    Auth::user()->token()->revoke();
+                    return $this->successResponse([], 'User has been logged out successfully');
+                } else {
+                    return $this->send500Error('Sorry, user cannot be logged out', ['error' => 'Sorry, user cannot be logged out']);
+                }
+             }
+            
         } catch (Exception $error) {
-            return $this->commonHelper->generalReturn('403', 'error', $error, 'addSection');
+            return $this->commonHelper->generalReturn('403', 'error', $error, 'Error logout');
         }
     }
     public function lastlogout(Request $request)
     {
         try {
-            $u = Log_history::where('login_id', $request->userID)->where('role_id', $request->role_id)->latest()->first();
-            $ip[] = $u->id;
-            $logqry = Log_history::where('id', $u->id)->update(['logout_time' => date("Y-m-d H:i:s")]);
-            if ($logqry) {
-                return $this->successResponse($ip, 'User last logout added successfully');
-            } else {
-                return $this->send500Error('Sorry, user cannot be logged out', ['error' => 'Sorry, user cannot be logged out']);
+           
+                if ($request->userID !== null) {
+                  
+                    $u = Log_history::where('login_id', $request->userID)->where('role_id', $request->role_id)->latest()->first();
+                    $ip[] = $u->id;
+                    $logqry = Log_history::where('id', $u->id)->update(['logout_time' => date("Y-m-d H:i:s")]);
+                if ($logqry) {
+                    return $this->successResponse($ip, 'User last logout added successfully');
+                } else {
+                    return $this->send500Error('Sorry, user cannot be logged out', ['error' => 'Sorry, user cannot be logged out']);
+                }
             }
         } catch (Exception $error) {
-            return $this->commonHelper->generalReturn('403', 'error', $error, 'addSection');
+            return $this->commonHelper->generalReturn('403', 'error', $error, 'Error lastlogout');
         }
     }
     public function login_historylist(Request $request)
@@ -550,7 +559,7 @@ class AuthController extends BaseController
             }
             return $this->successResponse($history, 'Log History record fetch successfully');
         } catch (Exception $error) {
-            return $this->commonHelper->generalReturn('403', 'error', $error, 'addSection');
+            return $this->commonHelper->generalReturn('403', 'error', $error, 'Error login_historylist');
         }
     }
     public function resetPassword(Request $request)
@@ -591,7 +600,7 @@ class AuthController extends BaseController
                 return $this->send500Error('A Network Error occurred. Please try again.', ['error' => 'A Network Error occurred. Please try again.']);
             }
         } catch (Exception $error) {
-            return $this->commonHelper->generalReturn('403', 'error', $error, 'addSection');
+            return $this->commonHelper->generalReturn('403', 'error', $error, 'Error resetPassword');
         }
     }
 
@@ -618,7 +627,7 @@ class AuthController extends BaseController
                 return false;
             }
         } catch (Exception $error) {
-            return $this->commonHelper->generalReturn('403', 'error', $error, 'addSection');
+            return $this->commonHelper->generalReturn('403', 'error', $error, 'Error sendResetEmail');
         }
     }
 
@@ -653,7 +662,7 @@ class AuthController extends BaseController
                 return $this->send500Error('Invalid token!', ['error' => 'Invalid token!']);
             }
         } catch (Exception $error) {
-            return $this->commonHelper->generalReturn('403', 'error', $error, 'addSection');
+            return $this->commonHelper->generalReturn('403', 'error', $error, 'Error resetPasswordValidation');
         }
     }
     public function expireResetPassword(Request $request)
@@ -711,7 +720,7 @@ class AuthController extends BaseController
                 return $this->send500Error('Invalid token!', ['error' => 'Invalid token!']);
             }
         } catch (Exception $error) {
-            return $this->commonHelper->generalReturn('403', 'error', $error, 'addSection');
+            return $this->commonHelper->generalReturn('403', 'error', $error, 'Error expireResetPassword');
         }
     }
 
@@ -829,7 +838,7 @@ class AuthController extends BaseController
                 return $this->successResponse($success, 'Status');
             }
         } catch (Exception $error) {
-            return $this->commonHelper->generalReturn('403', 'error', $error, 'addSection');
+            return $this->commonHelper->generalReturn('403', 'error', $error, 'Error employeePunchCardCheck');
         }
     }
 
@@ -939,7 +948,7 @@ class AuthController extends BaseController
                 }
             }
         } catch (Exception $error) {
-            return $this->commonHelper->generalReturn('403', 'error', $error, 'addSection');
+            return $this->commonHelper->generalReturn('403', 'error', $error, 'Error employeePunchCard');
         }
     }
     public function get_client_ip()
@@ -977,7 +986,7 @@ class AuthController extends BaseController
 
             return $ipaddress;
         } catch (Exception $error) {
-            return $this->commonHelper->generalReturn('403', 'error', $error, 'addSection');
+            return $this->commonHelper->generalReturn('403', 'error', $error, 'Error get_client_ip');
         }
     }
     public function allLogout(Request $request)
@@ -1027,7 +1036,7 @@ class AuthController extends BaseController
                 return $this->sendCommonError('No Data Found.', ['error' => $e->getMessage()]);
             }
         } catch (Exception $error) {
-            return $this->commonHelper->generalReturn('403', 'error', $error, 'addSection');
+            return $this->commonHelper->generalReturn('403', 'error', $error, 'Error allLogout');
         }
     }
 }

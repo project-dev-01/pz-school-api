@@ -78,14 +78,15 @@ class ApiController extends BaseController
         return $this->successResponse($data, 'Section record fetch successfully');
         }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'getRoles');
         }
     }
     // add section
     public function addSection(Request $request)
     {
 
-        $validator = \Validator::make($request->all(), [
+        try {
+            $validator = \Validator::make($request->all(), [
             'branch_id' => 'required',
             'token' => 'required',
             'name' => 'required'
@@ -116,6 +117,10 @@ class ApiController extends BaseController
                     return $this->successResponse($success, 'New Classes has been successfully saved');
                 }
             }
+        }
+        }
+        catch(Exception $error) {
+            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
         }
     }
     // get sections 
@@ -174,6 +179,8 @@ class ApiController extends BaseController
     public function updateSectionDetails(Request $request)
     {
 
+       try{
+    
         $validator = \Validator::make($request->all(), [
             'token' => 'required',
             'name' => 'required',
@@ -208,6 +215,10 @@ class ApiController extends BaseController
                 }
             }
         }
+    } catch (Exception $error) {
+        return $this->commonHelper->generalReturn('403', 'error', $error, 'Error in updateSectionDetails');
+    }
+
     }
     // delete Section
     public function deleteSection(Request $request)
@@ -1672,7 +1683,7 @@ class ApiController extends BaseController
             }
         }
         }catch(\Exception $error) {
-            $this->commonHelper->generalReturn('403','error',$error,'getSectionDetails');
+            $this->commonHelper->generalReturn('403','error',$error,'Error in deleteTeacherSubject');
         }
     }
     // getAssignClassSubjects
@@ -1728,7 +1739,7 @@ class ApiController extends BaseController
         }
         }
         catch(\Exception $error) {
-            $this->commonHelper->generalReturn('403','error',$error,'getSectionDetails');
+            $this->commonHelper->generalReturn('403','error',$error,'Error in branchIdByTeacherAllocation');
         }
     }
 
@@ -1750,7 +1761,7 @@ class ApiController extends BaseController
         }
          }
         catch(\Exception $error) {
-            $this->commonHelper->generalReturn('403','error',$error,'getSectionDetails');
+            $this->commonHelper->generalReturn('403','error',$error,'Error in branchIdByClass');
         }
     }
     // branchIdBySection 
@@ -1771,7 +1782,7 @@ class ApiController extends BaseController
         }
          }
         catch(\Exception $error) {
-            $this->commonHelper->generalReturn('403','error',$error,'getSectionDetails');
+            $this->commonHelper->generalReturn('403','error',$error,'Error in branchIdBySection');
         }
     }
 
@@ -1811,7 +1822,7 @@ class ApiController extends BaseController
         }
          }
         catch(\Exception $error) {
-            $this->commonHelper->generalReturn('403','error',$error,'getSectionDetails');
+            $this->commonHelper->generalReturn('403','error',$error,'Error in addEventType');
         }
     }
     // getEventTypeList
@@ -1834,7 +1845,7 @@ class ApiController extends BaseController
         }
          }
         catch(\Exception $error) {
-            $this->commonHelper->generalReturn('403','error',$error,'getSectionDetails');
+            $this->commonHelper->generalReturn('403','error',$error,'Error in getEventTypeList');
         }
     }
     // get EventType row details
@@ -1859,7 +1870,7 @@ class ApiController extends BaseController
         }
          }
         catch(\Exception $error) {
-            $this->commonHelper->generalReturn('403','error',$error,'getSectionDetails');
+            $this->commonHelper->generalReturn('403','error',$error,'Error in getEventTypeDetails');
         }
     }
     // update EventType
@@ -2414,7 +2425,7 @@ class ApiController extends BaseController
         }
          }
         catch(\Exception $error) {
-            $this->commonHelper->generalReturn('403','error',$error,'getSectionDetails');
+            $this->commonHelper->generalReturn('403','error',$error,'Error in publishEvent');
         }
     }
     // branchIdByEvent 
@@ -2444,7 +2455,7 @@ class ApiController extends BaseController
         }
          }
         catch(\Exception $error) {
-            $this->commonHelper->generalReturn('403','error',$error,'getSectionDetails');
+            $this->commonHelper->generalReturn('403','error',$error,'Error in branchIdByEvent');
         }
     }
     // Qualification  start 
@@ -2484,7 +2495,7 @@ class ApiController extends BaseController
         }
          }
         catch(\Exception $error) {
-            $this->commonHelper->generalReturn('403','error',$error,'getSectionDetails');
+            $this->commonHelper->generalReturn('403','error',$error,'Error in add_qualifications');
         }
     }
     //view list qualification
@@ -2508,7 +2519,7 @@ class ApiController extends BaseController
         }
          }
         catch(\Exception $error) {
-            $this->commonHelper->generalReturn('403','error',$error,'getSectionDetails');
+            $this->commonHelper->generalReturn('403','error',$error,'Error in getQualificationsList');
         }
     }
     // update qualification
@@ -2547,7 +2558,7 @@ class ApiController extends BaseController
         }
     }
         catch(\Exception $error) {
-            $this->commonHelper->generalReturn('403','error',$error,'getSectionDetails');
+            $this->commonHelper->generalReturn('403','error',$error,'Error in updateQualifications');
         }
     }
     // delete qualification
@@ -2580,7 +2591,7 @@ class ApiController extends BaseController
         }
          }
         catch(\Exception $error) {
-            $this->commonHelper->generalReturn('403','error',$error,'getSectionDetails');
+            $this->commonHelper->generalReturn('403','error',$error,'Error in deleteQualifications');
         }
     }
     // get Qualifications row details
@@ -2605,7 +2616,7 @@ class ApiController extends BaseController
         }
          }
         catch(\Exception $error) {
-            $this->commonHelper->generalReturn('403','error',$error,'getSectionDetails');
+            $this->commonHelper->generalReturn('403','error',$error,'Error in getQualifications');
         }
     }
     // Qualifaication end
@@ -2646,7 +2657,7 @@ class ApiController extends BaseController
         }
          }
         catch(\Exception $error) {
-            $this->commonHelper->generalReturn('403','error',$error,'getSectionDetails');
+            $this->commonHelper->generalReturn('403','error',$error,'Error in add_staffcategory');
         }
     }
     //view list staffcategory
@@ -2670,7 +2681,7 @@ class ApiController extends BaseController
         }
          }
         catch(\Exception $error) {
-            $this->commonHelper->generalReturn('403','error',$error,'getSectionDetails');
+            $this->commonHelper->generalReturn('403','error',$error,'Error in getstaffcategory');
         }
     }
     // update staffcategory
@@ -2709,7 +2720,7 @@ class ApiController extends BaseController
         }
          }
         catch(\Exception $error) {
-            $this->commonHelper->generalReturn('403','error',$error,'getSectionDetails');
+            $this->commonHelper->generalReturn('403','error',$error,'Error in updatestaffcategory');
         }
     }
     // delete staffcategory
@@ -2741,7 +2752,7 @@ class ApiController extends BaseController
         }
          }
         catch(\Exception $error) {
-            $this->commonHelper->generalReturn('403','error',$error,'getSectionDetails');
+            $this->commonHelper->generalReturn('403','error',$error,'Error in deletestaffcategory');
         }
     }
     // get staffcategory row details
@@ -2766,7 +2777,7 @@ class ApiController extends BaseController
         }
          }
         catch(\Exception $error) {
-            $this->commonHelper->generalReturn('403','error',$error,'getSectionDetails');
+            $this->commonHelper->generalReturn('403','error',$error,'Error in getstaffcategory_details');
         }
     }
 
@@ -2811,7 +2822,7 @@ class ApiController extends BaseController
     }
 
         catch(\Exception $error) {
-            $this->commonHelper->generalReturn('403','error',$error,'getSectionDetails');
+            $this->commonHelper->generalReturn('403','error',$error,'Error in addDepartment');
         }
     }
     // getDepartmentList
@@ -2849,7 +2860,7 @@ class ApiController extends BaseController
         }
          }
         catch(\Exception $error) {
-            $this->commonHelper->generalReturn('403','error',$error,'getSectionDetails');
+            $this->commonHelper->generalReturn('403','error',$error,'Error in getDepartmentList');
         }
     }
     // get department row details
@@ -2874,7 +2885,7 @@ class ApiController extends BaseController
         }
          }
         catch(\Exception $error) {
-            $this->commonHelper->generalReturn('403','error',$error,'getSectionDetails');
+            $this->commonHelper->generalReturn('403','error',$error,'Error in getDepartmentDetails');
         }
     }
     // update department
@@ -2917,7 +2928,7 @@ class ApiController extends BaseController
         }
          }
         catch(\Exception $error) {
-            $this->commonHelper->generalReturn('403','error',$error,'getSectionDetails');
+            $this->commonHelper->generalReturn('403','error',$error,'Error in updateDepartment');
         }
     }
     // delete department
@@ -2953,7 +2964,7 @@ class ApiController extends BaseController
         }
          }
         catch(\Exception $error) {
-            $this->commonHelper->generalReturn('403','error',$error,'getSectionDetails');
+            $this->commonHelper->generalReturn('403','error',$error,'Error in deleteDepartment');
         }
     }
     // addDesignation
@@ -2990,7 +3001,7 @@ class ApiController extends BaseController
         }
          }
         catch(\Exception $error) {
-            $this->commonHelper->generalReturn('403','error',$error,'getSectionDetails');
+            $this->commonHelper->generalReturn('403','error',$error,'Error in addDesignation');
         }
     }
     // getDesignationList
@@ -3013,7 +3024,7 @@ class ApiController extends BaseController
         }
          }
         catch(\Exception $error) {
-            $this->commonHelper->generalReturn('403','error',$error,'getSectionDetails');
+            $this->commonHelper->generalReturn('403','error',$error,'Error in getDesignationList');
         }
     }
     // getDesignationDetails row details
@@ -3038,7 +3049,7 @@ class ApiController extends BaseController
         }
          }
         catch(\Exception $error) {
-            $this->commonHelper->generalReturn('403','error',$error,'getSectionDetails');
+            $this->commonHelper->generalReturn('403','error',$error,'Error in getDesignationDetails');
         }
     }
     // update updateDesignation
@@ -3077,7 +3088,7 @@ class ApiController extends BaseController
         }
          }
         catch(\Exception $error) {
-            $this->commonHelper->generalReturn('403','error',$error,'getSectionDetails');
+            $this->commonHelper->generalReturn('403','error',$error,'Error in updateDesignation');
         }
     }
     // delete Designation
@@ -3108,7 +3119,7 @@ class ApiController extends BaseController
         }
          }
         catch(\Exception $error) {
-            $this->commonHelper->generalReturn('403','error',$error,'getSectionDetails');
+            $this->commonHelper->generalReturn('403','error',$error,'Error in deleteDesignation');
         }
     }
     // employee departments
@@ -3131,7 +3142,7 @@ class ApiController extends BaseController
         }
          }
         catch(\Exception $error) {
-            $this->commonHelper->generalReturn('403','error',$error,'getSectionDetails');
+            $this->commonHelper->generalReturn('403','error',$error,'Error in  getEmpDepartment');
         }
     }
     // employee designation
@@ -3154,7 +3165,7 @@ class ApiController extends BaseController
         }
          }
         catch(\Exception $error) {
-            $this->commonHelper->generalReturn('403','error',$error,'getSectionDetails');
+            $this->commonHelper->generalReturn('403','error',$error,'Error in getEmpDesignation');
         }
     }
     // get qualifications
@@ -3176,7 +3187,7 @@ class ApiController extends BaseController
         }
          }
         catch(\Exception $error) {
-            $this->commonHelper->generalReturn('403','error',$error,'getSectionDetails');
+            $this->commonHelper->generalReturn('403','error',$error,'Error in getQualificationsLst');
         }
     }
     // staffCategories
@@ -3198,7 +3209,7 @@ class ApiController extends BaseController
         }
          }
         catch(\Exception $error) {
-            $this->commonHelper->generalReturn('403','error',$error,'getSectionDetails');
+            $this->commonHelper->generalReturn('403','error',$error,'Error in staffCategories');
         }
     }
     // staffPositons
@@ -3220,7 +3231,7 @@ class ApiController extends BaseController
         }
          }
         catch(\Exception $error) {
-            $this->commonHelper->generalReturn('403','error',$error,'getSectionDetails');
+            $this->commonHelper->generalReturn('403','error',$error,'Error in staffPositions');
         }
     }
     // streamTypes
@@ -3242,7 +3253,7 @@ class ApiController extends BaseController
         }
          }
         catch(\Exception $error) {
-            $this->commonHelper->generalReturn('403','error',$error,'getSectionDetails');
+            $this->commonHelper->generalReturn('403','error',$error,'Error in streamTypes');
         }
     }
     // getReligion
@@ -3264,7 +3275,7 @@ class ApiController extends BaseController
         }
          }
         catch(\Exception $error) {
-            $this->commonHelper->generalReturn('403','error',$error,'getSectionDetails');
+            $this->commonHelper->generalReturn('403','error',$error,'Error in getReligion');
         }
     }
     // streamTypes
@@ -3286,7 +3297,7 @@ class ApiController extends BaseController
         }
          }
         catch(\Exception $error) {
-            $this->commonHelper->generalReturn('403','error',$error,'getSectionDetails');
+            $this->commonHelper->generalReturn('403','error',$error,'Error in getRaces');
         }
     }
     // add Employee
@@ -3523,7 +3534,7 @@ class ApiController extends BaseController
         }
          }
         catch(\Exception $error) {
-            $this->commonHelper->generalReturn('403','error',$error,'getSectionDetails');
+            $this->commonHelper->generalReturn('403','error',$error,'Error in addEmployee');
         }
     }
 
@@ -3591,7 +3602,7 @@ class ApiController extends BaseController
         return $this->successResponse($Staff, 'Staff record fetch successfully');
          }
         catch(\Exception $error) {
-            $this->commonHelper->generalReturn('403','error',$error,'getSectionDetails');
+            $this->commonHelper->generalReturn('403','error',$error,'Error in  getEmployeeList');
         }
     }
 
@@ -3788,7 +3799,7 @@ class ApiController extends BaseController
         }
          }
         catch(\Exception $error) {
-            $this->commonHelper->generalReturn('403','error',$error,'getSectionDetails');
+            $this->commonHelper->generalReturn('403','error',$error,'Error in getEmployeeDetails');
         }
     }
      // getEmployeeDetails PAGE row details
@@ -3824,7 +3835,7 @@ class ApiController extends BaseController
         }
          }
         catch(\Exception $error) {
-            $this->commonHelper->generalReturn('403','error',$error,'getSectionDetails');
+            $this->commonHelper->generalReturn('403','error',$error,'Error in getEmployeePageDetails');
         }
     }
     // update updateEmployee
@@ -4162,7 +4173,7 @@ class ApiController extends BaseController
         }
          }
         catch(\Exception $error) {
-            $this->commonHelper->generalReturn('403','error',$error,'getSectionDetails');
+            $this->commonHelper->generalReturn('403','error',$error,'Error in updateEmployee');
         }
     }
     // delete Employee
@@ -4568,7 +4579,7 @@ class ApiController extends BaseController
         }
         }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in getsubjectByAssignTest');
         }
     }
     public function examBySubjects(Request $request)
@@ -4608,7 +4619,7 @@ try {
         }
         }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in examBySubjects');
         }
     }
     //
@@ -4656,7 +4667,7 @@ try {
         }
         }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in examByTeacherSubjects');
         }
     }
     public function getSubjectByPaper(Request $request)
@@ -4699,7 +4710,7 @@ try {
 
  }
         catch(\Exception $error) {
-            $this->commonHelper->generalReturn('403','error',$error,'getSectionDetails');
+            $this->commonHelper->generalReturn('403','error',$error,'Error in getSubjectByPaper');
         }
     }
     // Timetable Subject 
@@ -4770,7 +4781,7 @@ try {
         }
          }
         catch(\Exception $error) {
-            $this->commonHelper->generalReturn('403','error',$error,'getSectionDetails');
+            $this->commonHelper->generalReturn('403','error',$error,'Error in timetableSubject');
         }
 
     }
@@ -4829,7 +4840,7 @@ try {
         }
          }
         catch(\Exception $error) {
-            $this->commonHelper->generalReturn('403','error',$error,'getSectionDetails');
+            $this->commonHelper->generalReturn('403','error',$error,'Error in timetableSubjectBulk');
         }
     }
 
@@ -4986,7 +4997,7 @@ try {
         }
         }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in addTimetable');
         }
     }
     // copy Timetable
@@ -5143,7 +5154,7 @@ try {
         }
         }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in copyTimetable');
         }
     }
     // add Bulk Timetable
@@ -5342,7 +5353,7 @@ try {
         }
         }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in addBulkTimetable');
         }
     }
 
@@ -5418,7 +5429,7 @@ try {
         }
         }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in getTimetableList');
         }
     }
 
@@ -5514,7 +5525,7 @@ try {
         }
         }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in editTimetable');
         }
     }
 
@@ -5646,7 +5657,7 @@ try {
         }
         }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in updateTimetable');
         }
     }
 
@@ -5725,7 +5736,7 @@ try {
         }
         }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in studentTimetable');
         }
     }
 
@@ -5733,7 +5744,7 @@ try {
     public function parentTimetable(Request $request)
     {
     try {
-               $validator = \Validator::make($request->all(), [
+            $validator = \Validator::make($request->all(), [
             'branch_id' => 'required',
             'token' => 'required',
             'parent_id' => 'required',
@@ -5806,7 +5817,7 @@ try {
         }
         }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in parentTimetable');
         }
     }
     // getStaffInfo
@@ -5842,7 +5853,7 @@ try {
         }
         }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in getStaffProfileInfo');
         }
     }
     // parent
@@ -5878,7 +5889,7 @@ try {
         }
         }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in getParentProfileInfo');
         }
     }
     // updatePicture settings
@@ -5932,7 +5943,7 @@ try {
         }
         }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in updatePicture');
         }
     }
     // changeLogo settings
@@ -5981,7 +5992,7 @@ try {
         }
         }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in changeLogo');
         }
 
     }
@@ -6026,7 +6037,7 @@ try {
         }
         }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in changePassword');
         }
     }
 
@@ -6075,7 +6086,7 @@ try {
         }
         }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in updateProfileInfo');
         }
     }
     // update parent profile info
@@ -6123,7 +6134,7 @@ try {
         }
         }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in updateParentProfileInfo');
         }
     }
     // forum Create Post 
@@ -6178,7 +6189,7 @@ try {
         }
         }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in forumCreatePost');
         }
     }
     // forum Update Post 
@@ -6232,7 +6243,7 @@ try {
         }
         }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in forumUpdatePost');
         }
     }
     // delete forum post
@@ -6259,7 +6270,7 @@ try {
         }
         }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in postDelete');
         }
     }
     // forum all post branch id wise
@@ -6351,7 +6362,7 @@ try {
         }
         }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in postList');
         }
     }
     // forum get Post by id
@@ -6435,7 +6446,7 @@ try {
         }
         }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in postEdit');
         }
     }
     // forum all Threads post branch id wise
@@ -6490,7 +6501,7 @@ try {
         }
         }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in ThreadspostList');
         }
     }
     public function userThreadspostList(Request $request)
@@ -6546,7 +6557,7 @@ try {
         }
         }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in userThreadspostList');
         }
     }
 
@@ -6602,7 +6613,7 @@ try {
         }
         }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in singlePost');
         }
     }
     // forum post replies branch id and post id wise 
@@ -6648,7 +6659,7 @@ try {
         }
         }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in singlePostReplies');
         }
     }
     // forum post all replies branch id and post id wise 
@@ -6681,7 +6692,7 @@ try {
         }
         }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in PostAllReplies');
         }
     }
     // class room teacher_class
@@ -6729,7 +6740,7 @@ try {
         }
         }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in getTeachersClassName');
         }
     }
     // class room teacher_section
@@ -6763,7 +6774,7 @@ try {
         }
         }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in getTeachersSectionName');
         }
     }
     // get subject name getTeachersSubjectName
@@ -6800,7 +6811,7 @@ try{
         }
         }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in getTeachersSubjectName');
         }
     }
     // forum view count insert 
@@ -6840,7 +6851,7 @@ try{
         }
         }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in viewcountinsert');
         }
     }
     // forum view count add
@@ -6866,7 +6877,7 @@ try{
         }
         }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in viewcountadded');
         }
     }
     // forum like count add
@@ -10938,6 +10949,8 @@ try{
         if (!$validator->passes()) {
             return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
         } else {
+            if($request->student_id!==null)
+            {
             // create new connection
             $Connection = $this->createNewConnection($request->branch_id);
             $studentID = $request->student_id;
@@ -11004,6 +11017,7 @@ try{
                 // ->groupBy('cl.subject_id')
                 ->get();
             return $this->successResponse($success, 'student calendor data get successfully');
+            }
         }
     }
     function addCalendorTimetable($request, $row, $getObjRow, $insertOrUpdateID, $bulkID)
@@ -15052,78 +15066,85 @@ try{
         if (!$validator->passes()) {
             return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
         } else {
-            $id = $request->id;
-            // create new connection
-            $conn = $this->createNewConnection($request->branch_id);
-            // get data
-            // $studentDetail['student'] = $conn->table('students as s')
-            //     ->select('s.*', DB::raw("CONCAT(s.last_name, ' ', s.first_name) as name"), 'c.name as class_name', 'sec.name as section_name', 's.relation', 'e.class_id', 'e.section_id', 'e.session_id', 'e.semester_id')
-            //     ->leftJoin('enrolls as e', 's.id', '=', 'e.student_id')
-            //     ->leftJoin('classes as c', 'e.class_id', '=', 'c.id')
-            //     ->leftJoin('sections as sec', 'e.section_id', '=', 'sec.id')
-            //     ->where('s.id', $id)->first();
+            if($request->id!==0)
+            {
+                $id = $request->id;
+                // create new connection            
+                $conn = $this->createNewConnection($request->branch_id);
+                // get data
+                // $studentDetail['student'] = $conn->table('students as s')
+                //     ->select('s.*', DB::raw("CONCAT(s.last_name, ' ', s.first_name) as name"), 'c.name as class_name', 'sec.name as section_name', 's.relation', 'e.class_id', 'e.section_id', 'e.session_id', 'e.semester_id')
+                //     ->leftJoin('enrolls as e', 's.id', '=', 'e.student_id')
+                //     ->leftJoin('classes as c', 'e.class_id', '=', 'c.id')
+                //     ->leftJoin('sections as sec', 'e.section_id', '=', 'sec.id')
+                //     ->where('s.id', $id)->first();
 
-            $getStudentDetail = $conn->table('students as s')
-                ->select(
-                    's.*',
-                    DB::raw("CONCAT(s.last_name, ' ', s.first_name) as name"),
-                    'e.academic_session_id as year',
-                    'c.name as class_name',
-                    'sec.name as section_name',
-                    'e.department_id',
-                    'e.class_id',
-                    'e.section_id',
-                    'e.session_id',
-                    'e.semester_id',
-                    'e.attendance_no'
-                )
-                ->leftJoin('enrolls as e', 's.id', '=', 'e.student_id')
-                ->leftJoin('classes as c', 'e.class_id', '=', 'c.id')
-                ->leftJoin('sections as sec', 'e.section_id', '=', 'sec.id')
-                ->where('s.id', $id)
-                ->get();
-            $studentObj = new \stdClass();
-            if (!empty($getStudentDetail)) {
-                foreach ($getStudentDetail as $suc) {
-                    $studentObj = $suc;
-                    $studentObj->current_address = Helper::decryptStringData($suc->current_address);
-                    $studentObj->permanent_address = Helper::decryptStringData($suc->permanent_address);
-                    $studentObj->mobile_no = Helper::decryptStringData($suc->mobile_no);
-                    $studentObj->nric = Helper::decryptStringData($suc->nric);
-                    $studentObj->passport = Helper::decryptStringData($suc->passport);
+                $getStudentDetail = $conn->table('students as s')
+                    ->select(
+                        's.*',
+                        DB::raw("CONCAT(s.last_name, ' ', s.first_name) as name"),
+                        'e.academic_session_id as year',
+                        'c.name as class_name',
+                        'sec.name as section_name',
+                        'e.department_id',
+                        'e.class_id',
+                        'e.section_id',
+                        'e.session_id',
+                        'e.semester_id',
+                        'e.attendance_no'
+                    )
+                    ->leftJoin('enrolls as e', 's.id', '=', 'e.student_id')
+                    ->leftJoin('classes as c', 'e.class_id', '=', 'c.id')
+                    ->leftJoin('sections as sec', 'e.section_id', '=', 'sec.id')
+                    ->where('s.id', $id)
+                    ->get();
+                $studentObj = new \stdClass();
+                if (!empty($getStudentDetail)) {
+                    foreach ($getStudentDetail as $suc) {
+                        $studentObj = $suc;
+                        $studentObj->current_address = Helper::decryptStringData($suc->current_address);
+                        $studentObj->permanent_address = Helper::decryptStringData($suc->permanent_address);
+                        $studentObj->mobile_no = Helper::decryptStringData($suc->mobile_no);
+                        $studentObj->nric = Helper::decryptStringData($suc->nric);
+                        $studentObj->passport = Helper::decryptStringData($suc->passport);
+                    }
                 }
-            }
-            $studentDetail['student'] = $studentObj;
-            $class_id = $studentDetail['student']->class_id;
-            $studentDetail['section'] = $conn->table('section_allocations as sa')->select('s.id as section_id', 's.name as section_name')
-                ->join('sections as s', 'sa.section_id', '=', 's.id')
-                ->where('sa.class_id', $class_id)
-                ->get();
+                $studentDetail['student'] = $studentObj;
+                $class_id = $studentDetail['student']->class_id;
+                $studentDetail['section'] = $conn->table('section_allocations as sa')->select('s.id as section_id', 's.name as section_name')
+                    ->join('sections as s', 'sa.section_id', '=', 's.id')
+                    ->where('sa.class_id', $class_id)
+                    ->get();
 
-            $route_id = $studentDetail['student']->route_id;
-            $studentDetail['vehicle'] = $conn->table('transport_assign')->select('transport_vehicle.id as vehicle_id', 'transport_vehicle.vehicle_no')
-                ->join('transport_vehicle', 'transport_assign.vehicle_id', '=', 'transport_vehicle.id')
-                ->where('transport_assign.route_id', $route_id)
-                ->get();
+                $route_id = $studentDetail['student']->route_id;
+                $studentDetail['vehicle'] = $conn->table('transport_assign')->select('transport_vehicle.id as vehicle_id', 'transport_vehicle.vehicle_no')
+                    ->join('transport_vehicle', 'transport_assign.vehicle_id', '=', 'transport_vehicle.id')
+                    ->where('transport_assign.route_id', $route_id)
+                    ->get();
 
-            $hostel_id = $studentDetail['student']->hostel_id;
-            $studentDetail['room'] = $conn->table('hostel_room')->select('hostel_room.id as room_id', 'hostel_room.name as room_name')
-                ->where('hostel_room.hostel_id', $hostel_id)
-                ->get();
-            $staffRoles = array('6');
-            $sql = "";
-            for ($x = 0; $x < count($staffRoles); $x++) {
-                $getRow = User::select('google2fa_secret_enable', 'id')->where('user_id', $id)
-                    ->where('branch_id', $request->branch_id)
-                    ->whereRaw("find_in_set('$staffRoles[$x]',role_id)")
-                    ->first();
-                if (isset($getRow->id)) {
-                    $sql = $getRow;
-                    break;
+                $hostel_id = $studentDetail['student']->hostel_id;
+                $studentDetail['room'] = $conn->table('hostel_room')->select('hostel_room.id as room_id', 'hostel_room.name as room_name')
+                    ->where('hostel_room.hostel_id', $hostel_id)
+                    ->get();
+                $staffRoles = array('6');
+                $sql = "";
+                for ($x = 0; $x < count($staffRoles); $x++) {
+                    $getRow = User::select('google2fa_secret_enable', 'id')->where('user_id', $id)
+                        ->where('branch_id', $request->branch_id)
+                        ->whereRaw("find_in_set('$staffRoles[$x]',role_id)")
+                        ->first();
+                    if (isset($getRow->id)) {
+                        $sql = $getRow;
+                        break;
+                    }
                 }
+                $studentDetail['user'] = $sql;
+                return $this->successResponse($studentDetail, 'Student record fetch successfully');
             }
-            $studentDetail['user'] = $sql;
-            return $this->successResponse($studentDetail, 'Student record fetch successfully');
+            else
+            {
+                return $this->commonHelper->generalReturn('403', 'error', 'Invalid Student Id ');
+            }
         }
     }
 
@@ -15602,7 +15623,6 @@ try{
     {
         $validator = \Validator::make($request->all(), [
             'branch_id' => 'required',
-            'token' => 'required',
         ]);
 
         if (!$validator->passes()) {
@@ -15612,8 +15632,22 @@ try{
             $conn = $this->createNewConnection($request->branch_id);
             // get data
             $parent_id = $request->parent_id;
-            $parentDetails = $conn->table('parent_change_info as pi')->select("p.email","pi.status", "pi.status_parent", "p.id as parent_id", "pi.id", "p.occupation", DB::raw("CONCAT(p.last_name, ' ', p.first_name) as name"))
-                ->leftJoin('parent as p', 'pi.parent_id', '=', 'p.id')->where('pi.parent_id', $parent_id)->get()->toArray();
+            $student_id = $request->student_id;
+            // $parentDetails = $conn->table('parent_change_info as pi')->select("p.email","pi.status", "pi.status_parent", "p.id as parent_id", "pi.id", "p.occupation", DB::raw("CONCAT(p.last_name, ' ', p.first_name) as name"))
+            //     ->leftJoin('parent as p', 'pi.parent_id', '=', 'p.id')->where('pi.parent_id', $parent_id)->get()->toArray();
+            
+            $parentDetails = $conn->table('parent_change_info as pi')
+                            ->select("p.email", "pi.status", "pi.status_parent", "p.id as parent_id", "pi.id", "p.occupation", DB::raw("CONCAT(p.last_name, ' ', p.first_name) as name"))
+                            ->leftJoin('students as s', function($join) {
+                                $join->on('pi.parent_id', '=', 's.guardian_id')
+                                    ->orOn('pi.parent_id', '=', 's.father_id')
+                                    ->orOn('pi.parent_id', '=', 's.mother_id');
+                            })
+                            ->leftJoin('parent as p', 'pi.parent_id', '=', 'p.id')
+                            ->where('s.guardian_id', $parent_id)
+                            ->get()
+                            ->toArray();
+
             $studentDetails = $conn->table('student_change_info as si')->select("s.email","si.status", "si.status_parent", "s.id as student_id", 'si.id', "s.roll_no", DB::raw("CONCAT(s.last_name, ' ', s.first_name) as name"))
                 ->leftJoin('students as s', 'si.student_id', '=', 's.id')->where('si.parent_id', $parent_id)->get()->toArray();
             $details = array_merge($parentDetails, $studentDetails);
@@ -15777,11 +15811,6 @@ try{
                 ->select(
                     'id',
                     'parent_id',
-                    'occupation',
-                    'mobile_no',
-                    'nationality',
-                    'passport_photo',
-                    'visa_photo',
                     'first_name',
                     'last_name',
                     'middle_name',
@@ -15791,22 +15820,28 @@ try{
                     'first_name_english',
                     'last_name_english',
                     'middle_name_english',
+                    'nationality',
                     'email',
-                    'visa_father_photo',
-                    'passport_father_photo',
-                    'visa_mother_photo',
-                    'passport_mother_photo',
-                    'relation',
+                    'mobile_no',
+                    'occupation',
                     'company_name_japan',
                     'company_name_local',
                     'company_phone_number',
                     'employment_status',
-                    'japanese_association_membership_image_supplimental',
+                    'relation',
+                    'passport_photo',
+                    'visa_photo',
+                    // 'visa_father_photo',
+                    // 'passport_father_photo',
+                    // 'visa_mother_photo',
+                    // 'passport_mother_photo',
                     'japan_postalcode',
                     'japan_contact_no',
                     'japan_emergency_sms',
                     'japan_address',
                     'stay_category',
+                    'japanese_association_membership_image_principal',
+                    'japanese_association_membership_image_supplimental',
 
                     // DB::raw("CONCAT(s.last_name, ' ', s.first_name) as name")
                 )
@@ -15982,7 +16017,6 @@ try{
                             $father_passport_file = base_path() . $father_passport_path . $father_passport_fileName;
                             $father_passport_suc = file_put_contents($father_passport_file, $father_passport_base64);
                         }
-
                         $father_old = $staffConn->table('parent')->select(
                             'middle_name','first_name','last_name',
                             'middle_name_furigana','first_name_furigana','last_name_furigana',
@@ -15992,7 +16026,6 @@ try{
     
                         )->where('id', '=', $request->father_id)->first();
     
-                        // dd($father_old);
                         $father_data = [
                             'id' => $request->father_id,
                             "last_name_furigana" => $request->father_last_name_furigana,
@@ -16011,7 +16044,7 @@ try{
                         ];
                         $father_insertArr = [];
                         foreach ($father_old as $key => $o) {
-                            if (isset($father_data[$key])) {
+                            // if (isset($father_data[$key])) {
                                 if ($key == "mobile_no") {
                                     // $encrypt = Helper::decryptStringData($old->$key);
                                     // dd(Crypt::encryptString($old->$key));
@@ -16031,19 +16064,23 @@ try{
                                         $father_insertArr[$key] = $father_data[$key];
                                     }
                                 }
-                            }
+                            // }
                         }
                         if (count($father_insertArr) > 0) {
                             $father_insertArr['status'] = "Admin";
                             $father_insertArr['parent_id'] = $request->father_id;
-                            if ($staffConn->table('parent_change_info')->where('parent_id', $request->father_id)->count() > 0) {
-                                $staffConn->table('parent_change_info')->where('parent_id', '=', $request->father_id)->update($father_insertArr);
-                                $father_update_id = $staffConn->table('parent_change_info')->where('parent_id', '=', $request->father_id)->first();
-                                $father_query = $father_update_id->id;
-                            }else{
-                                $father_query = $staffConn->table('parent_change_info')->insertGetId($father_insertArr);
-                            }
+                            // if ($staffConn->table('parent_change_info')->where('parent_id', $request->father_id)->count() > 0) {
+                            //     $staffConn->table('parent_change_info')->where('parent_id', '=', $request->father_id)->update($father_insertArr);
+                            //     $father_update_id = $staffConn->table('parent_change_info')->where('parent_id', '=', $request->father_id)->first();
+                            //     $father_query = $father_update_id->id;
+                            // }else{
+                            //     $father_query = $staffConn->table('parent_change_info')->insertGetId($father_insertArr);
+                            // }
     
+                            if ($staffConn->table('parent_change_info')->where('parent_id', $request->father_id)->count() > 0) {
+                                $staffConn->table('parent_change_info')->where('parent_id', '=', $request->father_id)->delete();
+                            }
+                            $father_query = $staffConn->table('parent_change_info')->insertGetId($father_insertArr);
                             // dd($father_insertArr);
                             // send Termination notifications
     
@@ -16125,7 +16162,7 @@ try{
                         ];
                         $mother_insertArr = [];
                         foreach ($mother_old as $key => $o) {
-                            if (isset($mother_data[$key])) {
+                            // if (isset($mother_data[$key])) {
                                 if ($key == "mobile_no") {
                                     if (Helper::decryptStringData($mother_old->$key) != $mother_data[$key]) {
                                         $mother_insertArr[$key] = Crypt::encryptString($mother_data[$key]);
@@ -16139,24 +16176,30 @@ try{
                                         $mother_insertArr[$key] = $mother_visa_fileName;
                                     }
                                 }  else {
+
                                     if ($mother_old->$key != $mother_data[$key]) {
                                         $mother_insertArr[$key] = $mother_data[$key];
                                     }
                                 }
                                 
-                            }
+                            // }
                         }
                         if (count($mother_insertArr) > 0) {
                             $mother_insertArr['status'] = "Admin";
                             $mother_insertArr['parent_id'] = $request->mother_id;
-                            if ($staffConn->table('parent_change_info')->where('parent_id', $request->mother_id)->count() > 0) {
-                                $staffConn->table('parent_change_info')->where('parent_id', '=', $request->mother_id)->update($mother_insertArr);
-                                $mother_update_id = $staffConn->table('parent_change_info')->where('parent_id', '=', $request->mother_id)->first();
-                                $mother_query = $mother_update_id->id;
-                            }else{
-                                $mother_query = $staffConn->table('parent_change_info')->insertGetId($mother_insertArr);
-                            }
+                            // if ($staffConn->table('parent_change_info')->where('parent_id', $request->mother_id)->count() > 0) {
+                            //     $staffConn->table('parent_change_info')->where('parent_id', '=', $request->mother_id)->update($mother_insertArr);
+                            //     $mother_update_id = $staffConn->table('parent_change_info')->where('parent_id', '=', $request->mother_id)->first();
+                            //     $mother_query = $mother_update_id->id;
+                            // }else{
+                            //     $mother_query = $staffConn->table('parent_change_info')->insertGetId($mother_insertArr);
+                            // }
     
+                            if ($staffConn->table('parent_change_info')->where('parent_id', $request->mother_id)->count() > 0) {
+                                $staffConn->table('parent_change_info')->where('parent_id', '=', $request->mother_id)->delete();
+                            }
+                            $mother_query = $staffConn->table('parent_change_info')->insertGetId($mother_insertArr);
+
                             // dd($mother_insertArr);
                             // send Termination notifications
     
@@ -16213,13 +16256,13 @@ try{
                             File::ensureDirectoryExists(base_path() . $image_principal_path);
                             $image_principal_file = base_path() . $image_principal_path . $image_principal_fileName;
                             $image_principal_suc = file_put_contents($image_principal_file, $image_principal_base64);
-                            if ($request->image_principal_old_photo) {
-                                if (\File::exists(base_path($nric_path . $request->image_principal_old_photo))) {
-                                    \File::delete(base_path($nric_path . $request->image_principal_old_photo));
-                                }
-                            }
+                            // if ($request->image_principal_old_photo) {
+                            //     if (\File::exists(base_path($nric_path . $request->image_principal_old_photo))) {
+                            //         \File::delete(base_path($nric_path . $request->image_principal_old_photo));
+                            //     }
+                            // }
                         }
-                        $supplimental_fileName = $request->japanese_association_membership_image_supplimental_old;
+                        $supplimental_fileName = "";
                         if ($request->japanese_association_membership_image_supplimental) {
                             $extension = $request->japanese_association_membership_image_supplimental_file_extension;
     
@@ -16277,7 +16320,7 @@ try{
                         ];
                         $guardian_insertArr = [];
                         foreach ($guardian_old as $key => $o) {
-                            if (isset($guardian_data[$key])) {
+                            // if (isset($guardian_data[$key])) {
                                 if ($key == "mobile_no" || $key == "company_phone_number"  || $key == "japan_contact_no" || $key == "japan_emergency_sms") {
                                     if (Helper::decryptStringData($guardian_old->$key) != $guardian_data[$key]) {
                                         $guardian_insertArr[$key] = Crypt::encryptString($guardian_data[$key]);
@@ -16296,7 +16339,7 @@ try{
                                     }
                                 }
                                 
-                            }
+                            // }
                         }
                         if (count($guardian_insertArr) > 0) {
                             $guardian_insertArr['status'] = "Admin";
@@ -16308,6 +16351,12 @@ try{
                             }else{
                                 $guardian_query = $staffConn->table('parent_change_info')->insertGetId($guardian_insertArr);
                             }
+    
+                            // if ($staffConn->table('parent_change_info')->where('parent_id', $request->guardian_id)->count() > 0) {
+                            //     $staffConn->table('parent_change_info')->where('parent_id', '=', $request->guardian_id)->delete();
+                            // }
+                            // $guardian_query = $staffConn->table('parent_change_info')->insertGetId($guardian_insertArr);
+
     
                             // dd($guardian_insertArr);
                             // send Termination notifications
@@ -18366,8 +18415,8 @@ try{
                 )
                 ->join('students as std', 'lev.student_id', '=', 'std.id')
                 ->join('enrolls as en', 'lev.student_id', '=', 'en.student_id')
-                ->join('classes as cl', 'lev.class_id', '=', 'cl.id')
-                ->join('sections as sc', 'lev.section_id', '=', 'sc.id')
+                ->join('classes as cl', 'en.class_id', '=', 'cl.id')
+                ->join('sections as sc', 'en.section_id', '=', 'sc.id')
                 ->leftJoin('student_leave_types as slt', 'lev.change_lev_type', '=', 'slt.id')
                 ->leftJoin('absent_reasons as ar', 'lev.reasonId', '=', 'ar.id')
                 ->join('staff_departments as sd', 'cl.department_id', '=', 'sd.id')
@@ -18407,6 +18456,7 @@ try{
                         });
                     });
                 })
+                ->where('en.active_status', '=', '0')
                 ->orderBy('lev.from_leave', 'desc')
                 ->get();
             return $this->successResponse($studentDetails, 'Student details fetch successfully');
@@ -23611,7 +23661,7 @@ try{
         }
            }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in deleteExcusedReason');
         }
     }
 
@@ -23659,7 +23709,7 @@ try{
         }
          }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in addSemester');
         }
     }
     // get Semester row details
@@ -23684,7 +23734,7 @@ try {
         }
          }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in getSemesterDetails');
         }
     }
     // update Semester
@@ -23734,7 +23784,7 @@ try {
         }
          }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in updateSemester');
         }
     }
     // delete Semester
@@ -23769,7 +23819,7 @@ try {
         }
          }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in deleteSemester');
         }
     }
 
@@ -23810,7 +23860,7 @@ try {
         }
          }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in addGlobalSetting');
         }
 
     }
@@ -23834,7 +23884,7 @@ try {
         }
          }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in getGlobalSettingList');
         }
     }
     // get GlobalSetting row details
@@ -23859,7 +23909,7 @@ try {
         }
          }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in getGlobalSettingDetails');
         }
     }
     // update GlobalSetting
@@ -23900,7 +23950,7 @@ try {
         }
          }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in updateGlobalSetting');
         }
     }
     // delete GlobalSetting
@@ -23931,7 +23981,7 @@ try {
         }
          }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in deleteGlobalSetting');
         }
     }
 
@@ -23974,7 +24024,7 @@ try {
         }
          }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in classRoomCheck');
         }
     }
 
@@ -24049,7 +24099,7 @@ try {
         }
          }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in studentLeaveCount');
         }
     }
     // employeeCount
@@ -24073,7 +24123,7 @@ try {
         }
          }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in employeeCount');
         }
     }
     // studentCount
@@ -24096,7 +24146,7 @@ try {
         }
          }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in studentCount');
         }
     }
     // parentCount
@@ -24119,7 +24169,7 @@ try {
         }
          }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in parentCount');
         }
     }
     // teacherCount
@@ -24165,7 +24215,7 @@ try {
         }
          }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in teacherCount');
         }
     }
 
@@ -24338,7 +24388,7 @@ try {
         }
          }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in addApplication');
         }
     }
 
@@ -24415,7 +24465,7 @@ try{
         }
          }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in emailApplication');
         }
     }
     public function verifyApplication(Request $request)
@@ -24470,7 +24520,7 @@ try{
         }
          }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in verifyApplication');
         }
     }
 
@@ -24582,7 +24632,7 @@ try{
         }
          }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in getApplicationList');
         }
     }
 
@@ -24623,7 +24673,7 @@ try{
         }
          }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in getApplicationDetails');
         }
 
     }
@@ -24654,7 +24704,7 @@ try{
         }
          }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in getApplicationGuardianDetails');
         }
     }
     // update Application
@@ -25443,7 +25493,7 @@ try{
         }
          }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'updateApplication');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in updateApplication');
         }
     }
 
@@ -25486,7 +25536,7 @@ try{
         }
          }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in approveApplication');
         }
     }
     // delete Application
@@ -25516,7 +25566,7 @@ try{
         }
          }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in deleteApplication');
         }
     }
 
@@ -25540,7 +25590,7 @@ try{
         }
          }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in getApplicationRelationList');
         }
     }
 
@@ -25580,7 +25630,7 @@ try{
         }
          }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in applicationAcademicYearList');
         }
     }
 
@@ -25603,7 +25653,7 @@ try{
         }
          }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in getApplicationGradeList');
         }
     }
 
@@ -25623,7 +25673,7 @@ try{
         return  $data;
          }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in forumImageStore');
         }
     }
     // student Profile
@@ -25659,7 +25709,7 @@ try{
         }
          }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in getStudentProfileInfo');
         }
     }
     // update Student profile info
@@ -25707,7 +25757,7 @@ try{
         }
          }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in updateStudentProfileInfo');
         }
     }
 
@@ -25762,7 +25812,7 @@ try{
         }
          }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in updateStudentPicture');
         }
     }
     // update parent Picture settings
@@ -25816,7 +25866,7 @@ try{
         }
          }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in updateParentPicture');
         }
     }
     // getCheckInOutTimeList
@@ -25839,7 +25889,7 @@ try{
         }
          }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in getCheckInOutTimeList');
         }
     }
     // get CheckInOutTime row details
@@ -25864,7 +25914,7 @@ try{
         }
          }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in getCheckInOutTimeDetails');
         }
     }
     // update CheckInOutTime
@@ -25901,7 +25951,7 @@ try{
 
          }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'updateCheckInOutTime');
         }
     }
 
@@ -25954,7 +26004,7 @@ try{
         }
          }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in addBankAccount');
         }
     }
     // get BankAccounts 
@@ -25979,7 +26029,7 @@ try{
         }
          }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in getBankAccountList');
         }
     }
     // get Bank Account row details
@@ -26004,7 +26054,7 @@ try{
         }
          }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in getBankAccountDetails');
         }
     }
     // update BankAccount
@@ -26058,7 +26108,7 @@ try{
         }
          }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in updateBankAccount');
         }
 
     }
@@ -26091,7 +26141,7 @@ try{
         }
          }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in deleteBankAccount');
         }
     }
     // bank Account Status
@@ -26129,7 +26179,7 @@ try{
         }
          }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in bankAccountStatus');
         }
     }
 
@@ -26166,7 +26216,7 @@ try{
         }
          }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in addBank');
         }
     }
     // getBankList
@@ -26193,7 +26243,7 @@ try{
         }
          }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in getBankList');
         }
     }
     // get Bank row details
@@ -26218,7 +26268,7 @@ try{
         }
          }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in getBankDetails');
         }
 
     }
@@ -26255,7 +26305,7 @@ try{
         }
          }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in updateBank');
         }
     }
     // delete Bank
@@ -26286,7 +26336,7 @@ try{
         }
          }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in deleteBank');
         }
     }
 
@@ -26339,7 +26389,7 @@ try{
         }
          }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in getBuletinBoardList');
         }
     }
     public function addBuletinBoard(Request $request)
@@ -26508,7 +26558,7 @@ try{
         }
          }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in addBuletinBoard');
         }
     }
     public function usernameBuletin(Request $request)
@@ -26534,7 +26584,7 @@ try{
         }
          }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in usernameBuletin');
         }
     }
     public function deleteBuletinBoard(Request $request)
@@ -26568,7 +26618,7 @@ try{
         }
          }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in deleteBuletinBoard');
         }
     }
     // get Event row details
@@ -26621,7 +26671,7 @@ try{
         }
          }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in getBuletinBoardDetails');
         }
     }
     public function updateBuletinBoard(Request $request)
@@ -26680,7 +26730,7 @@ try{
         }
         }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in updateBuletinBoard');
         }
     }
     // get Student List
@@ -26716,7 +26766,7 @@ try{
         }
         }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in getStudentListForBulletinBoard');
         }
     }
     public function getParentListForBulletinBoard(Request $request)
@@ -26754,7 +26804,7 @@ try{
         }
         }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in getParentListForBulletinBoard');
         }
     }
     // get Student List
@@ -26802,7 +26852,7 @@ try{
         }
         }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in getRetiredList');
         }
     }
     public function getBulletinParent(Request $request)
@@ -26878,7 +26928,7 @@ try{
         }
         }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in getBulletinParent');
         }
     }
 
@@ -26932,7 +26982,7 @@ try{
         }
         }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in bulletinParentStar');
         }
     }
     public function getBulletinImpParent(Request $request)
@@ -27004,7 +27054,7 @@ try{
         }
         }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in getBulletinImpParent');
         }
     }
     public function getBulletinStudent(Request $request)
@@ -27075,7 +27125,7 @@ try{
         }
         }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in getBulletinStudent');
         }
     }
 
@@ -27129,7 +27179,7 @@ try{
         }
         }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in bulletinStudentStar');
         }
     }
     public function getBulletinImpStudent(Request $request)
@@ -27195,7 +27245,7 @@ try{
         }
         }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in getBulletinImpStudent');
         }
     }
     public function getBulletinTeacher(Request $request)
@@ -27250,7 +27300,7 @@ try{
         }
         }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in getBulletinTeacher');
         }
     }
     public function getBulletinImpTeacher(Request $request)
@@ -27306,7 +27356,7 @@ try{
         }
         }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in getBulletinImpTeacher');
         }
     }
     public function bulletinTeacherStar(Request $request)
@@ -27360,7 +27410,7 @@ try{
         }
         }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in bulletinTeacherStar');
         }
     }
     function get_pointsresult(Request $request)
@@ -27377,7 +27427,7 @@ try{
         return $this->successResponse($data, 'Exam Point Status Get Successfully'); 
         }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in get_pointsresult');
         }
     }
 
@@ -27416,7 +27466,7 @@ try{
         }
         }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in addEmailType');
         }
     }
     // getEmailTypeList
@@ -27455,7 +27505,7 @@ try{
         }
         }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in getEmailTypeList');
         }
 
     }
@@ -27482,7 +27532,7 @@ try{
         }
         }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in getEmailTypeDetails');
         }
     }
     // update EmailType
@@ -27521,7 +27571,7 @@ try{
         }
         }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in updateEmailType');
         }
     }
     // delete EmailType
@@ -27552,7 +27602,7 @@ try{
         }
         }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in deleteEmailType');
         }
     }
 
@@ -27589,7 +27639,7 @@ try{
         }
         }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in addEmailTemplate');
         }
     }
     // getEmailTemplateList
@@ -27615,7 +27665,7 @@ try{
         }
         }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in getEmailTemplateList');
         }
     }
     // get EmailTemplate row details
@@ -27640,7 +27690,7 @@ try{
         }
         }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in getEmailTemplateDetails');
         }
     }
     // update EmailTemplate
@@ -27678,7 +27728,7 @@ try{
         }
         }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in updateEmailTemplate');
         }
     }
     // delete EmailTemplate
@@ -27709,7 +27759,7 @@ try{
         }
         }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in deleteEmailTemplate');
         }
     }
 
@@ -27780,25 +27830,49 @@ try{
                 File::ensureDirectoryExists(base_path() . $nric_path);
                 $nric_file = base_path() . $nric_path . $nric_fileName;
                 $nric_suc = file_put_contents($nric_file, $nric_base64);
-                if ($request->nric_old_photo) {
-                    if (\File::exists(base_path($nric_path . $request->nric_old_photo))) {
-                        \File::delete(base_path($nric_path . $request->nric_old_photo));
-                    }
-                }
+                // if ($request->nric_old_photo) {
+                //     if (\File::exists(base_path($nric_path . $request->nric_old_photo))) {
+                //         \File::delete(base_path($nric_path . $request->nric_old_photo));
+                //     }
+                // }
             }
-            $old = $conn->table('students')->where('id', '=', $id)->first();
+            $old = $conn->table('students')
+            ->select(
+                'last_name','middle_name','first_name',
+                'last_name_english','middle_name_english','first_name_english',
+                'last_name_furigana','middle_name_furigana','first_name_furigana',
+                'last_name_common','first_name_common','birthday',
+                'gender','religion','post_code',
+                'address_unit_no','address_condominium','address_street',
+                'address_district','city','state',
+                'country','nationality','dual_nationality',
+                'passport','passport_photo','passport_expiry_date',
+                'visa_photo','visa_type','visa_type_others','visa_expiry_date',
+                'japanese_association_membership_number_student','nric','nric_photo',
+                'school_name','school_country','school_state',
+                'school_city','school_postal_code','school_enrollment_status',
+                'school_enrollment_status_tendency'
+
+            )
+            ->where('id', '=', $id)->first();
             $insertArr = [];
             $insertArr['status'] = "Admin";
             // return Helper::decryptStringData($old->$passport);
             foreach ($old as $key => $o) {
                 if ($request->has($key)) {
-                    if ($key == "passport" || $key == "nric" || $key == "mobile_no" || $key == "current_address" || $key == "permanent_address") {
+                    if ($key == "passport" || $key == "nric") {
                         // $encrypt = Helper::decryptStringData($old->$key);
                         // dd(Crypt::encryptString($old->$key));
                         if (Helper::decryptStringData($old->$key) != $request->$key) {
                             $insertArr[$key] = Crypt::encryptString($request->$key);
                         }
-                    } else {
+                    } else if ($key == "passport_photo") {
+                        $insertArr[$key] = $passport_fileName;
+                    } else if ($key == "visa_photo") {
+                        $insertArr[$key] = $visa_fileName;
+                    }  else if ($key == "nric_photo") {
+                        $insertArr[$key] = $nric_fileName;
+                    }  else {
                         if ($old->$key != $request->$key) {
                             $insertArr[$key] = $request->$key;
                         }
@@ -27859,7 +27933,7 @@ try{
         }
         }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in parentUpdateStudent');
         }
     }
 
@@ -27884,31 +27958,54 @@ try{
                     'sci.id',
                     'sci.student_id',
                     'sci.parent_id',
+                    'sci.last_name',
+                    'sci.middle_name',
+                    'sci.first_name',
+                    'sci.last_name_english',
+                    'sci.middle_name_english',
+                    'sci.first_name_english',
+                    'sci.last_name_furigana',
+                    'sci.middle_name_furigana',
+                    'sci.first_name_furigana',
+                    'sci.last_name_common',
+                    'sci.first_name_common',
+                    'sci.birthday',
+                    'sci.gender',
+                    'sci.religion',
+                    'sci.post_code',
+                    'sci.address_unit_no',
+                    'sci.address_condominium',
+                    'sci.address_street',
+                    'sci.address_district',
+                    'sci.city',
+                    'sci.state',
+                    'sci.country',
+                    'sci.nationality',
+                    'sci.dual_nationality',
                     'sci.passport',
                     'sci.passport_photo',
                     'sci.passport_expiry_date',
-                    'sci.visa_number',
                     'sci.visa_photo',
+                    'sci.visa_type',
+                    'sci.visa_type_others',
                     'sci.visa_expiry_date',
-                    'sci.nationality',
+                    'sci.japanese_association_membership_number_student',
                     'sci.nric',
-                    // 'sci.religion',
+                    'sci.nric_photo',
+                    'sci.school_name',
+                    'sci.school_country',
+                    'sci.school_state',
+                    'sci.school_city',
+                    'sci.school_postal_code',
+                    'sci.school_enrollment_status',
+                    'sci.school_enrollment_status_tendency',
+                    
                     're.name as religion',
-                    // 'sci.race',
-                    'rc.name as race',
-                    'sci.blood_group',
-                    'sci.mother_tongue',
-                    'sci.current_address',
-                    'sci.permanent_address',
-                    'sci.country',
-                    'sci.state',
-                    'sci.city',
-                    'sci.post_code',
-                    'sci.mobile_no',
+                    // 'rc.name as race',
                     // DB::raw("CONCAT(s.last_name, ' ', s.first_name) as name")
                 )
                 ->leftJoin('religions as re', 'sci.religion', '=', 're.id')
-                ->leftJoin('races as rc', 'sci.race', '=', 'rc.id')
+                // ->leftJoin('races as rc', 'sci.race', '=', 'rc.id')
                 ->where('sci.id', $id)
                 ->first();
             $student_id = $getstudentDetails->student_id;
@@ -27918,17 +28015,18 @@ try{
             if (!empty($getstudentDetails)) {
                 foreach ($getstudentDetails as $key => $suc) {
 
-                    $old = $conn->table('students as s')->select('s.*', DB::raw("CONCAT(s.last_name, ' ', s.first_name) as name"), 'c.name as class_name', 'sc.name as section_name')
+                    $old = $conn->table('students as s')->select('s.*','re.name as religion', DB::raw("CONCAT(s.last_name, ' ', s.first_name) as name"), 'c.name as class_name', 'sc.name as section_name')
                         ->leftJoin('enrolls as e', 'e.student_id', '=', 's.id')
                         ->leftJoin('classes as c', 'e.class_id', '=', 'c.id')
                         ->leftJoin('sections as sc', 'e.section_id', '=', 'sc.id')
+                        ->leftJoin('religions as re', 's.religion', '=', 're.id')
                         ->where('s.id', '=', $student_id)->first();
                     // dd($old);
                     // dd(${$key});
                     if ($suc) {
                         // dd($key);
 
-                        if ($key == "passport" || $key == "nric" || $key == "mobile_no" || $key == "current_address" || $key == "permanent_address") {
+                        if ($key == "passport" || $key == "nric" ) {
                             // $encrypt = Helper::decryptStringData($old->$key);
                             // dd(Crypt::encryptString($old->$key));
 
@@ -27945,7 +28043,7 @@ try{
                             //         ->select('id','name')
                             //         ->where('id', $old->$key)
                             //         ->first();
-                            //         $religion_old_name = isset($religionOldValue->name)?$religionOldValue->name:"";
+                            //         $religion_old_name = $religionOldValue->name;
                             //     }
                             //     $religionNewValue = $conn->table('religions')
                             //     ->select('id','name')
@@ -27953,7 +28051,7 @@ try{
                             //     ->first();
                             //     ${$key} = [];
                             //     ${$key}['old_value'] =  $religion_old_name;
-                            //     ${$key}['new_value'] =  isset($religionOldValue->name)?$religionOldValue->name:"";
+                            //     ${$key}['new_value'] =  $religionNewValue->name;
                             //     // dd($key);
                             // }
                             // else
@@ -27970,7 +28068,8 @@ try{
             }
             $studentDetails['student'] = $studentObj;
             $profile = $old;
-            $profile->current_address = Helper::decryptStringData($old->current_address);
+            $profile->passport = Helper::decryptStringData($old->passport);
+            $profile->nric = Helper::decryptStringData($old->nric);
             $profile->mobile_no = Helper::decryptStringData($old->mobile_no);
             $studentDetails['profile'] = $profile;
 
@@ -27978,7 +28077,7 @@ try{
         }
         }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'getStudentUpdateInfoDetails');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in getStudentUpdateInfoDetails');
         }
     }
 
@@ -28002,7 +28101,7 @@ try{
         }
         }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in getFormFieldList');
         }
     }
     // get FormField row details
@@ -28027,7 +28126,7 @@ try{
         }
         }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in getFormFieldDetails');
         }
     }
     // update FormField
@@ -28069,7 +28168,7 @@ try{
         }
         }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in updateFormField');
         }
     }
     public function registerNumber($request)
@@ -28131,7 +28230,7 @@ try{
         return $registerNumber;
         }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in registerNumber');
         }
     }
     // get Parent update view details
@@ -28160,31 +28259,39 @@ try{
                     ->select(
                         'id',
                         'parent_id',
-                        'passport',
-                        'nric',
-                        'blood_group',
-                        'occupation',
-                        'income',
-                        'education',
-                        'mobile_no',
-                        'race',
-                        'religion',
-                        'address',
-                        'address_2',
-                        'country',
-                        'city',
-                        'state',
-                        'post_code',
-                        'photo',
-                        'facebook_url',
-                        'linkedin_url',
-                        'twitter_url',
+                        'first_name',
+                        'last_name',
+                        'middle_name',
+                        'first_name_furigana',
+                        'last_name_furigana',
+                        'middle_name_furigana',
+                        'first_name_english',
+                        'last_name_english',
+                        'middle_name_english',
                         'nationality',
+                        'email',
+                        'mobile_no',
+                        'occupation',
+                        'company_name_japan',
+                        'company_name_local',
+                        'company_phone_number',
+                        'employment_status',
+                        'relation',
                         'passport_photo',
-                        'passport_expiry_date',
-                        'visa_number',
                         'visa_photo',
-                        'visa_expiry_date',
+                        // 'visa_father_photo',
+                        // 'passport_father_photo',
+                        // 'visa_mother_photo',
+                        // 'passport_mother_photo',
+                        'japan_postalcode',
+                        'japan_contact_no',
+                        'japan_emergency_sms',
+                        'japan_address',
+                        'stay_category',
+                        'japanese_association_membership_image_principal',
+                        'japanese_association_membership_image_supplimental',
+
+
                         // DB::raw("CONCAT(s.last_name, ' ', s.first_name) as name")
                     )
                     ->where('pci.id', $id)
@@ -28203,7 +28310,7 @@ try{
                         if ($suc) {
                             // dd($key);
 
-                            if ($key == "passport" || $key == "nric" || $key == "mobile_no" || $key == "address" || $key == "address_2") {
+                            if ($key == "company_phone_number" || $key == "japan_contact_no" || $key == "mobile_no" || $key == "japan_emergency_sms") {
                                 // $encrypt = Helper::decryptStringData($old->$key);
                                 // dd(Crypt::encryptString($old->$key));
 
@@ -28217,9 +28324,8 @@ try{
                             }
                             $column = $key . "_status";
                             $details = json_decode($new->$column);
-                            ${$key}['status'] =  $details->status;
-                            ${$key}['remark'] =  $details->remark;
-
+                            ${$key}['status'] =  isset($details->status) ? $details->status : "";
+                            ${$key}['remark'] =  isset($details->remark) ? $details->remark : "";
                             $parentObj->$key = ${$key};
                         }
                     }
@@ -28236,27 +28342,52 @@ try{
                         'sci.id',
                         'sci.student_id',
                         'sci.parent_id',
-                        'sci.passport',
-                        'sci.passport_photo',
-                        'sci.passport_expiry_date',
-                        'sci.visa_number',
-                        'sci.visa_photo',
-                        'sci.visa_expiry_date',
-                        'sci.nationality',
-                        'sci.nric',
-                        'sci.religion',
-                        'sci.race',
-                        'sci.blood_group',
-                        'sci.mother_tongue',
-                        'sci.current_address',
-                        'sci.permanent_address',
-                        'sci.country',
-                        'sci.state',
-                        'sci.city',
-                        'sci.post_code',
-                        'sci.mobile_no',
+                        
+                    'sci.last_name',
+                    'sci.middle_name',
+                    'sci.first_name',
+                    'sci.last_name_english',
+                    'sci.middle_name_english',
+                    'sci.first_name_english',
+                    'sci.last_name_furigana',
+                    'sci.middle_name_furigana',
+                    'sci.first_name_furigana',
+                    'sci.last_name_common',
+                    'sci.first_name_common',
+                    'sci.birthday',
+                    'sci.gender',
+                    'sci.religion',
+                    'sci.post_code',
+                    'sci.address_unit_no',
+                    'sci.address_condominium',
+                    'sci.address_street',
+                    'sci.address_district',
+                    'sci.city',
+                    'sci.state',
+                    'sci.country',
+                    'sci.nationality',
+                    'sci.dual_nationality',
+                    'sci.passport',
+                    'sci.passport_photo',
+                    'sci.passport_expiry_date',
+                    'sci.visa_photo',
+                    'sci.visa_type',
+                    'sci.visa_type_others',
+                    'sci.visa_expiry_date',
+                    'sci.japanese_association_membership_number_student',
+                    'sci.nric',
+                    'sci.nric_photo',
+                    'sci.school_name',
+                    'sci.school_country',
+                    'sci.school_state',
+                    'sci.school_city',
+                    'sci.school_postal_code',
+                    'sci.school_enrollment_status',
+                    'sci.school_enrollment_status_tendency',
+                    're.name as religion',
                         // DB::raw("CONCAT(s.last_name, ' ', s.first_name) as name")
                     )
+                    ->leftJoin('religions as re', 'sci.religion', '=', 're.id')
                     ->where('sci.id', $id)
                     ->first();
                 // return $getstudentDetails;
@@ -28269,10 +28400,11 @@ try{
 
 
                         $new = $conn->table('student_change_info')->where('id', '=', $id)->first();
-                        $old = $conn->table('students as s')->select('s.*', DB::raw("CONCAT(s.last_name, ' ', s.first_name) as name"), 'c.name as class_name', 'sc.name as section_name')
+                        $old = $conn->table('students as s')->select('s.*','re.name as religion', DB::raw("CONCAT(s.last_name, ' ', s.first_name) as name"), 'c.name as class_name', 'sc.name as section_name')
                             ->leftJoin('enrolls as e', 'e.student_id', '=', 's.id')
                             ->leftJoin('classes as c', 'e.class_id', '=', 'c.id')
                             ->leftJoin('sections as sc', 'e.section_id', '=', 'sc.id')
+                            ->leftJoin('religions as re', 's.religion', '=', 're.id')
                             ->where('s.id', '=', $student_id)->first();
                         $remarks = $new->remarks;
                         // dd($old);
@@ -28280,7 +28412,7 @@ try{
                         if ($suc) {
                             // dd($key);
 
-                            if ($key == "passport" || $key == "nric" || $key == "mobile_no" || $key == "current_address" || $key == "permanent_address") {
+                            if ($key == "passport" || $key == "nric" ) {
                                 // $encrypt = Helper::decryptStringData($old->$key);
                                 // dd(Crypt::encryptString($old->$key));
 
@@ -28288,14 +28420,37 @@ try{
                                 ${$key}['old_value'] =  Helper::decryptStringData($old->$key);
                                 ${$key}['new_value'] =  Helper::decryptStringData($suc);
                             } else {
-                                ${$key} = [];
-                                ${$key}['old_value'] =  $old->$key;
-                                ${$key}['new_value'] =  $suc;
+                                
+                                // if($key == "religion")
+                                // {
+                                //     $religion_old_name = "";
+                                //     if($old->$key){
+
+                                //         $religionOldValue = $conn->table('religions')
+                                //         ->select('id','name')
+                                //         ->where('id', $old->$key)
+                                //         ->first();
+                                //         $religion_old_name = $religionOldValue->name;
+                                //     }
+                                //     $religionNewValue = $conn->table('religions')
+                                //     ->select('id','name')
+                                //     ->where('id', $suc)
+                                //     ->first();
+                                //     ${$key} = [];
+                                //     ${$key}['old_value'] =  $religion_old_name;
+                                //     ${$key}['new_value'] =  $religionNewValue->name;
+                                //     // dd($key);
+                                // }else{
+                                    
+                                    ${$key} = [];
+                                    ${$key}['old_value'] =  $old->$key;
+                                    ${$key}['new_value'] =  $suc;
+                                // }
                             }
                             $column = $key . "_status";
                             $details = json_decode($new->$column);
-                            ${$key}['status'] =  $details->status;
-                            ${$key}['remark'] =  $details->remark;
+                            ${$key}['status'] =  isset($details->status) ? $details->status : "";
+                            ${$key}['remark'] =  isset($details->remark) ? $details->remark : "";
 
                             $studentObj->$key = ${$key};
                         }
@@ -28310,7 +28465,7 @@ try{
         }
         }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in getParentUpdateView');
         }
     }
 
@@ -28407,7 +28562,7 @@ try{
         }
         }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in addTermination');
         }
     }
     // get Terminations 
@@ -28443,7 +28598,7 @@ try{
         }
         }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in getTerminationList');
         }
     }
     // get Termination row details
@@ -28474,7 +28629,7 @@ try{
         }
         }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in getTerminationDetails');
         }
     }
     // update Termination
@@ -28592,7 +28747,7 @@ try{
         }
         }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in updateTermination');
         }
     }
 
@@ -28680,7 +28835,7 @@ try{
         }
         }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in updateTerminationAdmin');
         }
     }
     // delete Termination
@@ -28709,7 +28864,7 @@ try{
         }
         }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in deleteTermination');
         }
     }
     public function addstupicture(Request $request)
@@ -28750,7 +28905,7 @@ try{
         return $this->successResponse($success, 'Student Photo uploaded successfully');
         }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in addstupicture');
         }
     }
     private function getChanges($oldData, $newData)
@@ -28775,7 +28930,7 @@ try{
         return $changes;
         }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in getChanges');
         }
     }
     public function getlogmodifyusers(Request $request)
@@ -28805,7 +28960,7 @@ try{
         }
         }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in getlogmodifyusers');
         }
     }
     public function getlogmodifytables(Request $request)
@@ -28831,7 +28986,7 @@ try{
         }
         }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in getlogmodifytables');
         }
     }
     public function log_modifylist(Request $request)
@@ -28929,7 +29084,7 @@ try{
         return $this->successResponse($history, 'Log Modify record fetch successfully');
         }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in log_modifylist');
         }
     }
     public function getpdf_report(Request $request)
@@ -28952,7 +29107,7 @@ try{
         }
         }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in getpdf_report');
         }
     }
     // getChildHealthList
@@ -28975,7 +29130,7 @@ try{
         }
         }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in getChildHealthList');
         }
     }
     // get ChildHealth row details
@@ -29000,7 +29155,7 @@ try{
         }
         }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in getChildHealthDetails');
         }
     }
     public function personalinterviewstore(Request $request)
@@ -29065,7 +29220,7 @@ try {
         }
         }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in personalinterviewstore');
         }
     }
     // getEventTypeList
@@ -29089,7 +29244,7 @@ try {
         }
 }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in personalinterviewdata');
         }
         
     }
@@ -29108,7 +29263,7 @@ try {
         return $this->successResponse($record, 'Personal Interview Informations get Successfully');
         }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in personalinterviewlist');
         }
         
     }
@@ -29139,7 +29294,7 @@ try {
         return $this->successResponse($record, 'Personal Interview Informations get Successfully');
         }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in personalinterview_individual');
         }
         
     }
@@ -29168,7 +29323,7 @@ try {
         return $this->successResponse($record, 'Personal Interview Informations get Successfully');
         }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in personalinterview_overall');
         }
         
     }
