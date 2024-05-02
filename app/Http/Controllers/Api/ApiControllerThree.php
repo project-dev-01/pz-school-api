@@ -379,7 +379,12 @@ class ApiControllerThree extends BaseController
                                 return $query->where('e.department_id', $deptId);
                             })
                             ->when($class_id, function ($query, $class_id) {
-                                return $query->where('e.class_id', $class_id);
+                                $classIDsArray = explode(",", $class_id);
+                                // Iterate over departmentIDs array to add conditions
+                                foreach ($classIDsArray as $classID) {
+                                    // Add condition for each department ID using FIND_IN_SET
+                                    $query->orWhereRaw("FIND_IN_SET('$classID', e.class_id) > 0");
+                                }
                             })
                             ->when($section_id, function ($query, $section_id) {
                                 return $query->where('e.section_id', $section_id);
@@ -641,7 +646,7 @@ class ApiControllerThree extends BaseController
                     // ->when($section_id, function ($query, $section_id) {
                     //     return $query->where('e.section_id', $section_id);
                     // })
-                    ->where('e.class_id', '=', $class_id)
+                    ->whereIn('e.class_id', $class_id)
                     ->where('e.section_id', '=', $section_id)
                     ->where('e.active_status', '=', "0")
                     ->groupBy('e.student_id')
@@ -681,7 +686,7 @@ class ApiControllerThree extends BaseController
                     // ->when($section_id, function ($query, $section_id) {
                     //     return $query->where('e.section_id', $section_id);
                     // })
-                    ->where('e.class_id', '=', $class_id)
+                    ->whereIn('e.class_id', $class_id)
                     ->where('e.section_id', '=', $section_id)
                     ->where('e.active_status', '=', "0")
                     ->groupBy('e.student_id')
@@ -961,7 +966,8 @@ class ApiControllerThree extends BaseController
                         $join->where('bi.user_id', '=', $parent_id);
                     })
                     ->where(function ($query) use ($class_id) {
-                        $query->where('b.class_id', $class_id)
+                        // Check if $class_id exists in the comma-separated list of class IDs
+                        $query->whereRaw("FIND_IN_SET('$class_id', b.class_id)")
                             ->orWhereNull('b.class_id');
                     })
                     //->where('b.class_id', $class_id)
@@ -1036,7 +1042,8 @@ class ApiControllerThree extends BaseController
                         $join->where('bi.user_id', '=', $student_id);
                     })
                     ->where(function ($query) use ($class_id) {
-                        $query->where('b.class_id', $class_id)
+                        // Check if $class_id exists in the comma-separated list of class IDs
+                        $query->whereRaw("FIND_IN_SET('$class_id', b.class_id)")
                             ->orWhereNull('b.class_id');
                     })
                     //->where('b.class_id', $class_id)
@@ -1159,7 +1166,8 @@ class ApiControllerThree extends BaseController
                         $join->where('bi.user_id', '=', $student_id);
                     })
                     ->where(function ($query) use ($class_id) {
-                        $query->where('b.class_id', $class_id)
+                        // Check if $class_id exists in the comma-separated list of class IDs
+                        $query->whereRaw("FIND_IN_SET('$class_id', b.class_id)")
                             ->orWhereNull('b.class_id');
                     })
                     // ->where('b.class_id', $class_id)
@@ -1212,7 +1220,7 @@ class ApiControllerThree extends BaseController
                 $role_id = $request->role_id;
                 $dep = $conn->table('staffs')->select('department_id')->where('id', $staff_id)->first();
                 $department = $dep->department_id;
-
+                $departmentArray = explode(",", $department);
                 $buletinDetails = $conn->table('bulletin_boards as b')
                     ->select("b.id", "b.title", "b.file", "b.discription", "bi.parent_imp", "b.publish_date")
                     ->leftJoin('' . $main_db . '.roles as rol', function ($join) {
@@ -1223,8 +1231,8 @@ class ApiControllerThree extends BaseController
                         $join->where('bi.user_id', '=', $staff_id);
                     })
                     ->leftJoin('staffs as s', 'b.department_id', '=', 's.department_id')
-                    ->where(function ($query) use ($department, $role_id) {
-                        $query->where('b.department_id', $department)
+                    ->where(function ($query) use ($departmentArray, $role_id) {
+                        $query->whereIn('b.department_id', $departmentArray)
                             ->orWhereNull('b.department_id')
                             ->whereRaw("FIND_IN_SET('$role_id', b.target_user)");
                     })
@@ -1268,7 +1276,7 @@ class ApiControllerThree extends BaseController
                 $role_id = $request->role_id;
                 $dep = $conn->table('staffs')->select('department_id')->where('id', $staff_id)->first();
                 $department = $dep->department_id;
-
+                $departmentArray = explode(",", $department);
                 $buletinDetails = $conn->table('bulletin_boards as b')
                     ->select("b.id", "b.title", "b.file", "b.discription", "bi.parent_imp", "b.publish_date")
                     ->leftJoin('' . $main_db . '.roles as rol', function ($join) {
@@ -1279,8 +1287,8 @@ class ApiControllerThree extends BaseController
                         $join->where('bi.user_id', '=', $staff_id);
                     })
                     ->leftJoin('staffs as s', 'b.department_id', '=', 's.department_id')
-                    ->where(function ($query) use ($department, $role_id) {
-                        $query->where('b.department_id', $department)
+                    ->where(function ($query) use ($departmentArray, $role_id) {
+                        $query->whereIn('b.department_id', $departmentArray)
                             ->orWhereNull('b.department_id')
                             ->whereRaw("FIND_IN_SET('$role_id', b.target_user)");
                     })
