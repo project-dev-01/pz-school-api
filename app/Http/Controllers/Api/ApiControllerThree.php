@@ -112,7 +112,7 @@ class ApiControllerThree extends BaseController
                 return $this->successResponse($buletinDetails, 'Bulletin record fetch successfully');
             }
         } catch (Exception $error) {
-            return $this->commonHelper->generalReturn('403', 'error', $error, 'addSection');
+            return $this->commonHelper->generalReturn('403', 'error', $error, 'Error in getBuletinBoardList');
         }
     }
     public function addBuletinBoard(Request $request)
@@ -172,7 +172,7 @@ class ApiControllerThree extends BaseController
                 }
             }
         } catch (Exception $error) {
-            return $this->commonHelper->generalReturn('403', 'error', $error, 'addSection');
+            return $this->commonHelper->generalReturn('403', 'error', $error, 'Error in  addBuletinBoard');
         }
     }
     public function bulletinCronJob(Request $request)
@@ -440,7 +440,7 @@ class ApiControllerThree extends BaseController
                 return $this->successResponse([], 'Notifications sent successfully.');
             }
         } catch (Exception $error) {
-            return $this->commonHelper->generalReturn('403', 'error', $error, 'bulletinCronJob');
+            return $this->commonHelper->generalReturn('403', 'error', $error, 'Error in  bulletinCronJob');
         }
     }
     public function usernameBuletin(Request $request)
@@ -466,7 +466,7 @@ class ApiControllerThree extends BaseController
                 return $this->successResponse($success, 'user name record fetch successfully');
             }
         } catch (Exception $error) {
-            return $this->commonHelper->generalReturn('403', 'error', $error, 'addSection');
+            return $this->commonHelper->generalReturn('403', 'error', $error, 'Error in usernameBuletin');
         }
     }
     public function deleteBuletinBoard(Request $request)
@@ -499,7 +499,7 @@ class ApiControllerThree extends BaseController
                 }
             }
         } catch (Exception $error) {
-            return $this->commonHelper->generalReturn('403', 'error', $error, 'addSection');
+            return $this->commonHelper->generalReturn('403', 'error', $error, 'Error in  deleteBuletinBoard');
         }
     }
     // get Event row details
@@ -555,7 +555,7 @@ class ApiControllerThree extends BaseController
                 return $this->successResponse($buletinDetails, 'Bulletin board row fetch successfully');
             }
         } catch (Exception $error) {
-            return $this->commonHelper->generalReturn('403', 'error', $error, 'addSection');
+            return $this->commonHelper->generalReturn('403', 'error', $error, 'Error in getBuletinBoardDetails');
         }
     }
     public function updateBuletinBoard(Request $request)
@@ -613,7 +613,7 @@ class ApiControllerThree extends BaseController
                 }
             }
         } catch (Exception $error) {
-            return $this->commonHelper->generalReturn('403', 'error', $error, 'addSection');
+            return $this->commonHelper->generalReturn('403', 'error', $error, 'Error in updateBuletinBoard');
         }
     }
     // get Student List
@@ -650,7 +650,7 @@ class ApiControllerThree extends BaseController
                 return $this->successResponse($student, 'Student record fetch successfully');
             }
         } catch (Exception $error) {
-            return $this->commonHelper->generalReturn('403', 'error', $error, 'addSection');
+            return $this->commonHelper->generalReturn('403', 'error', $error, 'Error in getStudentListForBulletinBoard');
         }
     }
     public function getParentListForBulletinBoard(Request $request)
@@ -689,7 +689,7 @@ class ApiControllerThree extends BaseController
                 return $this->successResponse($parent, 'Parent record fetch successfully');
             }
         } catch (Exception $error) {
-            return $this->commonHelper->generalReturn('403', 'error', $error, 'addSection');
+            return $this->commonHelper->generalReturn('403', 'error', $error, 'Error in getParentListForBulletinBoard');
         }
     }
     // get Student List
@@ -773,7 +773,7 @@ class ApiControllerThree extends BaseController
                 return $this->successResponse($studentData, 'Employee record fetch successfully');
             }
         } catch (Exception $error) {
-            return $this->commonHelper->generalReturn('403', 'error', $error, 'addSection');
+            return $this->commonHelper->generalReturn('403', 'error', $error, 'Error in getRetiredList');
         }
     }
     public function getBulletinParent(Request $request)
@@ -859,7 +859,7 @@ class ApiControllerThree extends BaseController
                 return $this->successResponse($buletinDetails, 'Bulletin record fetch successfully');
             }
         } catch (Exception $error) {
-            return $this->commonHelper->generalReturn('403', 'error', $error, 'addSection');
+            return $this->commonHelper->generalReturn('403', 'error', $error, 'Error in getBulletinParent');
         }
     }
 
@@ -912,7 +912,7 @@ class ApiControllerThree extends BaseController
                 }
             }
         } catch (Exception $error) {
-            return $this->commonHelper->generalReturn('403', 'error', $error, 'addSection');
+            return $this->commonHelper->generalReturn('403', 'error', $error, 'Error in bulletinParentStar');
         }
     }
     public function getBulletinImpParent(Request $request)
@@ -989,7 +989,7 @@ class ApiControllerThree extends BaseController
                 return $this->successResponse($buletinDetails, 'Bulletin Important record fetch successfully');
             }
         } catch (Exception $error) {
-            return $this->commonHelper->generalReturn('403', 'error', $error, 'addSection');
+            return $this->commonHelper->generalReturn('403', 'error', $error, 'Error in getBulletinImpParent');
         }
     }
     public function getBulletinStudent(Request $request)
@@ -1064,7 +1064,7 @@ class ApiControllerThree extends BaseController
                 return $this->successResponse($buletinDetails, 'Bulletin record fetch successfully');
             }
         } catch (Exception $error) {
-            return $this->commonHelper->generalReturn('403', 'error', $error, 'addSection');
+            return $this->commonHelper->generalReturn('403', 'error', $error, 'Error in getBulletinStudent');
         }
     }
 
@@ -1117,7 +1117,7 @@ class ApiControllerThree extends BaseController
                 }
             }
         } catch (Exception $error) {
-            return $this->commonHelper->generalReturn('403', 'error', $error, 'addSection');
+            return $this->commonHelper->generalReturn('403', 'error', $error, 'Error in bulletinStudentStar');
         }
     }
     public function getBulletinImpStudent(Request $request)
@@ -1187,7 +1187,7 @@ class ApiControllerThree extends BaseController
                 return $this->successResponse($buletinDetails, 'Bulletin Important record fetch successfully');
             }
         } catch (Exception $error) {
-            return $this->commonHelper->generalReturn('403', 'error', $error, 'addSection');
+            return $this->commonHelper->generalReturn('403', 'error', $error, 'Error in getBulletinImpStudent');
         }
     }
     public function getBulletinTeacher(Request $request)
@@ -1243,7 +1243,7 @@ class ApiControllerThree extends BaseController
                 return $this->successResponse($buletinDetails, 'Bulletin record fetch successfully');
             }
         } catch (Exception $error) {
-            return $this->commonHelper->generalReturn('403', 'error', $error, 'addSection');
+            return $this->commonHelper->generalReturn('403', 'error', $error, 'Error in getBulletinTeacher');
         }
     }
     public function getBulletinImpTeacher(Request $request)
@@ -1300,7 +1300,7 @@ class ApiControllerThree extends BaseController
                 return $this->successResponse($buletinDetails, 'Bulletin record fetch successfully');
             }
         } catch (Exception $error) {
-            return $this->commonHelper->generalReturn('403', 'error', $error, 'addSection');
+            return $this->commonHelper->generalReturn('403', 'error', $error, 'Error in getBulletinImpTeacher');
         }
     }
     public function bulletinTeacherStar(Request $request)
@@ -1352,7 +1352,7 @@ class ApiControllerThree extends BaseController
                 }
             }
         } catch (Exception $error) {
-            return $this->commonHelper->generalReturn('403', 'error', $error, 'addSection');
+            return $this->commonHelper->generalReturn('403', 'error', $error, 'Error in bulletinTeacherStar');
         }
     }
     // getStudentLeaveTypes
@@ -1394,7 +1394,7 @@ class ApiControllerThree extends BaseController
             }
             return $this->successResponse($getAllTypes, 'Student leave types fetched successfully');
         } catch (Exception $error) {
-            return $this->commonHelper->generalReturn('403', 'error', $error, 'addSection');
+            return $this->commonHelper->generalReturn('403', 'error', $error, 'Error in getStudentLeaveTypes');
         }
     }
     // get Reasons By LeaveType
@@ -1429,7 +1429,7 @@ class ApiControllerThree extends BaseController
                 return $this->successResponse($getAllReason, 'reasons by leave types fetch successfully');
             }
         } catch (Exception $error) {
-            return $this->commonHelper->generalReturn('403', 'error', $error, 'addSection');
+            return $this->commonHelper->generalReturn('403', 'error', $error, 'Error in getReasonsByLeaveType');
         }
     }
     // viewStudentLeaveDetailsRow
@@ -1493,7 +1493,7 @@ class ApiControllerThree extends BaseController
                 return $this->successResponse($studentDetails, 'Student row details fetch successfully');
             }
         } catch (Exception $error) {
-            return $this->commonHelper->generalReturn('403', 'error', $error, 'addSection');
+            return $this->commonHelper->generalReturn('403', 'error', $error, 'Error in viewStudentLeaveDetailsRow');
         }
     }
     // nursingOrHomeroom
@@ -1520,7 +1520,7 @@ class ApiControllerThree extends BaseController
                 return $this->successResponse($studentDetails, 'home or nusing fetch successfully');
             }
         } catch (Exception $error) {
-            return $this->commonHelper->generalReturn('403', 'error', $error, 'addSection');
+            return $this->commonHelper->generalReturn('403', 'error', $error, 'Error in nursingOrHomeroom');
         }
     }
     public function leaveTypeWiseAllReason(Request $request)
@@ -1564,7 +1564,7 @@ class ApiControllerThree extends BaseController
                 return $this->successResponse($jsonResult, 'student leave types fetch successfully');
             }
         } catch (Exception $error) {
-            return $this->commonHelper->generalReturn('403', 'error', $error, 'addSection');
+            return $this->commonHelper->generalReturn('403', 'error', $error, 'Error in leaveTypeWiseAllReason');
         }
     }
     // callViaLeaveDirectApprove 
@@ -1668,7 +1668,7 @@ class ApiControllerThree extends BaseController
                 }
             }
         } catch (Exception $error) {
-            return $this->commonHelper->generalReturn('403', 'error', $error, 'addSection');
+            return $this->commonHelper->generalReturn('403', 'error', $error, 'Error in callViaLeaveDirectApprove');
         }
     }
     public function getClassListByDept(Request $request)
@@ -1710,7 +1710,7 @@ class ApiControllerThree extends BaseController
                 return $this->successResponse($class, 'class by department record fetch successfully');
             }
         } catch (Exception $error) {
-            return $this->commonHelper->generalReturn('403', 'error', $error, 'addSection');
+            return $this->commonHelper->generalReturn('403', 'error', $error, 'Error in getClassListByDept');
         }
     }
     public function saveStudentSetting(Request $request)
@@ -1770,7 +1770,7 @@ class ApiControllerThree extends BaseController
                 }
             }
         } catch (Exception $error) {
-            return $this->commonHelper->generalReturn('403', 'error', $error, 'addSection');
+            return $this->commonHelper->generalReturn('403', 'error', $error, 'Error in saveStudentSetting');
         }
     }
     public function getStudentSownloadSettings(Request $request)
@@ -1793,7 +1793,7 @@ class ApiControllerThree extends BaseController
                 return $this->successResponse($classAssign, 'Student download row fetch successfully');
             }
         } catch (Exception $error) {
-            return $this->commonHelper->generalReturn('403', 'error', $error, 'addSection');
+            return $this->commonHelper->generalReturn('403', 'error', $error, 'Error in getStudentSownloadSettings');
         }
     }
     public function downloadStudentListInformation(Request $request)
@@ -2174,7 +2174,7 @@ class ApiControllerThree extends BaseController
                 return $this->successResponse($merged, 'get all subject record fetch successfully');
             }
         } catch (Exception $error) {
-            return $this->commonHelper->generalReturn('403', 'error', $error, 'addSection');
+            return $this->commonHelper->generalReturn('403', 'error', $error, 'Error in downloadStudentListInformation');
         }
     }
     // getStudentAttendenceByDay
@@ -2270,7 +2270,7 @@ class ApiControllerThree extends BaseController
                 return $this->successResponse($data, 'Attendance by day record fetch successfully');
             }
         } catch (Exception $error) {
-            return $this->commonHelper->generalReturn('403', 'error', $error, 'addSection');
+            return $this->commonHelper->generalReturn('403', 'error', $error, 'Error in getStudentAttendenceByDay');
         }
     }
     //add attendance by day
@@ -2444,7 +2444,7 @@ class ApiControllerThree extends BaseController
                 return $this->successResponse([], 'Attendance added successfuly.');
             }
         } catch (Exception $error) {
-            return $this->commonHelper->generalReturn('403', 'error', $error, 'addSection');
+            return $this->commonHelper->generalReturn('403', 'error', $error, 'Error in addStudentAttendenceByDay');
         }
     }
     // studentNewJoiningList 
@@ -2511,7 +2511,7 @@ class ApiControllerThree extends BaseController
                 return $this->successResponse($data, 'Student new joining list fetched successfully');
             }
         } catch (Exception $error) {
-            return $this->commonHelper->generalReturn('403', 'error', $error, 'addSection');
+            return $this->commonHelper->generalReturn('403', 'error', $error, 'Error in studentNewJoiningList');
         }
     }
     public function saveAttendanceReportSetting(Request $request)
@@ -2559,7 +2559,7 @@ class ApiControllerThree extends BaseController
                 }
             }
         } catch (Exception $error) {
-            return $this->commonHelper->generalReturn('403', 'error', $error, 'addSection');
+            return $this->commonHelper->generalReturn('403', 'error', $error, 'Error in saveAttendanceReportSetting');
         }
     }
     public function getAttendanceReportSetting(Request $request)
@@ -2582,7 +2582,7 @@ class ApiControllerThree extends BaseController
                 return $this->successResponse($attRep, 'Attendance report row fetch successfully');
             }
         } catch (Exception $error) {
-            return $this->commonHelper->generalReturn('403', 'error', $error, 'addSection');
+            return $this->commonHelper->generalReturn('403', 'error', $error, 'Error in getAttendanceReportSetting');
         }
     }
     public function absentAttendanceReport(Request $request)
@@ -2767,7 +2767,7 @@ class ApiControllerThree extends BaseController
                 return $this->successResponse($data, 'Attendance report row fetch successfully');
             }
         } catch (Exception $error) {
-            return $this->commonHelper->generalReturn('403', 'error', $error, 'addSection');
+            return $this->commonHelper->generalReturn('403', 'error', $error, 'Error in absentAttendanceReport');
         }
     }
     public function studentPlanToLeave(Request $request)
@@ -2815,7 +2815,7 @@ class ApiControllerThree extends BaseController
                 return $this->successResponse($attRep, 'student plan to leave list fetch successfully');
             }
         } catch (Exception $error) {
-            return $this->commonHelper->generalReturn('403', 'error', $error, 'addSection');
+            return $this->commonHelper->generalReturn('403', 'error', $error, 'Error in studentPlanToLeave');
         }
     }
     public function studentTransferList(Request $request)
@@ -2852,7 +2852,7 @@ class ApiControllerThree extends BaseController
                 return $this->successResponse($terminationDetails, 'Termination record fetch successfully');
             }
         } catch (Exception $error) {
-            return $this->commonHelper->generalReturn('403', 'error', $error, 'addSection');
+            return $this->commonHelper->generalReturn('403', 'error', $error, 'Error in studentTransferList');
         }
     }
     function hideUnhideSave(Request $request)
@@ -2922,7 +2922,7 @@ class ApiControllerThree extends BaseController
                 return $this->successResponse([], 'hide unhide data added successfuly.');
             }
         } catch (Exception $error) {
-            return $this->commonHelper->generalReturn('403', 'error', $error, 'addSection');
+            return $this->commonHelper->generalReturn('403', 'error', $error, 'Error in hideUnhideSave');
         }
     }
     function getDataHideUnhideDashboard(Request $request)
@@ -2947,7 +2947,7 @@ class ApiControllerThree extends BaseController
                 return $this->successResponse($whuData, 'widget list fetch successfully');
             }
         } catch (Exception $error) {
-            return $this->commonHelper->generalReturn('403', 'error', $error, 'addSection');
+            return $this->commonHelper->generalReturn('403', 'error', $error, 'Error in getDataHideUnhideDashboard');
         }
     }
     public function staffLeaveHistoryDashboard(Request $request)
@@ -3002,7 +3002,7 @@ class ApiControllerThree extends BaseController
                 return $this->successResponse($leaveDetails, 'Staff leave details fetch successfully');
             }
         } catch (Exception $error) {
-            return $this->commonHelper->generalReturn('403', 'error', $error, 'addSection');
+            return $this->commonHelper->generalReturn('403', 'error', $error, 'Error in staffLeaveHistoryDashboard');
         }
     }
     private function getChanges($oldData, $newData)
@@ -3025,7 +3025,7 @@ class ApiControllerThree extends BaseController
 
             return $changes;
         } catch (Exception $error) {
-            return $this->commonHelper->generalReturn('403', 'error', $error, 'addSection');
+            return $this->commonHelper->generalReturn('403', 'error', $error, 'Error in getChanges');
         }
     }
     public function encryptVariable(Request $request)
@@ -3047,7 +3047,7 @@ class ApiControllerThree extends BaseController
                 return $this->successResponse($data, 'encrypt and decrypt values');
             }
         } catch (Exception $error) {
-            return $this->commonHelper->generalReturn('403', 'error', $error, 'addSection');
+            return $this->commonHelper->generalReturn('403', 'error', $error, 'Error in encryptVariable');
         }
     }
     public function decryptVariable(Request $request)
@@ -3067,7 +3067,7 @@ class ApiControllerThree extends BaseController
                 return $this->successResponse($data, 'decrypt values');
             }
         } catch (Exception $error) {
-            return $this->commonHelper->generalReturn('403', 'error', $error, 'addSection');
+            return $this->commonHelper->generalReturn('403', 'error', $error, 'Error in decryptVariable');
         }
     }
     public function passwordUpdate(Request $request)
@@ -3104,7 +3104,7 @@ class ApiControllerThree extends BaseController
                 return $this->send500Error('Something went wrong.', ['error' => 'Something went wrong']);
             }
         } catch (Exception $error) {
-            return $this->commonHelper->generalReturn('403', 'error', $error, 'addSection');
+            return $this->commonHelper->generalReturn('403', 'error', $error, 'Error in passwordUpdate');
         }
     }
     public function testQueueEmail(Request $request)
@@ -3147,7 +3147,7 @@ class ApiControllerThree extends BaseController
                 }
             }
         } catch (Exception $error) {
-            return $this->commonHelper->generalReturn('403', 'error', $error, 'addSection');
+            return $this->commonHelper->generalReturn('403', 'error', $error, 'Error in testQueueEmail');
         }
     }
     public function testQueueEmailAllUsers(Request $request)
@@ -3193,7 +3193,7 @@ class ApiControllerThree extends BaseController
                 }
             }
         } catch (Exception $error) {
-            return $this->commonHelper->generalReturn('403', 'error', $error, 'addSection');
+            return $this->commonHelper->generalReturn('403', 'error', $error, 'Error in testQueueEmailAllUsers');
         }
     }
 
@@ -3256,7 +3256,7 @@ class ApiControllerThree extends BaseController
                 return $this->successResponse($parentDetails, 'Student details fetch successfully');
             }
         } catch (Exception $error) {
-            return $this->commonHelper->generalReturn('403', 'error', $error, 'addSection');
+            return $this->commonHelper->generalReturn('403', 'error', $error, 'Error in getParentDetailsAccStudentId');
         }
     }
     public function decryptEmailPassword(Request $request)
@@ -3279,7 +3279,7 @@ class ApiControllerThree extends BaseController
                 return $this->successResponse($data, 'Decrypt Email and password');
             }
         } catch (Exception $error) {
-            return $this->commonHelper->generalReturn('403', 'error', $error, 'addSection');
+            return $this->commonHelper->generalReturn('403', 'error', $error, 'Error in decryptEmailPassword');
         }
     }
     public function clearApiCacheBranch(Request $request)
@@ -3364,7 +3364,7 @@ class ApiControllerThree extends BaseController
                 return $this->successResponse($data, 'Your decrypt password is above');
             }
         } catch (Exception $error) {
-            return $this->commonHelper->generalReturn('403', 'error', $error, 'addSection');
+            return $this->commonHelper->generalReturn('403', 'error', $error, 'Error in emailPasswordEncrypt');
         }
     }
     // get Student List
@@ -3434,7 +3434,7 @@ class ApiControllerThree extends BaseController
                 return $this->successResponse($students, 'Student record fetch successfully');
             }
         } catch (Exception $error) {
-            return $this->commonHelper->generalReturn('403', 'error', $error, 'addSection');
+            return $this->commonHelper->generalReturn('403', 'error', $error, 'Error in getTeacherStudentList');
         }
     }
 }

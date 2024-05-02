@@ -64,7 +64,7 @@ class ApiControllerOne extends BaseController
         }
          }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in addGradeCategory');
         }
     }
     // get GradeCategoryList
@@ -87,7 +87,7 @@ class ApiControllerOne extends BaseController
         }
          }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in getGradeCategoryList');
         }
     }
     // get Grade Category Details row details
@@ -112,7 +112,7 @@ class ApiControllerOne extends BaseController
         }
          }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in getGradeCategoryDetails');
         }
     }
     // updateGrade Category
@@ -151,7 +151,7 @@ class ApiControllerOne extends BaseController
         }
          }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in updateGradeCategory');
         }
     }
     // delete Gade Category
@@ -182,7 +182,7 @@ class ApiControllerOne extends BaseController
         }
          }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in deleteGadeCategory');
         }
     }
     // by class by all subjects
@@ -219,7 +219,7 @@ class ApiControllerOne extends BaseController
         }
          }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in classByAllSubjects');
         }
     }
 
@@ -244,7 +244,7 @@ class ApiControllerOne extends BaseController
         }
          }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in getPaperTypeList');
         }
     }
     // import csv timetable
@@ -393,7 +393,7 @@ class ApiControllerOne extends BaseController
         }
          }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in importCsvTimetable');
         }
     }
     // import Csv add exam schedule
@@ -501,7 +501,7 @@ class ApiControllerOne extends BaseController
         }
          }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in addExamTimetable');
         }
     }
     function addCalendorTimetable($branchID, $row, $getObjRow, $insertOrUpdateID, $bulkID)
@@ -541,7 +541,7 @@ class ApiControllerOne extends BaseController
         }
          }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in addCalendorTimetable');
         }
     }
     // addTimetableCalendor
@@ -588,7 +588,7 @@ class ApiControllerOne extends BaseController
         }
          }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in addTimetableCalendor');
         }
     }
 
@@ -645,7 +645,7 @@ class ApiControllerOne extends BaseController
         }
          }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in examScheduleList');
         }
     }
     // get Exam Timetable 
@@ -750,7 +750,7 @@ class ApiControllerOne extends BaseController
         }
          }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in getExamTimetableList');
         }
     }
     // by class get subjects
@@ -791,7 +791,7 @@ class ApiControllerOne extends BaseController
         }
          }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in getSubjectByClass');
         }
     }
     public function examByClassSubject(Request $request)
@@ -833,7 +833,7 @@ class ApiControllerOne extends BaseController
         }
          }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in examByClassSubject');
         }
     }
 
@@ -1165,7 +1165,7 @@ class ApiControllerOne extends BaseController
         }
          }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in totgradeCalcuByClass');
         }
     }
     // by class get subjects
@@ -1203,7 +1203,7 @@ class ApiControllerOne extends BaseController
         }
          }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in getClassBySection');
         }
     }
     public function examByClassSec(Request $request)
@@ -1245,7 +1245,7 @@ class ApiControllerOne extends BaseController
         }
          }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in examByClassSec');
         }
     }
     // by subject  single 
@@ -1590,7 +1590,7 @@ class ApiControllerOne extends BaseController
         }
          }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in totgradeCalcuBySubject');
         }
     }
     //by student exam results
@@ -1798,7 +1798,7 @@ class ApiControllerOne extends BaseController
         }
          }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in totgradeCalcuByStudent');
         }
     }
     // Individual Result 
@@ -2033,7 +2033,7 @@ class ApiControllerOne extends BaseController
         }
          }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in getbyresult_student');
         }
     }
     // over all
@@ -2370,7 +2370,7 @@ class ApiControllerOne extends BaseController
         }
          }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in tot_grade_calcu_overall');
         }
     }
     // Report card 
@@ -2685,7 +2685,7 @@ class ApiControllerOne extends BaseController
         }
          }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in getreportcard');
         }
     }
     // academic Year Add
@@ -2724,7 +2724,7 @@ class ApiControllerOne extends BaseController
         }
          }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in academicYearAdd');
         }
     }
     // academic Year List
@@ -2768,7 +2768,7 @@ class ApiControllerOne extends BaseController
         }
          }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in academicYearList');
         }
     }
     // academic Year Details
@@ -2793,7 +2793,7 @@ class ApiControllerOne extends BaseController
         }
          }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in academicYearDetails');
         }
     }
     // update academic Year Details
@@ -2834,7 +2834,7 @@ class ApiControllerOne extends BaseController
         }
          }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in updateAcademicYear');
         }
     }
     // delete academic Year
@@ -2866,7 +2866,7 @@ class ApiControllerOne extends BaseController
         }
          }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in deleteAcademicYear');
         }
     }
     // get student list by entrolls
@@ -2912,7 +2912,7 @@ class ApiControllerOne extends BaseController
         }
          }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in getStudListByClassSecSemSess');
         }
     }
     //add attendance
@@ -3005,7 +3005,7 @@ class ApiControllerOne extends BaseController
         }
          }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in addPromotion');
         }
     }
     public function getPromotionDataBulkSave(Request $request)
@@ -3032,7 +3032,7 @@ class ApiControllerOne extends BaseController
         }
          }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in getPromotionDataBulkSave');
         }
     }
     public function getPromotionBulkStudentList(Request $request)
@@ -3163,7 +3163,7 @@ class ApiControllerOne extends BaseController
         }
          }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in getPromotionBulkStudentList');
         }
     }
     public function getPromotionUnassignedStudentList(Request $request)
@@ -3220,7 +3220,7 @@ class ApiControllerOne extends BaseController
         }
          }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in getPromotionUnassignedStudentList');
         }
     }
     public function getPromotionUnassignedFreezedData(Request $request)
@@ -3265,7 +3265,7 @@ class ApiControllerOne extends BaseController
         }
          }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in getPromotionUnassignedFreezedData');
         }
     }
     public function getPromotionTerminationStudentList(Request $request)
@@ -3319,7 +3319,7 @@ class ApiControllerOne extends BaseController
         }
          }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in getPromotionTerminationStudentList');
         }
     }
     public function getPromotionPreparedDataAdd(Request $request)
@@ -3344,7 +3344,7 @@ try {
         }
          }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in getPromotionPreparedDataAdd');
         }
     }
     public function getPromotionFreezedData(Request $request)
@@ -3382,7 +3382,7 @@ try {
         }
          }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in getPromotionFreezedData');
         }
     }
     public function addPromotionStatusData(Request $request)
@@ -3409,7 +3409,7 @@ try {
         }
          }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in addPromotionStatusData');
         }
     }
     public function addPromotionFinalData(Request $request)
@@ -3469,7 +3469,7 @@ try {
         }
          }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in addPromotionFinalData');
         }
     }
     public function downloadPromotionData(Request $request)
@@ -3519,7 +3519,7 @@ try {
         }
          }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in downloadPromotionData');
         }
     }
     // relief assignment
@@ -3566,7 +3566,7 @@ try {
         }
          }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in getAllLeaveReliefAssignment');
         }
     }
     public function getSubjectsByStaffIdWithDate(Request $request)
@@ -3662,7 +3662,7 @@ try {
         }
          }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in getSubjectsByStaffIdWithDate');
         }
     }
     public function reliefAssignmentOtherTeacher(Request $request)
@@ -3803,7 +3803,7 @@ try {
         }
          }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in reliefAssignmentOtherTeacher');
         }
     }
     // public function getStaffListByTimeslot(Request $request)
@@ -3893,7 +3893,7 @@ try {
         }
          }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in getStaffListByTimeslot');
         }
     }
     public function getCalendarDetailsTimetable(Request $request)
@@ -3927,7 +3927,7 @@ try {
         }
          }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in getCalendarDetailsTimetable');
         }
     }
     // soap category list
@@ -3954,7 +3954,7 @@ try {
         }
          }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in soapCategoryList');
         }
     }
     // soap sub category
@@ -3982,7 +3982,7 @@ try {
         }
          }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in soapSubCategoryList');
         }
     }
     // soap filter by notes
@@ -4013,7 +4013,7 @@ try {
         }
          }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in soapFilterByNotes');
         }
     }
     // soap add
@@ -4069,7 +4069,7 @@ try {
         }
          }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in soapAdd');
         }
     }
     // soap list
@@ -4104,7 +4104,7 @@ try {
         }
          }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in getSoapList');
         }
     }
     // get soap row details
@@ -4128,7 +4128,7 @@ try {
         }
          }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in getSoapDetails');
         }
     }
     // update soap
@@ -4164,7 +4164,7 @@ try {
         }
          }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in updateSoap');
         }
     }
     // delete soap
@@ -4201,7 +4201,7 @@ try {
         }
          }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in deleteSoap');
         }
     }
     // copy teacher allocations
@@ -4269,7 +4269,7 @@ try {
         }
          }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in acdemicCopyAssignTeacher');
         }
     }
     // copy class assign 
@@ -4337,7 +4337,7 @@ try {
         }
          }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in copyClassAssign');
         }
     }
     // copy subject teacher assign 
@@ -4406,7 +4406,7 @@ try {
         }
          }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in copySubjectTeacherAssign');
         }
     }
     // exam master exam setup copy
@@ -4469,7 +4469,7 @@ try {
         }
          }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in copyExamSetup');
         }
     }
     // exam master exam paper copy
@@ -4541,7 +4541,7 @@ try {
         }
          }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in copyExamPaper');
         }
     }
     // password Expired Link
@@ -4575,7 +4575,7 @@ try {
         return $this->successResponse([], 'A reset link has been sent to your email address.');
          }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in passwordExpiredLink');
         }
     }
     private function sendResetEmail($email, $token, $url)
@@ -4598,7 +4598,7 @@ try {
         }
          }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in sendResetEmail');
         }
     }
 
@@ -4633,7 +4633,7 @@ try {
         }
          }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in addSoapCategory');
         }
     }
     // getSoapCategoryList
@@ -4656,7 +4656,7 @@ try {
         }
          }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in getSoapCategoryList');
         }
     }
     // get SoapCategory row details
@@ -4681,7 +4681,7 @@ try {
         }
          }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in getSoapCategoryDetails');
         }
     }
     // update SoapCategory
@@ -4717,7 +4717,7 @@ try {
         }
          }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in updateSoapCategory');
         }
     }
     // delete SoapCategory
@@ -4748,7 +4748,7 @@ try {
         }
          }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in deleteSoapCategory');
         }
     }
 
@@ -4795,7 +4795,7 @@ try {
         }
          }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in addSoapSubCategory');
         }
     }
     // getSoapSubCategoryList
@@ -4819,7 +4819,7 @@ try {
         }
          }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in getSoapSubCategoryList');
         }
     }
     // get SoapSubCategory row details
@@ -4846,7 +4846,7 @@ try {
         }
          }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in getSoapSubCategoryDetails');
         }
     }
     // update SoapSubCategory
@@ -4904,7 +4904,7 @@ try {
         }
          }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in updateSoapSubCategory');
         }
     }
     // delete SoapSubCategory
@@ -4935,7 +4935,7 @@ try {
         }
          }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in deleteSoapSubCategory');
         }
     }
 
@@ -4973,7 +4973,7 @@ try {
         }
          }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in addSoapNotes');
         }
     }
     // getSoapNotesList
@@ -4999,7 +4999,7 @@ try {
         }
          }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in getSoapNotesList');
         }
     }
     // get SoapNotes row details
@@ -5025,7 +5025,7 @@ try {
         }
          }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in getSoapNotesDetails');
         }
     }
     // update SoapNotes
@@ -5063,7 +5063,7 @@ try {
         }
          }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in updateSoapNotes');
         }
     }
     // delete SoapNotes
@@ -5094,7 +5094,7 @@ try {
         }
          }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in deleteSoapNotes');
         }
     }
 
@@ -5138,7 +5138,7 @@ try {
         }
          }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in addSoapSubject');
         }
     }
     // getSoapSubjectList
@@ -5162,7 +5162,7 @@ try {
         }
          }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in getSoapSubjectList');
         }
     }
     // get SoapSubject row details
@@ -5187,7 +5187,7 @@ try {
         }
          }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in getSoapSubjectDetails');
         }
     }
     // update SoapSubject
@@ -5232,7 +5232,7 @@ try {
         }
          }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in updateSoapSubject');
         }
     }
     // delete SoapSubject
@@ -5263,7 +5263,7 @@ try {
         }
          }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in deleteSoapSubject');
         }
     }
     public function getExamPaperResults(Request $request)
@@ -5396,7 +5396,7 @@ try {
         }
          }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in getExamPaperResults');
         }
     }
     public function getExamTimetableDown(Request $request)
@@ -5475,7 +5475,7 @@ try {
         }
          }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in getExamTimetableDown');
         }
     } // getoldSoapStudentList
     public function getOldSoapStudentList(Request $request)
@@ -5520,7 +5520,7 @@ try {
         }
          }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in getOldSoapStudentList');
         }
     }
     // student Soap List 
@@ -5557,7 +5557,7 @@ try {
         }
          }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in studentSoapList');
         }
     }
 
@@ -5607,7 +5607,7 @@ try {
         }
          }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in getSoapStudentList');
         }
     }
 
@@ -5633,7 +5633,7 @@ try {
         }
          }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in getSoapLogList');
         }
     }
 
@@ -5657,7 +5657,7 @@ try {
         ]);
          }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in addSoapLog');
         }
     }
     public function feesYearlyAdd(Request $request)
@@ -5695,7 +5695,7 @@ try {
         }
          }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in feesYearlyAdd');
         }
     }
     // get Student Details
@@ -5728,7 +5728,7 @@ try {
         }
          }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in getStudentDetails');
         }
     }
 
@@ -5766,7 +5766,7 @@ try {
         }
          }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in addPaymentMode');
         }
     }
     // getPaymentModeList
@@ -5789,7 +5789,7 @@ try {
         }
          }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in getPaymentModeList');
         }
     }
     // get PaymentMode row details
@@ -5814,7 +5814,7 @@ try {
         }
          }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in getPaymentModeDetails');
         }
     }
     // update PaymentMode
@@ -5853,7 +5853,7 @@ try {
         }
          }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in updatePaymentMode');
         }
     }
     // delete PaymentMode
@@ -5885,7 +5885,7 @@ try {
         }
          }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in deletePaymentMode');
         }
     }
 
@@ -5924,7 +5924,7 @@ try {
         }
          }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in addPaymentStatus');
         }
     }
     // getPaymentStatusList
@@ -5947,7 +5947,7 @@ try {
         }
          }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in getPaymentStatusList');
         }
     }
     // get PaymentStatus row details
@@ -5972,13 +5972,14 @@ try {
         }
     }
     catch(Exception $error) {
-        return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+        return $this->commonHelper->generalReturn('403','error',$error,'Error in getPaymentStatusDetails');
     }
     }
     // update PaymentStatus
     public function updatePaymentStatus(Request $request)
     {
-        $id = $request->id;
+        try {
+             $id = $request->id;
         $validator = \Validator::make($request->all(), [
             'name' => 'required',
             'branch_id' => 'required',
@@ -6009,6 +6010,10 @@ try {
             }
         }
     }
+        catch(Exception $error) {
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in updatePaymentStatus');
+        }
+    }
     // delete PaymentStatus
     public function deletePaymentStatus(Request $request)
     {
@@ -6037,7 +6042,7 @@ try {
         }
          }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in deletePaymentStatus');
         }
     }
 
@@ -6075,7 +6080,7 @@ try {
         }
          }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in addFeesType');
         }
     }
     // getFeesTypeList
@@ -6098,7 +6103,7 @@ try {
         }
          }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in getFeesTypeList');
         }
     }
     // get FeesType row details
@@ -6123,7 +6128,7 @@ try {
         }
          }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in getFeesTypeDetails');
         }
     }
     // update FeesType
@@ -6162,7 +6167,7 @@ try {
         }
          }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in updateFeesType');
         }
     }
     // delete FeesType
@@ -6194,14 +6199,14 @@ try {
         }
          }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in deleteFeesType');
         }
     }
 
     // addFeesGroup
     public function addFeesGroup(Request $request)
     {
-try {
+    try {
         $validator = \Validator::make($request->all(), [
             'name' => 'required',
             'branch_id' => 'required',
@@ -6313,7 +6318,7 @@ try {
         }
          }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in addFeesGroup');
         }
     }
     // getFeesGroupList
@@ -6336,7 +6341,7 @@ try {
         }
          }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in getFeesGroupList');
         }
     }
     // get FeesGroup row details
@@ -6414,13 +6419,13 @@ try {
         }
          }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in getFeesGroupDetails');
         }
     }
     // update FeesGroup
     public function updateFeesGroup(Request $request)
     {
-try {
+        try {
         $validator = \Validator::make($request->all(), [
             'name' => 'required',
             'branch_id' => 'required',
@@ -6608,7 +6613,7 @@ try {
         }
          }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in updateFeesGroup');
         }
     }
     // public function updateFeesGroup(Request $request)
@@ -6718,7 +6723,7 @@ try {
         }
          }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in deleteFeesGroup');
         }
     }
     public function feesAllocation(Request $request)
@@ -6797,7 +6802,7 @@ try {
         }
          }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in feesAllocation');
         }
     }
     // get fees allocated students
@@ -6854,7 +6859,7 @@ try {
         }
          }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in feesAllocatedStudents');
         }
     }
     // get fees expense
@@ -6917,7 +6922,7 @@ try {
         }
          }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in getFeesExpenseStudents');
         }
     }
     // fees Expense Update
@@ -6978,13 +6983,13 @@ try {
         }
          }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in feesExpenseUpdate');
         }
     }
     // get fees
     public function getFeesAllocatedStudents(Request $request)
     {
-try {
+        try {
         $validator = \Validator::make($request->all(), [
             'branch_id' => 'required',
             'class_id' => 'required',
@@ -7095,7 +7100,7 @@ try {
         }
          }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in getFeesAllocatedStudents');
         }
     }
     public function getfeeGroup($value, $branchID, $academic_session_id, $grp_id)
@@ -7425,7 +7430,7 @@ try {
         return $ret_res;
          }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in getfeeGroup');
         }
     }
     function deleteFeesDetails(Request $request)
@@ -7467,7 +7472,7 @@ try {
         }
          }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in deleteFeesDetails');
         }
     }
     // get Fees row details
@@ -7590,7 +7595,7 @@ try {
         }
          }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in getFeesDetails');
         }
     }
     // fees edit page
@@ -7651,7 +7656,7 @@ try {
         }
          }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in studentFeesHistory');
         }
     }
     public function getStudentFeeDeposit($allocationID, $typeID, $studentID, $branchID)
@@ -7673,7 +7678,7 @@ try {
         return $fees_payment_history;
          }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in getStudentFeeDeposit');
         }
     }
 
@@ -7853,7 +7858,7 @@ try {
         }
          }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in updateFees');
         }
     }
     // get fees change payment mode
@@ -7928,7 +7933,7 @@ try {
         }
          }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in feesChangePaymentMode');
         }
     }
     // fees Type Group
@@ -7984,7 +7989,7 @@ try {
         }
          }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in feesTypeGroup');
         }
     }
     // get fees status check
@@ -8035,7 +8040,7 @@ try {
         }
          }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in feesStatusCheck');
         }
     }
     // get active tab fee details
@@ -8200,7 +8205,7 @@ try {
         }
          }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in feesActiveTabDetails');
         }
     }
     // public function feesActiveTabDetails(Request $request)
@@ -8346,7 +8351,7 @@ try {
         }
          }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in getPayModeID');
         }
     }
     public function calResult($Array, $student_id)
@@ -8553,7 +8558,7 @@ try {
         }
          }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in allExamSubjectScores');
         }
     }
     // all exam subject ranks
@@ -8743,7 +8748,7 @@ try {
         }
          }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in allExamSubjectRanks');
         }
     }
     // exam marks by high avg low
@@ -8909,7 +8914,7 @@ try {
         }
          }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in examMarksByHighAvgLow');
         }
     }
     public function examByStudent(Request $request)
@@ -8971,7 +8976,7 @@ try {
         }
          }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in examByStudent');
         }
     }
 
@@ -9223,7 +9228,7 @@ try {
         }
          }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in getMarksByStudent');
         }
     }
     public function calculate_overall_rank($marks): array
@@ -9249,7 +9254,7 @@ try {
         return $marks;
          }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in calculate_overall_rank');
         }
     }
 
@@ -9498,7 +9503,7 @@ try {
         }
          }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in getTenStudent');
         }
     }
     // get class teacher grades 
@@ -9532,12 +9537,12 @@ try {
         }
          }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in classTeacherClass');
         }
     }
     public function classTeacherSections(Request $request)
     {
-try {
+    try {
         $validator = \Validator::make($request->all(), [
             'token' => 'required',
             'branch_id' => 'required',
@@ -9545,27 +9550,29 @@ try {
             'teacher_id' => 'required',
             'class_id' => 'required'
         ]);
-
-        if (!$validator->passes()) {
-            return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
-        } else {
-            // create new connection
-            $createConnection = $this->createNewConnection($request->branch_id);
-            $success = $createConnection->table('teacher_allocations as ta')
-                ->select(
-                    's.id as section_id',
-                    's.name as section_name'
-                )
-                ->join('sections as s', 'ta.section_id', '=', 's.id')
-                ->where('ta.academic_session_id', $request->academic_session_id)
-                ->where('ta.class_id', $request->class_id)
-                ->where('ta.teacher_id', $request->teacher_id)
-                ->get();
-            return $this->successResponse($success, 'Class teacher section record fetch successfully');
+            if($request->class_id!==null)
+            {
+            if (!$validator->passes()) {
+                return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
+            } else {
+                // create new connection
+                $createConnection = $this->createNewConnection($request->branch_id);
+                $success = $createConnection->table('teacher_allocations as ta')
+                    ->select(
+                        's.id as section_id',
+                        's.name as section_name'
+                    )
+                    ->join('sections as s', 'ta.section_id', '=', 's.id')
+                    ->where('ta.academic_session_id', $request->academic_session_id)
+                    ->where('ta.class_id', $request->class_id)
+                    ->where('ta.teacher_id', $request->teacher_id)
+                    ->get();
+                return $this->successResponse($success, 'Class teacher section record fetch successfully');
+                }
+            }
         }
-         }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in classTeacherSections');
         }
     }
 
@@ -9613,7 +9620,7 @@ try {
         }
          }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in faqEmail');
         }
     }
 
@@ -9641,7 +9648,7 @@ try {
         }
          }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in firstName');
         }
     }
 
@@ -9771,7 +9778,7 @@ try {
         }
          }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in staffAttendanceReport');
         }
     }
 
@@ -10171,7 +10178,7 @@ try {
         }
          }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in studentAttendanceReport');
         }
     }
     
@@ -10571,7 +10578,7 @@ try {
         }
          }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in studentAttendanceReportSubject');
         }
     }
     // get Languages 
@@ -10592,7 +10599,7 @@ try {
         }
          }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in getLanguages');
         }
     }
     // add holidays
@@ -10630,7 +10637,7 @@ try {
         }
          }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in addHolidays');
         }
     }
     // get holidays 
@@ -10664,7 +10671,7 @@ try {
         }
          }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in getHolidaysList');
         }
     }
     // get holidays row details
@@ -10687,7 +10694,7 @@ try {
         }
          }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in getHolidaysDetails');
         }
     }
     // update holidays
@@ -10726,7 +10733,7 @@ try {
         }
          }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in updateHolidaysDetails');
         }
     }
     // delete holidays
@@ -10761,7 +10768,7 @@ try {
         }
          }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in deleteHolidays');
         }
     }
     // all student marks
@@ -11011,7 +11018,7 @@ try {
         }
          }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in allStudentRanking');
         }
     }
     // get Branch Id Permission
@@ -11030,7 +11037,7 @@ try {
         }
          }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in getBranchIdPermission');
         }
     }
     // work week
@@ -11055,7 +11062,7 @@ try {
         }
          }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in workWeek');
         }
     }
     public function workWeekGet(Request $request)
@@ -11076,7 +11083,7 @@ try {
         }
          }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in workWeekGet');
         }
     }
     public function workWeekUpdate(Request $request)
@@ -11111,7 +11118,7 @@ try {
         }
          }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in workWeekUpdate');
         }
     }
     // get fees
@@ -11222,7 +11229,7 @@ try {
         }
          }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in getParentFeesList');
         }
     }
 
@@ -11288,7 +11295,7 @@ try {
         }
          }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in parentFeesHistory');
         }
     }
     public function getTodaySchedulesAdmin(Request $request)
@@ -11407,7 +11414,7 @@ try {
         }
          }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in getTodaySchedulesAdmin');
         }
     }
     public function getTodaySchedulesTeacher(Request $request)
@@ -11604,7 +11611,7 @@ try {
         }
          }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in getTodaySchedulesTeacher');
         }
     }
     // job title list
@@ -11627,7 +11634,7 @@ try {
         }
          }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in jobTitleList');
         }
     }
     // employee type list
@@ -11650,7 +11657,7 @@ try {
         }
          }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in employeeTypeList');
         }
     }
     // gradeListByDepartment
@@ -11676,7 +11683,7 @@ try {
         }
          }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in gradeListByDepartment');
         }
     }
 
@@ -11735,7 +11742,7 @@ try {
         }
          }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in feesExpenseExport');
         }
     }
     // termination Student
@@ -11763,7 +11770,7 @@ try {
         return $this->successResponse([], 'Student Has been Terminated');
          }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in terminationStudent');
         }
     }
     public function getHealthLogbooks(Request $request)
@@ -11816,7 +11823,7 @@ try {
         }
          }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in getHealthLogbooks');
         }
     }
     public function addHealthLogbooks(Request $request)
@@ -11858,7 +11865,7 @@ try {
         }
          }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in addHealthLogbooks');
         }
     }
     public function addHealthLogbooksPartc(Request $request)
@@ -11908,7 +11915,7 @@ try {
         }
          }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in addHealthLogbooksPartc');
         }
     }
     public function deleteHealthLogbooksPartc(Request $request)
@@ -11939,7 +11946,7 @@ try {
         }
          }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in deleteHealthLogbooksPartc');
         }
     }
     public function editHealthLogbooksPartc(Request $request)
@@ -11964,7 +11971,7 @@ try {
         }
          }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in editHealthLogbooksPartc');
         }
     }
     public function updateHealthLogbooksPartc(Request $request)
@@ -12014,7 +12021,7 @@ try {
         }
          }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in updateHealthLogbooksPartc');
         }
     }
     public function getInjuryList(Request $request)
@@ -12037,7 +12044,7 @@ try {
         }
          }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in getInjuryList');
         }
     }
     public function getIllnessList(Request $request)
@@ -12059,7 +12066,7 @@ try {
         }
          }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in getIllnessList');
         }
     }
     public function getHealthConsultList(Request $request)
@@ -12082,12 +12089,14 @@ try {
         }
          }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in getHealthConsultList');
         }
     }
     public function exportHealthLogbooks(Request $request)
     {
-        $validator = \Validator::make($request->all(), [
+        try
+        {
+            $validator = \Validator::make($request->all(), [
             'branch_id' => 'required',
         ]);
 
@@ -12133,9 +12142,14 @@ try {
             return $this->successResponse($data, 'Health logbooks fetch successfully');
         }
     }
+    catch(Exception $error) {
+        return $this->commonHelper->generalReturn('403','error',$error,'Error in exportHealthLogbooks');
+    }
+    }
     public function getHealthLogbooksLeaveSummary(Request $request)
     {
-        $validator = \Validator::make($request->all(), [
+        try{
+            $validator = \Validator::make($request->all(), [
             'branch_id' => 'required',
         ]);
 
@@ -12195,11 +12209,16 @@ try {
             return $this->successResponse($data, 'Health logbooks fetch successfully');
         }
     }
+    catch(Exception $error) {
+        return $this->commonHelper->generalReturn('403','error',$error,'Error in getHealthLogbooksLeaveSummary');
+    }
+    }
     // addShortcut
     public function addShortcut(Request $request)
     {
 
-        $validator = \Validator::make($request->all(), [
+        try{
+            $validator = \Validator::make($request->all(), [
             'name' => 'required',
             'link' => 'required',
             'branch_id' => 'required',
@@ -12226,6 +12245,10 @@ try {
                 return $this->successResponse($success, 'Shortcut link has been successfully saved');
             }
         }
+    }
+    catch(Exception $error) {
+        return $this->commonHelper->generalReturn('403','error',$error,'Error in addShortcut');
+    }
     }
     // getShortcutList
     public function getShortcutList(Request $request)
@@ -12530,7 +12553,7 @@ try {
         }
          }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in editStudentInterview');
         }
     }
 
@@ -12692,7 +12715,7 @@ try {
         }
          }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in childHealthExport');
         }
     }
     public function getHolidaysEventList(Request $request){
@@ -12717,7 +12740,7 @@ try {
         }
          }
         catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'addSection');
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in getHolidaysEventList');
         }
     }
     protected function clearCache($cache_name,$branchId)
