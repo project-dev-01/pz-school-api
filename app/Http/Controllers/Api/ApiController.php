@@ -3594,6 +3594,87 @@ class ApiController extends BaseController
             $this->commonHelper->generalReturn('403','error',$error,'getSectionDetails');
         }
     }
+
+
+    // getEmployeeListNEW
+    public function getEmployeeListNew(Request $request)
+    {
+        try {
+        // get data
+        $cache_time = config('constants.cache_time');
+        $cache_Staff = config('constants.cache_Staff');
+        $cacheKey = $cache_Staff . $request->branch_id;
+        
+        // Check if the data is cached
+        if (Cache::has($cacheKey)) {
+        //return ['CACHE'];
+            // If cached, return cached data
+            $Staff = Cache::get($cacheKey);
+        } else {
+        // create new connection
+        $main_db = config('constants.main_db');
+       
+        $Connection = $this->createNewConnection($request->branch_id);
+        
+        $name_status = $request->name_status;
+        $Staff = $Connection->table('staffs as s')
+        ->select(
+            DB::raw("CONCAT(s." . ($name_status == 0 ? 'last_name' : 'first_name') . ", ' ', s." . ($name_status == 1 ? 'first_name' : 'last_name') . ") as name"),
+            DB::raw('CONCAT(s.' . ($name_status == 0 ? 'last_name_english' : 'first_name_english') . ', " ", s.' . ($name_status == 1 ? 'first_name_english' : 'last_name_english') . ") as english_emp_name"),
+            DB::raw('CONCAT(s.' . ($name_status == 0 ? 'last_name_furigana' : 'first_name_furigana') . ', " ", s.' . ($name_status == 1 ? 'first_name_furigana' : 'last_name_furigana') . ") as furigana_emp_name"),
+            
+           //  DB::raw("CONCAT(s.last_name, ' ', s.first_name) as name"),
+           //  DB::raw('CONCAT(s.last_name_english, " ", s.first_name_english) as english_emp_name'),
+           //  DB::raw('CONCAT(s.last_name_furigana, " ", s.first_name_furigana) as furigana_emp_name'),
+            's.id',
+            's.short_name',
+            's.salary_grade',
+            's.email',
+            's.gender',
+            's.height',
+            's.weight',
+            's.allergy',
+            's.blood_group',
+            's.employment_status',
+            'stps.name as staff_position_name',
+            'stc.name as staff_category_name',
+            's.birthday',
+            's.nationality',
+            're.name as religion_name',
+            's.mobile_no',
+            's.photo',
+            's.is_active',
+            'stp.name as stream_type',
+            DB::raw("GROUP_CONCAT(DISTINCT  dp.name) as department_name"),
+            DB::raw("GROUP_CONCAT(DISTINCT  ds.name) as designation_name"),
+            's.joining_date',
+            'em.name as employee_name'
+        )
+        ->leftJoin("staff_departments as dp", DB::raw("FIND_IN_SET(dp.id,s.department_id)"), ">", DB::raw("'0'"))
+        ->leftJoin("staff_designations as ds", DB::raw("FIND_IN_SET(ds.id,s.designation_id)"), ">", DB::raw("'0'"))
+        ->leftJoin("employee_types as em", DB::raw("FIND_IN_SET(em.id, s.employee_type_id)"), ">", DB::raw("'0'"))
+        ->leftJoin('stream_types as stp', 's.stream_type_id', '=', 'stp.id')
+        ->leftJoin('religions as re', 's.religion', '=', 're.id')
+        ->leftJoin('staff_categories as stc', 's.staff_category', '=', 'stc.id')
+        ->leftJoin('staff_positions as stps', 's.staff_position', '=', 'stps.id')
+        ->where('s.is_active', '=', '0')
+        ->whereNull('s.deleted_at')
+        ->orderBy('stp.name', 'desc')
+        ->orderBy('s.salary_grade', 'desc')
+        ->groupBy("s.id")
+        ->get();
+      
+        // Cache the fetched data for future requests
+        Cache::put($cacheKey, $Staff, now()->addHours($cache_time)); // Cache for 24 hours
+        }
+        return $this->successResponse($Staff, 'Staff record fetch successfully');
+         }
+        catch(\Exception $error) {
+            $this->commonHelper->generalReturn('403','error',$error,'getSectionDetails');
+        }
+    }
+
+
     // getEmployeeDetails row details
     public function getEmployeeDetails(Request $request)
     {
@@ -14385,6 +14466,97 @@ try{
             return $this->successResponse($students, 'Student record fetch successfully');
         }
     }
+
+//getStudentListNew
+     public function getStudentListNew(Request $request)
+    {
+        $validator = \Validator::make($request->all(), [
+            'branch_id' => 'required',
+        ]);
+ 
+        $department_id = isset($request->department_id) ? $request->department_id : null;
+        $class_id = isset($request->class_id) ? $request->class_id : null;
+        $session_id = isset($request->session_id) ? $request->session_id : 0;
+        $section_id = isset($request->section_id) ? $request->section_id : null;
+        $status = isset($request->status) ? $request->status : null;
+        $name = isset($request->student_name) ? $request->student_name : null;
+ 
+        if (!$validator->passes()) {
+            return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
+        }
+         else {
+            // get data
+            $cache_time = config('constants.cache_time');
+            $cache_students = config('constants.cache_students');
+ 
+            $cacheKey = $cache_students . $request->branch_id;
+            // Check if the data is cached
+            if (Cache::has($cacheKey) && !($department_id || $class_id || $session_id || $section_id || $status)) {
+                // If cached and no filters are applied, return cached data
+                \Log::info('cacheKey ' . json_encode($cacheKey));
+                $students = Cache::get($cacheKey);
+            } else {
+                // create new connection
+                $con = $this->createNewConnection($request->branch_id);
+             
+                $name_status = $request->name_status;
+            
+                $query = $con->table('enrolls as e')
+                ->select(
+                    's.id',
+                    DB::raw("CONCAT(s." . ($name_status == 0 ? 'last_name' : 'first_name') . ", ' ', s." . ($name_status == 1 ? 'first_name' : 'last_name') . ") as name"),
+                    DB::raw('CONCAT(s.' . ($name_status == 0 ? 'last_name_common' : 'first_name_common') . ', " ", s.' . ($name_status == 1 ? 'first_name_common' : 'last_name_common') . ") as name_common"),
+                   
+                    // DB::raw('CONCAT(s.last_name, " ", s.first_name) as name'),
+                    // DB::raw('CONCAT(s.last_name_common, " ", s.first_name_common) as name_common'),
+                    's.register_no',
+                    's.roll_no',
+                    's.mobile_no',
+                    's.email',
+                    's.gender',
+                    's.photo',
+                    'e.attendance_no'
+                )
+                ->join('students as s', 'e.student_id', '=', 's.id');
+           
+                if (isset($request->department_id) && filled($request->department_id)) {
+                    $query->where('e.department_id', $request->department_id);
+                }
+ 
+                if (isset($request->class_id) && filled($request->class_id)) {
+                    $query->where('e.class_id', $request->class_id);
+                }
+ 
+                // if (isset($request->session_id) && filled($request->session_id)) {
+                //     $query->where('e.session_id', $request->session_id);
+                // }
+ 
+                if (isset($request->section_id) && filled($request->section_id)) {
+                    $query->where('e.section_id', $request->section_id);
+                }
+ 
+                if (isset($request->status) && filled($request->status)) {
+                    $query->where('e.active_status', $request->status);
+                }
+ 
+                if (isset($request->student_name) && filled($request->student_name)) {
+                    $name = $request->student_name;
+                    $query->where(function ($q) use ($name) {
+                        $q->where('s.first_name', 'like', '%' . $name . '%')
+                            ->orWhere('s.last_name', 'like', '%' . $name . '%');
+                    });
+                }
+ 
+                $students = $query->groupBy('e.student_id')->get()->toArray();
+ 
+                // Cache the fetched data for future requests, only if no filters are applied
+                if (!($department_id || $class_id || $session_id || $section_id || $status)) {
+                    Cache::put($cacheKey, $students, now()->addHours($cache_time)); // Cache for 24 hours
+                }
+            }
+            return $this->successResponse($students, 'Student record fetch successfully');
+        }
+    }
     // get Student List
     // public function getStudentList(Request $request)
     // {
@@ -15487,6 +15659,34 @@ try{
             return $this->successResponse($studentDetails, 'Student record fetch successfully');
         }
     }
+
+    // getStudentUpdateListNew
+     public function getStudentUpdateInfoListNew(Request $request)
+     {
+         $validator = \Validator::make($request->all(), [
+             'branch_id' => 'required',
+             'token' => 'required',
+         ]);
+ 
+         if (!$validator->passes()) {
+             return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
+         } else {
+             // create new connection
+             $conn = $this->createNewConnection($request->branch_id);
+        
+             $name_status = $brdata->name_status; 
+             // get data
+             $studentDetails = $conn->table('student_change_info as si')
+                                     ->select("s.email",
+                                     "s.id as student_id", 'si.id', "s.roll_no", 
+ 
+                                     DB::raw("CONCAT(s." . ($name_status == 0 ? 'last_name' : 'first_name') . ", ' ', s." . ($name_status == 1 ? 'first_name' : 'last_name') . ") as name"),
+                                     // DB::raw("CONCAT(s.last_name, ' ', s.first_name) as name")
+                                     )
+                                     ->leftJoin('students as s', 'si.student_id', '=', 's.id')->where('si.status', $request->status)->get();
+             return $this->successResponse($studentDetails, 'Student record fetch successfully');
+         }
+     }
     // get Parent row details
     public function getParentDetails(Request $request)
     {
