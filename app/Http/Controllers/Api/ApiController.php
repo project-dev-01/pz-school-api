@@ -15645,6 +15645,7 @@ try{
                             })
                             ->leftJoin('parent as p', 'pi.parent_id', '=', 'p.id')
                             ->where('s.guardian_id', $parent_id)
+                            ->groupBy('pi.id')
                             ->get()
                             ->toArray();
 
@@ -17824,9 +17825,15 @@ try{
                     'std.gender'
                 )
                 ->join('enrolls as en', 'std.id', '=', 'en.student_id')
-                ->where('std.father_id', '=', $parent_id)
-                ->orWhere('std.mother_id', '=', $parent_id)
-                ->orWhere('std.guardian_id', '=', $parent_id)
+                // ->where('std.father_id', '=', $parent_id)
+                // ->orWhere('std.mother_id', '=', $parent_id)
+                // ->orWhere('std.guardian_id', '=', $parent_id)\
+                ->where(function($query) use ($parent_id) {
+                    $query->where('std.father_id', $parent_id)
+                          ->orWhere('std.mother_id', $parent_id)
+                          ->orWhere('std.guardian_id', $parent_id);
+                })
+                ->where('en.active_status', '=', '0')
                 ->groupBy("std.id")
                 ->get();
             return $this->successResponse($studentDetails, 'Student details fetch successfully');
@@ -18148,7 +18155,7 @@ try{
     {
         $validator = \Validator::make($request->all(), [
             'branch_id' => 'required',
-            'parent_id' => 'required',
+            // 'parent_id' => 'required',
             'student_id' => 'required'
 
         ]);
@@ -18178,13 +18185,19 @@ try{
                     'lev.teacher_remarks',
                     'lev.nursing_teacher_remarks'
                 )
+                ->join('enrolls as en', function ($join) {
+                    $join->on('lev.class_id', '=', 'en.class_id')
+                         ->on('lev.section_id', '=', 'en.section_id')
+                         ->on('lev.student_id', '=', 'en.student_id');
+                })
                 //->select('lev.class_id','lev.section_id','student_id','std.first_name','std.last_name','lev.from_leave','lev.to_leave','lev.reason','lev.status')
                 ->leftJoin('students as std', 'lev.student_id', '=', 'std.id')
                 ->leftJoin('student_leave_types as slt', 'lev.change_lev_type', '=', 'slt.id')
                 ->leftJoin('absent_reasons as as', 'lev.reasonId', '=', 'as.id')
                 ->where([
-                    ['lev.parent_id', '=', $request->parent_id],
+                    // ['lev.parent_id', '=', $request->parent_id],
                     ['lev.student_id', '=', $request->student_id],
+                    ['en.active_status', '=', '0'],
                 ])
                 ->orderby('lev.to_leave', 'desc')
                 ->get();
