@@ -1,6 +1,7 @@
 <?php
 return [
-    'main_db'=>'aajskl',
+    'main_db'=>'apaxsuzenapi',
+    // 'main_db'=>'aajskl',
     'client_email'=>'suzen-noreply@suzen.school',
     'student_email_domain' => "@jskl.edu.my",
     'cache_time'=>"24",

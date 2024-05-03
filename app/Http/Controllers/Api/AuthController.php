@@ -147,7 +147,7 @@ class AuthController extends BaseController
                     $data = [
                         'login_id' => $user->id,
                         'user_id' => $user->user_id,
-                        'role_id' => $request->role_id,
+                        'role_id' => isset($request->role_id)?$request->role_id:null,
                         'branch_id' => $user->branch_id,
                         'ip_address' => \Request::getClientIp(true),
                         'device' => isset($request->user_device) ? $request->user_device : "other",

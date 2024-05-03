@@ -237,4 +237,14 @@ class BaseController extends Controller
 
         return response()->json($response, $code);
     }
+    public function validationFailureResponse($result, $message)
+    {
+        $response = [
+            'code' => 202,
+            'success' => true,
+            'message' => $message,
+            'data'    => $result,
+        ];
+        return response()->json($response, 202);
+    }
 }

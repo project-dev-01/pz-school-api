@@ -17875,7 +17875,8 @@ try{
                     ['lev.to_leave', '>=', $to_leave]
                 ])->count();
             if ($fromLeaveCnt > 0 || $toLeaveCnt > 0) {
-                return $this->send422Error('You have already applied for leave between these dates', ['error' => 'You have already applied for leave between these dates']);
+                return $this->validationFailureResponse([], 'You have already applied for leave between these dates');
+                // return $this->send422Error('You have already applied for leave between these dates', ['error' => 'You have already applied for leave between these dates']);
             } else {
                 // insert data
                 if (isset($request->file)) {
@@ -18147,7 +18148,8 @@ try{
     {
         $validator = \Validator::make($request->all(), [
             'branch_id' => 'required',
-            'parent_id' => 'required'
+            'parent_id' => 'required',
+            'student_id' => 'required'
 
         ]);
         if (!$validator->passes()) {
@@ -18181,7 +18183,8 @@ try{
                 ->leftJoin('student_leave_types as slt', 'lev.change_lev_type', '=', 'slt.id')
                 ->leftJoin('absent_reasons as as', 'lev.reasonId', '=', 'as.id')
                 ->where([
-                    ['lev.parent_id', '=', $request->parent_id]
+                    ['lev.parent_id', '=', $request->parent_id],
+                    ['lev.student_id', '=', $request->student_id],
                 ])
                 ->orderby('lev.to_leave', 'desc')
                 ->get();
@@ -18364,7 +18367,8 @@ try{
     function getAllStudentLeaves(Request $request)
     {
         $validator = \Validator::make($request->all(), [
-            'branch_id' => 'required'
+            'branch_id' => 'required',
+            'academic_session_id' => 'required',
         ]);
         if (!$validator->passes()) {
             return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
@@ -18414,7 +18418,12 @@ try{
                     'sd.name as department_name'
                 )
                 ->join('students as std', 'lev.student_id', '=', 'std.id')
-                ->join('enrolls as en', 'lev.student_id', '=', 'en.student_id')
+                // ->join('enrolls as en', 'lev.student_id', '=', 'en.student_id')
+                ->join('enrolls as en', function ($join) {
+                    $join->on('lev.class_id', '=', 'en.class_id')
+                         ->on('lev.section_id', '=', 'en.section_id')
+                         ->on('lev.student_id', '=', 'en.student_id');
+                })
                 ->join('classes as cl', 'en.class_id', '=', 'cl.id')
                 ->join('sections as sc', 'en.section_id', '=', 'sc.id')
                 ->leftJoin('student_leave_types as slt', 'lev.change_lev_type', '=', 'slt.id')
@@ -18456,9 +18465,25 @@ try{
                         });
                     });
                 })
+                // ->when($date, function ($query, $date) {
+                //     return $query->where(function ($query) use ($date) {
+                //         $query->where(function ($query) use ($date) {
+                //             $query->whereBetween('lev.from_leave', [$date['from'], $date['to']])
+                //                   ->orWhereBetween('lev.to_leave', [$date['from'], $date['to']]);
+                //         });
+                //     });
+                // })   
+                // ->when($date, function ($query, $date) {
+                //     return $query->where(function ($query) use ($date) {
+                //         $query->where('lev.from_leave', '>=', $date['from'])
+                //               ->where('lev.to_leave', '<=', $date['to']);
+                //     });
+                // })             
                 ->where('en.active_status', '=', '0')
+                ->where('en.academic_session_id', '=', $request->academic_session_id)
                 ->orderBy('lev.from_leave', 'desc')
                 ->get();
+                // dd($studentDetails);
             return $this->successResponse($studentDetails, 'Student details fetch successfully');
         }
     }
