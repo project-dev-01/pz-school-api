@@ -15871,7 +15871,7 @@ try{
                             $realtion = $conn->table('students')->select('relation')->where('guardian_id', '=', $parent_id)->first();
                             
                             ${$key} = [];
-                            ${$key}['old_value'] =  $realtion->$key;
+                            ${$key}['old_value'] =   ($realtion!==null)?$realtion->$key:'';
                             ${$key}['new_value'] =  $suc;
                         }else {
                             ${$key} = [];
@@ -21928,25 +21928,34 @@ try{
     public function unreadNotifications(Request $request)
     {
 
-        $id = auth()->user()->id;
-        // $notifications = auth()->user()->unreadnotifications()
-        $res = [
-            'unread' => auth()->user()->unreadnotifications,
-            'unread_count' => auth()->user()->unreadnotifications->count(),
-            'read' => auth()->user()->notifications()
-                ->whereNotNull('read_at')
-                ->orderBy('read_at', 'asc')
-                ->orderBy('created_at', 'desc')
-                ->where('notifiable_id', $id)
-                ->get()
-        ];
+        try
+        {
+            $id = auth()->user()->id;
+            // $notifications = auth()->user()->unreadnotifications()
+            if($id!==null)
+            {
+                $res = [
+                    'unread' => auth()->user()->unreadnotifications,
+                    'unread_count' => auth()->user()->unreadnotifications->count(),
+                    'read' => auth()->user()->notifications()
+                        ->whereNotNull('read_at')
+                        ->orderBy('read_at', 'asc')
+                        ->orderBy('created_at', 'desc')
+                        ->where('notifiable_id', $id)
+                        ->get()
+                ];
 
-        // $notifications = auth()->user()->notifications()
-        //     ->orderBy('read_at', 'asc')
-        //     ->orderBy('created_at', 'desc')
-        //     ->where('notifiable_id', $id)
-        //     ->get();
-        return $this->successResponse($res, 'get notifications data get successfully');
+                // $notifications = auth()->user()->notifications()
+                //     ->orderBy('read_at', 'asc')
+                //     ->orderBy('created_at', 'desc')
+                //     ->where('notifiable_id', $id)
+                //     ->get();
+                return $this->successResponse($res, 'get notifications data get successfully');
+            }
+        }
+        catch(Exception $error) {
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in unreadNotifications');
+        }
     }
     // markAsRead
     public function markAsRead(Request $request)
