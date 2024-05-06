@@ -14422,7 +14422,7 @@ try{
             // Check if the data is cached
             if (Cache::has($cacheKey) && !($department_id || $class_id || $session_id || $section_id || $status)) {
                 // If cached and no filters are applied, return cached data
-                \Log::info('cacheKey ' . json_encode($cacheKey));
+                //\Log::info('cacheKey ' . json_encode($cacheKey));
                 $students = Cache::get($cacheKey);
             } else {
                 // create new connection
@@ -14507,7 +14507,7 @@ try{
             // Check if the data is cached
             if (Cache::has($cacheKey) && !($department_id || $class_id || $session_id || $section_id || $status)) {
                 // If cached and no filters are applied, return cached data
-                \Log::info('cacheKey ' . json_encode($cacheKey));
+                //\Log::info('cacheKey ' . json_encode($cacheKey));
                 $students = Cache::get($cacheKey);
             } else {
                 // create new connection
@@ -14597,7 +14597,7 @@ try{
     //         // Check if the data is cached
     //         if (Cache::has($cacheKey) && !($department_id || $class_id || $session_id || $section_id || $status)) {
     //             // If cached and no filters are applied, return cached data
-    //             \Log::info('cacheKey ' . json_encode($cacheKey));
+    //             //\Log::info('cacheKey ' . json_encode($cacheKey));
     //             $students = Cache::get($cacheKey);
     //         } else {
     //             // create new connection
@@ -15151,7 +15151,7 @@ try{
     // delete Student
     public function deleteStudent(Request $request)
     {
-        \Log::info('Delete student request: ' . json_encode($request->all()));
+        //\Log::info('Delete student request: ' . json_encode($request->all()));
         $validator = \Validator::make($request->all(), [
             'branch_id' => 'required',
             'id' => 'required',
@@ -15196,7 +15196,7 @@ try{
             $cache_students = config('constants.cache_students');
             $this->clearCache($cache_students, $branch_id);
     
-            \Log::info("Deleted student with ID $id. User records deleted: $deletedUserCount, Enrollment records deleted: $enrollDeleteCount, Student records deleted: $studentDeleteCount");
+            //\Log::info("Deleted student with ID $id. User records deleted: $deletedUserCount, Enrollment records deleted: $enrollDeleteCount, Student records deleted: $studentDeleteCount");
     
             return $this->successResponse([], 'Student has been deleted successfully');
         } catch (\Exception $e) {
@@ -17532,7 +17532,7 @@ try{
             $cache_time = config('constants.cache_time');
             $cache_religions = config('constants.cache_religions');
             $cacheKey = $cache_religions . $request->branch_id;
-           
+
             // Check if the data is cached
             if (Cache::has($cacheKey)) {
                 // If cached, return cached data
@@ -26524,10 +26524,10 @@ try{
                     $q->where('role_id', 6);
                 })->get();
                 // Before sending the notification
-                \Log::info('Sending notification to users: ' . json_encode($user));
+                //\Log::info('Sending notification to users: ' . json_encode($user));
                 Notification::send($user, new StudentEmail($request->branch_id));
                 // After sending the notification
-                \Log::info('Notification sent successfully to users: ' . json_encode($user));
+                //\Log::info('Notification sent successfully to users: ' . json_encode($user));
             }
             if ($target_user_array == [2, 5]) {
                 $class_id =   $request->class_id;
@@ -26566,10 +26566,10 @@ try{
                     $q->where('role_id', 5);
                 })->get();
                 // Before sending the notification
-                \Log::info('Sending notification to users: ' . json_encode($user));
+                //\Log::info('Sending notification to users: ' . json_encode($user));
                 Notification::send($user, new ParentEmail($request->branch_id));
                 // After sending the notification
-                \Log::info('Notification sent successfully to users: ' . json_encode($user));
+                //\Log::info('Notification sent successfully to users: ' . json_encode($user));
             }
             if ($target_user_array == [2, 4]) {
                 $deptId = $request->department_id;
@@ -29377,7 +29377,7 @@ try {
     protected function clearCache($cache_name,$branchId)
     {
         $cacheKey = $cache_name . $branchId;
-        \Log::info('cacheClear ' . json_encode($cacheKey));
+        //\Log::info('cacheClear ' . json_encode($cacheKey));
         Cache::forget($cacheKey);
     }
 }
