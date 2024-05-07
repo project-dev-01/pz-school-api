@@ -12370,7 +12370,7 @@ try {
             // get data
             $currentDateTime = Carbon::now();
             $buletinDetails = $conn->table('bulletin_boards as b')
-                ->select("b.file","b.title")
+                ->select("b.file","b.title","b.publish_date","b.id")
                 ->where("b.status", 1)
                 ->where("b.add_dashboard", 1)
                 //->where("b.publish", 1)
@@ -12394,13 +12394,15 @@ try {
 
             // create new connection
             $conn = $this->createNewConnection($request->branch_id);
+            $main_db = config('constants.main_db');
             $staff_id = $request->staff_id;
             $dep = $conn->table('staffs')->select('department_id')->where('id', $staff_id)->first();
             $department = $dep->department_id;
             // get data
             $currentDateTime = Carbon::now();
             $buletinDetails = $conn->table('bulletin_boards as b')
-                ->select("b.file","b.title")
+                ->select("b.file","b.title","b.publish_date","b.id","b.discription")
+             
                 ->where("b.target_user", '2,4')
                 ->where(function ($query) use ($department) {
                     $query->where('b.department_id', $department)
