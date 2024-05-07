@@ -27,6 +27,7 @@ class ImportController extends BaseController
     // import Csv Employee 
     public function importCsvEmployee(Request $request)
     {
+        try{
         $validator = \Validator::make($request->all(), [
             'branch_id' => 'required',
             'file' => 'required'
@@ -311,6 +312,9 @@ class ImportController extends BaseController
                 return $this->send422Error('Validation error.', ['error' => 'Invalid File Extension']);
             }
         }
+        } catch(Exception $error) {
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in importCsvEmployee');
+        }
     }
 
     // getLikeColumnName
@@ -346,6 +350,7 @@ class ImportController extends BaseController
 
     public function importCsvParents(Request $request)
     {
+        try{
         // Validation
         $validator = \Validator::make($request->all(), [
             'branch_id' => 'required',
@@ -537,10 +542,14 @@ class ImportController extends BaseController
         }
 
         return $this->successResponse([], 'Bulk Insert Successful');
+        } catch(Exception $error) {
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in importCsvParents');
+        }
     }
     // import Csv Students
     public function importCsvStudents(Request $request)
     {
+        try{
         // dd($request->file('file'));
 
         // Validation
@@ -784,10 +793,14 @@ class ImportController extends BaseController
         }
 
         return $this->successResponse([], 'Bulk Insert Successful');
+        } catch(Exception $error) {
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in importCsvStudents');
+        }
     }
     // getLikeColumnName
     public function getLikeColumnName($request)
     {
+        try{
         // return $request;
         // create new connection
         $conn = $this->createNewConnection($request['branch_id']);
@@ -838,11 +851,15 @@ class ImportController extends BaseController
             }
         }
         return $response;
+        } catch(Exception $error) {
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in getLikeColumnName');
+        }
     }
 
     // getLikeColumnName
     public function getLikeColumnNameImport($request)
     {
+        try{
         // return $request;
         // create new connection
         $conn = $this->createNewConnection($request['branch_id']);
@@ -865,9 +882,13 @@ class ImportController extends BaseController
             }
         }
         return $response;
+        } catch(Exception $error) {
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in getLikeColumnNameImport');
+        }
     }
     public function importCsvExamMarks(Request $request)
     {
+        try{
 
         $validator = \Validator::make($request->all(), [
             'branch_id' => 'required',
@@ -1049,9 +1070,13 @@ class ImportController extends BaseController
                 return $this->send422Error('Validation error.', ['error' => 'Invalid File Extension']);
             }
         }
+        } catch(Exception $error) {
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in importCsvExamMarks');
+        }
     }
     public function getPromotionDataBulk(Request $request)
     {
+        try{
 
 
         $validator = \Validator::make($request->all(), [
@@ -1224,11 +1249,15 @@ class ImportController extends BaseController
                 return $this->send422Error('Validation error.', ['error' => 'Invalid File Extension']);
             }
         }
+        } catch(Exception $error) {
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in getPromotionDataBulk');
+        }
     }
 
     // import Csv Expense
     public function importCsvExpense(Request $request)
     {
+        try{
         $validator = \Validator::make($request->all(), [
             'branch_id' => 'required',
             'file' => 'required'
@@ -1345,10 +1374,14 @@ class ImportController extends BaseController
                 return $this->send422Error('Validation error.', ['error' => 'Invalid File Extension']);
             }
         }
+        } catch(Exception $error) {
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in importCsvExpense');
+        }
     }
     // import Csv Students
     public function importCsvChildHealth(Request $request)
     {
+        try{
         // return 1;
         // date('Y-m-d H:i:s', strtotime($old_date));
         $date_month = date('m', strtotime($request->date));
@@ -1903,9 +1936,13 @@ class ImportController extends BaseController
             // }
             return $this->successResponse([], 'Import Successful');
         }
+        } catch(Exception $error) {
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in importCsvChildHealth');
+        }
     }
     private function normalizeJapaneseArray($array)
     {
+        try{
         return array_map(function ($string) {
             // Remove leading and trailing whitespaces, as well as non-printable characters
             $trimmed = preg_replace('/[^\p{L}\p{N}\s]/u', '', $string);
@@ -1918,5 +1955,8 @@ class ImportController extends BaseController
 
             return $normalized;
         }, $array);
+        } catch(Exception $error) {
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in normalizeJapaneseArray');
+        }
     }
 }

@@ -19,13 +19,17 @@ class BaseController extends Controller
      */
     public function successResponse($result, $message)
     {
-        $response = [
-            'code' => 200,
-            'success' => true,
-            'message' => $message,
-            'data'    => $result,
-        ];
-        return response()->json($response, 200);
+        try{
+            $response = [
+                'code' => 200,
+                'success' => true,
+                'message' => $message,
+                'data'    => $result,
+            ];
+            return response()->json($response, 200);
+        } catch(Exception $error) {
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in successResponse');
+        }
     }
 
 
@@ -36,76 +40,96 @@ class BaseController extends Controller
      */
     public function send404Error($error, $errorMessages = [], $code = 404)
     {
-        $response = [
-            'code' => 404,
-            'success' => false,
-            'message' => $error,
-        ];
+        try{
+            $response = [
+                'code' => 404,
+                'success' => false,
+                'message' => $error,
+            ];
 
-        if (!empty($errorMessages)) {
-            $response['data'] = $errorMessages;
+            if (!empty($errorMessages)) {
+                $response['data'] = $errorMessages;
+            }
+
+            return response()->json($response, $code);
+        } catch(Exception $error) {
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in send404Error');
         }
-
-        return response()->json($response, $code);
     }
 
     public function send500Error($error, $errorMessages = [], $code = 500)
     {
-        $response = [
-            'code' => 500,
-            'success' => false,
-            'message' => $error,
-        ];
+        try{
+            $response = [
+                'code' => 500,
+                'success' => false,
+                'message' => $error,
+            ];
 
-        if (!empty($errorMessages)) {
-            $response['data'] = $errorMessages;
+            if (!empty($errorMessages)) {
+                $response['data'] = $errorMessages;
+            }
+
+            return response()->json($response, $code);
+        } catch(Exception $error) {
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in send500Error');
         }
-
-        return response()->json($response, $code);
     }
     public function send400Error($error, $errorMessages = [], $code = 400)
     {
-        $response = [
-            'code' => 400,
-            'success' => false,
-            'message' => $error,
-        ];
+        try{
+            $response = [
+                'code' => 400,
+                'success' => false,
+                'message' => $error,
+            ];
 
-        if (!empty($errorMessages)) {
-            $response['data'] = $errorMessages;
+            if (!empty($errorMessages)) {
+                $response['data'] = $errorMessages;
+            }
+
+            return response()->json($response, $code);
+        } catch(Exception $error) {
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in send400Error');
         }
-
-        return response()->json($response, $code);
     }
 
     public function send422Error($error, $errorMessages = [], $code = 422)
     {
-        $response = [
-            'code' => 422,
-            'success' => false,
-            'message' => $error,
-        ];
+        try{
+            $response = [
+                'code' => 422,
+                'success' => false,
+                'message' => $error,
+            ];
 
-        if (!empty($errorMessages)) {
-            $response['data'] = $errorMessages;
+            if (!empty($errorMessages)) {
+                $response['data'] = $errorMessages;
+            }
+
+            return response()->json($response, $code);
+        } catch(Exception $error) {
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in send422Error');
         }
-
-        return response()->json($response, $code);
     }
     // unauthorized
     public function send401Error($error, $errorMessages = [], $code = 401)
     {
-        $response = [
-            'code' => 401,
-            'success' => false,
-            'message' => $error,
-        ];
+        try{
+            $response = [
+                'code' => 401,
+                'success' => false,
+                'message' => $error,
+            ];
 
-        if (!empty($errorMessages)) {
-            $response['data'] = $errorMessages;
+            if (!empty($errorMessages)) {
+                $response['data'] = $errorMessages;
+            }
+
+            return response()->json($response, $code);
+        } catch(Exception $error) {
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in send401Error');
         }
-
-        return response()->json($response, $code);
     }
     // create migration file
     function DBMigrationCall($dbName, $dbUsername, $dbPass, $dbPort, $dbHost)
@@ -139,52 +163,69 @@ class BaseController extends Controller
                 ]
             );
             return true;
-        } catch (\Exception $e) {
-            return false;
+        } catch(Exception $error) {
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in DBMigrationCall');
         }
     }
     // create users
     function createUser(Request $request, $lastInsertID, $Staffid)
     {
-        $user = new User();
-        $user->name = $request->first_name . " " . $request->last_name;
-        $user->email = $request->email;
-        $user->role_id = 2;
-        $user->user_id = $Staffid;
-        $user->password = \Hash::make($request->password);
-        $user->branch_id = $lastInsertID;
-        $query = $user->save();
-        if (!$query) {
-            return false;
-        } else {
-            return true;
+        try{
+            $user = new User();
+            $user->name = $request->first_name . " " . $request->last_name;
+            $user->email = $request->email;
+            $user->role_id = 2;
+            $user->user_id = $Staffid;
+            $user->password = \Hash::make($request->password);
+            $user->branch_id = $lastInsertID;
+            $query = $user->save();
+            if (!$query) {
+                return false;
+            } else {
+                return true;
+            }
+        } catch(Exception $error) {
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in createUser');
         }
+            
     }
     // check users email exit 
     function existUser($email)
     {
-        if (User::where('email', '=', $email)->count() > 0) {
-            return false;
-        } else {
-            return true;
+        try{
+            if (User::where('email', '=', $email)->count() > 0) {
+                return false;
+            } else {
+                return true;
+            }
+        } catch(Exception $error) {
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in existUser');
         }
     }
     // check users email exit with branch
     function existUserWithBranch($email,$branch)
     {
-        if (User::where([['email', '=', $email], ['branch_id', '=', $branch]])->count() > 0) {
-            return false;
-        } else {
-            return true;
+        try{
+            if (User::where([['email', '=', $email], ['branch_id', '=', $branch]])->count() > 0) {
+                return false;
+            } else {
+                return true;
+            }
+        } catch(Exception $error) {
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in existUserWithBranch');
         }
     }
     // check users email exit 
     function existBranch($email)
     {
-        if (Branches::where('email', '=', $email)->count() > 0) {
-            return false;
-        } else {
-            return true;
+        try{
+            if (Branches::where('email', '=', $email)->count() > 0) {
+                return false;
+            } else {
+                return true;
+            }
+        } catch(Exception $error) {
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in existBranch');
         }
     }
     // create new connection
@@ -206,35 +247,43 @@ class BaseController extends Controller
     // upload user profile
     function uploadUserProfile(Request $request)
     {
-        $path = 'users/images/';
-        $file = $request->file('photo');
-        $new_name = 'UIMG_' . date('Ymd') . uniqid() . '.jpg';
+        try{
+            $path = 'users/images/';
+            $file = $request->file('photo');
+            $new_name = 'UIMG_' . date('Ymd') . uniqid() . '.jpg';
 
-        //Upload new image
-        $upload = $file->move(public_path($path), $new_name);
+            //Upload new image
+            $upload = $file->move(public_path($path), $new_name);
 
-        if (!$upload) {
-            return null;
-        } else {
             if (!$upload) {
                 return null;
             } else {
-                return $new_name;
+                if (!$upload) {
+                    return null;
+                } else {
+                    return $new_name;
+                }
             }
+        } catch(Exception $error) {
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in uploadUserProfile');
         }
     }
     public function sendCommonError($error, $errorMessages = [], $code = 503)
     {
-        $response = [
-            'code' => 503,
-            'success' => false,
-            'message' => $error,
-        ];
+        try{
+            $response = [
+                'code' => 503,
+                'success' => false,
+                'message' => $error,
+            ];
 
-        if (!empty($errorMessages)) {
-            $response['data'] = $errorMessages;
+            if (!empty($errorMessages)) {
+                $response['data'] = $errorMessages;
+            }
+
+            return response()->json($response, $code);
+        } catch(Exception $error) {
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in sendCommonError');
         }
-
-        return response()->json($response, $code);
     }
 }

@@ -31,6 +31,7 @@ class ChatController extends BaseController
     // get all teacher
     public function chatGetTeacherList(Request $request)
     {
+        try{
         $validator = \Validator::make($request->all(), [
             'branch_id' => 'required',
             'token' => 'required',
@@ -132,10 +133,14 @@ class ChatController extends BaseController
             // return usort($allTeachers, "created_at");
             return $this->successResponse($allTeachers, 'get all teacher record fetch successfully');
         }
+        } catch(Exception $error) {
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in chatGetTeacherList');
+        }
     }
     // get all parents
     public function chatGetParentList(Request $request)
     {
+        try{
         $validator = \Validator::make($request->all(), [
             'branch_id' => 'required',
             'token' => 'required',
@@ -190,10 +195,14 @@ class ChatController extends BaseController
             array_multisort($col, SORT_DESC, $allParents);
             return $this->successResponse($allParents, 'get all Parent record fetch successfully');
         }
+        } catch(Exception $error) {
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in chatGetParentList');
+        }
     }
     // get teacher assign parents
     public function chatGetTeacherAssignParentList(Request $request)
     {
+        try{
         $validator = \Validator::make($request->all(), [
             'branch_id' => 'required',
             'teacher_id' => 'required',
@@ -302,10 +311,14 @@ class ChatController extends BaseController
             //     ->get();
             return $this->successResponse($subject_assigns_teachers, 'get assign teacher record fetch successfully');
         }
+        } catch(Exception $error) {
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in chatGetTeacherAssignParentList');
+        }
     }
     // get parent chat teacher list
     public function getParentChatTeacherList(Request $request)
     {
+        try{
         $validator = \Validator::make($request->all(), [
             'branch_id' => 'required',
             'token' => 'required',
@@ -393,10 +406,14 @@ class ChatController extends BaseController
             array_multisort($col, SORT_DESC, $allTeachers);
             return $this->successResponse($allTeachers, 'get assign teacher record fetch successfully');
         }
+        } catch(Exception $error) {
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in getParentChatTeacherList');
+        }
     }
     // chat sent message
     public function chatSentMessage(Request $request)
     {
+        try{
         $validator = \Validator::make($request->all(), [
             'branch_id' => 'required',
             'token' => 'required',
@@ -429,9 +446,13 @@ class ChatController extends BaseController
                 return $this->successResponse($success, 'Message sent successfully');
             }
         }
+        } catch(Exception $error) {
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in chatSentMessage');
+        }
     }
     public function storechat(Request $request)
     {
+        try{
 
         //dd('123');
         // create new connection
@@ -481,9 +502,13 @@ class ChatController extends BaseController
         } else {
             return $this->successResponse($success, 'Message sent successfully');
         }
+        } catch(Exception $error) {
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in storechat');
+        }
     }
     public function deletechat(Request $request)
     {
+        try{
 
         //dd('123');
         // create new connection
@@ -503,10 +528,14 @@ class ChatController extends BaseController
         } else {
             return $this->successResponse($success, 'Message Deleted successfully');
         }
+        } catch(Exception $error) {
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in deletechat');
+        }
     }
 
     public function chatlists(Request $request)
     {
+        try{
 
         $conn = $this->createNewConnection($request->branch_id);
         $branch_id = $request->branch_id;
@@ -652,9 +681,13 @@ class ChatController extends BaseController
         } else {
             return $this->successResponse($success, 'get all chat record fetch successfully');
         }
+        } catch(Exception $error) {
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in chatlists');
+        }
     }
     public function pchatlists(Request $request)
     {
+        try{
 
         //dd('123');
         // create new connection
@@ -802,9 +835,13 @@ class ChatController extends BaseController
         } else {
             return $this->successResponse($success, 'get all chat record fetch successfully');
         }
+        } catch(Exception $error) {
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in pchatlists');
+        }
     }
 	public function chatnotification(Request $request)
-    {	
+    {
+       
 		try
         {
             $conn = $this->createNewConnection($request->branch_id);
@@ -840,9 +877,11 @@ class ChatController extends BaseController
 
             return  $this->commonHelper->generalReturn('403', 'error', $error, 'Error Chat Nofications');
         }
+       
     }
     public function groupchatlists(Request $request)
     {
+        try{
 
         //dd('123');
         // create new connection
@@ -904,8 +943,8 @@ class ChatController extends BaseController
                     'ch.chat_file_extension',
                     'ch.created_at',
 
-                    DB::raw('DATE_FORMAT(ch.created_at, "%d-%M-%Y") as chatdate'),
-                    DB::raw('DATE_FORMAT(ch.created_at, "%H:%i") as chattime'),
+                    DB::raw('DAT_FORMAT(ch.created_at, "%d-%M-%Y") as chatdate'),
+                    DB::raw('EDATE_FORMAT(ch.created_at, "%H:%i") as chattime'),
                     'ch.flag'
                 )
                 ->where([
@@ -926,10 +965,14 @@ class ChatController extends BaseController
         } else {
             return $this->successResponse($success, 'get all chat record fetch successfully');
         }
+        } catch(Exception $error) {
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in groupchatlists');
+        }
     }
     // get all Groups
     public function chatGetGroupList(Request $request)
     {
+        try{
         $validator = \Validator::make($request->all(), [
             'branch_id' => 'required',
             'token' => 'required',
@@ -953,10 +996,14 @@ class ChatController extends BaseController
             }
             return $this->successResponse($allTeachers, 'get all Group record fetch successfully');
         }
+        } catch(Exception $error) {
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in chatGetGroupList');
+        }
     }
     // get all Groups
     public function chatGetParentGroupList(Request $request)
     {
+        try{
         $validator = \Validator::make($request->all(), [
             'branch_id' => 'required',
             'token' => 'required',
@@ -979,6 +1026,9 @@ class ChatController extends BaseController
                 $allTeachers = $query->whereRaw("find_in_set($parent,gs.parent)")->get();
             }
             return $this->successResponse($allTeachers, 'get all Group record fetch successfully');
+        }
+        } catch(Exception $error) {
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in chatGetParentGroupList');
         }
     }
 }

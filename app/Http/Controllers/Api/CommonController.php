@@ -23,53 +23,74 @@ class CommonController extends BaseController
     // get sections 
     public function countryList()
     {
-        $success = Countries::all();
-        return $this->successResponse($success, 'Countries record fetch successfully');
+        try{
+            $success = Countries::all();
+            return $this->successResponse($success, 'Countries record fetch successfully');
+        } catch (\Exception $e) {
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in countryList');
+        }
     }
     // get states by country id
     public function getStateByIdList(Request $request)
     {
-        $validator = \Validator::make($request->all(), [
-            'country_id' => 'required',
-        ]);
-
-        if (!$validator->passes()) {
-            return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
-        } else {
-            $success = States::where('country_id', $request->country_id)->get();
-            return $this->successResponse($success, 'States record fetch successfully');
+        try{
+            $validator = \Validator::make($request->all(), [
+                'country_id' => 'required',
+            ]);
+    
+            if (!$validator->passes()) {
+                return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
+            } else {
+                $success = States::where('country_id', $request->country_id)->get();
+                return $this->successResponse($success, 'States record fetch successfully');
+            }
+        } catch (\Exception $e) {
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in getStateByIdList');
         }
+        
     }
     // get citites by state id
     public function getCityByIdList(Request $request)
     {
-        $validator = \Validator::make($request->all(), [
-            'state_id' => 'required',
-        ]);
-
-        if (!$validator->passes()) {
-            return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
-        } else {
-            $success = Cities::where('state_id', $request->state_id)->get();
-            return $this->successResponse($success, 'Citites record fetch successfully');
+        try{
+            $validator = \Validator::make($request->all(), [
+                'state_id' => 'required',
+            ]);
+    
+            if (!$validator->passes()) {
+                return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
+            } else {
+                $success = Cities::where('state_id', $request->state_id)->get();
+                return $this->successResponse($success, 'Citites record fetch successfully');
+            }
+        } catch (\Exception $e) {
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in getCityByIdList');
         }
+        
     }
     function databaseMigrate(Request $request)
     {
-
+        try{
         $params =  Branches::select('id', 'db_name', 'db_username', 'db_password', 'db_port', 'db_host')->where('id', $request->branch_id)->first();
         $staffConn = DatabaseConnection::databaseMigrate($params);
         return $this->successResponse([], 'Migrated successfully');
+        } catch (\Exception $e) {
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in databaseMigrate');
+        }
     }
     function indexingMigrate(Request $request)
     {
-
+        try{
         $params =  Branches::select('id', 'db_name', 'db_username', 'db_password', 'db_port', 'db_host')->where('id', $request->branch_id)->first();
         $staffConn = DatabaseConnection::indexingMigrate($params);
         return $this->successResponse([], 'Migrated successfully');
+        } catch (\Exception $e) {
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in indexingMigrate');
+        }
     }
     public function categoryList(Request $request)
     {
+        try{
         $validator = \Validator::make($request->all(), [
             'token' => 'required',
             'branch_id' => 'required'
@@ -82,9 +103,13 @@ class CommonController extends BaseController
             $success = Category::all();
             return $this->successResponse($success, 'category record fetch successfully');
         }
+        } catch (\Exception $e) {
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in categoryList');
+        }
     }
     public function dbnameslist(Request $request)
     {
+        try{
         $validator = \Validator::make($request->all(), [
             'token' => 'required'
         ]);
@@ -96,9 +121,13 @@ class CommonController extends BaseController
 
             return $this->successResponse($success, 'school db names fetch successfully');
         }
+        } catch (\Exception $e) {
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in dbnameslist');
+        }
     }
     public function fistLastScript(Request $request)
     {
+        try{
         $validator = \Validator::make($request->all(), [
             'branch_id' => 'required',
             'table_name' => 'required',
@@ -143,14 +172,21 @@ class CommonController extends BaseController
             }
             return $this->successResponse([], 'reverse update record successfully');
         }
+        } catch (\Exception $e) {
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in fistLastScript');
+        }
     }
     public function basesixfour(Request $request)
     {
+        try{
         $fontFile = public_path('common-asset\IPAexGothic\ipag_bold.ttf'); // Replace 'your-font-file.ttf' with the actual file name and path
         
         $fontData = file_get_contents($fontFile);
         $base64FontData = base64_encode($fontData);
         
         echo $base64FontData;
+        } catch (\Exception $e) {
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in basesixfour');
+        }
     }
 }

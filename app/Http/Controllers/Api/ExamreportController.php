@@ -49,6 +49,8 @@ class ExamreportController extends BaseController
     
     public function getec_marks(Request $request)
     {
+        try{
+
         $exam_id = $request->exam_id;
         $class_id = $request->class_id;
         $department_id = $request->department_id;
@@ -104,9 +106,13 @@ class ExamreportController extends BaseController
         
         
         return $this->successResponse($getSubjectMarks, 'Get EC Mark Detatils');
+        } catch(Exception $error) {
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in getec_marks');
+        }
     }
     public function getec_teacher(Request $request)
     {
+        try{
         $class_id = $request->class_id;
         $department_id = $request->department_id;
         $section_id = $request->section_id;
@@ -145,9 +151,13 @@ class ExamreportController extends BaseController
         
         
         return $this->successResponse($getSubjectMarks, 'Get EC Teacher Name Detatils');
+        } catch(Exception $error) {
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in getec_teacher');
+        }
     }
     public function getsubjectpapermark(Request $request)
-    { 
+    {
+        try{ 
         $Connection = $this->createNewConnection($request->branch_id);
         $getsubject = $Connection->table('subjects as sb')
         ->select(
@@ -217,9 +227,13 @@ class ExamreportController extends BaseController
         }
             
         return $this->successResponse($paper_list, 'Get Subject Paper Lists');
+        } catch(Exception $error) {
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in getsubjectpapermark');
+        }
     }
     public function classteacher_principal(Request $request)
-    {        
+    {
+        try{        
         
         $class_id = $request->class_id;
         $section_id = $request->section_id;
@@ -255,9 +269,13 @@ class ExamreportController extends BaseController
             "teacher"=> $teacher
         ];
         return $this->successResponse($datas, 'Get Class Teacher & Principal Details Successfully.');
+        } catch(Exception $error) {
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in classteacher_principal');
+        }
     }
     public function stuexam_ppmarklist(Request $request)
-    {        
+    {
+        try{        
         $exam_id = $request->exam_id;
         $class_id = $request->class_id;
         $section_id = $request->section_id;
@@ -304,9 +322,13 @@ class ExamreportController extends BaseController
         ->first();      
         
         return $this->successResponse($getSemesterMark, 'Get Personal Point Mark Details Successfully.');
+        } catch(Exception $error) {
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in stuexam_ppmarklist');
+        }
     }
     public function stuexam_ppavgmarklist(Request $request)
-    {        
+    {
+        try{        
         $exam_id = $request->exam_id;
         $class_id = $request->class_id;
         $section_id = $request->section_id;
@@ -354,9 +376,13 @@ class ExamreportController extends BaseController
         ->first();      
         
         return $this->successResponse($getSemesterMark, 'Get Personal Point Avg Mark Details Successfully');
+        } catch(Exception $error) {
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in stuexam_ppavgmarklist');
+        }
     }
     public function getpaperoverallmarklist1(Request $request)
-    { 
+    {
+        try{ 
         $exam_id = $request->exam_id;
         $class_id = $request->class_id;
         $section_id = $request->section_id;
@@ -420,9 +446,13 @@ class ExamreportController extends BaseController
            
             
         return $this->successResponse($getmark, 'Get  Paper Marks Lists');
+        } catch(Exception $error) {
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in getpaperoverallmarklist1');
+        }
     }
     public function getacyeardates(Request $request)
     {
+        try{
         $validator = \Validator::make($request->all(), [
             'branch_id' => 'required'
         ]);
@@ -447,9 +477,13 @@ class ExamreportController extends BaseController
             
             return $this->successResponse($data, 'Get Pdf Academic year Report successfully');
         }
+        } catch(Exception $error) {
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in getacyeardates');
+        }
     }
     public function getsem_studentattendance(Request $request)
     {
+        try{
         $validator = \Validator::make($request->all(), [
             'branch_id' => 'required'
         ]);
@@ -573,10 +607,14 @@ class ExamreportController extends BaseController
             
             return $this->successResponse($attendance_list, 'Get Pdf Attendance Report successfully');
         }
+        } catch(Exception $error) {
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in getsem_studentattendance');
+        }
     }
 
     public function exam_studentslist(Request $request)
-    { 
+    {
+        try{ 
         $Connection = $this->createNewConnection($request->branch_id);
 
         $studentdetails = $Connection->table('enrolls as en')
@@ -597,9 +635,13 @@ class ExamreportController extends BaseController
 
             
         return $this->successResponse($studentdetails, 'Student Lists');
+        } catch(Exception $error) {
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in exam_studentslist');
+        }
     }
     public function get_subjectlist(Request $request)
-    { 
+    {
+        try{ 
         $Connection = $this->createNewConnection($request->branch_id);
 
         $subjectdetails = $Connection->table('subject_assigns as sa')
@@ -622,9 +664,13 @@ class ExamreportController extends BaseController
             ->get();
             
         return $this->successResponse($subjectdetails, 'Get Subject Lists');
+        } catch(Exception $error) {
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in get_subjectlist');
+        }
     }
     public function get_mainsubjectlist(Request $request)
-    { 
+    {
+        try{ 
         $Connection = $this->createNewConnection($request->branch_id);
         if($request->mandatory=='1')
             {
@@ -671,9 +717,13 @@ class ExamreportController extends BaseController
                 ->get();
             }
         return $this->successResponse($subjectdetails, 'Get Subject Lists');
+        } catch(Exception $error) {
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in get_mainsubjectlist');
+        }
     }
     public function exam_papermarks(Request $request)
     {
+        try{
        
         $exam_id = $request->exam_id;
         $class_id = $request->class_id;
@@ -720,10 +770,14 @@ class ExamreportController extends BaseController
         ])   
         ->get();
         return $this->successResponse($getSubjectMarks, 'Get EC Mark Detatils');
+        } catch(Exception $error) {
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in exam_papermarks');
+        }
     }
     
     public function getsubjecpapertlist(Request $request)
-    { 
+    {
+        try{ 
         $Connection = $this->createNewConnection($request->branch_id);
         
         $getpapers = $Connection->table('exam_papers as ep')
@@ -779,10 +833,14 @@ class ExamreportController extends BaseController
         }
             
         return $this->successResponse($paper_list, 'Get Subject Paper Lists');
+         } catch(Exception $error) {
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in getsubjecpapertlist');
+        }
     }
 
     public function stuexam_marklist(Request $request)
-    {        
+    {
+        try{        
         $exam_id = $request->exam_id;
         $class_id = $request->class_id;
         $section_id = $request->section_id;
@@ -825,9 +883,13 @@ class ExamreportController extends BaseController
         ->first();      
         
         return $this->successResponse($getSemesterMark, 'Get Mark Details');
+         } catch(Exception $error) {
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in stuexam_marklist');
+        }
     }
     public function stuexam_avgmarklist(Request $request)
-    {        
+    {
+        try{        
         $exam_id = $request->exam_id;
         $class_id = $request->class_id;
         $section_id = $request->section_id;
@@ -870,9 +932,13 @@ class ExamreportController extends BaseController
         ->first();      
         
         return $this->successResponse($getSemesterMark, 'Get Mark Details');
+         } catch(Exception $error) {
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in stuexam_avgmarklist');
+        }
     }
     public function get_overallsubjectlist(Request $request)
-    { 
+    {
+        try{ 
         $Connection = $this->createNewConnection($request->branch_id);
 
         $subjectdetails = $Connection->table('subject_assigns as sa')
@@ -892,9 +958,13 @@ class ExamreportController extends BaseController
             ->get();
             
         return $this->successResponse($subjectdetails, 'Get Subject Lists');
+         } catch(Exception $error) {
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in get_overallsubjectlist');
+        }
     }
     public function get_overallpaperlist(Request $request)
-    { 
+    {
+        try{ 
         $Connection = $this->createNewConnection($request->branch_id);
 
         $getpapers = $Connection->table('exam_papers as ep')
@@ -913,9 +983,13 @@ class ExamreportController extends BaseController
         ->get();
       
         return $this->successResponse($getpapers, 'Get Subject Lists');
+         } catch(Exception $error) {
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in get_overallpaperlist');
+        }
     }
     public function getpaperoverallmarklist(Request $request)
-    { 
+    {
+        try{ 
         $Connection = $this->createNewConnection($request->branch_id);
         
         $getsemester = $Connection->table('semester')->where('academic_session_id',$request->academic_session_id)->orderBy('start_date', 'asc')->get();
@@ -953,10 +1027,14 @@ class ExamreportController extends BaseController
             }
            
             
-        return $this->successResponse($getmark, 'Get  Paper Marks Lists');
+            return $this->successResponse($getmark, 'Get  Paper Marks Lists');
+        } catch(Exception $error) {
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in getpaperoverallmarklist');
+        }
     }
     public function studentclasssection(Request $request)
     {
+        try{
         $validator = \Validator::make($request->all(), [
             'branch_id' => 'required'
         ]);
@@ -1049,9 +1127,13 @@ class ExamreportController extends BaseController
             }
             return $this->successResponse($result, 'Get class Section Fetched successfully');
         }
+        } catch(Exception $error) {
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in studentclasssection');
+        }
     }
     public function getpdf_report(Request $request)
     {
+        try{
         $validator = \Validator::make($request->all(), [
             'branch_id' => 'required'
         ]);
@@ -1066,6 +1148,9 @@ class ExamreportController extends BaseController
             
             
             return $this->successResponse($pdflist, 'Get Pdf Report successfully');
+        }
+        } catch(Exception $error) {
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in getpdf_report');
         }
     }  
 }
