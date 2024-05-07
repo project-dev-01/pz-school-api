@@ -448,6 +448,36 @@ class ApiControllerThree extends BaseController
             return $this->commonHelper->generalReturn('403', 'error', $error, 'Error in  bulletinCronJob');
         }
     }
+    public function bulletinCronJobTestMail(Request $request)
+    {
+        try {
+            if ($request->secret_key !== 'S6rSMVixPeupH51AO5mVFjkQJ88bnjOO') {
+                return response()->json(['error' => 'Unauthorized.'], 401);
+            }
+            $validator = \Validator::make($request->all(), [
+                'branch_id' => 'required',
+            ]);
+            if (!$validator->passes()) {
+                return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
+            } else {
+
+                $currentDateTime = now();
+                // create new connection
+                $conn = $this->createNewConnection($request->branch_id);
+
+                //dd($assignerID);
+                $user = User::where('email', "karthik@aibots.my")
+                ->get();
+
+                Notification::send($user, new StudentEmail($request->branch_id));
+
+                return $this->successResponse([], 'Notifications sent successfully.');
+            }
+        } catch (Exception $error) {
+            return $this->commonHelper->generalReturn('403', 'error', $error, 'Error in  bulletinCronJob');
+        }
+    }
+    
     public function usernameBuletin(Request $request)
     {
         try {

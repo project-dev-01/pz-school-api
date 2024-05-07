@@ -18249,7 +18249,7 @@ try{
                 ];
                 $sentNotificationToParent = 0;
             } else {
-                if (isset($nursing_leave_type)) {
+                if (isset($nursing_teacher_status)) {
                     $data = [
                         'nursing_leave_type' => $nursing_leave_type,
                         'nursing_reason_id' => $nursing_reason_id,

@@ -42,7 +42,7 @@
                             <br>
                             <p>ログインページのURL: <u><a href="https://jskl.suzen.school/parent/login">https://jskl.suzen.school/parent/login</a></u></p>
                             <p>ログインID: このメールの送信先アドレス（ご連絡用メールアドレス）をお使いください。</p>
-                            <p>パスワード：初期パスワードは、ログインID（メールアドレスはすべて小文字）の後に、”J24“を加えてください。</p>
+                            <p>パスワード：初期パスワードは、ログインID（メールアドレス）の後に、”J24“を加えてください。</p>
                             <p>※例えばログインIDが {{ $loginId }} の場合、パスワードは {{ $password }} となります。</p>
                             <br>
                             <p>＜お願い事項＞</p>
@@ -50,8 +50,8 @@
                             <p>・初回ログイン後、保護者およびお子様の情報がすべて正しいか必ず確認をお願いします。空欄または変更がある場合はご入力の上、Suzenにて申請をお願いいたします。特に住所や電話番号などが古い情報のままになっていないかどうかを、ご確認ください。</p>
                             <p>・パスワードや登録情報の変更手順につきまして、ログイン後サイト内のFAQページをご参照ください。</p>
                             <p>・本システムの利用規約に関しまして、こちらの<a href="https://api.suzen.school/common-asset/downloads/SUZEN%20PRIVACY%20POLICY_JP.pdf">リンク</a>にてご確認ください。本システムへログインすることで、本規約を同意することと見なします。</p>
+                            <p>・メールアドレスの変更を希望される方は、<a href="https://docs.google.com/forms/d/e/1FAIpQLScC2-M7HdlocaRcS5G8Ko54vJKown3GJYJDynuFrhmUPeTf4w/viewform">こちらのForms</a>から申請をお願いいたします。</p>
                             <br>
-                            <p>操作方法についてご不明点がある場合や、不具合等が発生しましたら、<a href="https://forms.office.com/pages/responsepage.aspx?id=eDKt2dw8dk2GWMWe1cEzNNxjQyefn0pNkwmoBRANxpxUM1JDWjRQWVhCSENZMVdQQUFDU0pQTjZNSi4u">こちらのフォーム</a>からお問い合わせいただくようにお願いいたします。</p>
                             <p>その他ご不明な事項がございましたら、クアラルンプール日本人学校まで直接お問い合わせください。</p>
                             <p>小中学部お問い合わせ: <u><a href="mailto:jskl2@jskl.edu.my">jskl2@jskl.edu.my</a></u></p>
                             <p>幼稚部お問い合わせ: <u><a href="mailto:kindergarten2@jskl.edu.my">kindergarten2@jskl.edu.my</a></u></p>

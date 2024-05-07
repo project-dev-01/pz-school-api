@@ -37,7 +37,7 @@ class TeacherEmail extends Notification implements ShouldQueue
      */
     public function toMail($notifiable)
     {
-        Log::info('notifiable email for teacher ' . $notifiable->email);
+        Log::channel('queue-worker')->info('notifiable email for teacher ' . $notifiable->email);
         return (new MailMessage)
         ->subject('New Bulletin Board Notification')
         ->line('Hello!')

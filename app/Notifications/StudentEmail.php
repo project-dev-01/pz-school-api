@@ -36,7 +36,7 @@ class StudentEmail extends Notification implements ShouldQueue
      */
     public function toMail($notifiable)
     {
-        Log::info('notifiable email for student ' . $notifiable->email);
+        Log::channel('queue-worker')->info('notifiable email for student ' . $notifiable->email);
         return (new MailMessage)
         ->subject('New Bulletin Board Notification')
         ->line('Hello!')

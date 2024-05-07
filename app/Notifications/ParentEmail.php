@@ -39,7 +39,7 @@ class ParentEmail extends Notification implements ShouldQueue
     public function toMail($notifiable)
     {
       //  $url = url('/bulletin-board'); // Adjust the URL accordingly
-      Log::info('notifiable email for parent ' . $notifiable->email);
+      Log::channel('queue-worker')->info('notifiable email for parent ' . $notifiable->email);
 
         return (new MailMessage)
             ->subject('New Bulletin Board Notification')
