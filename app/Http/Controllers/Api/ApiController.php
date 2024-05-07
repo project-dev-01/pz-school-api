@@ -14422,7 +14422,7 @@ try{
             // Check if the data is cached
             if (Cache::has($cacheKey) && !($department_id || $class_id || $session_id || $section_id || $status)) {
                 // If cached and no filters are applied, return cached data
-                \Log::info('cacheKey ' . json_encode($cacheKey));
+                //\Log::info('cacheKey ' . json_encode($cacheKey));
                 $students = Cache::get($cacheKey);
             } else {
                 // create new connection
@@ -14507,7 +14507,7 @@ try{
             // Check if the data is cached
             if (Cache::has($cacheKey) && !($department_id || $class_id || $session_id || $section_id || $status)) {
                 // If cached and no filters are applied, return cached data
-                \Log::info('cacheKey ' . json_encode($cacheKey));
+                //\Log::info('cacheKey ' . json_encode($cacheKey));
                 $students = Cache::get($cacheKey);
             } else {
                 // create new connection
@@ -14597,7 +14597,7 @@ try{
     //         // Check if the data is cached
     //         if (Cache::has($cacheKey) && !($department_id || $class_id || $session_id || $section_id || $status)) {
     //             // If cached and no filters are applied, return cached data
-    //             \Log::info('cacheKey ' . json_encode($cacheKey));
+    //             //\Log::info('cacheKey ' . json_encode($cacheKey));
     //             $students = Cache::get($cacheKey);
     //         } else {
     //             // create new connection
@@ -15151,7 +15151,7 @@ try{
     // delete Student
     public function deleteStudent(Request $request)
     {
-        \Log::info('Delete student request: ' . json_encode($request->all()));
+        //\Log::info('Delete student request: ' . json_encode($request->all()));
         $validator = \Validator::make($request->all(), [
             'branch_id' => 'required',
             'id' => 'required',
@@ -15196,7 +15196,7 @@ try{
             $cache_students = config('constants.cache_students');
             $this->clearCache($cache_students, $branch_id);
     
-            \Log::info("Deleted student with ID $id. User records deleted: $deletedUserCount, Enrollment records deleted: $enrollDeleteCount, Student records deleted: $studentDeleteCount");
+            //\Log::info("Deleted student with ID $id. User records deleted: $deletedUserCount, Enrollment records deleted: $enrollDeleteCount, Student records deleted: $studentDeleteCount");
     
             return $this->successResponse([], 'Student has been deleted successfully');
         } catch (\Exception $e) {
@@ -15645,6 +15645,7 @@ try{
                             })
                             ->leftJoin('parent as p', 'pi.parent_id', '=', 'p.id')
                             ->where('s.guardian_id', $parent_id)
+                            ->groupBy('pi.id')
                             ->get()
                             ->toArray();
 
@@ -15871,7 +15872,7 @@ try{
                             $realtion = $conn->table('students')->select('relation')->where('guardian_id', '=', $parent_id)->first();
                             
                             ${$key} = [];
-                            ${$key}['old_value'] =  $realtion->$key;
+                            ${$key}['old_value'] =   ($realtion!==null)?$realtion->$key:'';
                             ${$key}['new_value'] =  $suc;
                         }else {
                             ${$key} = [];
@@ -17531,7 +17532,7 @@ try{
             $cache_time = config('constants.cache_time');
             $cache_religions = config('constants.cache_religions');
             $cacheKey = $cache_religions . $request->branch_id;
-           
+
             // Check if the data is cached
             if (Cache::has($cacheKey)) {
                 // If cached, return cached data
@@ -17824,9 +17825,15 @@ try{
                     'std.gender'
                 )
                 ->join('enrolls as en', 'std.id', '=', 'en.student_id')
-                ->where('std.father_id', '=', $parent_id)
-                ->orWhere('std.mother_id', '=', $parent_id)
-                ->orWhere('std.guardian_id', '=', $parent_id)
+                // ->where('std.father_id', '=', $parent_id)
+                // ->orWhere('std.mother_id', '=', $parent_id)
+                // ->orWhere('std.guardian_id', '=', $parent_id)\
+                ->where(function($query) use ($parent_id) {
+                    $query->where('std.father_id', $parent_id)
+                          ->orWhere('std.mother_id', $parent_id)
+                          ->orWhere('std.guardian_id', $parent_id);
+                })
+                ->where('en.active_status', '=', '0')
                 ->groupBy("std.id")
                 ->get();
             return $this->successResponse($studentDetails, 'Student details fetch successfully');
@@ -17875,7 +17882,8 @@ try{
                     ['lev.to_leave', '>=', $to_leave]
                 ])->count();
             if ($fromLeaveCnt > 0 || $toLeaveCnt > 0) {
-                return $this->send422Error('You have already applied for leave between these dates', ['error' => 'You have already applied for leave between these dates']);
+                return $this->validationFailureResponse([], 'You have already applied for leave between these dates');
+                // return $this->send422Error('You have already applied for leave between these dates', ['error' => 'You have already applied for leave between these dates']);
             } else {
                 // insert data
                 if (isset($request->file)) {
@@ -18147,7 +18155,8 @@ try{
     {
         $validator = \Validator::make($request->all(), [
             'branch_id' => 'required',
-            'parent_id' => 'required'
+            // 'parent_id' => 'required',
+            'student_id' => 'required'
 
         ]);
         if (!$validator->passes()) {
@@ -18176,12 +18185,19 @@ try{
                     'lev.teacher_remarks',
                     'lev.nursing_teacher_remarks'
                 )
+                ->join('enrolls as en', function ($join) {
+                    $join->on('lev.class_id', '=', 'en.class_id')
+                         ->on('lev.section_id', '=', 'en.section_id')
+                         ->on('lev.student_id', '=', 'en.student_id');
+                })
                 //->select('lev.class_id','lev.section_id','student_id','std.first_name','std.last_name','lev.from_leave','lev.to_leave','lev.reason','lev.status')
                 ->leftJoin('students as std', 'lev.student_id', '=', 'std.id')
                 ->leftJoin('student_leave_types as slt', 'lev.change_lev_type', '=', 'slt.id')
                 ->leftJoin('absent_reasons as as', 'lev.reasonId', '=', 'as.id')
                 ->where([
-                    ['lev.parent_id', '=', $request->parent_id]
+                    // ['lev.parent_id', '=', $request->parent_id],
+                    ['lev.student_id', '=', $request->student_id],
+                    ['en.active_status', '=', '0'],
                 ])
                 ->orderby('lev.to_leave', 'desc')
                 ->get();
@@ -18364,7 +18380,8 @@ try{
     function getAllStudentLeaves(Request $request)
     {
         $validator = \Validator::make($request->all(), [
-            'branch_id' => 'required'
+            'branch_id' => 'required',
+            'academic_session_id' => 'required',
         ]);
         if (!$validator->passes()) {
             return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
@@ -18414,7 +18431,12 @@ try{
                     'sd.name as department_name'
                 )
                 ->join('students as std', 'lev.student_id', '=', 'std.id')
-                ->join('enrolls as en', 'lev.student_id', '=', 'en.student_id')
+                // ->join('enrolls as en', 'lev.student_id', '=', 'en.student_id')
+                ->join('enrolls as en', function ($join) {
+                    $join->on('lev.class_id', '=', 'en.class_id')
+                         ->on('lev.section_id', '=', 'en.section_id')
+                         ->on('lev.student_id', '=', 'en.student_id');
+                })
                 ->join('classes as cl', 'en.class_id', '=', 'cl.id')
                 ->join('sections as sc', 'en.section_id', '=', 'sc.id')
                 ->leftJoin('student_leave_types as slt', 'lev.change_lev_type', '=', 'slt.id')
@@ -18456,9 +18478,25 @@ try{
                         });
                     });
                 })
+                // ->when($date, function ($query, $date) {
+                //     return $query->where(function ($query) use ($date) {
+                //         $query->where(function ($query) use ($date) {
+                //             $query->whereBetween('lev.from_leave', [$date['from'], $date['to']])
+                //                   ->orWhereBetween('lev.to_leave', [$date['from'], $date['to']]);
+                //         });
+                //     });
+                // })   
+                // ->when($date, function ($query, $date) {
+                //     return $query->where(function ($query) use ($date) {
+                //         $query->where('lev.from_leave', '>=', $date['from'])
+                //               ->where('lev.to_leave', '<=', $date['to']);
+                //     });
+                // })             
                 ->where('en.active_status', '=', '0')
+                ->where('en.academic_session_id', '=', $request->academic_session_id)
                 ->orderBy('lev.from_leave', 'desc')
                 ->get();
+                // dd($studentDetails);
             return $this->successResponse($studentDetails, 'Student details fetch successfully');
         }
     }
@@ -21903,25 +21941,34 @@ try{
     public function unreadNotifications(Request $request)
     {
 
-        $id = auth()->user()->id;
-        // $notifications = auth()->user()->unreadnotifications()
-        $res = [
-            'unread' => auth()->user()->unreadnotifications,
-            'unread_count' => auth()->user()->unreadnotifications->count(),
-            'read' => auth()->user()->notifications()
-                ->whereNotNull('read_at')
-                ->orderBy('read_at', 'asc')
-                ->orderBy('created_at', 'desc')
-                ->where('notifiable_id', $id)
-                ->get()
-        ];
+        try
+        {
+            $id = auth()->user()->id;
+            // $notifications = auth()->user()->unreadnotifications()
+            if($id!==null)
+            {
+                $res = [
+                    'unread' => auth()->user()->unreadnotifications,
+                    'unread_count' => auth()->user()->unreadnotifications->count(),
+                    'read' => auth()->user()->notifications()
+                        ->whereNotNull('read_at')
+                        ->orderBy('read_at', 'asc')
+                        ->orderBy('created_at', 'desc')
+                        ->where('notifiable_id', $id)
+                        ->get()
+                ];
 
-        // $notifications = auth()->user()->notifications()
-        //     ->orderBy('read_at', 'asc')
-        //     ->orderBy('created_at', 'desc')
-        //     ->where('notifiable_id', $id)
-        //     ->get();
-        return $this->successResponse($res, 'get notifications data get successfully');
+                // $notifications = auth()->user()->notifications()
+                //     ->orderBy('read_at', 'asc')
+                //     ->orderBy('created_at', 'desc')
+                //     ->where('notifiable_id', $id)
+                //     ->get();
+                return $this->successResponse($res, 'get notifications data get successfully');
+            }
+        }
+        catch(Exception $error) {
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in unreadNotifications');
+        }
     }
     // markAsRead
     public function markAsRead(Request $request)
@@ -26477,10 +26524,10 @@ try{
                     $q->where('role_id', 6);
                 })->get();
                 // Before sending the notification
-                \Log::info('Sending notification to users: ' . json_encode($user));
+                //\Log::info('Sending notification to users: ' . json_encode($user));
                 Notification::send($user, new StudentEmail($request->branch_id));
                 // After sending the notification
-                \Log::info('Notification sent successfully to users: ' . json_encode($user));
+                //\Log::info('Notification sent successfully to users: ' . json_encode($user));
             }
             if ($target_user_array == [2, 5]) {
                 $class_id =   $request->class_id;
@@ -26519,10 +26566,10 @@ try{
                     $q->where('role_id', 5);
                 })->get();
                 // Before sending the notification
-                \Log::info('Sending notification to users: ' . json_encode($user));
+                //\Log::info('Sending notification to users: ' . json_encode($user));
                 Notification::send($user, new ParentEmail($request->branch_id));
                 // After sending the notification
-                \Log::info('Notification sent successfully to users: ' . json_encode($user));
+                //\Log::info('Notification sent successfully to users: ' . json_encode($user));
             }
             if ($target_user_array == [2, 4]) {
                 $deptId = $request->department_id;
@@ -29330,7 +29377,7 @@ try {
     protected function clearCache($cache_name,$branchId)
     {
         $cacheKey = $cache_name . $branchId;
-        \Log::info('cacheClear ' . json_encode($cacheKey));
+        //\Log::info('cacheClear ' . json_encode($cacheKey));
         Cache::forget($cacheKey);
     }
 }

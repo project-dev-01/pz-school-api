@@ -286,4 +286,14 @@ class BaseController extends Controller
             return $this->commonHelper->generalReturn('403','error',$error,'Error in sendCommonError');
         }
     }
+    public function validationFailureResponse($result, $message)
+    {
+        $response = [
+            'code' => 202,
+            'success' => true,
+            'message' => $message,
+            'data'    => $result,
+        ];
+        return response()->json($response, 202);
+    }
 }

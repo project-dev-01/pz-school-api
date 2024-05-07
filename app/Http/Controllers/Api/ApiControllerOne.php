@@ -34,35 +34,35 @@ class ApiControllerOne extends BaseController
     public function addGradeCategory(Request $request)
     {
         try {
-        $validator = \Validator::make($request->all(), [
-            'name' => 'required',
-            'branch_id' => 'required',
-            'token' => 'required',
-        ]);
+            $validator = \Validator::make($request->all(), [
+                'name' => 'required',
+                'branch_id' => 'required',
+                'token' => 'required',
+            ]);
 
-        if (!$validator->passes()) {
-            return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
-        } else {
-            // create new connection
-            $Connection = $this->createNewConnection($request->branch_id);
-            // check exist name
-            if ($Connection->table('grade_category')->where('name', '=', $request->name)->count() > 0) {
-                return $this->send422Error('Name Already Exist', ['error' => 'Name Already Exist']);
+            if (!$validator->passes()) {
+                return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
             } else {
-                // insert data
-                $query = $Connection->table('grade_category')->insert([
-                    'name' => $request->name,
-                    'created_at' => date("Y-m-d H:i:s")
-                ]);
-                $success = [];
-                if (!$query) {
-                    return $this->send500Error('Something went wrong.', ['error' => 'Something went wrong']);
+                // create new connection
+                $Connection = $this->createNewConnection($request->branch_id);
+                // check exist name
+                if ($Connection->table('grade_category')->where('name', '=', $request->name)->count() > 0) {
+                    return $this->send422Error('Name Already Exist', ['error' => 'Name Already Exist']);
                 } else {
-                    return $this->successResponse($success, 'Grade Category has been successfully saved');
+                    // insert data
+                    $query = $Connection->table('grade_category')->insert([
+                        'name' => $request->name,
+                        'created_at' => date("Y-m-d H:i:s")
+                    ]);
+                    $success = [];
+                    if (!$query) {
+                        return $this->send500Error('Something went wrong.', ['error' => 'Something went wrong']);
+                    } else {
+                        return $this->successResponse($success, 'Grade Category has been successfully saved');
+                    }
                 }
             }
         }
-         }
         catch(Exception $error) {
             return $this->commonHelper->generalReturn('403','error',$error,'Error in addGradeCategory');
         }
@@ -71,21 +71,21 @@ class ApiControllerOne extends BaseController
     public function getGradeCategoryList(Request $request)
     {
         try {
-        $validator = \Validator::make($request->all(), [
-            'branch_id' => 'required',
-            'token' => 'required',
-        ]);
+            $validator = \Validator::make($request->all(), [
+                'branch_id' => 'required',
+                'token' => 'required',
+            ]);
 
-        if (!$validator->passes()) {
-            return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
-        } else {
-            // create new connection
-            $Connection = $this->createNewConnection($request->branch_id);
-            // get data
-            $GradeCategory = $Connection->table('grade_category')->get();
-            return $this->successResponse($GradeCategory, 'Grade Category record fetch successfully');
+            if (!$validator->passes()) {
+                return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
+            } else {
+                // create new connection
+                $Connection = $this->createNewConnection($request->branch_id);
+                // get data
+                $GradeCategory = $Connection->table('grade_category')->get();
+                return $this->successResponse($GradeCategory, 'Grade Category record fetch successfully');
+            }
         }
-         }
         catch(Exception $error) {
             return $this->commonHelper->generalReturn('403','error',$error,'Error in getGradeCategoryList');
         }
@@ -11607,7 +11607,15 @@ try {
             usort($combinedArray, function ($a, $b) {
                 return strtotime($a->start) - strtotime($b->start);
             });
-            return $this->successResponse($combinedArray, 'Today Schedule Events Fetched successfully');
+            if($combinedArray!==null)
+            {
+                return $this->successResponse($combinedArray, 'Today Schedule Events Fetched successfully');
+            }
+            else
+            {
+                return $this->commonHelper->generalReturn('403','error',$error,'Error in getTodaySchedulesTeacher');
+            }
+            
         }
          }
         catch(Exception $error) {

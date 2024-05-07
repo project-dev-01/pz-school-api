@@ -147,7 +147,7 @@ class AuthController extends BaseController
                     $data = [
                         'login_id' => $user->id,
                         'user_id' => $user->user_id,
-                        'role_id' => $request->role_id,
+                        'role_id' => isset($request->role_id)?$request->role_id:null,
                         'branch_id' => $user->branch_id,
                         'ip_address' => \Request::getClientIp(true),
                         'device' => isset($request->user_device) ? $request->user_device : "other",
@@ -469,22 +469,29 @@ class AuthController extends BaseController
             return $this->commonHelper->generalReturn('403', 'error', $error, 'Error logout');
         }
     }
+    
     public function lastlogout(Request $request)
     {
         try {
-           
-                if ($request->userID !== null) {
-                  
-                    $u = Log_history::where('login_id', $request->userID)->where('role_id', $request->role_id)->latest()->first();
-                    $ip[] = $u->id;
-                    $logqry = Log_history::where('id', $u->id)->update(['logout_time' => date("Y-m-d H:i:s")]);
-                if ($logqry) {
-                    return $this->successResponse($ip, 'User last logout added successfully');
+            // Check if userID is not null
+            if ($request->userID !== null) {
+                // Retrieve the latest log history for the given userID and role_id
+                $logHistory = Log_history::where('login_id', $request->userID)
+                    ->where('role_id', $request->role_id)
+                    ->latest()
+                    ->first();
+
+                // If log history exists, update the logout time
+                if ($logHistory) {
+                    $logHistory->update(['logout_time' => date("Y-m-d H:i:s")]);
+                    return $this->successResponse([$logHistory->id], 'User last logout added successfully');
                 } else {
+                    // If log history doesn't exist, return an error response
                     return $this->send500Error('Sorry, user cannot be logged out', ['error' => 'Sorry, user cannot be logged out']);
                 }
             }
         } catch (Exception $error) {
+            // Handle any exceptions
             return $this->commonHelper->generalReturn('403', 'error', $error, 'Error lastlogout');
         }
     }
