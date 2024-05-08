@@ -618,8 +618,9 @@ class ApiControllerThree extends BaseController
                     if (isset($request->file)) {
                         $now = now();
                         $name = strtotime($now);
+                        $originalfilename = $request->fileName;
                         $extension = $request->file_extension;
-                        $fileName = $name . "." . $extension;
+                        $fileName = $originalfilename . "." . $extension;
                         $path = '/public/' . $request->branch_id . '/admin-documents/buletin_files/';
                         $base64 = base64_decode($request->file);
                         File::ensureDirectoryExists(base_path() . $path);
