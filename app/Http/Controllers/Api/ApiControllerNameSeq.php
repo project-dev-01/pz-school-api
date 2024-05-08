@@ -2646,7 +2646,7 @@ class ApiControllerNameSeq extends BaseController
                     ->leftJoin('parent as p', 'p.id', '=', 'b.parent_id')
                     ->leftJoin('students as st', 'st.id', '=', 'b.student_id')
                     ->where("b.status", 1)
-                    ->where('b.publish_end_date', '>', $currentDateTime)
+                    //->where('b.publish_end_date', '>', $currentDateTime)
                     ->groupBy("b.id")
                     ->orderBy('b.id', 'desc')
                     ->get()->toArray();

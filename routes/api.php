@@ -1033,7 +1033,7 @@ Route::group(['middleware' => ['auth:api', 'throttle:limit_per_user', 'logroute'
     Route::post('grade_list_by_department', [ApiControllerOne::class, 'gradeListByDepartment']);
     // buletin_board routes
     Route::post('buletin_board/add', [ApiControllerThree::class, 'addBuletinBoard']);
-    // Route::get('buletin_board/list', [ApiControllerThree::class, 'getBuletinBoardList']);
+   // Route::get('buletin_board/list', [ApiControllerThree::class, 'getBuletinBoardList']);
     Route::get('buletin_board/usernames', [ApiControllerThree::class, 'usernameBuletin']);
     Route::post('buletin_board/delete', [ApiControllerThree::class, 'deleteBuletinBoard']);
     Route::post('buletin_board/buletin_board-details', [ApiControllerThree::class, 'getBuletinBoardDetails']);

@@ -136,8 +136,9 @@ class ApiControllerThree extends BaseController
                 if (isset($request->file)) {
                     $now = now();
                     $name = strtotime($now);
+                    $originalfilename = $request->fileName;
                     $extension = $request->file_extension;
-                    $fileName = $name . "." . $extension;
+                    $fileName = $originalfilename . "." . $extension;
                     $path = '/public/' . $request->branch_id . '/admin-documents/buletin_files/';
                     $base64 = base64_decode($request->file);
                     File::ensureDirectoryExists(base_path() . $path);
@@ -885,7 +886,7 @@ class ApiControllerThree extends BaseController
                     //     $query->where('b.publish_end_date', '>', $currentDateTime)
                     //         ->orWhereNull('b.publish_end_date');
                     // })
-                    // ->where('b.publish_date', '<=', now())
+                    ->where('b.publish_date', '<=', now())
                     ->groupBy("b.id")
                     ->orderBy('b.id', 'desc')
                     ->get()->toArray();
@@ -1017,7 +1018,7 @@ class ApiControllerThree extends BaseController
                     //     $query->where('b.publish_end_date', '>', $currentDateTime)
                     //         ->orWhereNull('b.publish_end_date');
                     // })
-                    // ->where('b.publish_date', '<=', now())
+                    ->where('b.publish_date', '<=', now())
                     ->groupBy("b.id")
                     ->get()->toArray();
 
@@ -1092,7 +1093,7 @@ class ApiControllerThree extends BaseController
                     //     $query->where('b.publish_end_date', '>', $currentDateTime)
                     //         ->orWhereNull('b.publish_end_date');
                     // })
-                    // ->where('b.publish_date', '<=', now())
+                     ->where('b.publish_date', '<=', now())
                     ->groupBy("b.id")
                     ->orderBy('b.id', 'desc')
                     ->get()->toArray();
@@ -1217,7 +1218,7 @@ class ApiControllerThree extends BaseController
                     //     $query->where('b.publish_end_date', '>', $currentDateTime)
                     //         ->orWhereNull('b.publish_end_date');
                     // })
-                    // ->where('b.publish_date', '<=', now())
+                    ->where('b.publish_date', '<=', now())
                     ->groupBy("b.id")
                     ->get()->toArray();
 
@@ -1233,7 +1234,7 @@ class ApiControllerThree extends BaseController
 
         try {
             $validator = \Validator::make($request->all(), [
-                'token' => 'required',
+               // 'token' => 'required',
                 'branch_id' => 'required',
             ]);
 
@@ -1249,8 +1250,8 @@ class ApiControllerThree extends BaseController
                 $staff_id = $request->staff_id;
                 $role_id = $request->role_id;
                 $dep = $conn->table('staffs')->select('department_id')->where('id', $staff_id)->first();
-                $department = $dep->department_id;
-                $departmentArray = explode(",", $department);
+                $departmentArray = $dep->department_id;
+                //$departmentArray = explode(",", $department);
                 $buletinDetails = $conn->table('bulletin_boards as b')
                     ->select("b.id", "b.title", "b.file", "b.discription", "bi.parent_imp", "b.publish_date")
                     ->leftJoin('' . $main_db . '.roles as rol', function ($join) {
@@ -1261,8 +1262,9 @@ class ApiControllerThree extends BaseController
                         $join->where('bi.user_id', '=', $staff_id);
                     })
                     ->leftJoin('staffs as s', 'b.department_id', '=', 's.department_id')
+                   
                     ->where(function ($query) use ($departmentArray, $role_id) {
-                        $query->whereIn('b.department_id', $departmentArray)
+                        $query->whereRaw("FIND_IN_SET('$departmentArray', b.department_id)")
                             ->orWhereNull('b.department_id')
                             ->whereRaw("FIND_IN_SET('$role_id', b.target_user)");
                     })
@@ -1272,7 +1274,7 @@ class ApiControllerThree extends BaseController
                     //     $query->where('b.publish_end_date', '>', $currentDateTime)
                     //         ->orWhereNull('b.publish_end_date');
                     // })
-                    // ->where('b.publish_date', '<=', now())
+                     ->where('b.publish_date', '<=', now())
                     ->groupBy("b.id")
                     ->orderBy('b.id', 'desc')
                     ->get()->toArray();
@@ -1305,8 +1307,8 @@ class ApiControllerThree extends BaseController
                 $staff_id = $request->staff_id;
                 $role_id = $request->role_id;
                 $dep = $conn->table('staffs')->select('department_id')->where('id', $staff_id)->first();
-                $department = $dep->department_id;
-                $departmentArray = explode(",", $department);
+                $departmentArray = $dep->department_id;
+              
                 $buletinDetails = $conn->table('bulletin_boards as b')
                     ->select("b.id", "b.title", "b.file", "b.discription", "bi.parent_imp", "b.publish_date")
                     ->leftJoin('' . $main_db . '.roles as rol', function ($join) {
@@ -1318,7 +1320,7 @@ class ApiControllerThree extends BaseController
                     })
                     ->leftJoin('staffs as s', 'b.department_id', '=', 's.department_id')
                     ->where(function ($query) use ($departmentArray, $role_id) {
-                        $query->whereIn('b.department_id', $departmentArray)
+                        $query->whereRaw("FIND_IN_SET('$departmentArray', b.department_id)")
                             ->orWhereNull('b.department_id')
                             ->whereRaw("FIND_IN_SET('$role_id', b.target_user)");
                     })
@@ -1329,7 +1331,7 @@ class ApiControllerThree extends BaseController
                     //     $query->where('b.publish_end_date', '>', $currentDateTime)
                     //         ->orWhereNull('b.publish_end_date');
                     // })
-                    // ->where('b.publish_date', '<=', now())
+                     ->where('b.publish_date', '<=', now())
                     ->groupBy("b.id")
                     ->orderBy('b.id', 'desc')
                     ->get()->toArray();
