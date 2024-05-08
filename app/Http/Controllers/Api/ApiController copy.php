@@ -91,7 +91,6 @@ class ApiController extends BaseController
             'token' => 'required',
             'name' => 'required'
         ]);
-
         if (!$validator->passes()) {
             return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
         } else {
@@ -2462,7 +2461,6 @@ class ApiController extends BaseController
             'branch_id' => 'required',
             'token' => 'required',
         ]);
-
         if (!$validator->passes()) {
             return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
         } else {
@@ -8821,7 +8819,6 @@ try{
             'user_id' => 'required',
             'branch_id' => 'required'
         ]);
-
         if (!$validator->passes()) {
             return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
         } else {
@@ -10597,7 +10594,6 @@ try{
             'student_id' => 'required',
             'academic_session_id' => 'required',
         ]);
-
         if (!$validator->passes()) {
             return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
         } else {
@@ -10670,7 +10666,6 @@ try{
             'student_id' => 'required',
             'academic_session_id' => 'required',
         ]);
-
         //    return $request;
         if (!$validator->passes()) {
             return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
@@ -12400,9 +12395,6 @@ try{
             'branch_id' => 'required',
             'academic_session_id' => 'required',
         ]);
-
-
-
         if (!$validator->passes()) {
             return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
         } else {
@@ -12502,7 +12494,6 @@ try{
             'academic_session_id' => 'required'
         ]);
         // dd($request);
-
         if (!$validator->passes()) {
             return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
         } else {
@@ -12543,10 +12534,8 @@ try{
             'section_id' => 'required',
             'academic_session_id' => 'required'
         ]);
-
         // return $request;
         // dd($request);
-
         if (!$validator->passes()) {
             return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
         } else {
@@ -13858,7 +13847,6 @@ try{
             'branch_id' => 'required',
             'token' => 'required',
         ]);
-
         if (!$validator->passes()) {
             return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
         } else {
@@ -13951,7 +13939,6 @@ try{
             'branch_id' => 'required',
             'id' => 'required',
         ]);
-
         if (!$validator->passes()) {
             return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
         } else {
@@ -14014,8 +14001,6 @@ try{
             'token' => 'required',
             'route_id' => 'required',
         ]);
-
-
         if (!$validator->passes()) {
             return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
         } else {
@@ -19895,7 +19880,6 @@ try{
             'branch_id' => 'required',
             'token' => 'required'
         ]);
-
         if (!$validator->passes()) {
             return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
         } else {
