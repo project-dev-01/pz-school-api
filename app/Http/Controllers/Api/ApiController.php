@@ -14074,7 +14074,7 @@ try{
             'year' => 'required',
             // 'register_no' => 'required',
            // 'roll_no' => 'required',
-            'admission_date' => 'required',
+            // 'admission_date' => 'required',
             // 'category_id' => 'required',
             'first_name' => 'required',
             'mobile_no' => 'required',
@@ -14330,7 +14330,7 @@ try{
                     'relation' => $request->relation,
                     'register_no' => $registerNumber,
                     // 'roll_no' => $request->roll_no,
-                    'admission_date' => $request->admission_date,
+                    // 'admission_date' => $request->admission_date,
 
                     'enrollment' => isset($request->enrollment) ? $request->enrollment : "",
                     'trail_date' => isset($request->trail_date) ? $request->trail_date : "",
@@ -15710,7 +15710,7 @@ try{
              'year' => 'required',
              'register_no' => 'required',
             //  'roll_no' => 'required',
-             'admission_date' => 'required',
+            //  'admission_date' => 'required',
             // 'category_id' => 'required',
               'first_name' => 'required',
               'mobile_no' => 'required',
@@ -15919,7 +15919,7 @@ try{
                         'email' => $request->guardian_email,
                         "company_name_japan" => $request->guardian_company_name_japan,
                         "company_name_local" => $request->guardian_company_name_local,
-                        "company_phone_number" => $request->guardian_company_phone_number,
+                        "company_phone_number" => isset($request->guardian_company_phone_number) ? Crypt::encryptString($request->guardian_company_phone_number) : "",
                         "employment_status" => $request->guardian_employment_status,
                         'status' => '0', // Assuming you want to update the status as well
                         'updated_at' => now()
@@ -15938,7 +15938,7 @@ try{
                     'register_no' => $request->register_no,
                     'year' => $request->year,
                     // 'roll_no' => $request->roll_no,
-                    'admission_date' => $request->admission_date,
+                    // 'admission_date' => $request->admission_date,
                     'category_id' => $request->category_id,
                     'first_name' => isset($request->first_name) ? $request->first_name : "",
                     'last_name' => isset($request->last_name) ? $request->last_name : "",
@@ -16719,6 +16719,7 @@ try{
                             })
                             ->leftJoin('parent as p', 'pi.parent_id', '=', 'p.id')
                             ->where('s.guardian_id', $parent_id)
+                            ->groupBy('pi.id')
                             ->get()
                             ->toArray();
 
@@ -16972,7 +16973,7 @@ try{
                             $realtion = $conn->table('students')->select('relation')->where('guardian_id', '=', $parent_id)->first();
                             
                             ${$key} = [];
-                            ${$key}['old_value'] =  $realtion->$key;
+                            ${$key}['old_value'] =   ($realtion!==null)?$realtion->$key:'';
                             ${$key}['new_value'] =  $suc;
                         }else {
                             ${$key} = [];
@@ -19068,9 +19069,15 @@ try{
                     'std.gender'
                 )
                 ->join('enrolls as en', 'std.id', '=', 'en.student_id')
-                ->where('std.father_id', '=', $parent_id)
-                ->orWhere('std.mother_id', '=', $parent_id)
-                ->orWhere('std.guardian_id', '=', $parent_id)
+                // ->where('std.father_id', '=', $parent_id)
+                // ->orWhere('std.mother_id', '=', $parent_id)
+                // ->orWhere('std.guardian_id', '=', $parent_id)\
+                ->where(function($query) use ($parent_id) {
+                    $query->where('std.father_id', $parent_id)
+                          ->orWhere('std.mother_id', $parent_id)
+                          ->orWhere('std.guardian_id', $parent_id);
+                })
+                ->where('en.active_status', '=', '0')
                 ->groupBy("std.id")
                 ->get();
             return $this->successResponse($studentDetails, 'Student details fetch successfully');

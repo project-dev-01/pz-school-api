@@ -590,6 +590,7 @@ class AuthController extends BaseController
 
             //Create Password Reset Token
             DB::table('password_resets')->insert([
+                'branch_id' => $request->branch_id,
                 'email' => $request->email,
                 'token' => Str::random(60),
                 'created_at' => Carbon::now()
@@ -601,7 +602,7 @@ class AuthController extends BaseController
             // $user = DB::table('users')->where('email', $request->email)->first();
             $tokenData = DB::table('password_resets')->where('email', $request->email)->orderBy('created_at', 'DESC')->first();
             // return $tokenData->token;
-            if ($this->sendResetEmail($request->email, $request->sent_link, $tokenData->token)) {
+            if ($this->sendResetEmail($request->email, $request->sent_link, $tokenData->token, $request->branch_id)) {
                 return $this->successResponse($user, 'A reset link has been sent to your email address.');
             } else {
                 return $this->send500Error('A Network Error occurred. Please try again.', ['error' => 'A Network Error occurred. Please try again.']);
@@ -611,11 +612,11 @@ class AuthController extends BaseController
         }
     }
 
-    private function sendResetEmail($email, $sent_link, $token)
+    private function sendResetEmail($email, $sent_link, $token, $branch_id)
     {
         try {
             //Retrieve the user from the database
-            $user = DB::table('users')->select('name', 'email')->where('email', $email)->select('name', 'email')->first();
+            $user = DB::table('users')->select('name', 'email')->where('email', $email)->where('branch_id', $branch_id)->select('name', 'email')->first();
             //Generate, the password reset link. The token generated is embedded in the link
             // $link = url('/password/reset') . '/' . $token;
             $link = $sent_link . '/password/reset/' . $token;
@@ -654,16 +655,16 @@ class AuthController extends BaseController
             }
 
             $updatePassword = DB::table('password_resets')
-                ->where(['email' => $request->email, 'token' => $request->token])
+                ->where(['email' => $request->email, 'token' => $request->token, 'branch_id' => $request->branch_id])
                 ->first();
             //  dd($updatePassword);
             if ($updatePassword) {
-                $user = User::where('email', $request->email)
-                    ->update(['password' => bcrypt($request->password)]);
+                $user = User::where(['email'=> $request->email,'branch_id' => $request->branch_id])
+                    ->update(['password' => bcrypt($request->password),'status' => "0",'login_attempt' => '0',]);
 
-                DB::table('password_resets')->where(['email' => $request->email])->delete();
+                DB::table('password_resets')->where(['email' => $request->email, 'branch_id' => $request->branch_id])->delete();
 
-                $user = User::where('email', '=', $request->email)->first();
+                $user = User::where(['email' => $request->email,'branch_id' => $request->branch_id])->first();
                 return $this->successResponse($user, 'Your password has been changed!');
             } else {
                 return $this->send500Error('Invalid token!', ['error' => 'Invalid token!']);
