@@ -19658,7 +19658,8 @@ try{
     {
         try{
         $validator = \Validator::make($request->all(), [
-            'branch_id' => 'required'
+            'branch_id' => 'required',
+            'academic_session_id' => 'required',
         ]);
         if (!$validator->passes()) {
             return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
@@ -19677,9 +19678,9 @@ try{
             if ($request->date) {
                 $date_range = explode(' to ', $request->date);
                 $date['from'] = $date_range[0];
-                $date['to'] = isset($date_range[1]) ? $date_range[1] : $date_range[0];
+                $date['to'] = isset($date_range[1]) ? $date_range[1] : null;
             }
-            // return $status;
+            // dd($date);
             $studentDetails = $conn->table('student_leaves as lev')
                 ->select(
                     'lev.id',
@@ -19708,7 +19709,12 @@ try{
                     'sd.name as department_name'
                 )
                 ->join('students as std', 'lev.student_id', '=', 'std.id')
-                ->join('enrolls as en', 'lev.student_id', '=', 'en.student_id')
+                // ->join('enrolls as en', 'lev.student_id', '=', 'en.student_id')
+                ->join('enrolls as en', function ($join) {
+                    $join->on('lev.class_id', '=', 'en.class_id')
+                            ->on('lev.section_id', '=', 'en.section_id')
+                            ->on('lev.student_id', '=', 'en.student_id');
+                })
                 ->join('classes as cl', 'en.class_id', '=', 'cl.id')
                 ->join('sections as sc', 'en.section_id', '=', 'sc.id')
                 ->leftJoin('student_leave_types as slt', 'lev.change_lev_type', '=', 'slt.id')
@@ -19733,24 +19739,36 @@ try{
                             ->orWhere("std.last_name", "LIKE", "%{$student_name}%");
                     });
                 })
-                // ->when($date, function ($query, $date) {
-                //     return $query->where(function ($query1) use ($date) {
-                //         $query1->whereBetween('lev.from_leave', [$date['from'], $date['to']])
-                //                ->orWhereBetween('lev.to_leave', [$date['from'], $date['to']]);
-                //     });
-                // })
                 ->when($date, function ($query, $date) {
-                    return $query->where(function ($query1) use ($date) {
-                        $query1->where(function ($query2) use ($date) {
-                            $query2->where('lev.from_leave', '>=', $date['from'])
-                                   ->where('lev.from_leave', '<=', $date['to']);
-                        })->orWhere(function ($query3) use ($date) {
-                            $query3->where('lev.to_leave', '>=', $date['from'])
-                                   ->where('lev.to_leave', '<=', $date['to']);
+                    if ($date && isset($date['from'])) {
+                        return $query->where(function ($query1) use ($date) {
+                            if ($date['to'] === null || $date['to'] === '') {
+                                // this one is only filter by one date choose
+                                   $query1->where(function($q) use ($date) {
+                                    $q->where('lev.from_leave', '<=', $date['from'])
+                                      ->where('lev.to_leave', '>=', $date['from']);
+                                    });
+                            } else {
+                                // For date range
+                                $query1->where(function ($query2) use ($date) {
+                                    $query2->where('lev.from_leave', '>=', $date['from'])
+                                        ->where('lev.to_leave', '<=', $date['to']);
+                                })->orWhere(function ($query3) use ($date) {
+                                    $query3->where('lev.from_leave', '<=', $date['from'])
+                                        ->where('lev.to_leave', '>=', $date['to']);
+                                })->orWhere(function ($query4) use ($date) {
+                                    $query4->where('lev.from_leave', '<=', $date['to'])
+                                        ->where('lev.to_leave', '>=', $date['from']);
+                                });
+                            }
                         });
-                    });
+                    } else {
+                        return $query;
+                    }
                 })
+                
                 ->where('en.active_status', '=', '0')
+                ->where('en.academic_session_id', '=', $request->academic_session_id)
                 ->orderBy('lev.from_leave', 'desc')
                 ->get();
             return $this->successResponse($studentDetails, 'Student details fetch successfully');
@@ -23539,30 +23557,34 @@ try{
     // unread Notifications
     public function unreadNotifications(Request $request)
     {
-     try{
-        $id = auth()->user()->id;
-        // $notifications = auth()->user()->unreadnotifications()
-        $res = [
-            'unread' => auth()->user()->unreadnotifications,
-            'unread_count' => auth()->user()->unreadnotifications->count(),
-            'read' => auth()->user()->notifications()
-                ->whereNotNull('read_at')
-                ->orderBy('read_at', 'asc')
-                ->orderBy('created_at', 'desc')
-                ->where('notifiable_id', $id)
-                ->get()
-        ];
+        try
+        {
+            $id = auth()->user()->id;
+            // $notifications = auth()->user()->unreadnotifications()
+            if($id!==null)
+            {
+                $res = [
+                    'unread' => auth()->user()->unreadnotifications,
+                    'unread_count' => auth()->user()->unreadnotifications->count(),
+                    'read' => auth()->user()->notifications()
+                        ->whereNotNull('read_at')
+                        ->orderBy('read_at', 'asc')
+                        ->orderBy('created_at', 'desc')
+                        ->where('notifiable_id', $id)
+                        ->get()
+                ];
 
-        // $notifications = auth()->user()->notifications()
-        //     ->orderBy('read_at', 'asc')
-        //     ->orderBy('created_at', 'desc')
-        //     ->where('notifiable_id', $id)
-        //     ->get();
-        return $this->successResponse($res, 'get notifications data get successfully');
-    }
-    catch(Exception $error) {
-        return $this->commonHelper->generalReturn('403','error',$error,'Error in unreadNotifications');
-    }
+                // $notifications = auth()->user()->notifications()
+                //     ->orderBy('read_at', 'asc')
+                //     ->orderBy('created_at', 'desc')
+                //     ->where('notifiable_id', $id)
+                //     ->get();
+                return $this->successResponse($res, 'get notifications data get successfully');
+            }
+        }
+        catch(Exception $error) {
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in unreadNotifications');
+        }
     }
     // markAsRead
     public function markAsRead(Request $request)
