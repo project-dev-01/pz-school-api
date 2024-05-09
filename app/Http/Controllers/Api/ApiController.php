@@ -14074,7 +14074,7 @@ try{
             'year' => 'required',
             // 'register_no' => 'required',
            // 'roll_no' => 'required',
-            // 'admission_date' => 'required',
+             'admission_date' => 'required',
             // 'category_id' => 'required',
             'first_name' => 'required',
             'mobile_no' => 'required',
@@ -14330,7 +14330,7 @@ try{
                     'relation' => $request->relation,
                     'register_no' => $registerNumber,
                     // 'roll_no' => $request->roll_no,
-                    // 'admission_date' => $request->admission_date,
+                     'admission_date' => $request->admission_date,
 
                     'enrollment' => isset($request->enrollment) ? $request->enrollment : "",
                     'trail_date' => isset($request->trail_date) ? $request->trail_date : "",
@@ -15710,7 +15710,7 @@ try{
              'year' => 'required',
              'register_no' => 'required',
             //  'roll_no' => 'required',
-            //  'admission_date' => 'required',
+              'admission_date' => 'required',
             // 'category_id' => 'required',
               'first_name' => 'required',
               'mobile_no' => 'required',
@@ -15723,10 +15723,7 @@ try{
             'branch_id' => 'required',
            // 'token' => 'required',
         ]);
-    }
-    catch(Exception $error) {
-        return $this->commonHelper->generalReturn('403','error',$error,'Error in updateStudent');
-    }
+   
 
        // return $request;
         $previous['school_name'] = $request->school_name;
@@ -15938,7 +15935,7 @@ try{
                     'register_no' => $request->register_no,
                     'year' => $request->year,
                     // 'roll_no' => $request->roll_no,
-                    // 'admission_date' => $request->admission_date,
+                     'admission_date' => $request->admission_date,
                     'category_id' => $request->category_id,
                     'first_name' => isset($request->first_name) ? $request->first_name : "",
                     'last_name' => isset($request->last_name) ? $request->last_name : "",
@@ -16097,6 +16094,10 @@ try{
                 }
             }
         }
+    }
+    catch(Exception $error) {
+        return $this->commonHelper->generalReturn('403','error',$error,'Error in updateStudent');
+    }
     }
 
     // get StudentDetails details
@@ -26627,6 +26628,7 @@ try{
 
 
             $visa_fileName = $request->visa_old_photo;
+            $studentId="";
             if ($request->visa_photo) {
 
                 $visa_now = now();
@@ -27230,8 +27232,7 @@ try{
                 'phase_1_reason' => $request->phase_1_reason,
                 'phase_2_reason' => $request->phase_2_reason,
                 'register_number' => $registerNumber,
-                
-
+                'student_id' => $studentId,
                 "middle_name" => $request->middle_name,
                 "middle_name_english" => $request->middle_name_english,
                 "middle_name_furigana" => $request->middle_name_furigana,

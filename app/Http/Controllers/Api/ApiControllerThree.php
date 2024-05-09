@@ -2536,12 +2536,14 @@ class ApiControllerThree extends BaseController
                         'sc.name as section_name',
                         'emd.name as dept_name',
                         'stud.gender',
-                        'stud.email'
+                        'stud.email',
+                        'stap.status_after_approval'
                     )
                     ->join('classes as cl', 'en.class_id', '=', 'cl.id')
                     ->join('sections as sc', 'en.section_id', '=', 'sc.id')
                     ->join('students as stud', 'en.student_id', '=', 'stud.id')
                     ->join('emp_department as emd', 'en.department_id', '=', 'emd.id')
+                    ->join('student_applications as stap', 'en.student_id', '=', 'stap.student_id')
                     ->when($class_id, function ($query, $class_id) {
                         return $query->where('en.class_id', $class_id);
                     })
