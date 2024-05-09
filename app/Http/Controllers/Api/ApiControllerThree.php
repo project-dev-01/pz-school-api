@@ -133,24 +133,43 @@ class ApiControllerThree extends BaseController
 
                 // create new connection
                 $conn = $this->createNewConnection($request->branch_id);
-                if (isset($request->file)) {
-                    $now = now();
-                    $name = strtotime($now);
-                    $originalfilename = $request->fileName;
-                    $extension = $request->file_extension;
-                    $fileName = $originalfilename . "." . $extension;
-                    $path = '/public/' . $request->branch_id . '/admin-documents/buletin_files/';
-                    $base64 = base64_decode($request->file);
-                    File::ensureDirectoryExists(base_path() . $path);
-                    $file = base_path() . $path . $fileName;
-                    $picture = file_put_contents($file, $base64);
-                } else {
-                    $fileName = null;
+                $fileDetails = $request->file;
+
+                $fileNames = [];
+                if ($fileDetails) {
+                    foreach ($fileDetails as $key => $value) {
+                        $now = now();
+                        $name = strtotime($now);
+                        $extension = $value['extension'];
+                        $originalfilename = $value['filename'];
+                        $fileName = $originalfilename . "." . $extension;
+                        $path = '/public/' . $request->branch_id . '/admin-documents/buletin_files/';
+                        $base64 = base64_decode($value['base64']);
+                        File::ensureDirectoryExists(base_path() . $path);
+                        $file = base_path() . $path . $fileName;
+                        $upload = file_put_contents($file, $base64);
+                        array_push($fileNames, $fileName);
+                    }
                 }
+                
+                // if (isset($request->file)) {
+                //     $now = now();
+                //     $name = strtotime($now);
+                //     $originalfilename = $request->fileName;
+                //     $extension = $request->file_extension;
+                //     $fileName = $originalfilename . "." . $extension;
+                //     $path = '/public/' . $request->branch_id . '/admin-documents/buletin_files/';
+                //     $base64 = base64_decode($request->file);
+                //     File::ensureDirectoryExists(base_path() . $path);
+                //     $file = base_path() . $path . $fileName;
+                //     $picture = file_put_contents($file, $base64);
+                // } else {
+                //     $fileName = null;
+                // }
                 $query = $conn->table('bulletin_boards')->insertGetId([
                     'title' => $request->title,
                     'discription' => $request->description,
-                    'file' => $fileName,
+                    'file' => implode(",", $fileNames),
                     'target_user' => $request->target_user,
                     'status' => 1,
                     'class_id' => $request->class_id,
@@ -613,32 +632,43 @@ class ApiControllerThree extends BaseController
                 // create new connection
                 $conn = $this->createNewConnection($request->branch_id);
                 if (isset($request->oldfile) && empty($request->file)) {
-                    $fileName = $request->oldfile;
+                    $fileNames = $request->oldfile;
                 } else {
                     if (isset($request->file)) {
-                        $now = now();
-                        $name = strtotime($now);
-                        $originalfilename = $request->fileName;
-                        $extension = $request->file_extension;
-                        $fileName = $originalfilename . "." . $extension;
-                        $path = '/public/' . $request->branch_id . '/admin-documents/buletin_files/';
-                        $base64 = base64_decode($request->file);
-                        File::ensureDirectoryExists(base_path() . $path);
-                        $file = base_path() . $path . $fileName;
-                        $picture = file_put_contents($file, $base64);
+                        $fileDetails = $request->file;
+                        $fileNames = [];
+                        foreach ($fileDetails as $key => $value) {
+                            $now = now();
+                            $name = strtotime($now);
+                            $extension = $value['extension'];
+                            $originalfilename = $value['filename'];
+                            $fileName = $originalfilename . "." . $extension;
+                            $path = '/public/' . $request->branch_id . '/admin-documents/buletin_files/';
+                            $base64 = base64_decode($value['base64']);
+                            File::ensureDirectoryExists(base_path() . $path);
+                            $file = base_path() . $path . $fileName;
+                            $upload = file_put_contents($file, $base64);
+                            array_push($fileNames, $fileName);
+                        }
                     } else {
-                        $fileName = null;
+                        $fileNames = null;
                     }
                 }
                 $query = $conn->table('bulletin_boards')->where('id', $id)->update([
                     'title' => $request->title,
                     'discription' => $request->description,
-                    'file' => $fileName,
+                    'file' => implode(",", $fileNames),
                     'target_user' => $request->target_user,
                     'status' => 1,
                     'publish_date' => $request->publish_date,
                     'publish_end_date' => $request->publish_end_dates,
+                    'class_id' => $request->class_id,
+                    'section_id' => $request->section_id,
+                    'student_id' => $request->student_id,
+                    'parent_id' => $request->parent_id,
+                    'department_id' => $request->department_id,
                     //  'publish' => !empty($request->publish == "on") ? "1" : "0",
+                    'add_dashboard' =>  !empty($request->add_to_dash == "on") ? "1" : "0",
                     'updated_at' => date("Y-m-d H:i:s"),
                     'updated_by' => $request->updated_by,
                 ]);

@@ -2626,7 +2626,7 @@ class ApiControllerNameSeq extends BaseController
                     ->select(
                         "b.*",
                         DB::raw("GROUP_CONCAT(DISTINCT  rol.role_name) as name"),
-                        DB::raw("c.name as grade_name"),
+                        DB::raw("GROUP_CONCAT(DISTINCT c.name) as grade_name"),
                         DB::raw("s.name as section_name"),
                         DB::raw("GROUP_CONCAT(DISTINCT  d.name) as department_name"),
                         DB::raw("CONCAT(p." . ($name_status == 0 ? 'last_name' : 'first_name') . ", ' ', p." . ($name_status == 0 ? 'first_name' : 'last_name') . ") as parent_name"),
@@ -2638,7 +2638,10 @@ class ApiControllerNameSeq extends BaseController
                     ->leftJoin('' . $main_db . '.roles as rol', function ($join) {
                         $join->on(\DB::raw("FIND_IN_SET(rol.id,b.target_user)"), ">", \DB::raw("'0'"));
                     })
-                    ->leftJoin('classes as c', 'c.id', '=', 'b.class_id')
+                    ->leftJoin('classes as c', function ($join) {
+                        $join->on(\DB::raw("FIND_IN_SET(c.id,b.class_id)"), ">", \DB::raw("'0'"));
+                    })
+                    //->leftJoin('classes as c', 'c.id', '=', 'b.class_id')
                     ->leftJoin('sections as s', 's.id', '=', 'b.section_id')
                     ->leftJoin('staff_departments as d', function ($join) {
                         $join->on(\DB::raw("FIND_IN_SET(d.id,b.department_id)"), ">", \DB::raw("'0'"));
