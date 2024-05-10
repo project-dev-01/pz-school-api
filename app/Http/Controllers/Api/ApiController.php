@@ -14074,7 +14074,7 @@ try{
             'year' => 'required',
             // 'register_no' => 'required',
            // 'roll_no' => 'required',
-             'admission_date' => 'required',
+            'admission_date' => 'required',
             // 'category_id' => 'required',
             'first_name' => 'required',
             'mobile_no' => 'required',
@@ -14330,7 +14330,7 @@ try{
                     'relation' => $request->relation,
                     'register_no' => $registerNumber,
                     // 'roll_no' => $request->roll_no,
-                     'admission_date' => $request->admission_date,
+                    'admission_date' => $request->admission_date,
 
                     'enrollment' => isset($request->enrollment) ? $request->enrollment : "",
                     'trail_date' => isset($request->trail_date) ? $request->trail_date : "",
@@ -15710,7 +15710,7 @@ try{
              'year' => 'required',
              'register_no' => 'required',
             //  'roll_no' => 'required',
-              'admission_date' => 'required',
+             'admission_date' => 'required',
             // 'category_id' => 'required',
               'first_name' => 'required',
               'mobile_no' => 'required',
@@ -15916,7 +15916,7 @@ try{
                         'email' => $request->guardian_email,
                         "company_name_japan" => $request->guardian_company_name_japan,
                         "company_name_local" => $request->guardian_company_name_local,
-                        "company_phone_number" => isset($request->guardian_company_phone_number) ? Crypt::encryptString($request->guardian_company_phone_number) : "",
+                        "company_phone_number" => $request->guardian_company_phone_number,
                         "employment_status" => $request->guardian_employment_status,
                         'status' => '0', // Assuming you want to update the status as well
                         'updated_at' => now()
@@ -15935,7 +15935,7 @@ try{
                     'register_no' => $request->register_no,
                     'year' => $request->year,
                     // 'roll_no' => $request->roll_no,
-                     'admission_date' => $request->admission_date,
+                    'admission_date' => $request->admission_date,
                     'category_id' => $request->category_id,
                     'first_name' => isset($request->first_name) ? $request->first_name : "",
                     'last_name' => isset($request->last_name) ? $request->last_name : "",
@@ -19434,7 +19434,8 @@ try{
         try{
         $validator = \Validator::make($request->all(), [
             'branch_id' => 'required',
-            'parent_id' => 'required'
+            // 'parent_id' => 'required',
+            'student_id' => 'required'
 
         ]);
         if (!$validator->passes()) {
@@ -19463,12 +19464,19 @@ try{
                     'lev.teacher_remarks',
                     'lev.nursing_teacher_remarks'
                 )
+                ->join('enrolls as en', function ($join) {
+                    $join->on('lev.class_id', '=', 'en.class_id')
+                         ->on('lev.section_id', '=', 'en.section_id')
+                         ->on('lev.student_id', '=', 'en.student_id');
+                })
                 //->select('lev.class_id','lev.section_id','student_id','std.first_name','std.last_name','lev.from_leave','lev.to_leave','lev.reason','lev.status')
                 ->leftJoin('students as std', 'lev.student_id', '=', 'std.id')
                 ->leftJoin('student_leave_types as slt', 'lev.change_lev_type', '=', 'slt.id')
                 ->leftJoin('absent_reasons as as', 'lev.reasonId', '=', 'as.id')
                 ->where([
-                    ['lev.parent_id', '=', $request->parent_id]
+                    // ['lev.parent_id', '=', $request->parent_id],
+                    ['lev.student_id', '=', $request->student_id],
+                    ['en.active_status', '=', '0'],
                 ])
                 ->orderby('lev.to_leave', 'desc')
                 ->get();
@@ -19525,7 +19533,7 @@ try{
                 ];
                 $sentNotificationToParent = 0;
             } else {
-                if (isset($nursing_leave_type)) {
+                if (isset($nursing_teacher_status)) {
                     $data = [
                         'nursing_leave_type' => $nursing_leave_type,
                         'nursing_reason_id' => $nursing_reason_id,
@@ -19601,8 +19609,8 @@ try{
                     'p.email'
                 )
                 ->join('students as std', 'lev.student_id', '=', 'std.id')
-                ->join('parent as p', 'lev.student_id', '=', 'p.id')
-                ->leftJoin('absent_reasons as as', 'lev.reasonId', '=', 'as.id')
+                ->join('parent as p', 'lev.parent_id', '=', 'p.id')
+                ->join('absent_reasons as as', 'lev.reasonId', '=', 'as.id')
                 ->where('lev.id', $student_leave_tbl_id)
                 ->first();
             // dd($studentDetails);
