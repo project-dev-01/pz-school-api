@@ -13,7 +13,7 @@ use App\Http\Controllers\Api\TwoFactorAuth;
 use App\Http\Controllers\Api\MenuAccessController;
 use App\Http\Controllers\Api\ExamreportController;
 use Illuminate\Support\Facades\Artisan;
-
+use App\Http\Controllers\Api\V1\GradeController;
 use App\Http\Controllers\Api\ApiControllerNameSeq;
 
 /*school_roles
@@ -103,12 +103,12 @@ Route::group(['middleware' => ['auth:api', 'throttle:limit_per_user', 'logroute'
     Route::post('branch/delete', [ApiController::class, 'deleteBranch']);
 
     // Class routes
-    Route::post('classes/add', [ApiController::class, 'addClass']);
-    Route::get('classes/list', [ApiController::class, 'getClassList']);
-    Route::post('classes/class-details', [ApiController::class, 'getClassDetails']);
-    Route::post('classes/update', [ApiController::class, 'updateClassDetails']);
-    Route::post('classes/delete', [ApiController::class, 'deleteClass']);
-    Route::post('classes/list_by_department', [ApiControllerThree::class, 'getClassListByDept']);
+    Route::post('classes/add', [GradeController::class, 'addClass']);
+    Route::get('classes/list', [GradeController::class, 'getClassList']);
+    Route::post('classes/class-details', [GradeController::class, 'getClassDetails']);
+    Route::post('classes/update', [GradeController::class, 'updateClassDetails']);
+    Route::post('classes/delete', [GradeController::class, 'deleteClass']);
+    Route::post('classes/list_by_department', [GradeController::class, 'getClassListByDept']);
 
     Route::post('teacher/class_list', [ApiController::class, 'teacherClassList']);
 
@@ -1181,6 +1181,7 @@ Route::group(['middleware' => ['auth:api', 'throttle:limit_per_user', 'logroute'
     Route::post('clear-api-cache-branch', [ApiControllerThree::class, 'clearApiCacheBranch']);
     Route::post('email-password-encrypt', [ApiControllerThree::class, 'emailPasswordEncrypt']);
     Route::post('teacher/student/list', [ApiControllerThree::class, 'getTeacherStudentList']);
+    Route::post('std_leave_update', [ApiControllerNameSeq::class, 'student_leaveupdate']);
 
 
     //new api on name sequence condition
@@ -1198,27 +1199,26 @@ Route::group(['middleware' => ['auth:api', 'throttle:limit_per_user', 'logroute'
     // Route::get('teacher_assign/list', [ApiControllerNameSeq::class, 'getTeacherListSubject']);
     // Route::get('parent/name', [ApiControllerNameSeq::class, 'getParentName']);
 
-    Route::get('get_all_teacher_list', [ApiControllerNameSeq::class, 'getAllTeacherList']);
-    Route::get('get_students_parentdashboard', [ApiControllerNameSeq::class, 'get_studentsparentdashboard']);
-    Route::post('std_leave_apply', [ApiControllerNameSeq::class, 'student_leaveapply']);
-    Route::post('std_leave_update', [ApiControllerNameSeq::class, 'student_leaveupdate']);
-    Route::get('get_student_leaves', [ApiControllerNameSeq::class, 'get_studentleaves']);
-    Route::post('studentleave_list', [ApiControllerNameSeq::class, 'get_particular_studentleave_list']);
-    Route::post('get_all_student_leaves', [ApiControllerNameSeq::class, 'getAllStudentLeaves']);
-    Route::get('staff_leave_assign/list', [ApiControllerNameSeq::class, 'getStaffLeaveAssignList']);
-    
-    Route::post('staff_leave_assign/staff_leave_assign-details', [ApiControllerNameSeq::class, 'getStaffLeaveAssignDetails']);
-    Route::get('get_all_staff_details', [ApiControllerNameSeq::class, 'getAllStaffDetails']);
-    Route::post('group/group-details', [ApiControllerNameSeq::class, 'getGroupDetails']);
-    Route::get('student/name', [ApiControllerNameSeq::class, 'getStudentName']);
-    Route::get('staff/name', [ApiControllerNameSeq::class, 'getStaffName']);
-    Route::get('hostel_group/list', [ApiControllerNameSeq::class, 'getHostelGroupList']);
-    Route::get('teacher_count', [ApiControllerNameSeq::class, 'teacherCount']);
-    Route::get('application/list', [ApiControllerNameSeq::class, 'getApplicationList']);
-   
-    Route::get('buletin_board/list', [ApiControllerNameSeq::class, 'getBuletinBoardList']);
-    Route::post('student/update_info/view', [ApiControllerNameSeq::class, 'getStudentUpdateInfoDetails']);
-    Route::post('termination/termination-details', [ApiControllerNameSeq::class, 'getTerminationDetails']);
-    Route::get('termination/list', [ApiControllerNameSeq::class, 'getTerminationList']);
+    // Route::get('get_all_teacher_list', [ApiControllerNameSeq::class, 'getAllTeacherList']);
+    // Route::get('get_students_parentdashboard', [ApiControllerNameSeq::class, 'get_studentsparentdashboard']);
+    // Route::post('std_leave_apply', [ApiControllerNameSeq::class, 'student_leaveapply']);
+    // Route::get('get_student_leaves', [ApiControllerNameSeq::class, 'get_studentleaves']);
+    // Route::post('studentleave_list', [ApiControllerNameSeq::class, 'get_particular_studentleave_list']);
+    // Route::post('get_all_student_leaves', [ApiControllerNameSeq::class, 'getAllStudentLeaves']);
+    // Route::get('staff_leave_assign/list', [ApiControllerNameSeq::class, 'getStaffLeaveAssignList']);
+
+    // Route::post('staff_leave_assign/staff_leave_assign-details', [ApiControllerNameSeq::class, 'getStaffLeaveAssignDetails']);
+    // Route::get('get_all_staff_details', [ApiControllerNameSeq::class, 'getAllStaffDetails']);
+    // Route::post('group/group-details', [ApiControllerNameSeq::class, 'getGroupDetails']);
+    // Route::get('student/name', [ApiControllerNameSeq::class, 'getStudentName']);
+    // Route::get('staff/name', [ApiControllerNameSeq::class, 'getStaffName']);
+    // Route::get('hostel_group/list', [ApiControllerNameSeq::class, 'getHostelGroupList']);
+    // Route::get('teacher_count', [ApiControllerNameSeq::class, 'teacherCount']);
+    // Route::get('application/list', [ApiControllerNameSeq::class, 'getApplicationList']);
+
+    // Route::get('buletin_board/list', [ApiControllerNameSeq::class, 'getBuletinBoardList']);
+    // Route::post('student/update_info/view', [ApiControllerNameSeq::class, 'getStudentUpdateInfoDetails']);
+    // Route::post('termination/termination-details', [ApiControllerNameSeq::class, 'getTerminationDetails']);
+    // Route::get('termination/list', [ApiControllerNameSeq::class, 'getTerminationList']);
 
 });
