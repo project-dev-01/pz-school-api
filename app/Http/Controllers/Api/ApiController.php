@@ -18150,6 +18150,85 @@ try{
             return $this->successResponse($reasons, 'Reasons record fetch successfully');
         }
     }
+
+    //Edit std leave form
+    public function studentleaveEdit(Request $request)
+    {
+        try {
+            $validator = \Validator::make($request->all(), [
+                'branch_id' => 'required',
+                'id' => 'required'
+            ]);
+            if (!$validator->passes()) {
+                return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
+            } else {
+                // get data
+                $cache_time = config('constants.cache_time');
+                $cache_leaveTypeWiseAllReason = config('constants.cache_leaveTypeWiseAllReason');
+                $cacheKey = $cache_leaveTypeWiseAllReason . $request->branch_id;
+              
+                    // create new connection
+                    $conn = $this->createNewConnection($request->branch_id);
+                    $studentDetails = $conn->table('student_leaves as lev')
+                                        ->select(
+                                            'lev.id',
+                                            'lev.class_id',
+                                            'lev.section_id',
+                                            'lev.student_id',
+                                            DB::raw('DATE_FORMAT(lev.from_leave, "%d-%m-%Y") as from_leave'),
+                                            DB::raw('DATE_FORMAT(lev.to_leave, "%d-%m-%Y") as to_leave'),
+                                            DB::raw('DATE_FORMAT(lev.created_at, "%d-%m-%Y") as created_at'),
+                                            'lev.total_leave',
+                                            'lev.change_lev_type',
+                                            'lev.reason',
+                                            'lev.document',
+                                            'lev.status',
+                                            'lev.remarks',
+                                            'lev.teacher_remarks',
+                                            'lev.reasonId',                                            
+                                        )
+                                        ->where('id', $request->id)
+                                        ->first();
+                    $jsonResult = json_encode($studentDetails);
+               
+                return $this->successResponse($studentDetails, 'student leave fetch successfully');
+            }
+        } catch (Exception $error) {
+            return $this->commonHelper->generalReturn('403', 'error', $error, 'Error in leaveTypeWiseAllReason');
+        }
+    }
+
+    //Delete student leav    
+    public function studentleaveDelete(Request $request)
+    {
+    try{
+        $id = $request->id;        
+        $validator = \Validator::make($request->all(), [
+            'token' => 'required',
+            'branch_id' => 'required',
+            'id' => 'required',
+        ]);
+
+        if (!$validator->passes()) {
+            return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
+        } else {
+            // create new connection
+            $conn = $this->createNewConnection($request->branch_id);
+            // get data
+            $query = $conn->table('student_leaves')->where('id', $id)->delete();
+            $success = [];
+            if ($query) {
+                return $this->successResponse($success, 'Leave have been deleted successfully');
+            } else {
+                return $this->send500Error('Something went wrong.', ['error' => 'Something went wrong']);
+            }
+        }
+         }
+        catch(Exception $error) {
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in studentleaveDelete');
+        }
+    }
+
     //get particular student leave 
     function get_particular_studentleave_list(Request $request)
     {

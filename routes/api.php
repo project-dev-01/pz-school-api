@@ -546,6 +546,9 @@ Route::group(['middleware' => ['auth:api', 'throttle:limit_per_user', 'logroute'
     // Route::get('get_students_parentdashboard', [ApiController::class, 'get_studentsparentdashboard']);
     // Route::post('std_leave_apply', [ApiController::class, 'student_leaveapply']);
     // Route::get('get_student_leaves', [ApiController::class, 'get_studentleaves']);
+
+    Route::get('studentleave/edit', [ApiController::class, 'studentleaveEdit']);
+    Route::post('studentleave/delete', [ApiController::class, 'studentleaveDelete']);
     Route::get('get_leave_reasons', [ApiController::class, 'get_leavereasons']);
     Route::get('leave_type_wise_get_all_reason', [ApiControllerThree::class, 'leaveTypeWiseAllReason']);
     // Route::post('studentleave_list', [ApiController::class, 'get_particular_studentleave_list']);
@@ -1197,6 +1200,7 @@ Route::group(['middleware' => ['auth:api', 'throttle:limit_per_user', 'logroute'
     Route::get('get_all_teacher_list', [ApiControllerNameSeq::class, 'getAllTeacherList']);
     Route::get('get_students_parentdashboard', [ApiControllerNameSeq::class, 'get_studentsparentdashboard']);
     Route::post('std_leave_apply', [ApiControllerNameSeq::class, 'student_leaveapply']);
+    Route::post('std_leave_update', [ApiControllerNameSeq::class, 'student_leaveupdate']);
     Route::get('get_student_leaves', [ApiControllerNameSeq::class, 'get_studentleaves']);
     Route::post('studentleave_list', [ApiControllerNameSeq::class, 'get_particular_studentleave_list']);
     Route::post('get_all_student_leaves', [ApiControllerNameSeq::class, 'getAllStudentLeaves']);
