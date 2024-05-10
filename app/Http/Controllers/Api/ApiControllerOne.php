@@ -12230,11 +12230,12 @@ class ApiControllerOne extends BaseController
 
                 ->where("b.target_user", '2,4')
                 ->where(function ($query) use ($department) {
-                    $query->where('b.department_id', $department)
+                    $query->whereRaw("FIND_IN_SET('$department', b.department_id)")
                         ->orWhereNull('b.department_id');
                 })
                 ->where("b.status", 1)
                 ->where("b.add_dashboard", 1)
+                ->where('b.publish_date', '<=', now())
                 //->where('b.publish_end_date', '>', $currentDateTime)
                 ->orderBy('b.created_at', 'desc') // Assuming 'created_at' is the creation date of the bulletin
                 ->take(10) // Limit the results to 10 records

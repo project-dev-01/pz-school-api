@@ -133,23 +133,43 @@ class ApiControllerThree extends BaseController
 
                 // create new connection
                 $conn = $this->createNewConnection($request->branch_id);
-                if (isset($request->file)) {
-                    $now = now();
-                    $name = strtotime($now);
-                    $extension = $request->file_extension;
-                    $fileName = $name . "." . $extension;
-                    $path = '/public/' . $request->branch_id . '/admin-documents/buletin_files/';
-                    $base64 = base64_decode($request->file);
-                    File::ensureDirectoryExists(base_path() . $path);
-                    $file = base_path() . $path . $fileName;
-                    $picture = file_put_contents($file, $base64);
-                } else {
-                    $fileName = null;
+                $fileDetails = $request->file;
+
+                $fileNames = [];
+                if ($fileDetails) {
+                    foreach ($fileDetails as $key => $value) {
+                        $now = now();
+                        $name = strtotime($now);
+                        $extension = $value['extension'];
+                        $originalfilename = $value['filename'];
+                        $fileName = $originalfilename . "." . $extension;
+                        $path = '/public/' . $request->branch_id . '/admin-documents/buletin_files/';
+                        $base64 = base64_decode($value['base64']);
+                        File::ensureDirectoryExists(base_path() . $path);
+                        $file = base_path() . $path . $fileName;
+                        $upload = file_put_contents($file, $base64);
+                        array_push($fileNames, $fileName);
+                    }
                 }
+                
+                // if (isset($request->file)) {
+                //     $now = now();
+                //     $name = strtotime($now);
+                //     $originalfilename = $request->fileName;
+                //     $extension = $request->file_extension;
+                //     $fileName = $originalfilename . "." . $extension;
+                //     $path = '/public/' . $request->branch_id . '/admin-documents/buletin_files/';
+                //     $base64 = base64_decode($request->file);
+                //     File::ensureDirectoryExists(base_path() . $path);
+                //     $file = base_path() . $path . $fileName;
+                //     $picture = file_put_contents($file, $base64);
+                // } else {
+                //     $fileName = null;
+                // }
                 $query = $conn->table('bulletin_boards')->insertGetId([
                     'title' => $request->title,
                     'discription' => $request->description,
-                    'file' => $fileName,
+                    'file' => implode(",", $fileNames),
                     'target_user' => $request->target_user,
                     'status' => 1,
                     'class_id' => $request->class_id,
@@ -612,31 +632,43 @@ class ApiControllerThree extends BaseController
                 // create new connection
                 $conn = $this->createNewConnection($request->branch_id);
                 if (isset($request->oldfile) && empty($request->file)) {
-                    $fileName = $request->oldfile;
+                    $fileNames = $request->oldfile;
                 } else {
                     if (isset($request->file)) {
-                        $now = now();
-                        $name = strtotime($now);
-                        $extension = $request->file_extension;
-                        $fileName = $name . "." . $extension;
-                        $path = '/public/' . $request->branch_id . '/admin-documents/buletin_files/';
-                        $base64 = base64_decode($request->file);
-                        File::ensureDirectoryExists(base_path() . $path);
-                        $file = base_path() . $path . $fileName;
-                        $picture = file_put_contents($file, $base64);
+                        $fileDetails = $request->file;
+                        $fileNames = [];
+                        foreach ($fileDetails as $key => $value) {
+                            $now = now();
+                            $name = strtotime($now);
+                            $extension = $value['extension'];
+                            $originalfilename = $value['filename'];
+                            $fileName = $originalfilename . "." . $extension;
+                            $path = '/public/' . $request->branch_id . '/admin-documents/buletin_files/';
+                            $base64 = base64_decode($value['base64']);
+                            File::ensureDirectoryExists(base_path() . $path);
+                            $file = base_path() . $path . $fileName;
+                            $upload = file_put_contents($file, $base64);
+                            array_push($fileNames, $fileName);
+                        }
                     } else {
-                        $fileName = null;
+                        $fileNames = null;
                     }
                 }
                 $query = $conn->table('bulletin_boards')->where('id', $id)->update([
                     'title' => $request->title,
                     'discription' => $request->description,
-                    'file' => $fileName,
+                    'file' => implode(",", $fileNames),
                     'target_user' => $request->target_user,
                     'status' => 1,
                     'publish_date' => $request->publish_date,
                     'publish_end_date' => $request->publish_end_dates,
+                    'class_id' => $request->class_id,
+                    'section_id' => $request->section_id,
+                    'student_id' => $request->student_id,
+                    'parent_id' => $request->parent_id,
+                    'department_id' => $request->department_id,
                     //  'publish' => !empty($request->publish == "on") ? "1" : "0",
+                    'add_dashboard' =>  !empty($request->add_to_dash == "on") ? "1" : "0",
                     'updated_at' => date("Y-m-d H:i:s"),
                     'updated_by' => $request->updated_by,
                 ]);
@@ -885,7 +917,7 @@ class ApiControllerThree extends BaseController
                     //     $query->where('b.publish_end_date', '>', $currentDateTime)
                     //         ->orWhereNull('b.publish_end_date');
                     // })
-                    // ->where('b.publish_date', '<=', now())
+                    ->where('b.publish_date', '<=', now())
                     ->groupBy("b.id")
                     ->orderBy('b.id', 'desc')
                     ->get()->toArray();
@@ -1017,7 +1049,7 @@ class ApiControllerThree extends BaseController
                     //     $query->where('b.publish_end_date', '>', $currentDateTime)
                     //         ->orWhereNull('b.publish_end_date');
                     // })
-                    // ->where('b.publish_date', '<=', now())
+                    ->where('b.publish_date', '<=', now())
                     ->groupBy("b.id")
                     ->get()->toArray();
 
@@ -1092,7 +1124,7 @@ class ApiControllerThree extends BaseController
                     //     $query->where('b.publish_end_date', '>', $currentDateTime)
                     //         ->orWhereNull('b.publish_end_date');
                     // })
-                    // ->where('b.publish_date', '<=', now())
+                     ->where('b.publish_date', '<=', now())
                     ->groupBy("b.id")
                     ->orderBy('b.id', 'desc')
                     ->get()->toArray();
@@ -1217,7 +1249,7 @@ class ApiControllerThree extends BaseController
                     //     $query->where('b.publish_end_date', '>', $currentDateTime)
                     //         ->orWhereNull('b.publish_end_date');
                     // })
-                    // ->where('b.publish_date', '<=', now())
+                    ->where('b.publish_date', '<=', now())
                     ->groupBy("b.id")
                     ->get()->toArray();
 
@@ -1233,7 +1265,7 @@ class ApiControllerThree extends BaseController
 
         try {
             $validator = \Validator::make($request->all(), [
-                'token' => 'required',
+               // 'token' => 'required',
                 'branch_id' => 'required',
             ]);
 
@@ -1249,8 +1281,8 @@ class ApiControllerThree extends BaseController
                 $staff_id = $request->staff_id;
                 $role_id = $request->role_id;
                 $dep = $conn->table('staffs')->select('department_id')->where('id', $staff_id)->first();
-                $department = $dep->department_id;
-                $departmentArray = explode(",", $department);
+                $departmentArray = $dep->department_id;
+                //$departmentArray = explode(",", $department);
                 $buletinDetails = $conn->table('bulletin_boards as b')
                     ->select("b.id", "b.title", "b.file", "b.discription", "bi.parent_imp", "b.publish_date")
                     ->leftJoin('' . $main_db . '.roles as rol', function ($join) {
@@ -1261,8 +1293,9 @@ class ApiControllerThree extends BaseController
                         $join->where('bi.user_id', '=', $staff_id);
                     })
                     ->leftJoin('staffs as s', 'b.department_id', '=', 's.department_id')
+                   
                     ->where(function ($query) use ($departmentArray, $role_id) {
-                        $query->whereIn('b.department_id', $departmentArray)
+                        $query->whereRaw("FIND_IN_SET('$departmentArray', b.department_id)")
                             ->orWhereNull('b.department_id')
                             ->whereRaw("FIND_IN_SET('$role_id', b.target_user)");
                     })
@@ -1272,7 +1305,7 @@ class ApiControllerThree extends BaseController
                     //     $query->where('b.publish_end_date', '>', $currentDateTime)
                     //         ->orWhereNull('b.publish_end_date');
                     // })
-                    // ->where('b.publish_date', '<=', now())
+                     ->where('b.publish_date', '<=', now())
                     ->groupBy("b.id")
                     ->orderBy('b.id', 'desc')
                     ->get()->toArray();
@@ -1305,8 +1338,8 @@ class ApiControllerThree extends BaseController
                 $staff_id = $request->staff_id;
                 $role_id = $request->role_id;
                 $dep = $conn->table('staffs')->select('department_id')->where('id', $staff_id)->first();
-                $department = $dep->department_id;
-                $departmentArray = explode(",", $department);
+                $departmentArray = $dep->department_id;
+              
                 $buletinDetails = $conn->table('bulletin_boards as b')
                     ->select("b.id", "b.title", "b.file", "b.discription", "bi.parent_imp", "b.publish_date")
                     ->leftJoin('' . $main_db . '.roles as rol', function ($join) {
@@ -1318,7 +1351,7 @@ class ApiControllerThree extends BaseController
                     })
                     ->leftJoin('staffs as s', 'b.department_id', '=', 's.department_id')
                     ->where(function ($query) use ($departmentArray, $role_id) {
-                        $query->whereIn('b.department_id', $departmentArray)
+                        $query->whereRaw("FIND_IN_SET('$departmentArray', b.department_id)")
                             ->orWhereNull('b.department_id')
                             ->whereRaw("FIND_IN_SET('$role_id', b.target_user)");
                     })
@@ -1329,7 +1362,7 @@ class ApiControllerThree extends BaseController
                     //     $query->where('b.publish_end_date', '>', $currentDateTime)
                     //         ->orWhereNull('b.publish_end_date');
                     // })
-                    // ->where('b.publish_date', '<=', now())
+                     ->where('b.publish_date', '<=', now())
                     ->groupBy("b.id")
                     ->orderBy('b.id', 'desc')
                     ->get()->toArray();
@@ -2533,12 +2566,14 @@ class ApiControllerThree extends BaseController
                         'sc.name as section_name',
                         'emd.name as dept_name',
                         'stud.gender',
-                        'stud.email'
+                        'stud.email',
+                        'stap.status_after_approval'
                     )
                     ->join('classes as cl', 'en.class_id', '=', 'cl.id')
                     ->join('sections as sc', 'en.section_id', '=', 'sc.id')
                     ->join('students as stud', 'en.student_id', '=', 'stud.id')
                     ->join('emp_department as emd', 'en.department_id', '=', 'emd.id')
+                    ->join('student_applications as stap', 'en.student_id', '=', 'stap.student_id')
                     ->when($class_id, function ($query, $class_id) {
                         return $query->where('en.class_id', $class_id);
                     })
