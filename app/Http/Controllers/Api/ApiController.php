@@ -46,7 +46,7 @@ use App\Notifications\AdminTermination;
 use App\Notifications\ParentInfoUpdate;
 use App\Notifications\StudentInfoUpdate;
 use App\Notifications\LeaveReasonNotification;
-use App\Notifications\newApplication;
+use App\Notifications\NewApplication;
 
 use Illuminate\Support\Facades\Notification;
 // encrypt and decrypt
@@ -13879,7 +13879,7 @@ try{
             'year' => 'required',
             // 'register_no' => 'required',
            // 'roll_no' => 'required',
-            'admission_date' => 'required',
+            //  'admission_date' => 'required',
             // 'category_id' => 'required',
             'first_name' => 'required',
             'mobile_no' => 'required',
@@ -14135,7 +14135,7 @@ try{
                     'relation' => $request->relation,
                     'register_no' => $registerNumber,
                     // 'roll_no' => $request->roll_no,
-                    'admission_date' => $request->admission_date,
+                    //  'admission_date' => $request->admission_date,
 
                     'enrollment' => isset($request->enrollment) ? $request->enrollment : "",
                     'trail_date' => isset($request->trail_date) ? $request->trail_date : "",
@@ -15284,9 +15284,9 @@ try{
                     $query->where('e.class_id', $request->class_id);
                 }
  
-                // if (isset($request->session_id) && filled($request->session_id)) {
-                //     $query->where('e.session_id', $request->session_id);
-                // }
+                if (isset($request->academic_session_id) && filled($request->academic_session_id)) {
+                    $query->where('e.academic_session_id', $request->academic_session_id);
+                }
  
                 if (isset($request->section_id) && filled($request->section_id)) {
                     $query->where('e.section_id', $request->section_id);
@@ -15515,7 +15515,7 @@ try{
              'year' => 'required',
              'register_no' => 'required',
             //  'roll_no' => 'required',
-             'admission_date' => 'required',
+            //   'admission_date' => 'required',
             // 'category_id' => 'required',
               'first_name' => 'required',
               'mobile_no' => 'required',
@@ -15721,7 +15721,7 @@ try{
                         'email' => $request->guardian_email,
                         "company_name_japan" => $request->guardian_company_name_japan,
                         "company_name_local" => $request->guardian_company_name_local,
-                        "company_phone_number" => $request->guardian_company_phone_number,
+                        "company_phone_number" => isset($request->guardian_company_phone_number) ? Crypt::encryptString($request->guardian_company_phone_number) : "",
                         "employment_status" => $request->guardian_employment_status,
                         'status' => '0', // Assuming you want to update the status as well
                         'updated_at' => now()
@@ -15740,7 +15740,7 @@ try{
                     'register_no' => $request->register_no,
                     'year' => $request->year,
                     // 'roll_no' => $request->roll_no,
-                    'admission_date' => $request->admission_date,
+                    //  'admission_date' => $request->admission_date,
                     'category_id' => $request->category_id,
                     'first_name' => isset($request->first_name) ? $request->first_name : "",
                     'last_name' => isset($request->last_name) ? $request->last_name : "",
@@ -16439,57 +16439,72 @@ try{
         try{
         $conn = $this->createNewConnection($branch_id);
     
-        if ($status == "1") {
-            $inactive1 = $conn->table('parent as pt')
-                        ->select("pt.id", 'pt.email', 'pt.occupation', DB::raw("CONCAT(pt.last_name, ' ', pt.first_name) as name"))
-                        // ->join('students as st', 'pt.id', '=', 'st.guardian_id')
-                        ->join('students as st', 'pt.id', '=', 'st.father_id')
-                        // ->leftjoin('students as st', function ($join) {
-                        //     $join->on('st.father_id', '=', 'pt.id');
-                        //     $join->orOn('st.mother_id', '=', 'pt.id');
-                        //     $join->orOn('st.guardian_id', '=', 'pt.id');
-                        // })
-                        ->leftJoin('enrolls as e', 'st.id', '=', 'e.student_id')
-                        ->where('e.active_status', '!=' , "0")
-                        ->where('pt.status', '=', '0')
-                        ->groupBy('st.father_id')
-                        ->get()->toArray();
-
-
-            $inactive2 = $conn->table('parent as pt')
-                        ->select("pt.id", 'pt.email', 'pt.occupation', DB::raw("CONCAT(pt.last_name, ' ', pt.first_name) as name"))
-                        // ->leftJoin('students as st', 'pt.id', '=', 'st.guardian_id')
-                        ->leftJoin('students as st', 'pt.id', '=', 'st.father_id')
-                        // ->leftjoin('students as st', function ($join) {
-                        //     $join->on('st.father_id', '=', 'pt.id');
-                        //     $join->orOn('st.mother_id', '=', 'pt.id');
-                        //     $join->orOn('st.guardian_id', '=', 'pt.id');
-                        // })
-                        ->leftJoin('enrolls as e', 'st.id', '=', 'e.student_id')
-                        ->whereNull('st.guardian_id')
-                        ->where('pt.status', '=', '0')
-                        ->groupBy('st.father_id')
-                        ->get()->toArray();
-
-            
-            $parentDetails = array_merge($inactive2, $inactive1);
-        } else {
-            $parentDetails = $conn->table('parent as pt')
+        
+        $parentDetails = $conn->table('parent as pt')
                 ->select("pt.id", 'pt.email', 'pt.occupation', DB::raw("CONCAT(pt.last_name, ' ', pt.first_name) as name"))
                 // ->join('students as st', 'pt.id', '=', 'st.guardian_id')
-                ->join('students as st', 'pt.id', '=', 'st.father_id')
-                // ->leftjoin('students as st', function ($join) {
-                //     $join->on('st.father_id', '=', 'pt.id');
-                //     $join->orOn('st.mother_id', '=', 'pt.id');
-                //     $join->orOn('st.guardian_id', '=', 'pt.id');
-                // })
+                // ->join('students as st', 'pt.id', '=', 'st.father_id')
+                ->leftjoin('students as st', function ($join) {
+                    $join->on('st.guardian_id', '=', 'pt.id');
+                    // $join->orOn('st.mother_id', '=', 'pt.id');
+                    // $join->orOn('st.guardian_id', '=', 'pt.id');
+                })
                 ->leftJoin('enrolls as e', 'st.id', '=', 'e.student_id')
                 ->where('e.academic_session_id', '=' , $academic_session_id)
                 ->where('e.active_status', '=' , "0")
                 ->where('pt.status', '=', '0')
-                ->groupBy('st.father_id')
+                ->groupBy('pt.id')
                 ->get();
+        if ($status == "1") {
+            $allParentDetails = $conn->table('parent as pt')
+                ->select("pt.id", 'pt.email', 'pt.occupation', DB::raw("CONCAT(pt.last_name, ' ', pt.first_name) as name"))
+                ->where('pt.status', '=', '0')
+                ->groupBy('pt.id')
+                ->get();
+             // Convert collections to arrays for easier manipulation
+            $parentDetailsArray = $parentDetails->pluck('id')->toArray();
+            $allParentDetailsArray = $allParentDetails->pluck('id')->toArray();
+
+            // Remove parent details from $allParentDetails where they match $parentDetails
+            $parentDetails = $allParentDetails->reject(function ($item) use ($parentDetailsArray) {
+                return in_array($item->id, $parentDetailsArray);
+            });
+
+            // $inactive1 = $conn->table('parent as pt')
+            //             ->select("pt.id", 'pt.email', 'pt.occupation', DB::raw("CONCAT(pt.last_name, ' ', pt.first_name) as name"))
+            //             // ->join('students as st', 'pt.id', '=', 'st.guardian_id')
+            //             // ->join('students as st', 'pt.id', '=', 'st.father_id')
+            //             ->leftjoin('students as st', function ($join) {
+            //                 $join->on('st.guardian_id', '=', 'pt.id');
+            //                 // $join->orOn('st.mother_id', '=', 'pt.id');
+            //                 // $join->orOn('st.guardian_id', '=', 'pt.id');
+            //             })
+            //             ->leftJoin('enrolls as e', 'st.id', '=', 'e.student_id')
+            //             ->where('e.active_status', '!=' , "0")
+            //             ->where('e.academic_session_id', '=' , $academic_session_id)
+            //             ->where('pt.status', '=', '0')
+            //             ->groupBy('pt.id')
+            //             ->get()->toArray();
+            // $inactive2 = $conn->table('parent as pt')
+            //             ->select("pt.id", 'pt.email', 'pt.occupation', DB::raw("CONCAT(pt.last_name, ' ', pt.first_name) as name"))
+            //             // ->leftJoin('students as st', 'pt.id', '=', 'st.guardian_id')
+            //             // ->leftJoin('students as st', 'pt.id', '=', 'st.father_id')
+            //             ->leftjoin('students as st', function ($join) {
+            //                 $join->on('st.guardian_id', '=', 'pt.id');
+            //                 // $join->orOn('st.mother_id', '=', 'pt.id');
+            //                 // $join->orOn('st.guardian_id', '=', 'pt.id');
+            //             })
+            //             ->leftJoin('enrolls as e', 'st.id', '=', 'e.student_id')
+            //             ->whereNull('st.guardian_id')
+            //             ->where('e.academic_session_id', '=' , $academic_session_id)
+            //             ->where('pt.status', '=', '0')
+            //             ->groupBy('pt.id')
+            //             ->get()->toArray();
+
+            
+            // $parentDetails = array_merge($inactive2, $inactive1);
         }
+        // dd(count($parentDetails));
         return $parentDetails;
     }
     catch(Exception $error) {
@@ -16631,7 +16646,7 @@ try{
         $validator = \Validator::make($request->all(), [
             'id' => 'required',
             'branch_id' => 'required',
-            'token' => 'required'
+            // 'token' => 'required'
         ]);
 
         if (!$validator->passes()) {
