@@ -15044,89 +15044,114 @@ try{
     {
         try
         {
-        $validator = \Validator::make($request->all(), [
-            'branch_id' => 'required',
-        ]);
-        $department_id = isset($request->department_id) ? $request->department_id : null;
-        $class_id = isset($request->class_id) ? $request->class_id : null;
-        $session_id = isset($request->session_id) ? $request->session_id : 0;
-        $section_id = isset($request->section_id) ? $request->section_id : null;
-        $status = isset($request->status) ? $request->status : null;
-        $name = isset($request->student_name) ? $request->student_name : null;
- 
-        if (!$validator->passes()) {
-            return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
-        }
-         else {
-            // get data
-            $cache_time = config('constants.cache_time');
-            $cache_students = config('constants.cache_students');
- 
-            $cacheKey = $cache_students . $request->branch_id;
-            // Check if the data is cached
-            if (Cache::has($cacheKey) && !($department_id || $class_id || $session_id || $section_id || $status)) {
-                // If cached and no filters are applied, return cached data
-                \Log::info('cacheKey ' . json_encode($cacheKey));
-                $students = Cache::get($cacheKey);
-            } else {
-                // create new connection
-                $con = $this->createNewConnection($request->branch_id);
-                $query = $con->table('enrolls as e')
-                ->select(
-                    's.id',
-                    DB::raw('CONCAT(s.last_name, " ", s.first_name) as name'),
-                    DB::raw('CONCAT(s.last_name_common, " ", s.first_name_common) as name_common'),
-                    's.register_no',
-                    's.roll_no',
-                    's.mobile_no',
-                    's.email',
-                    's.gender',
-                    's.photo',
-                    'e.attendance_no'
-                )
-                ->join('students as s', 'e.student_id', '=', 's.id');
-           
-                if (isset($request->department_id) && filled($request->department_id)) {
-                    $query->where('e.department_id', $request->department_id);
-                }
- 
-                if (isset($request->class_id) && filled($request->class_id)) {
-                    $query->where('e.class_id', $request->class_id);
-                }
- 
-                if (isset($request->academic_session_id) && filled($request->academic_session_id)) {
-                    $query->where('e.academic_session_id', $request->academic_session_id);
-                }
- 
-                if (isset($request->section_id) && filled($request->section_id)) {
-                    $query->where('e.section_id', $request->section_id);
-                }
- 
-                if (isset($request->status) && filled($request->status)) {
-                    $query->where('e.active_status', $request->status);
-                }
- 
-                if (isset($request->student_name) && filled($request->student_name)) {
-                    $name = $request->student_name;
-                    $query->where(function ($q) use ($name) {
-                        $q->where('s.first_name', 'like', '%' . $name . '%')
-                            ->orWhere('s.last_name', 'like', '%' . $name . '%');
-                    });
-                }
- 
-                $students = $query->groupBy('e.student_id')->get()->toArray();
- 
-                // Cache the fetched data for future requests, only if no filters are applied
-                if (!($department_id || $class_id || $session_id || $section_id || $status)) {
-                    Cache::put($cacheKey, $students, now()->addHours($cache_time)); // Cache for 24 hours
+            $validator = \Validator::make($request->all(), [
+                'branch_id' => 'required',
+            ]);
+            $department_id = isset($request->department_id) ? $request->department_id : null;
+            $class_id = isset($request->class_id) ? $request->class_id : null;
+            $session_id = isset($request->session_id) ? $request->session_id : 0;
+            $section_id = isset($request->section_id) ? $request->section_id : null;
+            // $status = $request->status;
+            $name = isset($request->student_name) ? $request->student_name : null;
+            $academic_session_id = isset($request->academic_session_id) ? $request->academic_session_id : null;
+            // \Log::info('Status = ' . $status);
+            
+            
+            $status = 2;
+            if(isset($request->status)){
+                if($request->status=='1'){
+                    $status = 1;
                 }
             }
-            return $this->successResponse($students, 'Student record fetch successfully');
+            if (!$validator->passes()) {
+                return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
+            }
+            else {
+                // get data
+                $cache_time = config('constants.cache_time');
+                $cache_students = config('constants.cache_students');
+    
+                $cacheKey = $cache_students . $request->branch_id;
+                // Check if the data is cached
+                if (Cache::has($cacheKey) && !($department_id || $class_id || $session_id || $section_id || $status || $name)) {
+                    // If cached and no filters are applied, return cached data
+                    \Log::info('cacheKey ' . json_encode($cacheKey));
+                    $students = Cache::get($cacheKey);
+                } else {
+                    // create new connection
+                    $con = $this->createNewConnection($request->branch_id);
+                    $query = $con->table('enrolls as e')
+                    ->select(
+                        's.id',
+                        DB::raw('CONCAT(s.last_name, " ", s.first_name) as name'),
+                        DB::raw('CONCAT(s.last_name_common, " ", s.first_name_common) as name_common'),
+                        's.register_no',
+                        's.roll_no',
+                        's.mobile_no',
+                        's.email',
+                        's.gender',
+                        's.photo',
+                        'e.attendance_no'
+                    )
+                    ->join('students as s', 'e.student_id', '=', 's.id');
+            
+                    if (isset($request->department_id) && filled($request->department_id)) {
+                        $query->where('e.department_id', $request->department_id);
+                    }
+    
+                    if (isset($request->class_id) && filled($request->class_id)) {
+                        $query->where('e.class_id', $request->class_id);
+                    }
+    
+                    // if (isset($request->academic_session_id) && filled($request->academic_session_id)) {
+                    //     $query->where('e.academic_session_id', $request->academic_session_id);
+                    // }
+    
+                    if (isset($request->section_id) && filled($request->section_id)) {
+                        $query->where('e.section_id', $request->section_id);
+                    }
+
+                    if (isset($status)) {
+                        if ($status == 2) {
+                            // Retrieve currently active students only
+                            $query->where('e.active_status', 0)
+                                ->where('e.academic_session_id', $academic_session_id);
+                        } elseif ($status == 1) {
+                            // Retrieve inactive students, ensuring they are not currently active in any other records
+                            // $query->where('e.active_status', 1)
+                            //       ->where('e.academic_session_id', '!=', $academic_session_id)
+                                $query->whereNotExists(function ($subQuery) use ($academic_session_id) {
+                                    $subQuery->select(DB::raw(1))
+                                        ->from('enrolls as sub_e')
+                                        ->whereRaw('sub_e.student_id = e.student_id')
+                                        ->where('sub_e.active_status', 0)
+                                        ->where('sub_e.academic_session_id', $academic_session_id);
+                                });
+                        }
+                    }
+                    
+    
+                    if (isset($request->student_name) && filled($request->student_name)) {
+                        $name = $request->student_name;
+                        $query->where(function ($q) use ($name) {
+                            $q->where('s.first_name', 'like', '%' . $name . '%')
+                                ->orWhere('s.last_name', 'like', '%' . $name . '%');
+                        });
+                    }
+    
+                    $students = $query->groupBy('e.student_id')->get()->toArray();
+    
+                    // Cache the fetched data for future requests, only if no filters are applied
+                    if (!($department_id || $class_id || $session_id || $section_id || $status || $name)) {
+                        Cache::put($cacheKey, $students, now()->addHours($cache_time)); // Cache for 24 hours
+                    }
+                }
+                return $this->successResponse($students, 'Student record fetch successfully');
+            }
         }
-    }
-    catch(Exception $error) {
-        return $this->commonHelper->generalReturn('403','error',$error,'Error in getStudentList');
-    }
+        catch(Exception $error) {
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in getStudentList');
+        }
 
     }
 
@@ -30191,7 +30216,7 @@ try{
                 ->where('e.active_status', '=', '0')
                 ->when($parent_id, function ($query, $parent_id) {
                     return $query->where('t.created_by', $parent_id);
-                })->orderBy('t.created_by', 'desc')->get()->toArray();
+                })->orderBy('t.created_by', 'desc')->groupBy('t.id')->get()->toArray();
 
             // $groupDetails = $conn->table('termination')->get()->toArray();
             return $this->successResponse($terminationDetails, 'Termination record fetch successfully');
