@@ -14,6 +14,7 @@ use App\Http\Controllers\Api\MenuAccessController;
 use App\Http\Controllers\Api\ExamreportController;
 use Illuminate\Support\Facades\Artisan;
 use App\Http\Controllers\Api\V1\GradeController;
+use App\Http\Controllers\Api\V1\ClassController;
 use App\Http\Controllers\Api\ApiControllerNameSeq;
 
 /*school_roles
@@ -89,11 +90,11 @@ Route::group(['middleware' => ['auth:api', 'throttle:limit_per_user', 'logroute'
     Route::get('logout', [AuthController::class, 'logout']);
     Route::get('get_user', [AuthController::class, 'get_user']);
     // section routes
-    Route::post('section/add', [ApiController::class, 'addSection']);
-    Route::get('section/list', [ApiController::class, 'getSectionList']);
-    Route::post('section/section-details', [ApiController::class, 'getSectionDetails']);
-    Route::post('section/update', [ApiController::class, 'updateSectionDetails']);
-    Route::post('section/delete', [ApiController::class, 'deleteSection']);
+    Route::post('section/add', [ClassController::class, 'addSection']);
+    Route::get('section/list', [ClassController::class, 'getSectionList']);
+    Route::post('section/section-details', [ClassController::class, 'getSectionDetails']);
+    Route::post('section/update', [ClassController::class, 'updateSectionDetails']);
+    Route::post('section/delete', [ClassController::class, 'deleteSection']);
 
     // branch routes
     Route::post('branch/add', [ApiController::class, 'addBranch']);
