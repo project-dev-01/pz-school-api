@@ -16248,19 +16248,19 @@ try{
             $academic_session_id = $request->academic_session_id;
             $status = $request->status ?? null;
             // dd($request);
-            // if ($status === null) {
-            //     // Cache enabled for status filtering
-            //     $cacheKey = $cache_parentDetails . $request->branch_id; 
-            //     if (Cache::has($cacheKey)) {
-            //         $parentDetails = Cache::get($cacheKey);
-            //     } else {
-            //         $parentDetails = $this->fetchParentDetails($request->branch_id, $status,$academic_session_id);
-            //         Cache::put($cacheKey, $parentDetails, now()->addHours($cache_time));
-            //     }
-            // } else {
+            if ($status === null) {
+                // Cache enabled for status filtering
+                $cacheKey = $cache_parentDetails . $request->branch_id; 
+                if (Cache::has($cacheKey)) {
+                    $parentDetails = Cache::get($cacheKey);
+                } else {
+                    $parentDetails = $this->fetchParentDetails($request->branch_id, $status,$academic_session_id);
+                    Cache::put($cacheKey, $parentDetails, now()->addHours($cache_time));
+                }
+            } else {
                 // No caching for status filtering
                 $parentDetails = $this->fetchParentDetails($request->branch_id, $status,$academic_session_id);
-            // }
+            }
 
             return $this->successResponse($parentDetails, 'Parent records fetched successfully');
         }
@@ -16277,12 +16277,8 @@ try{
         
         $parentDetails = $conn->table('parent as pt')
                 ->select("pt.id", 'pt.email', 'pt.occupation', DB::raw("CONCAT(pt.last_name, ' ', pt.first_name) as name"))
-                // ->join('students as st', 'pt.id', '=', 'st.guardian_id')
-                // ->join('students as st', 'pt.id', '=', 'st.father_id')
                 ->leftjoin('students as st', function ($join) {
                     $join->on('st.guardian_id', '=', 'pt.id');
-                    // $join->orOn('st.mother_id', '=', 'pt.id');
-                    // $join->orOn('st.guardian_id', '=', 'pt.id');
                 })
                 ->leftJoin('enrolls as e', 'st.id', '=', 'e.student_id')
                 ->where('e.academic_session_id', '=' , $academic_session_id)
@@ -16304,42 +16300,32 @@ try{
             $parentDetails = $allParentDetails->reject(function ($item) use ($parentDetailsArray) {
                 return in_array($item->id, $parentDetailsArray);
             });
-
-            // $inactive1 = $conn->table('parent as pt')
-            //             ->select("pt.id", 'pt.email', 'pt.occupation', DB::raw("CONCAT(pt.last_name, ' ', pt.first_name) as name"))
-            //             // ->join('students as st', 'pt.id', '=', 'st.guardian_id')
-            //             // ->join('students as st', 'pt.id', '=', 'st.father_id')
-            //             ->leftjoin('students as st', function ($join) {
-            //                 $join->on('st.guardian_id', '=', 'pt.id');
-            //                 // $join->orOn('st.mother_id', '=', 'pt.id');
-            //                 // $join->orOn('st.guardian_id', '=', 'pt.id');
-            //             })
-            //             ->leftJoin('enrolls as e', 'st.id', '=', 'e.student_id')
-            //             ->where('e.active_status', '!=' , "0")
-            //             ->where('e.academic_session_id', '=' , $academic_session_id)
-            //             ->where('pt.status', '=', '0')
-            //             ->groupBy('pt.id')
-            //             ->get()->toArray();
-            // $inactive2 = $conn->table('parent as pt')
-            //             ->select("pt.id", 'pt.email', 'pt.occupation', DB::raw("CONCAT(pt.last_name, ' ', pt.first_name) as name"))
-            //             // ->leftJoin('students as st', 'pt.id', '=', 'st.guardian_id')
-            //             // ->leftJoin('students as st', 'pt.id', '=', 'st.father_id')
-            //             ->leftjoin('students as st', function ($join) {
-            //                 $join->on('st.guardian_id', '=', 'pt.id');
-            //                 // $join->orOn('st.mother_id', '=', 'pt.id');
-            //                 // $join->orOn('st.guardian_id', '=', 'pt.id');
-            //             })
-            //             ->leftJoin('enrolls as e', 'st.id', '=', 'e.student_id')
-            //             ->whereNull('st.guardian_id')
-            //             ->where('e.academic_session_id', '=' , $academic_session_id)
-            //             ->where('pt.status', '=', '0')
-            //             ->groupBy('pt.id')
-            //             ->get()->toArray();
-
-            
-            // $parentDetails = array_merge($inactive2, $inactive1);
         }
-        // dd(count($parentDetails));
+        // $query = $conn->table('parent as pt')
+        //         ->select("pt.id", 'pt.email', 'pt.occupation', DB::raw("CONCAT(pt.last_name, ' ', pt.first_name) as name"))
+        //         ->leftjoin('students as st', function ($join) {
+        //             $join->on('st.guardian_id', '=', 'pt.id');
+        //         })
+        //         ->leftJoin('enrolls as e', 'st.id', '=', 'e.student_id');
+
+        //         if (isset($status)) {
+        //             if ($status == 0) {
+        //                 // Retrieve currently active students only
+        //                 $query->where('e.active_status', 0)
+        //                         ->where('e.academic_session_id', $academic_session_id);
+        //             } elseif ($status == 1) {
+        //                 $query->whereNotExists(function ($subQuery) use ($academic_session_id) {
+        //                     $subQuery->select(DB::raw(1))
+        //                         ->from('enrolls as sub_e')
+        //                         ->whereRaw('sub_e.student_id = e.student_id')
+        //                         ->where('sub_e.active_status', 0)
+        //                         ->where('sub_e.academic_session_id', $academic_session_id);
+        //                 });
+        //             }
+        //         }
+        //     $query->where('pt.status', '=', '0');
+        //     $parentDetails = $query->groupBy('pt.id')->get()->toArray();
+                    
         return $parentDetails;
     }
     catch(Exception $error) {
@@ -26371,7 +26357,7 @@ try{
 
 
             $visa_fileName = $request->visa_old_photo;
-            $studentId="";
+            $studentId= null;
             if ($request->visa_photo) {
 
                 $visa_now = now();
