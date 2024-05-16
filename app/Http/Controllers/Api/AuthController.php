@@ -147,7 +147,7 @@ class AuthController extends BaseController
                     $data = [
                         'login_id' => $user->id,
                         'user_id' => $user->user_id,
-                        'role_id' => isset($request->role_id)?$request->role_id:null,
+                        'role_id' => isset($request->role_id) ? $request->role_id : null,
                         'branch_id' => $user->branch_id,
                         'ip_address' => \Request::getClientIp(true),
                         'device' => isset($request->user_device) ? $request->user_device : "other",
@@ -160,7 +160,7 @@ class AuthController extends BaseController
                         'created_at' => date("Y-m-d H:i:s")
                     ];
                     //$query = $staffConn->table('staff_leaves')->insert($data);
-                    $query = Log_history::insert($data);
+                    // $query = Log_history::insert($data);
 
                     $success['token'] = $token;
                     $success['user'] = $user;
@@ -432,7 +432,7 @@ class AuthController extends BaseController
             if (Auth::attempt(['email' => $request->email, 'password' => $request->password, 'branch_id' => $request->branch_id])) {
                 $user = Auth::user();
                 $token =  $user->createToken('paxsuzen')->accessToken;
-                
+
                 if ($user->status == 0) {
                     $success['token'] = $token;
                     $success['user'] = $user;
@@ -455,21 +455,19 @@ class AuthController extends BaseController
     {
         try {
             //Request is validated, do logout
-            if($request->branch_id!==null)
-            {
+            if ($request->branch_id !== null) {
                 if (Auth::check()) {
                     Auth::user()->token()->revoke();
                     return $this->successResponse([], 'User has been logged out successfully');
                 } else {
                     return $this->send500Error('Sorry, user cannot be logged out', ['error' => 'Sorry, user cannot be logged out']);
                 }
-             }
-            
+            }
         } catch (Exception $error) {
             return $this->commonHelper->generalReturn('403', 'error', $error, 'Error logout');
         }
     }
-    
+
     public function lastlogout(Request $request)
     {
         try {
@@ -596,7 +594,7 @@ class AuthController extends BaseController
                 'created_at' => Carbon::now()
             ]);
 
-            // $user = 
+            // $user =
             //Get the token just created above
             // $tokenData = DB::table('password_resets')->where('email', $request->email)->first();
             // $user = DB::table('users')->where('email', $request->email)->first();
@@ -659,12 +657,12 @@ class AuthController extends BaseController
                 ->first();
             //  dd($updatePassword);
             if ($updatePassword) {
-                $user = User::where(['email'=> $request->email,'branch_id' => $request->branch_id])
-                    ->update(['password' => bcrypt($request->password),'status' => "0",'login_attempt' => '0',]);
+                $user = User::where(['email' => $request->email, 'branch_id' => $request->branch_id])
+                    ->update(['password' => bcrypt($request->password), 'status' => "0", 'login_attempt' => '0',]);
 
                 DB::table('password_resets')->where(['email' => $request->email, 'branch_id' => $request->branch_id])->delete();
 
-                $user = User::where(['email' => $request->email,'branch_id' => $request->branch_id])->first();
+                $user = User::where(['email' => $request->email, 'branch_id' => $request->branch_id])->first();
                 return $this->successResponse($user, 'Your password has been changed!');
             } else {
                 return $this->send500Error('Invalid token!', ['error' => 'Invalid token!']);

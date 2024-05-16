@@ -1,30 +1,15 @@
 <?php
 
-namespace App\Http\Controllers\Api\V1;
+namespace App\Http\Controllers\Api\V1\Academic;
 
-// use App\Http\Controllers\Controller;
+use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Validator;
-use Illuminate\Support\Facades\Auth;
-use Symfony\Component\HttpFoundation\Response;
-// base controller add
-use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Api\BaseController as BaseController;
-use Illuminate\Validation\Rule;
-use Illuminate\Support\Str;
-use DateTime;
-use DateInterval;
-use DatePeriod;
-use App\Helpers\Helper;
-use App\Models\Classes;
-use Carbon\Carbon;
-use Illuminate\Support\Arr;
-use File;
-use Exception;
-use Illuminate\Support\Facades\Config;
-use Illuminate\Support\Facades\Hash;
 use App\Helpers\CommonHelper;
+use Illuminate\Support\Facades\DB;
+use Exception;
 
 class GradeController extends BaseController
 {
@@ -33,7 +18,10 @@ class GradeController extends BaseController
     {
         $this->commonHelper = $commonHelper;
     }
-    // add class
+    /**
+     * @Chandru @since May 15,2024
+     * @desc List section
+     */
     public function addClass(Request $request)
     {
         try {

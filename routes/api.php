@@ -13,9 +13,12 @@ use App\Http\Controllers\Api\TwoFactorAuth;
 use App\Http\Controllers\Api\MenuAccessController;
 use App\Http\Controllers\Api\ExamreportController;
 use Illuminate\Support\Facades\Artisan;
-use App\Http\Controllers\Api\V1\GradeController;
+#use App\Http\Controllers\Api\V1\GradeController;
 use App\Http\Controllers\Api\ApiControllerNameSeq;
 use App\Http\Controllers\Api\V1\AcademicController;
+
+use App\Http\Controllers\Api\V1\Academic\{ClassesAllocationController, GradeController, ClassesController, AssignGradeTeacherController, PromotionAssignController, ScheduleController, SubjectController, SubjectGradeAssignController, SubjectTeacherAssignController,  TimetableController, TimetableCopyController, PromotionController};
+
 
 /*school_roles
 |--------------------------------------------------------------------------
@@ -98,11 +101,11 @@ Route::group(['middleware' => ['auth:api', 'throttle:limit_per_user', 'logroute'
 
     //section routes after split section controller SectionController
 
-    Route::post('section/add', [AcademicController::class, 'addSection']);
-    Route::get('section/list', [AcademicController::class, 'getSectionList']);
-    Route::post('section/section-details', [AcademicController::class, 'getSectionDetails']);
-    Route::post('section/update', [AcademicController::class, 'updateSectionDetails']);
-    Route::post('section/delete', [AcademicController::class, 'deleteSection']);
+    Route::post('section/add', [ClassesController::class, 'addSection']);
+    Route::get('section/list', [ClassesController::class, 'getSectionList']);
+    Route::post('section/section-details', [ClassesController::class, 'getSectionDetails']);
+    Route::post('section/update', [ClassesController::class, 'updateSectionDetails']);
+    Route::post('section/delete', [ClassesController::class, 'deleteSection']);
 
     // branch routes
     Route::post('branch/add', [ApiController::class, 'addBranch']);
@@ -112,51 +115,51 @@ Route::group(['middleware' => ['auth:api', 'throttle:limit_per_user', 'logroute'
     Route::post('branch/delete', [ApiController::class, 'deleteBranch']);
 
     // Class routes
-    Route::post('classes/add', [AcademicController::class, 'addClass']);
-    Route::get('classes/list', [AcademicController::class, 'getClassList']);
-    Route::post('classes/class-details', [AcademicController::class, 'getClassDetails']);
-    Route::post('classes/update', [AcademicController::class, 'updateClassDetails']);
-    Route::post('classes/delete', [AcademicController::class, 'deleteClass']);
-    Route::post('classes/list_by_department', [AcademicController::class, 'getClassListByDept']);
+    Route::post('classes/add', [GradeController::class, 'addClass']);
+    Route::get('classes/list', [GradeController::class, 'getClassList']);
+    Route::post('classes/class-details', [GradeController::class, 'getClassDetails']);
+    Route::post('classes/update', [GradeController::class, 'updateClassDetails']);
+    Route::post('classes/delete', [GradeController::class, 'deleteClass']);
+    Route::post('classes/list_by_department', [GradeController::class, 'getClassListByDept']);
 
     Route::post('teacher/class_list', [ApiController::class, 'teacherClassList']);
 
     // sections allocations routes
-    Route::post('allocate_section/add', [AcademicController::class, 'addSectionAllocation']);
-    Route::get('allocate_section/list', [AcademicController::class, 'getSectionAllocationList']);
-    Route::post('allocate_section/section_allocation-details', [AcademicController::class, 'getSectionAllocationDetails']);
-    Route::post('allocate_section/update', [AcademicController::class, 'updateSectionAllocation']);
-    Route::post('allocate_section/delete', [AcademicController::class, 'deleteSectionAllocation']);
+    Route::post('allocate_section/add', [ClassesAllocationController::class, 'addSectionAllocation']);
+    Route::get('allocate_section/list', [ClassesAllocationController::class, 'getSectionAllocationList']);
+    Route::post('allocate_section/section_allocation-details', [ClassesAllocationController::class, 'getSectionAllocationDetails']);
+    Route::post('allocate_section/update', [ClassesAllocationController::class, 'updateSectionAllocation']);
+    Route::post('allocate_section/delete', [ClassesAllocationController::class, 'deleteSectionAllocation']);
 
     // TeacherAllocations routes
-    Route::post('assign_teacher/add', [AcademicController::class, 'addTeacherAllocation']);
-    Route::get('assign_teacher/list', [AcademicController::class, 'getTeacherAllocationList']);
-    Route::post('assign_teacher/assign_teacher-details', [AcademicController::class, 'getTeacherAllocationDetails']);
-    Route::post('assign_teacher/update', [AcademicController::class, 'updateTeacherAllocation']);
-    Route::post('assign_teacher/delete', [AcademicController::class, 'deleteTeacherAllocation']);
-    Route::post('branch-by-assign-teacher', [AcademicController::class, 'branchIdByTeacherAllocation']);
+    Route::post('assign_teacher/add', [AssignGradeTeacherController::class, 'addTeacherAllocation']);
+    Route::get('assign_teacher/list', [AssignGradeTeacherController::class, 'getTeacherAllocationList']);
+    Route::post('assign_teacher/assign_teacher-details', [AssignGradeTeacherController::class, 'getTeacherAllocationDetails']);
+    Route::post('assign_teacher/update', [AssignGradeTeacherController::class, 'updateTeacherAllocation']);
+    Route::post('assign_teacher/delete', [AssignGradeTeacherController::class, 'deleteTeacherAllocation']);
+    Route::post('branch-by-assign-teacher', [AssignGradeTeacherController::class, 'branchIdByTeacherAllocation']);
     // Add Subjects
-    Route::post('subjects/add', [AcademicController::class, 'addSubjects']);
-    Route::get('subjects/list', [AcademicController::class, 'getSubjectsList']);
-    Route::post('subjects/subjects-details', [AcademicController::class, 'getSubjectsDetails']);
-    Route::post('subjects/update', [AcademicController::class, 'updateSubjects']);
-    Route::post('subjects/delete', [AcademicController::class, 'deleteSubjects']);
+    Route::post('subjects/add', [SubjectController::class, 'addSubjects']);
+    Route::get('subjects/list', [SubjectController::class, 'getSubjectsList']);
+    Route::post('subjects/subjects-details', [SubjectController::class, 'getSubjectsDetails']);
+    Route::post('subjects/update', [SubjectController::class, 'updateSubjects']);
+    Route::post('subjects/delete', [SubjectController::class, 'deleteSubjects']);
 
     // class assign
-    Route::post('class_assign/add', [AcademicController::class, 'addClassAssign']);
-    Route::get('class_assign/list', [AcademicController::class, 'getClassAssignList']);
-    Route::post('class_assign/class_assign-details', [AcademicController::class, 'getClassAssignDetails']);
-    Route::post('class_assign/update', [AcademicController::class, 'updateClassAssign']);
-    Route::post('class_assign/delete', [AcademicController::class, 'deleteClassAssign']);
+    Route::post('class_assign/add', [SubjectGradeAssignController::class, 'addClassAssign']);
+    Route::get('class_assign/list', [SubjectGradeAssignController::class, 'getClassAssignList']);
+    Route::post('class_assign/class_assign-details', [SubjectGradeAssignController::class, 'getClassAssignDetails']);
+    Route::post('class_assign/update', [SubjectGradeAssignController::class, 'updateClassAssign']);
+    Route::post('class_assign/delete', [SubjectGradeAssignController::class, 'deleteClassAssign']);
 
     // Teacher subject assign
-    Route::post('teacher_assign/add', [AcademicController::class, 'addTeacherSubject']);
-    Route::get('teacher_assign/list', [AcademicController::class, 'getTeacherListSubject']);
-    Route::post('teacher_assign/teacher_assign-details', [AcademicController::class, 'getTeacherDetailsSubject']);
-    Route::post('teacher_assign/update', [AcademicController::class, 'updateTeacherSubject']);
-    Route::post('teacher_assign/delete', [AcademicController::class, 'deleteTeacherSubject']);
+    Route::post('teacher_assign/add', [SubjectTeacherAssignController::class, 'addTeacherSubject']);
+    Route::get('teacher_assign/list', [SubjectTeacherAssignController::class, 'getTeacherListSubject']);
+    Route::post('teacher_assign/teacher_assign-details', [SubjectTeacherAssignController::class, 'getTeacherDetailsSubject']);
+    Route::post('teacher_assign/update', [SubjectTeacherAssignController::class, 'updateTeacherSubject']);
+    Route::post('teacher_assign/delete', [SubjectTeacherAssignController::class, 'deleteTeacherSubject']);
     // get_assign_class_subjects
-    Route::post('get_assign_class_subjects', [AcademicController::class, 'getAssignClassSubjects']);
+    Route::post('get_assign_class_subjects', [SubjectTeacherAssignController::class, 'getAssignClassSubjects']);
 
 
 
@@ -293,15 +296,15 @@ Route::group(['middleware' => ['auth:api', 'throttle:limit_per_user', 'logroute'
     Route::get('session/list', [ApiController::class, 'getSessionList']);
 
     // Timetable
-    Route::post('timetable/add', [AcademicController::class, 'addTimetable']);
-    Route::post('timetable/list', [AcademicController::class, 'getTimetableList']);
-    Route::post('timetable/edit', [AcademicController::class, 'editTimetable']);
-    Route::post('timetable/update', [AcademicController::class, 'updateTimetable']);
-    Route::post('timetable/copy', [AcademicController::class, 'copyTimetable']);
+    Route::post('timetable/add', [ScheduleController::class, 'addTimetable']);
+    Route::post('timetable/list', [ScheduleController::class, 'getTimetableList']);
+    Route::post('timetable/edit', [ScheduleController::class, 'editTimetable']);
+    Route::post('timetable/update', [ScheduleController::class, 'updateTimetable']);
+    Route::post('timetable/copy', [ScheduleController::class, 'copyTimetable']);
 
     // Timetable Bulk
-    Route::post('timetable-subject-bulk', [AcademicController::class, 'timetableSubjectBulk']);
-    Route::post('timetable/add/bulk', [AcademicController::class, 'addBulkTimetable']);
+    Route::post('timetable-subject-bulk', [TimetableController::class, 'timetableSubjectBulk']);
+    Route::post('timetable/add/bulk', [TimetableController::class, 'addBulkTimetable']);
 
     // Grade routes
     Route::post('grade/add', [ApiController::class, 'addGrade']);
@@ -765,8 +768,8 @@ Route::group(['middleware' => ['auth:api', 'throttle:limit_per_user', 'logroute'
     Route::post('academic_year/update', [ApiControllerOne::class, 'updateAcademicYear']);
     Route::post('academic_year/delete', [ApiControllerOne::class, 'deleteAcademicYear']);
     // add promotion
-    Route::post('get_student_list/by_class_section_sem_ses', [AcademicController::class, 'getStudListByClassSecSemSess']);
-    Route::post('promotion/add', [AcademicController::class, 'addPromotion']);
+    Route::post('get_student_list/by_class_section_sem_ses', [PromotionAssignController::class, 'getStudListByClassSecSemSess']);
+    Route::post('promotion/add', [PromotionAssignController::class, 'addPromotion']);
     Route::post('get_student_list/promotion_data_bulk', [ImportController::class, 'getPromotionDataBulk']);
     Route::post('get_student_list/promotion_bulk_import_save', [AcademicController::class, 'getPromotionDataBulkSave']);
     Route::post('get_student_list/promotion_bulk_student_list', [AcademicController::class, 'getPromotionBulkStudentList']);
