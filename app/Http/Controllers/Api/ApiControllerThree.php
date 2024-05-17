@@ -2562,25 +2562,26 @@ class ApiControllerThree extends BaseController
                         // 'en.active_status',
                         DB::raw("CONCAT(stud.last_name, ' ', stud.first_name) as student_name"),
                         'stud.admission_date',
+                        'stud.official_date',
                         'cl.name as class_name',
                         'sc.name as section_name',
                         'emd.name as dept_name',
                         'stud.gender',
                         'stud.email',
-                        'stap.status_after_approval'
+                        'stap.status as status_after_approval'
                     )
                     ->join('classes as cl', 'en.class_id', '=', 'cl.id')
                     ->join('sections as sc', 'en.section_id', '=', 'sc.id')
                     ->join('students as stud', 'en.student_id', '=', 'stud.id')
                     ->join('emp_department as emd', 'en.department_id', '=', 'emd.id')
-                    ->join('student_applications as stap', 'en.student_id', '=', 'stap.student_id')
+                    ->leftJoin('student_applications as stap', 'en.student_id', '=', 'stap.student_id')
                     ->when($class_id, function ($query, $class_id) {
                         return $query->where('en.class_id', $class_id);
                     })
                     ->when($section_id, function ($query, $section_id) {
                         return $query->where('en.section_id', $section_id);
                     })
-                    ->whereBetween('stud.admission_date', [$startDate, $endDate])
+                    ->whereBetween('stud.official_date', [$startDate, $endDate])
                     ->groupBy("stud.id")
                     ->get();
                 return $this->successResponse($data, 'Student new joining list fetched successfully');
