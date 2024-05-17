@@ -616,52 +616,59 @@ class MenuAccessController extends BaseController
         try {
             $br_id = $request->br_id;
             $scrole_id = $request->scrole_id;
+            $role_id = $request->role_id;
             $main_db = config('constants.main_db');
-
+ 
             $conn = $this->createNewConnection($request->br_id);
             // get data
             //$query = $conn->table('school_roles')->where('id', $id)->delete();
-
+ 
             $data =  $conn->table($main_db . '.menus as ms')->select('ms.*')
-                ->selectSub(function ($query) use ($scrole_id) {
+                ->selectSub(function ($query) use ($scrole_id,$role_id) {
                     $query->select('read')
                         ->from('school_menuaccess')
                         ->where('school_roleid', $scrole_id)
+                        ->where('role_id', $role_id)
                         ->whereColumn('ms.menu_id', 'school_menuaccess.menu_id')
                         ->limit(1);
                 }, 'menu_read')
-                ->selectSub(function ($query) use ($scrole_id) {
+                ->selectSub(function ($query) use ($scrole_id,$role_id) {
                     $query->select('add')
                         ->from('school_menuaccess')
                         ->where('school_roleid', $scrole_id)
+                        ->where('role_id', $role_id)
                         ->whereColumn('ms.menu_id', 'school_menuaccess.menu_id')
                         ->limit(1);
                 }, 'menu_add')
-                ->selectSub(function ($query) use ($scrole_id) {
+                ->selectSub(function ($query) use ($scrole_id,$role_id) {
                     $query->select('updates')
                         ->from('school_menuaccess')
                         ->where('school_roleid', $scrole_id)
+                        ->where('role_id', $role_id)
                         ->whereColumn('ms.menu_id', 'school_menuaccess.menu_id')
                         ->limit(1);
                 }, 'menu_update')
-                ->selectSub(function ($query) use ($scrole_id) {
+                ->selectSub(function ($query) use ($scrole_id,$role_id) {
                     $query->select('deletes')
                         ->from('school_menuaccess')
                         ->where('school_roleid', $scrole_id)
+                        ->where('role_id', $role_id)
                         ->whereColumn('ms.menu_id', 'school_menuaccess.menu_id')
                         ->limit(1);
                 }, 'menu_delete')
-                ->selectSub(function ($query) use ($scrole_id) {
+                ->selectSub(function ($query) use ($scrole_id,$role_id) {
                     $query->select('export')
                         ->from('school_menuaccess')
                         ->where('school_roleid', $scrole_id)
+                        ->where('role_id', $role_id)
                         ->whereColumn('ms.menu_id', 'school_menuaccess.menu_id')
                         ->limit(1);
                 }, 'menu_export')
-                ->selectSub(function ($query) use ($scrole_id) {
+                ->selectSub(function ($query) use ($scrole_id,$role_id) {
                     $query->select('id')
                         ->from('school_menuaccess')
                         ->where('school_roleid', $scrole_id)
+                         ->where('role_id', $role_id)
                         ->whereColumn('ms.menu_id', 'school_menuaccess.menu_id')
                         ->limit(1);
                 }, 'menuaccess_id')
@@ -681,6 +688,7 @@ class MenuAccessController extends BaseController
     }
     public function setschoolpermission(Request $request)
     {
+        ini_set('max_input_vars', 5000);
         try {
             // return $request;
             $conn = $this->createNewConnection($request->branch_id);
