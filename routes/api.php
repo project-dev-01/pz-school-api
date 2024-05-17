@@ -16,6 +16,7 @@ use Illuminate\Support\Facades\Artisan;
 #use App\Http\Controllers\Api\V1\GradeController;
 use App\Http\Controllers\Api\ApiControllerNameSeq;
 use App\Http\Controllers\Api\V1\AcademicController;
+use App\Http\Controllers\Api\V1\ClassroomManagemenController;
 
 use App\Http\Controllers\Api\V1\Academic\{ClassesAllocationController, GradeController, ClassesController, AssignGradeTeacherController, PromotionAssignController, ScheduleController, SubjectController, SubjectGradeAssignController, SubjectTeacherAssignController,  TimetableController, TimetableCopyController, PromotionController};
 
@@ -166,8 +167,8 @@ Route::group(['middleware' => ['auth:api', 'throttle:limit_per_user', 'logroute'
     // branch id by class
     Route::post('branch-by-class', [ApiController::class, 'branchIdByClass']);
     Route::post('branch-by-section', [ApiController::class, 'branchIdBySection']);
-    Route::post('section-by-class', [ApiController::class, 'sectionByClass']);
-    Route::post('subject-by-class', [ApiController::class, 'subjectByClass']);
+    Route::post('section-by-class', [ClassroomManagemenController::class, 'sectionByClass']);
+    Route::post('subject-by-class', [ClassroomManagemenController::class, 'subjectByClass']);
     Route::post('exam-by-subjects', [ApiController::class, 'examBySubjects']);
     Route::post('exam-by-teacher-subjects', [ApiController::class, 'examByTeacherSubjects']);
     Route::post('subject-by-papers', [ApiController::class, 'getSubjectByPaper']);
@@ -424,12 +425,12 @@ Route::group(['middleware' => ['auth:api', 'throttle:limit_per_user', 'logroute'
     Route::post('homework/student/filter', [ApiController::class, 'studentHomeworkFilter']);
 
     //  getStudentAttendence
-    Route::post('get_student_attendance', [ApiController::class, 'getStudentAttendence']);
+    Route::post('get_student_attendance', [ClassroomManagemenController::class, 'getStudentAttendence']);
     Route::post('add_student_attendance', [ApiController::class, 'addStudentAttendence']);
-    Route::post('get_short_test', [ApiController::class, 'getShortTest']);
+    Route::post('get_short_test', [ClassroomManagemenController::class, 'getShortTest']);
     Route::post('add_short_test', [ApiController::class, 'addShortTest']);
     Route::post('add_daily_report', [ApiController::class, 'addDailyReport']);
-    Route::post('get_daily_report_remarks', [ApiController::class, 'getDailyReportRemarks']);
+    Route::post('get_daily_report_remarks', [ClassroomManagemenController::class, 'getDailyReportRemarks']);
     Route::post('add_daily_report_remarks', [ApiController::class, 'addDailyReportRemarks']);
     Route::post('get_classroom_widget_data', [ApiController::class, 'getClassroomWidget']);
     Route::post('add_daily_report_by_student', [ApiController::class, 'addDailyReportByStudent']);
@@ -557,7 +558,7 @@ Route::group(['middleware' => ['auth:api', 'throttle:limit_per_user', 'logroute'
     Route::post('student_leave/get_reasons_by_leave_type', [ApiControllerThree::class, 'getReasonsByLeaveType']);
     Route::get('get_students_parentdashboard', [ApiController::class, 'get_studentsparentdashboard']);
     Route::post('std_leave_apply', [ApiController::class, 'student_leaveapply']);
-    Route::get('get_student_leaves', [ApiController::class, 'get_studentleaves']);
+    Route::get('get_student_leaves', [ClassroomManagemenController::class, 'get_studentleaves']);
     Route::get('get_leave_reasons', [ApiController::class, 'get_leavereasons']);
 
     Route::get('studentleave/edit', [ApiController::class, 'studentleaveEdit']);
@@ -1046,7 +1047,7 @@ Route::group(['middleware' => ['auth:api', 'throttle:limit_per_user', 'logroute'
 
     Route::get('job_title/list', [ApiControllerOne::class, 'jobTitleList']);
     Route::get('employee_type/list', [ApiControllerOne::class, 'employeeTypeList']);
-    Route::post('grade_list_by_department', [ApiControllerOne::class, 'gradeListByDepartment']);
+    Route::post('grade_list_by_department', [ClassroomManagemenController::class, 'gradeListByDepartment']);
     // buletin_board routes
     Route::post('buletin_board/add', [ApiControllerThree::class, 'addBuletinBoard']);
     Route::get('buletin_board/list', [ApiControllerThree::class, 'getBuletinBoardList']);
