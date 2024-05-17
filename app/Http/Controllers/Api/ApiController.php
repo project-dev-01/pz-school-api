@@ -16236,101 +16236,100 @@ try{
     public function getParentList(Request $request)
     {
         try{
-        $validator = \Validator::make($request->all(), [
-            'branch_id' => 'required'
-        ]);
+            $validator = \Validator::make($request->all(), [
+                'branch_id' => 'required'
+            ]);
 
-        if (!$validator->passes()) {
-            return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
-        } else {
-            $cache_time = config('constants.cache_time');
-            $cache_parentDetails = config('constants.cache_parentDetails');
-            $academic_session_id = $request->academic_session_id;
-            $status = $request->status ?? null;
-            // dd($request);
-            if ($status === null) {
-                // Cache enabled for status filtering
-                $cacheKey = $cache_parentDetails . $request->branch_id; 
-                if (Cache::has($cacheKey)) {
-                    $parentDetails = Cache::get($cacheKey);
-                } else {
-                    $parentDetails = $this->fetchParentDetails($request->branch_id, $status,$academic_session_id);
-                    Cache::put($cacheKey, $parentDetails, now()->addHours($cache_time));
-                }
+            if (!$validator->passes()) {
+                return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
             } else {
-                // No caching for status filtering
-                $parentDetails = $this->fetchParentDetails($request->branch_id, $status,$academic_session_id);
+                $cache_time = config('constants.cache_time');
+                $cache_parentDetails = config('constants.cache_parentDetails');
+                $academic_session_id = $request->academic_session_id;
+                $status = $request->status ?? null;
+                // dd($request);
+                if ($status === null) {
+                    // Cache enabled for status filtering
+                    $cacheKey = $cache_parentDetails . $request->branch_id; 
+                    if (Cache::has($cacheKey)) {
+                        $parentDetails = Cache::get($cacheKey);
+                    } else {
+                        $parentDetails = $this->fetchParentDetails($request->branch_id, $status,$academic_session_id);
+                        Cache::put($cacheKey, $parentDetails, now()->addHours($cache_time));
+                    }
+                } else {
+                    // No caching for status filtering
+                    $parentDetails = $this->fetchParentDetails($request->branch_id, $status,$academic_session_id);
+                }
+
+                return $this->successResponse($parentDetails, 'Parent records fetched successfully');
             }
-
-            return $this->successResponse($parentDetails, 'Parent records fetched successfully');
         }
-    }
-    catch(Exception $error) {
-        return $this->commonHelper->generalReturn('403','error',$error,'Error in getParentList');
-    }
-
+        catch(Exception $error) {
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in getParentList');
+        }
     }
     private function fetchParentDetails($branch_id, $status = null, $academic_session_id) {
         try{
-        $conn = $this->createNewConnection($branch_id);
-    
+            $conn = $this->createNewConnection($branch_id);
         
-        $parentDetails = $conn->table('parent as pt')
-                ->select("pt.id", 'pt.email', 'pt.occupation', DB::raw("CONCAT(pt.last_name, ' ', pt.first_name) as name"))
-                ->leftjoin('students as st', function ($join) {
-                    $join->on('st.guardian_id', '=', 'pt.id');
-                })
-                ->leftJoin('enrolls as e', 'st.id', '=', 'e.student_id')
-                ->where('e.academic_session_id', '=' , $academic_session_id)
-                ->where('e.active_status', '=' , "0")
-                ->where('pt.status', '=', '0')
-                ->groupBy('pt.id')
-                ->get();
-        if ($status == "1") {
-            $allParentDetails = $conn->table('parent as pt')
-                ->select("pt.id", 'pt.email', 'pt.occupation', DB::raw("CONCAT(pt.last_name, ' ', pt.first_name) as name"))
-                ->where('pt.status', '=', '0')
-                ->groupBy('pt.id')
-                ->get();
-             // Convert collections to arrays for easier manipulation
-            $parentDetailsArray = $parentDetails->pluck('id')->toArray();
-            $allParentDetailsArray = $allParentDetails->pluck('id')->toArray();
+            
+            // $parentDetails = $conn->table('parent as pt')
+            //         ->select("pt.id", 'pt.email', 'pt.occupation', DB::raw("CONCAT(pt.last_name, ' ', pt.first_name) as name"))
+            //         ->leftjoin('students as st', function ($join) {
+            //             $join->on('st.guardian_id', '=', 'pt.id');
+            //         })
+            //         ->leftJoin('enrolls as e', 'st.id', '=', 'e.student_id')
+            //         ->where('e.academic_session_id', '=' , $academic_session_id)
+            //         ->where('e.active_status', '=' , "0")
+            //         ->where('pt.status', '=', '0')
+            //         ->groupBy('pt.id')
+            //         ->get();
+            // if ($status == "1") {
+            //     $allParentDetails = $conn->table('parent as pt')
+            //         ->select("pt.id", 'pt.email', 'pt.occupation', DB::raw("CONCAT(pt.last_name, ' ', pt.first_name) as name"))
+            //         ->where('pt.status', '=', '0')
+            //         ->groupBy('pt.id')
+            //         ->get();
+            //     // Convert collections to arrays for easier manipulation
+            //     $parentDetailsArray = $parentDetails->pluck('id')->toArray();
+            //     $allParentDetailsArray = $allParentDetails->pluck('id')->toArray();
 
-            // Remove parent details from $allParentDetails where they match $parentDetails
-            $parentDetails = $allParentDetails->reject(function ($item) use ($parentDetailsArray) {
-                return in_array($item->id, $parentDetailsArray);
-            });
+            //     // Remove parent details from $allParentDetails where they match $parentDetails
+            //     $parentDetails = $allParentDetails->reject(function ($item) use ($parentDetailsArray) {
+            //         return in_array($item->id, $parentDetailsArray);
+            //     });
+            // }
+            $query = $conn->table('parent as pt')
+                    ->select("pt.id", 'pt.email', 'pt.occupation', DB::raw("CONCAT(pt.last_name, ' ', pt.first_name) as name"))
+                    ->leftjoin('students as st', function ($join) {
+                        $join->on('st.guardian_id', '=', 'pt.id');
+                    })
+                    ->leftJoin('enrolls as e', 'st.id', '=', 'e.student_id');
+
+                    if (isset($status)) {
+                        if ($status == 0) {
+                            // Retrieve currently active students only
+                            $query->where('e.active_status', 0)
+                                    ->where('e.academic_session_id', $academic_session_id);
+                        } elseif ($status == 1) {
+                            $query->whereNotExists(function ($subQuery) use ($academic_session_id) {
+                                $subQuery->select(DB::raw(1))
+                                    ->from('enrolls as sub_e')
+                                    ->join('students as sub_st', 'sub_e.student_id', '=', 'sub_st.id')
+                                    ->whereRaw('sub_st.guardian_id = pt.id')
+                                    ->where('sub_e.active_status', 0)
+                                    ->where('sub_e.academic_session_id', $academic_session_id);
+                            });
+                        }
+                    }
+            $query->where('pt.status', '=', '0');
+            $parentDetails = $query->groupBy('pt.id')->get()->toArray();
+            return $parentDetails;
         }
-        // $query = $conn->table('parent as pt')
-        //         ->select("pt.id", 'pt.email', 'pt.occupation', DB::raw("CONCAT(pt.last_name, ' ', pt.first_name) as name"))
-        //         ->leftjoin('students as st', function ($join) {
-        //             $join->on('st.guardian_id', '=', 'pt.id');
-        //         })
-        //         ->leftJoin('enrolls as e', 'st.id', '=', 'e.student_id');
-
-        //         if (isset($status)) {
-        //             if ($status == 0) {
-        //                 // Retrieve currently active students only
-        //                 $query->where('e.active_status', 0)
-        //                         ->where('e.academic_session_id', $academic_session_id);
-        //             } elseif ($status == 1) {
-        //                 $query->whereNotExists(function ($subQuery) use ($academic_session_id) {
-        //                     $subQuery->select(DB::raw(1))
-        //                         ->from('enrolls as sub_e')
-        //                         ->whereRaw('sub_e.student_id = e.student_id')
-        //                         ->where('sub_e.active_status', 0)
-        //                         ->where('sub_e.academic_session_id', $academic_session_id);
-        //                 });
-        //             }
-        //         }
-        //     $query->where('pt.status', '=', '0');
-        //     $parentDetails = $query->groupBy('pt.id')->get()->toArray();
-                    
-        return $parentDetails;
-    }
-    catch(Exception $error) {
-        return $this->commonHelper->generalReturn('403','error',$error,'Error in fetchParentDetails');
-    }
+        catch(Exception $error) {
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in fetchParentDetails');
+        }
     }
     // getParentStudentUpdateList
     public function getParentStudentUpdateInfoList(Request $request)
@@ -26082,54 +26081,58 @@ try{
     public function verifyApplication(Request $request)
     {
 
-try{
-        $validator = \Validator::make($request->all(), [
-            'branch_id' => 'required',
-            'email' => 'required'
-        ]);
-        if (!$validator->passes()) {
-            return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
-        } else {
-            // create new connection
-            $conn = $this->createNewConnection($request->branch_id);
+        try{
+            $validator = \Validator::make($request->all(), [
+                'branch_id' => 'required',
+                'email' => 'required'
+            ]);
+            if (!$validator->passes()) {
+                return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
+            } else {
+                // create new connection
+                $conn = $this->createNewConnection($request->branch_id);
 
-            $email =  $request->email;
+                $email =  $request->email;
 
-            $token = Str::random(60);
-            if ($conn->table('guest')->where([['email', '=', $email]])->count() > 0) {
-                if ($conn->table('guest')->where([['email', '=', $email], ['email_verify', '=', "0"]])->count() > 0) {
-                    $guest_id = $conn->table('guest')->where('email', '=', $email)->update([
-                        'token' => $token,
-                        'created_at' => date("Y-m-d H:i:s")
-                    ]);
-                } else if ($conn->table('guest')->where([['email', '=', $email], ['email_verify', '=', "1"]])->count() > 0) {
-                    return $this->send422Error('Email Already Verified', ['error' => 'Email Already Verified']);
+                $token = Str::random(60);
+                if(User::where([['email', '=', $request->email],['branch_id', '=', $request->branch_id], ['role_id', '=', "5"]])->count() < 1){
+                    if ($conn->table('guest')->where([['email', '=', $email]])->count() > 0) {
+                        if ($conn->table('guest')->where([['email', '=', $email], ['email_verify', '=', "0"]])->count() > 0) {
+                            $guest_id = $conn->table('guest')->where('email', '=', $email)->update([
+                                'token' => $token,
+                                'created_at' => date("Y-m-d H:i:s")
+                            ]);
+                        } else if ($conn->table('guest')->where([['email', '=', $email], ['email_verify', '=', "1"]])->count() > 0) {
+                            return $this->send422Error('Email Already Verified', ['error' => 'Email Already Verified']);
+                        }
+                    } else {
+                        // insert data
+                        $guest_id = $conn->table('guest')->insert([
+                            'email' => $email,
+                            'token' => $token,
+                            'created_at' => date("Y-m-d H:i:s")
+                        ]);
+                    }
+                    $link = $request->url . '/application/email/' . $request->branch_id . '/' . $token;
+                    $mailFromAddress = env('MAIL_FROM_ADDRESS', config('constants.client_email'));
+                    if ($email) {
+                        $data = array('link' => $link, 'email' => $email);
+                        $query = Mail::send('auth.verify_mail', $data, function ($message) use ($email,$mailFromAddress) {
+                            $message->to($email, 'Guest')->subject('Email Verification');
+                            $message->from($mailFromAddress, 'Email Verification');
+                        });
+                    }
+                }else{
+                    return $this->send422Error('User Account Already Exist', ['error' => 'User Account Already Exist']);
                 }
-            } else {
-                // insert data
-                $guest_id = $conn->table('guest')->insert([
-                    'email' => $email,
-                    'token' => $token,
-                    'created_at' => date("Y-m-d H:i:s")
-                ]);
-            }
-            $link = $request->url . '/application/email/' . $request->branch_id . '/' . $token;
-            $mailFromAddress = env('MAIL_FROM_ADDRESS', config('constants.client_email'));
-            if ($email) {
-                $data = array('link' => $link, 'email' => $email);
-                $query = Mail::send('auth.verify_mail', $data, function ($message) use ($email,$mailFromAddress) {
-                    $message->to($email, 'Guest')->subject('Email Verification');
-                    $message->from($mailFromAddress, 'Email Verification');
-                });
-            }
-            $success = [];
-            if (!$query) {
-                return $this->send500Error('Something went wrong.', ['error' => 'Something went wrong']);
-            } else {
-                return $this->successResponse($success, 'Verification has been Sended Successfully');
+                $success = [];
+                if (!$query) {
+                    return $this->send500Error('Something went wrong.', ['error' => 'Something went wrong']);
+                } else {
+                    return $this->successResponse($success, 'Verification has been Sended Successfully');
+                }
             }
         }
-         }
         catch(Exception $error) {
             return $this->commonHelper->generalReturn('403','error',$error,'Error in verifyApplication');
         }
@@ -26585,7 +26588,12 @@ try{
                     
                     $relation = $conn->table('relations')->where('id',$request->guardian_relation)->first();
 
-                    
+                    $guardian_nationality = NULL;
+                    if($relation->parent == "1"){
+                        $guardian_nationality = $request->father_nationality;
+                    }else if($relation->parent == "2"){
+                        $guardian_nationality = $request->mother_nationality;
+                    }
                     if ($request->guardian_first_name) {
                         // return $request;
                         $guardian_data = [
@@ -26599,6 +26607,7 @@ try{
                                 'last_name_english' => isset($request->guardian_last_name_english) ? $request->guardian_last_name_english : "",
                                 'middle_name_english' => isset($request->guardian_middle_name_english) ? $request->guardian_middle_name_english : "",
                                 'occupation' => $request->guardian_occupation,
+                                'nationality' => $guardian_nationality,
                                 'mobile_no' => isset($request->guardian_phone_number) ? Crypt::encryptString($request->guardian_phone_number) : "",
                                 'email' => $request->guardian_email,
                                 'company_name_japan' => $request->guardian_company_name_japan,
@@ -30117,9 +30126,13 @@ try{
                     $number = $last_id->id;
                 }
                 $control_number = $year . sprintf("%04d", $number + 1);
+                $student_current_details = $conn->table('enrolls')->where('student_id',$request->student_id)->where('active_status',0)->first();
                 // return $request;
                 $query = $conn->table('termination')->insertGetId([
                     'student_id' => $request->student_id,
+                    'academic_session_id' => $student_current_details->academic_session_id,
+                    'class_id' => $student_current_details->class_id,
+                    'section_id' => $student_current_details->section_id,
                     'control_number' => $control_number,
                     'date' => $request->date,
                     'schedule_date_of_termination' => $request->schedule_date_of_termination,
@@ -30193,16 +30206,28 @@ try{
             $conn = $this->createNewConnection($request->branch_id);
             // get data
             $parent_id = $request->parent_id;
+            $academic_year = $request->academic_year;
+            $academic_grade = $request->academic_grade;
             $terminationDetails = $conn->table('termination as t')->select('t.*', 'ay.name as academic_year', 's.gender', DB::raw("CONCAT(s.last_name_english, ' ', s.first_name_english) as name_english"), DB::raw("CONCAT(s.last_name, ' ', s.first_name) as name"), 'c.name as class_name', 'sc.name as section_name')
                 ->leftJoin('students as s', 's.id', '=', 't.student_id')
                 ->leftJoin('enrolls as e', 'e.student_id', '=', 's.id')
                 ->leftJoin('classes as c', 'e.class_id', '=', 'c.id')
                 ->leftJoin('sections as sc', 'e.section_id', '=', 'sc.id')
                 ->leftJoin('academic_year as ay', 'e.academic_session_id', '=', 'ay.id')
-                ->where('e.active_status', '=', '0')
+                // ->where('e.active_status', '=', '0')
                 ->when($parent_id, function ($query, $parent_id) {
                     return $query->where('t.created_by', $parent_id);
-                })->orderBy('t.created_by', 'desc')->groupBy('t.id')->get()->toArray();
+                })
+                ->when($academic_year, function ($query, $academic_year) {
+                    return $query->where('t.academic_session_id', $academic_year);
+                })
+                ->when($academic_grade, function ($query, $academic_grade) {
+                    return $query->where('t.class_id', $academic_grade);
+                })
+                // ->where('e.academic_session_id', $academic_year)
+                // ->where('e.class_id', $academic_grade)
+                ->orderBy('t.created_by', 'desc')
+                ->groupBy('t.id')->get()->toArray();
 
             // $groupDetails = $conn->table('termination')->get()->toArray();
             return $this->successResponse($terminationDetails, 'Termination record fetch successfully');

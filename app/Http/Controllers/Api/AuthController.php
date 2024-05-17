@@ -177,8 +177,8 @@ class AuthController extends BaseController
                             ->join('enrolls as en', 'std.id', '=', 'en.student_id')
                             ->where('en.active_status', '=', '0')
                             ->where('guardian_id', '=', $user->user_id)
-                            ->orWhere('mother_id', '=', $user->user_id)
-                            ->orWhere('father_id', '=', $user->user_id)
+                            // ->orWhere('mother_id', '=', $user->user_id)
+                            // ->orWhere('father_id', '=', $user->user_id)
                             ->groupBy('std.id')
                             ->get();
                         $success['StudentID'] = $StudentID;
