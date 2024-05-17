@@ -10,7 +10,7 @@ use App\Helpers\CommonHelper;
 use Illuminate\Support\Facades\DB;
 use Exception;
 
-class ClassroomManagemenController extends BaseController
+class ClassroomManagementController extends BaseController
 {
     protected CommonHelper $commonHelper;
     public function __construct(CommonHelper $commonHelper)
