@@ -12253,12 +12253,13 @@ class ApiControllerOne extends BaseController
         if (!$validator->passes()) {
             return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
         } else {
+            $conn = $this->createNewConnection($request->branch_id);
             $department_id = $request->department_id;
             $class_id = $request->class_id;
             $section_id = $request->section_id;
             $student_id  = $request->student_id;
             // create new connection
-            $conn = $this->createNewConnection($request->branch_id);
+            
             if (empty($department_id)) {
                 $class_id = $request->class_id;
                 $department  =  $conn->table('classes')->select("department_id")->where("id", $class_id)->first();
@@ -12270,11 +12271,12 @@ class ApiControllerOne extends BaseController
                     'se.name as section_name',
                     'cl.name as class_name',
                     DB::raw('CONCAT(s.last_name, " ", s.first_name) as student_name'),
-                    DB::raw('MAX(sin.type) as latest_type'),
+                    DB::raw('COUNT(DISTINCT sin.id) as message_count'),
                     'sin.type',
                     'sin.comment',
                     'si.title',
-                    'sin.id'
+                    'sin.id',
+                    'si.id as student_interviewId'
                 )
                 ->leftJoin('students as s', 'si.student_id', '=', 's.id')
                 ->leftJoin('staff_departments as d1', 'si.department_id', '=', 'd1.id')
@@ -12284,8 +12286,10 @@ class ApiControllerOne extends BaseController
                 ->where('si.class_id', $class_id)
                 ->where('si.section_id', $section_id)
                 ->where('si.department_id', $department_id)
-                ->where('si.student_id', $student_id)
-                // ->groupBy('d1.name', 'se.name', 'cl.name', 'sin.comment', 'sin.title')
+                ->when($student_id, function ($q)  use ($student_id) {
+                            $q->where('si.student_id', $student_id);
+                        })
+             ->groupBy('si.id')
                 ->get();
 
 
@@ -12392,7 +12396,109 @@ class ApiControllerOne extends BaseController
             return $this->commonHelper->generalReturn('403', 'error', $error, 'Error in editStudentInterview');
         }
     }
+    public function updateStudentInterview(Request $request){
+        try {
+            $validator = \Validator::make($request->all(), [
+                // 'token' => 'required',
+                'branch_id' => 'required',
+            ]);
 
+            //    return $request;
+            if (!$validator->passes()) {
+                return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
+            } else {
+                $conn = $this->createNewConnection($request->branch_id);
+                $id = $request->id; // Assuming 'id' is the key for the comment ID in the array
+                $commentText = $request->comment;// Assuming 'comment' is the key for the comment text in the array
+    
+                    // Update the comment in the table using the connection
+                $query = $conn->table('student_interview_notes')
+                        ->where('id', $id)
+                        ->update([
+                            'comment' => $commentText,
+                            'updated_by' => $request->updated_by,
+                            'updated_at' => date("Y-m-d H:i:s"),
+                        ]);
+
+                $success = [];
+                if ($query) {
+                    return $this->successResponse($success, 'Comment Details have Been updated');
+                } else {
+                    return $this->send500Error('Something went wrong.', ['error' => 'Something went wrong']);
+                }
+            }
+        } catch (Exception $error) {
+            return $this->commonHelper->generalReturn('403', 'error', $error, 'Error in updateStudentInterview');
+        }
+
+    }
+    public function addCommentStudentInterview(Request $request){
+          try {
+            $validator = \Validator::make($request->all(), [
+                // 'token' => 'required',
+                'branch_id' => 'required',
+            ]);
+
+            //    return $request;
+            if (!$validator->passes()) {
+                return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
+            } else {
+                $conn = $this->createNewConnection($request->branch_id);
+                $id = $request->id; // Assuming 'id' is the key for the comment ID in the array
+                $commentText = $request->comment;// Assuming 'comment' is the key for the comment text in the array
+    
+                    // Update the comment in the table using the connection
+                $query = $conn->table('student_interview_notes')
+                        ->insert([
+                            'student_interview_id' =>$id,
+                            'comment' => $commentText,
+                            'type' => $request->type,
+                            'created_by' => $request->created_by,
+                            'created_at' => date("Y-m-d H:i:s")
+                        ]);
+
+                $success = [];
+                if ($query) {
+                    return $this->successResponse($success, 'Comment has been successfully saved');
+                } else {
+                    return $this->send500Error('Something went wrong.', ['error' => 'Something went wrong']);
+                }
+            }
+        } catch (Exception $error) {
+            return $this->commonHelper->generalReturn('403', 'error', $error, 'Error in updateStudentInterview');
+        }
+
+    }
+    public function getStudentListbysection(Request $request)
+    {
+        try {
+            $validator = \Validator::make($request->all(), [
+                'branch_id' => 'required',
+                'token' => 'required',
+            ]);
+
+            $class_id = $request->class_id;
+            $section_id = $request->section_id;
+            if (!$validator->passes()) {
+                return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
+            } else {
+                // create new connection
+                $con = $this->createNewConnection($request->branch_id);
+                // get data
+                $student = $con->table('enrolls as e')->select('s.id', DB::raw('CONCAT(s.last_name, " ", s.first_name) as name'), 's.register_no', 's.roll_no', 's.mobile_no', 's.email', 's.gender', 's.photo')
+                    ->leftJoin('students as s', 'e.student_id', '=', 's.id')
+                    ->where('e.class_id','=', $class_id)
+                    ->where('e.section_id', '=', $section_id)
+                    ->where('e.active_status', '=', "0")
+                    ->groupBy('e.student_id')
+                    ->get()->toArray();
+
+                return $this->successResponse($student, 'Student record fetch successfully');
+            }
+        } catch (Exception $error) {
+            return $this->commonHelper->generalReturn('403', 'error', $error, 'Error in getStudentListbysection');
+        }
+    }
 
     public function childHealthExport(Request $request)
     {

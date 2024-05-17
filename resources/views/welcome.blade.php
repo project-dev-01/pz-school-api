@@ -5,7 +5,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
-    <title>paxsuzen</title>
+    <title>Suzen</title>
 
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.gstatic.com">
@@ -55,7 +55,7 @@
     <div class="flex-center position-ref full-height">
         <div class="content">
             <div class="title">
-                <a href="https://paxsuzen.com">paxsuzen</a>
+                <a href="https://paxsuzen.com">Suzen</a>
             </div>
         </div>
     </div>

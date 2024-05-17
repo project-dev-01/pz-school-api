@@ -1159,6 +1159,8 @@ Route::group(['middleware' => ['auth:api', 'throttle:limit_per_user', 'logroute'
     Route::post('student_interview_add', [ApiControllerOne::class, 'addStudentInterview']);
     Route::post('student_interview_edit', [ApiControllerOne::class, 'editStudentInterview']);
     Route::post('student_interview_update', [ApiControllerOne::class, 'updateStudentInterview']);
+    Route::post('student_interview_addComment', [ApiControllerOne::class, 'addCommentStudentInterview']);
+    Route::post('get_student_list_interview',[ApiControllerOne::class, 'getStudentListbysection']);
     Route::get('child_health/list', [ApiControllerOne::class, 'getChildHealthList']);
     Route::post('child_health/child_health-details', [ApiControllerOne::class, 'getChildHealthDetails']);
     Route::post('personalinterview/store', [ApiController::class, 'personalinterviewstore']);

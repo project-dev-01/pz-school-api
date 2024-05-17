@@ -188,7 +188,7 @@ class ApiControllerThree extends BaseController
                 if (!$query) {
                     return $this->send500Error('Something went wrong.', ['error' => 'Something went wrong']);
                 } else {
-                    return $this->successResponse($success, 'Bulliten Board has been successfully saved');
+                    return $this->successResponse($success, 'Bulletin Board has been successfully saved');
                 }
             }
         } catch (Exception $error) {
@@ -676,7 +676,7 @@ class ApiControllerThree extends BaseController
                 if (!$query) {
                     return $this->send500Error('Something went wrong.', ['error' => 'Something went wrong']);
                 } else {
-                    return $this->successResponse($success, 'Bulliten Board has been successfully updated');
+                    return $this->successResponse($success, 'Bulletin Board has been successfully updated');
                 }
             }
         } catch (Exception $error) {
