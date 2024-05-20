@@ -16111,8 +16111,7 @@ try{
                     'occupation' => $request->occupation,
                     'email' => $request->email,
                     'mobile_no' => $mobile_no,
-                    'status' => $request->status,
-                    
+                    "status" => '0',
                     
                     'first_name_english' => $request->first_name_english,
                     'middle_name_english' => $request->middle_name_english,                    
@@ -16246,7 +16245,7 @@ try{
                 $cache_time = config('constants.cache_time');
                 $cache_parentDetails = config('constants.cache_parentDetails');
                 $academic_session_id = $request->academic_session_id;
-                $status = $request->status ?? null;
+                $status = $request->status ?? 0;
                 // dd($request);
                 if ($status === null) {
                     // Cache enabled for status filtering
@@ -17265,7 +17264,7 @@ try{
                             'mobile_no' =>  $father_mobile_no ,
                            'visa_photo' => $father_visa_fileName, 
                              'passport_photo' => $father_passport_fileName,  
-                            'status' => '0', // Assuming you want to update the status as well
+                            // 'status' => '0', // Assuming you want to update the status as well 
                             'updated_at' => now()
                         ]);
                     }
@@ -17314,7 +17313,7 @@ try{
                             'mobile_no' =>   $mother_mobile_no,
                             'passport_photo' => $mother_passport_fileName,  
                             'visa_photo' => $mother_visa_fileName, 
-                            'status' => '0', // Assuming you want to update the status as well
+                            // 'status' => '0', // Assuming you want to update the status as well
                             'updated_at' => now()
                         ]);
                     }
@@ -17335,7 +17334,15 @@ try{
                         ]);
                     }
 
+                    $updateData = ['status' => $request->status];
+                    if ($request->status == 0) {
+                        $updateData['login_attempt'] = 0;
+                    }
 
+                    $update_user = User::where([
+                        ['branch_id', '=', $request->branch_id],
+                        ['user_id', '=', $id]
+                    ])->update($updateData);
 
                     $query = $staffConn->table('parent')->where('id', $id)->update([
                         
@@ -17345,7 +17352,7 @@ try{
                         'occupation' => $request->occupation,
                         'email' => $request->email,
                         'mobile_no' => $mobile_no,
-                        'status' => $request->status,
+                        // 'status' => $request->status,
                         'email' => $request->email,
                         'mobile_no' => $mobile_no,
                        /* 'gender' => $request->gender,
@@ -17370,7 +17377,7 @@ try{
                         'facebook_url' => $request->facebook_url,
                         'linkedin_url' => $request->linkedin_url,
                         'twitter_url' => $request->twitter_url,*/
-                        'status' => $request->status,
+                        // 'status' => $request->status,
                         'first_name_english' => $request->first_name_english,
                         'middle_name_english' => $request->middle_name_english,                    
                         'last_name_english' => $request->last_name_english,
