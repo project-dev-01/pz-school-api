@@ -109,7 +109,7 @@ Route::group(['middleware' => ['auth:api', 'throttle:limit_per_user', 'logroute'
     Route::post('classes/class-details', [GradeController::class, 'getClassDetails']);
     Route::post('classes/update', [GradeController::class, 'updateClassDetails']);
     Route::post('classes/delete', [GradeController::class, 'deleteClass']);
-    Route::post('classes/list_by_department', [GradeController::class, 'getClassListByDept']);
+    Route::post('classes/list_by_department', [ApiControllerThree::class, 'getClassListByDept']);
 
     Route::post('teacher/class_list', [ApiController::class, 'teacherClassList']);
 
