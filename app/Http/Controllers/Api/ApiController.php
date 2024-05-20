@@ -13949,6 +13949,7 @@ try{
 
                     'enrollment' => isset($request->enrollment) ? $request->enrollment : "",
                     'trail_date' => isset($request->trail_date) ? $request->trail_date : "",
+                    'trail_end_date' => isset($request->trail_end_date) ? $request->trail_end_date : "",
                     'official_date' => isset($request->official_date) ? $request->official_date : "",
 
                     'category_id' => $request->category_id,
@@ -26818,6 +26819,7 @@ try{
 
                         'enrollment' => $request->enrollment,
                         'trail_date' => $request->trail_date,
+                        'trail_end_date' => $request->trail_end_date,
                         'official_date' => $request->official_date,
 
                         // 'japanese_association_membership_image_principal' => $image_principal_fileName,
@@ -26958,6 +26960,7 @@ try{
                 'nationality' => $request->nationality,
                 'enrollment' => $request->enrollment,
                 'trail_date' => $request->trail_date,
+                'trail_end_date' => $request->trail_end_date,
                 'official_date' => $request->official_date,
                 'nric' => $request->nric,
                 'passport' => $request->passport,
