@@ -16,7 +16,7 @@ use Illuminate\Support\Facades\Artisan;
 #use App\Http\Controllers\Api\V1\GradeController;
 use App\Http\Controllers\Api\ApiControllerNameSeq;
 use App\Http\Controllers\Api\V1\AcademicController;
-use App\Http\Controllers\Api\V1\{ClassroomManagementController, HomeworkController, TaskController, ForumController, LeaveManagementController};
+use App\Http\Controllers\Api\V1\{ClassroomManagementController, HomeworkController, TaskController, ForumController, LeaveManagementController, SuperVisionController};
 
 use App\Http\Controllers\Api\V1\Academic\{ClassesAllocationController, GradeController, ClassesController, AssignGradeTeacherController, PromotionAssignController, ScheduleController, SubjectController, SubjectGradeAssignController, SubjectTeacherAssignController,  TimetableController, TimetableCopyController, PromotionController};
 
@@ -467,44 +467,44 @@ Route::group(['middleware' => ['auth:api', 'throttle:limit_per_user', 'logroute'
     Route::post('add_calendor_timetable', [ApiController::class, 'addCalendorTimetable']);
 
     // Hostel routes
-    Route::post('hostel/add', [ApiController::class, 'addHostel']);
-    Route::get('hostel/list', [ApiController::class, 'getHostelList']);
-    Route::post('hostel/hostel-details', [ApiController::class, 'getHostelDetails']);
-    Route::post('hostel/update', [ApiController::class, 'updateHostel']);
-    Route::post('hostel/delete', [ApiController::class, 'deleteHostel']);
+    Route::post('hostel/add', [SuperVisionController::class, 'addHostel']);
+    Route::get('hostel/list', [SuperVisionController::class, 'getHostelList']);
+    Route::post('hostel/hostel-details', [SuperVisionController::class, 'getHostelDetails']);
+    Route::post('hostel/update', [SuperVisionController::class, 'updateHostel']);
+    Route::post('hostel/delete', [SuperVisionController::class, 'deleteHostel']);
 
 
     // Hostel Category routes
-    Route::post('hostel_category/add', [ApiController::class, 'addHostelCategory']);
-    Route::get('hostel_category/list', [ApiController::class, 'getHostelCategoryList']);
-    Route::post('hostel_category/hostel_category-details', [ApiController::class, 'getHostelCategoryDetails']);
-    Route::post('hostel_category/update', [ApiController::class, 'updateHostelCategory']);
-    Route::post('hostel_category/delete', [ApiController::class, 'deleteHostelCategory']);
+    Route::post('hostel_category/add', [SuperVisionController::class, 'addHostelCategory']);
+    Route::get('hostel_category/list', [SuperVisionController::class, 'getHostelCategoryList']);
+    Route::post('hostel_category/hostel_category-details', [SuperVisionController::class, 'getHostelCategoryDetails']);
+    Route::post('hostel_category/update', [SuperVisionController::class, 'updateHostelCategory']);
+    Route::post('hostel_category/delete', [SuperVisionController::class, 'deleteHostelCategory']);
 
     // Hostel Room routes
-    Route::post('hostel_room/add', [ApiController::class, 'addHostelRoom']);
-    Route::get('hostel_room/list', [ApiController::class, 'getHostelRoomList']);
-    Route::post('hostel_room/hostel_room-details', [ApiController::class, 'getHostelRoomDetails']);
-    Route::post('hostel_room/update', [ApiController::class, 'updateHostelRoom']);
-    Route::post('hostel_room/delete', [ApiController::class, 'deleteHostelRoom']);
-    Route::post('vehicle-by-route', [ApiController::class, 'vehicleByRoute']);
-    Route::post('room-by-hostel', [ApiController::class, 'roomByHostel']);
+    Route::post('hostel_room/add', [SuperVisionController::class, 'addHostelRoom']);
+    Route::get('hostel_room/list', [SuperVisionController::class, 'getHostelRoomList']);
+    Route::post('hostel_room/hostel_room-details', [SuperVisionController::class, 'getHostelRoomDetails']);
+    Route::post('hostel_room/update', [SuperVisionController::class, 'updateHostelRoom']);
+    Route::post('hostel_room/delete', [SuperVisionController::class, 'deleteHostelRoom']);
+    Route::post('vehicle-by-route', [SuperVisionController::class, 'vehicleByRoute']);
+    Route::post('room-by-hostel', [SuperVisionController::class, 'roomByHostel']);
 
-    Route::post('floor-by-block', [ApiController::class, 'floorByBlock']);
+    Route::post('floor-by-block', [SuperVisionController::class, 'floorByBlock']);
 
     // Hostel Block routes
-    Route::post('hostel_block/add', [ApiController::class, 'addHostelBlock']);
-    Route::get('hostel_block/list', [ApiController::class, 'getHostelBlockList']);
-    Route::post('hostel_block/hostel_block-details', [ApiController::class, 'getHostelBlockDetails']);
-    Route::post('hostel_block/update', [ApiController::class, 'updateHostelBlock']);
-    Route::post('hostel_block/delete', [ApiController::class, 'deleteHostelBlock']);
+    Route::post('hostel_block/add', [SuperVisionController::class, 'addHostelBlock']);
+    Route::get('hostel_block/list', [SuperVisionController::class, 'getHostelBlockList']);
+    Route::post('hostel_block/hostel_block-details', [SuperVisionController::class, 'getHostelBlockDetails']);
+    Route::post('hostel_block/update', [SuperVisionController::class, 'updateHostelBlock']);
+    Route::post('hostel_block/delete', [SuperVisionController::class, 'deleteHostelBlock']);
 
     // Hostel Floor routes
-    Route::post('hostel_floor/add', [ApiController::class, 'addHostelFloor']);
-    Route::get('hostel_floor/list', [ApiController::class, 'getHostelFloorList']);
-    Route::post('hostel_floor/hostel_floor-details', [ApiController::class, 'getHostelFloorDetails']);
-    Route::post('hostel_floor/update', [ApiController::class, 'updateHostelFloor']);
-    Route::post('hostel_floor/delete', [ApiController::class, 'deleteHostelFloor']);
+    Route::post('hostel_floor/add', [SuperVisionController::class, 'addHostelFloor']);
+    Route::get('hostel_floor/list', [SuperVisionController::class, 'getHostelFloorList']);
+    Route::post('hostel_floor/hostel_floor-details', [SuperVisionController::class, 'getHostelFloorDetails']);
+    Route::post('hostel_floor/update', [SuperVisionController::class, 'updateHostelFloor']);
+    Route::post('hostel_floor/delete', [SuperVisionController::class, 'deleteHostelFloor']);
 
     // Admission routes
     Route::post('admission/add', [ApiController::class, 'addAdmission']);
@@ -593,32 +593,32 @@ Route::group(['middleware' => ['auth:api', 'throttle:limit_per_user', 'logroute'
     Route::post('staff_leave_assign/delete', [LeaveManagementController::class, 'deleteStaffLeaveAssign']);
 
     // Transport Route routes
-    Route::post('transport_route/add', [ApiController::class, 'addTransportRoute']);
-    Route::get('transport_route/list', [ApiController::class, 'getTransportRouteList']);
-    Route::post('transport_route/transport_route-details', [ApiController::class, 'getTransportRouteDetails']);
-    Route::post('transport_route/update', [ApiController::class, 'updateTransportRoute']);
-    Route::post('transport_route/delete', [ApiController::class, 'deleteTransportRoute']);
+    Route::post('transport_route/add', [SuperVisionController::class, 'addTransportRoute']);
+    Route::get('transport_route/list', [SuperVisionController::class, 'getTransportRouteList']);
+    Route::post('transport_route/transport_route-details', [SuperVisionController::class, 'getTransportRouteDetails']);
+    Route::post('transport_route/update', [SuperVisionController::class, 'updateTransportRoute']);
+    Route::post('transport_route/delete', [SuperVisionController::class, 'deleteTransportRoute']);
 
     // Vehicle Master routes
-    Route::post('transport_vehicle/add', [ApiController::class, 'addTransportVehicle']);
-    Route::get('transport_vehicle/list', [ApiController::class, 'getTransportVehicleList']);
-    Route::post('transport_vehicle/transport_vehicle-details', [ApiController::class, 'getTransportVehicleDetails']);
-    Route::post('transport_vehicle/update', [ApiController::class, 'updateTransportVehicle']);
-    Route::post('transport_vehicle/delete', [ApiController::class, 'deleteTransportVehicle']);
+    Route::post('transport_vehicle/add', [SuperVisionController::class, 'addTransportVehicle']);
+    Route::get('transport_vehicle/list', [SuperVisionController::class, 'getTransportVehicleList']);
+    Route::post('transport_vehicle/transport_vehicle-details', [SuperVisionController::class, 'getTransportVehicleDetails']);
+    Route::post('transport_vehicle/update', [SuperVisionController::class, 'updateTransportVehicle']);
+    Route::post('transport_vehicle/delete', [SuperVisionController::class, 'deleteTransportVehicle']);
 
     // Transport Stoppage routes
-    Route::post('transport_stoppage/add', [ApiController::class, 'addTransportStoppage']);
-    Route::get('transport_stoppage/list', [ApiController::class, 'getTransportStoppageList']);
-    Route::post('transport_stoppage/transport_stoppage-details', [ApiController::class, 'getTransportStoppageDetails']);
-    Route::post('transport_stoppage/update', [ApiController::class, 'updateTransportStoppage']);
-    Route::post('transport_stoppage/delete', [ApiController::class, 'deleteTransportStoppage']);
+    Route::post('transport_stoppage/add', [SuperVisionController::class, 'addTransportStoppage']);
+    Route::get('transport_stoppage/list', [SuperVisionController::class, 'getTransportStoppageList']);
+    Route::post('transport_stoppage/transport_stoppage-details', [SuperVisionController::class, 'getTransportStoppageDetails']);
+    Route::post('transport_stoppage/update', [SuperVisionController::class, 'updateTransportStoppage']);
+    Route::post('transport_stoppage/delete', [SuperVisionController::class, 'deleteTransportStoppage']);
 
     // Transport Assign routes
-    Route::post('transport_assign/add', [ApiController::class, 'addTransportAssign']);
-    Route::get('transport_assign/list', [ApiController::class, 'getTransportAssignList']);
-    Route::post('transport_assign/transport_assign-details', [ApiController::class, 'getTransportAssignDetails']);
-    Route::post('transport_assign/update', [ApiController::class, 'updateTransportAssign']);
-    Route::post('transport_assign/delete', [ApiController::class, 'deleteTransportAssign']);
+    Route::post('transport_assign/add', [SuperVisionController::class, 'addTransportAssign']);
+    Route::get('transport_assign/list', [SuperVisionController::class, 'getTransportAssignList']);
+    Route::post('transport_assign/transport_assign-details', [SuperVisionController::class, 'getTransportAssignDetails']);
+    Route::post('transport_assign/update', [SuperVisionController::class, 'updateTransportAssign']);
+    Route::post('transport_assign/delete', [SuperVisionController::class, 'deleteTransportAssign']);
     // staff leave apply
     Route::get('employee-leave/get_leave_types', [ApiController::class, 'getLeaveTypes']);
     Route::post('employee-leave/apply', [ApiController::class, 'staffLeaveApply']);
