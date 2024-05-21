@@ -16,7 +16,7 @@ use Illuminate\Support\Facades\Artisan;
 #use App\Http\Controllers\Api\V1\GradeController;
 use App\Http\Controllers\Api\ApiControllerNameSeq;
 use App\Http\Controllers\Api\V1\AcademicController;
-use App\Http\Controllers\Api\V1\{ClassroomManagementController, HomeworkController, TaskController, ForumController, LeaveManagementController, SuperVisionController};
+use App\Http\Controllers\Api\V1\{ClassroomManagementController, HomeworkController, TaskController, ForumController, LeaveManagementController, SuperVisionController, SettingsController, SoapController};
 
 use App\Http\Controllers\Api\V1\Academic\{ClassesAllocationController, GradeController, ClassesController, AssignGradeTeacherController, PromotionAssignController, ScheduleController, SubjectController, SubjectGradeAssignController, SubjectTeacherAssignController,  TimetableController, TimetableCopyController, PromotionController};
 
@@ -827,33 +827,33 @@ Route::group(['middleware' => ['auth:api', 'throttle:limit_per_user', 'logroute'
     Route::post('exam_master/copy/exam_paper', [ApiControllerOne::class, 'copyExamPaper']);
 
     // SoapSubject routes
-    Route::post('soap_subject/add', [ApiControllerOne::class, 'addSoapSubject']);
-    Route::get('soap_subject/list', [ApiControllerOne::class, 'getSoapSubjectList']);
-    Route::post('soap_subject/soap_subject-details', [ApiControllerOne::class, 'getSoapSubjectDetails']);
-    Route::post('soap_subject/update', [ApiControllerOne::class, 'updateSoapSubject']);
-    Route::post('soap_subject/delete', [ApiControllerOne::class, 'deleteSoapSubject']);
+    Route::post('soap_subject/add', [SoapController::class, 'addSoapSubject']);
+    Route::get('soap_subject/list', [SoapController::class, 'getSoapSubjectList']);
+    Route::post('soap_subject/soap_subject-details', [SoapController::class, 'getSoapSubjectDetails']);
+    Route::post('soap_subject/update', [SoapController::class, 'updateSoapSubject']);
+    Route::post('soap_subject/delete', [SoapController::class, 'deleteSoapSubject']);
 
 
     // SOAP category crud routes
-    Route::post('soap_category/add', [ApiControllerOne::class, 'addSoapCategory']);
-    Route::get('soap_category/list', [ApiControllerOne::class, 'getSoapCategoryList']);
-    Route::post('soap_category/soap_category-details', [ApiControllerOne::class, 'getSoapCategoryDetails']);
-    Route::post('soap_category/update', [ApiControllerOne::class, 'updateSoapCategory']);
-    Route::post('soap_category/delete', [ApiControllerOne::class, 'deleteSoapCategory']);
+    Route::post('soap_category/add', [SoapController::class, 'addSoapCategory']);
+    Route::get('soap_category/list', [SoapController::class, 'getSoapCategoryList']);
+    Route::post('soap_category/soap_category-details', [SoapController::class, 'getSoapCategoryDetails']);
+    Route::post('soap_category/update', [SoapController::class, 'updateSoapCategory']);
+    Route::post('soap_category/delete', [SoapController::class, 'deleteSoapCategory']);
 
     // SOAP sub category crud routes
-    Route::post('soap_sub_category/add', [ApiControllerOne::class, 'addSoapSubCategory']);
-    Route::get('soap_sub_category/list', [ApiControllerOne::class, 'getSoapSubCategoryList']);
-    Route::post('soap_sub_category/soap_sub_category-details', [ApiControllerOne::class, 'getSoapSubCategoryDetails']);
-    Route::post('soap_sub_category/update', [ApiControllerOne::class, 'updateSoapSubCategory']);
-    Route::post('soap_sub_category/delete', [ApiControllerOne::class, 'deleteSoapSubCategory']);
+    Route::post('soap_sub_category/add', [SoapController::class, 'addSoapSubCategory']);
+    Route::get('soap_sub_category/list', [SoapController::class, 'getSoapSubCategoryList']);
+    Route::post('soap_sub_category/soap_sub_category-details', [SoapController::class, 'getSoapSubCategoryDetails']);
+    Route::post('soap_sub_category/update', [SoapController::class, 'updateSoapSubCategory']);
+    Route::post('soap_sub_category/delete', [SoapController::class, 'deleteSoapSubCategory']);
 
     // SOAP Notes crud routes
-    Route::post('soap_notes/add', [ApiControllerOne::class, 'addSoapNotes']);
-    Route::get('soap_notes/list', [ApiControllerOne::class, 'getSoapNotesList']);
-    Route::post('soap_notes/soap_notes-details', [ApiControllerOne::class, 'getSoapNotesDetails']);
-    Route::post('soap_notes/update', [ApiControllerOne::class, 'updateSoapNotes']);
-    Route::post('soap_notes/delete', [ApiControllerOne::class, 'deleteSoapNotes']);
+    Route::post('soap_notes/add', [SoapController::class, 'addSoapNotes']);
+    Route::get('soap_notes/list', [SoapController::class, 'getSoapNotesList']);
+    Route::post('soap_notes/soap_notes-details', [SoapController::class, 'getSoapNotesDetails']);
+    Route::post('soap_notes/update', [SoapController::class, 'updateSoapNotes']);
+    Route::post('soap_notes/delete', [SoapController::class, 'deleteSoapNotes']);
     // download csv api
     Route::post('exam_timetable/list/download', [ApiControllerOne::class, 'getExamTimetableDown']);
     Route::post('staff_attendance/export', [ApiControllerOne::class, 'staffAttendanceReport']);
