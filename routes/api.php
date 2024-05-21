@@ -1098,11 +1098,19 @@ Route::group(['middleware' => ['auth:api', 'throttle:limit_per_user', 'logroute'
     Route::post('exam_result/get_mainsubjectlist', [ExamreportController::class, 'get_mainsubjectlist']);
     Route::post('exam_result/getsubjecpapertlist', [ExamreportController::class, 'getsubjecpapertlist']);
 
+    Route::get('exam_result/get_jsklsubjectlist', [ExamreportController::class, 'get_jsklsubjectlist']);
+    Route::get('exam_result/getjsklexampaper_list', [ExamreportController::class, 'getjsklexampaper_list']);
+    
     Route::post('exam_result/stuexam_marklist', [ExamreportController::class, 'stuexam_marklist']);
     Route::post('exam_result/stuexam_avgmarklist', [ExamreportController::class, 'stuexam_avgmarklist']);
 
     Route::post('exam_result/papermark', [ExamreportController::class, 'exam_papermarks']);
-    Route::post('importcsv/exam', [ImportController::class, 'importCsvExamMarks']);
+    //Route::post('importcsv/exam', [ImportController::class, 'importCsvExamMarks']); 
+    Route::post('importcsv/exam', [ExamreportController::class, 'importCsvExamMarks']); 
+    Route::post('exam/exam_student_list', [ExamreportController::class, 'exam_student_list']);
+    Route::post('exam/exam_file_name', [ExamreportController::class, 'exam_file_name']);
+    Route::post('exam/mark_comparison', [ExamreportController::class, 'mark_comparison']);    
+    Route::post('exam/examuploadmark', [ExamreportController::class, 'examuploadmark']);
 
     Route::post('exam_result/get_overallsubjectlist', [ExamreportController::class, 'get_overallsubjectlist']);
     Route::post('exam_result/get_overallpaperlist', [ExamreportController::class, 'get_overallpaperlist']);

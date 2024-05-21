@@ -28100,10 +28100,10 @@ try{
                     $q->where('role_id', 6);
                 })->get();
                 // Before sending the notification
-                \Log::info('Sending notification to users: ' . json_encode($user));
+                //\Log::info('Sending notification to users: ' . json_encode($user));
                 Notification::send($user, new StudentEmail($request->branch_id));
                 // After sending the notification
-                \Log::info('Notification sent successfully to users: ' . json_encode($user));
+               // \Log::info('Notification sent successfully to users: ' . json_encode($user));
             }
             if ($target_user_array == [2, 5]) {
                 $class_id =   $request->class_id;
@@ -28142,10 +28142,10 @@ try{
                     $q->where('role_id', 5);
                 })->get();
                 // Before sending the notification
-                \Log::info('Sending notification to users: ' . json_encode($user));
+                //\Log::info('Sending notification to users: ' . json_encode($user));
                 Notification::send($user, new ParentEmail($request->branch_id));
                 // After sending the notification
-                \Log::info('Notification sent successfully to users: ' . json_encode($user));
+               // \Log::info('Notification sent successfully to users: ' . json_encode($user));
             }
             if ($target_user_array == [2, 4]) {
                 $deptId = $request->department_id;
