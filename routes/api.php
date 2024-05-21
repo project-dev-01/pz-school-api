@@ -16,7 +16,7 @@ use Illuminate\Support\Facades\Artisan;
 #use App\Http\Controllers\Api\V1\GradeController;
 use App\Http\Controllers\Api\ApiControllerNameSeq;
 use App\Http\Controllers\Api\V1\AcademicController;
-use App\Http\Controllers\Api\V1\{ClassroomManagementController, HomeworkController, TaskController, ForumController};
+use App\Http\Controllers\Api\V1\{ClassroomManagementController, HomeworkController, TaskController, ForumController, LeaveManagementController};
 
 use App\Http\Controllers\Api\V1\Academic\{ClassesAllocationController, GradeController, ClassesController, AssignGradeTeacherController, PromotionAssignController, ScheduleController, SubjectController, SubjectGradeAssignController, SubjectTeacherAssignController,  TimetableController, TimetableCopyController, PromotionController};
 
@@ -579,18 +579,18 @@ Route::group(['middleware' => ['auth:api', 'throttle:limit_per_user', 'logroute'
     Route::get('get_birthday_calendor_admin', [ApiController::class, 'getBirthdayCalendorAdmin']);
 
     // Leave Type routes
-    Route::post('leave_type/add', [ApiController::class, 'addLeaveType']);
-    Route::get('leave_type/list', [ApiController::class, 'getLeaveTypeList']);
-    Route::post('leave_type/leave_type-details', [ApiController::class, 'getLeaveTypeDetails']);
-    Route::post('leave_type/update', [ApiController::class, 'updateLeaveType']);
-    Route::post('leave_type/delete', [ApiController::class, 'deleteLeaveType']);
+    Route::post('leave_type/add', [LeaveManagementController::class, 'addLeaveType']);
+    Route::get('leave_type/list', [LeaveManagementController::class, 'getLeaveTypeList']);
+    Route::post('leave_type/leave_type-details', [LeaveManagementController::class, 'getLeaveTypeDetails']);
+    Route::post('leave_type/update', [LeaveManagementController::class, 'updateLeaveType']);
+    Route::post('leave_type/delete', [LeaveManagementController::class, 'deleteLeaveType']);
 
     // staff Leave Assign routes
-    Route::post('staff_leave_assign/add', [ApiController::class, 'addStaffLeaveAssign']);
-    Route::get('staff_leave_assign/list', [ApiController::class, 'getStaffLeaveAssignList']);
-    Route::post('staff_leave_assign/staff_leave_assign-details', [ApiController::class, 'getStaffLeaveAssignDetails']);
-    Route::post('staff_leave_assign/update', [ApiController::class, 'updateStaffLeaveAssign']);
-    Route::post('staff_leave_assign/delete', [ApiController::class, 'deleteStaffLeaveAssign']);
+    Route::post('staff_leave_assign/add', [LeaveManagementController::class, 'addStaffLeaveAssign']);
+    Route::get('staff_leave_assign/list', [LeaveManagementController::class, 'getStaffLeaveAssignList']);
+    Route::post('staff_leave_assign/staff_leave_assign-details', [LeaveManagementController::class, 'getStaffLeaveAssignDetails']);
+    Route::post('staff_leave_assign/update', [LeaveManagementController::class, 'updateStaffLeaveAssign']);
+    Route::post('staff_leave_assign/delete', [LeaveManagementController::class, 'deleteStaffLeaveAssign']);
 
     // Transport Route routes
     Route::post('transport_route/add', [ApiController::class, 'addTransportRoute']);
