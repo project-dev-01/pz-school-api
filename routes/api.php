@@ -16,7 +16,7 @@ use Illuminate\Support\Facades\Artisan;
 #use App\Http\Controllers\Api\V1\GradeController;
 use App\Http\Controllers\Api\ApiControllerNameSeq;
 use App\Http\Controllers\Api\V1\AcademicController;
-use App\Http\Controllers\Api\V1\{ClassroomManagementController, HomeworkController};
+use App\Http\Controllers\Api\V1\{ClassroomManagementController, HomeworkController, TaskController, ForumController};
 
 use App\Http\Controllers\Api\V1\Academic\{ClassesAllocationController, GradeController, ClassesController, AssignGradeTeacherController, PromotionAssignController, ScheduleController, SubjectController, SubjectGradeAssignController, SubjectTeacherAssignController,  TimetableController, TimetableCopyController, PromotionController};
 
@@ -359,34 +359,34 @@ Route::group(['middleware' => ['auth:api', 'throttle:limit_per_user', 'logroute'
     Route::get('get-category', [CommonController::class, 'categoryList']);
     Route::get('get-dbnames', [CommonController::class, 'dbnameslist']);
     Route::post('get-branchid', [ApiController::class, 'schoolvsbranchid']);
-    Route::get('forum/list', [ApiController::class, 'postList']);
-    Route::get('forum/edit', [ApiController::class, 'postEdit']);
-    Route::post('forum/delete', [ApiController::class, 'postDelete']);
-    Route::get('forum/threadslist', [ApiController::class, 'ThreadspostList']);
-    Route::get('forum/userthreadslist', [ApiController::class, 'userThreadspostList']);
-    Route::get('forum/listcategory', [ApiController::class, 'postListCategory']);
-    Route::get('forum/adminlistcategoryvs', [ApiController::class, 'adminpostListCategory']);
-    Route::get('forum/singlepost', [ApiController::class, 'singlePost']);
-    Route::get('forum/singlecateg', [ApiController::class, 'singleCategoryPosts']);
-    Route::get('forum/usersinglecateg', [ApiController::class, 'user_singleCategoryPosts']);
-    Route::get('forum/postlistusercreated', [ApiController::class, 'postListUserCreatedOnly']);
-    Route::get('forum/listcategoryusercrd', [ApiController::class, 'categorypostListUserCreatedOnly']);
-    Route::get('forum/singlepost/replies', [ApiController::class, 'singlePostReplies']);
-    Route::get('forum/post/allreplies', [ApiController::class, 'PostAllReplies']);
-    Route::post('forum/createpost', [ApiController::class, 'forumcreatepost']);
-    Route::post('forum/updatepost', [ApiController::class, 'forumupdatepost']);
-    Route::post('forum-likecout', [ApiController::class, 'likescountadded']);
-    Route::post('forum-discout', [ApiController::class, 'dislikescountadded']);
-    Route::post('forum-heartcout', [ApiController::class, 'heartcountadded']);
-    Route::post('forum-viewcout', [ApiController::class, 'viewcountadded']);
-    Route::post('forum-viewcout-insert', [ApiController::class, 'viewcountinsert']);
-    Route::post('forum-replies-insert', [ApiController::class, 'repliesinsert']);
-    Route::post('forum-replikecout', [ApiController::class, 'replikescountadded']);
-    Route::post('forum-repdislikecout', [ApiController::class, 'repdislikescountadded']);
-    Route::post('forum-repfavorits', [ApiController::class, 'repfavcountadded']);
-    Route::post('forum/threads/status/update', [ApiController::class, 'threadstatusupdate']);
-    Route::get('forum/usernames/autocomplete', [ApiController::class, 'usernameautocomplete']);
-    Route::get('forum/getuserid', [ApiController::class, 'getuserid']);
+    Route::get('forum/list', [ForumController::class, 'postList']);
+    Route::get('forum/edit', [ForumController::class, 'postEdit']);
+    Route::post('forum/delete', [ForumController::class, 'postDelete']);
+    Route::get('forum/threadslist', [ForumController::class, 'ThreadspostList']);
+    Route::get('forum/userthreadslist', [ForumController::class, 'userThreadspostList']);
+    Route::get('forum/listcategory', [ForumController::class, 'postListCategory']);
+    Route::get('forum/adminlistcategoryvs', [ForumController::class, 'adminpostListCategory']);
+    Route::get('forum/singlepost', [ForumController::class, 'singlePost']);
+    Route::get('forum/singlecateg', [ForumController::class, 'singleCategoryPosts']);
+    Route::get('forum/usersinglecateg', [ForumController::class, 'user_singleCategoryPosts']);
+    Route::get('forum/postlistusercreated', [ForumController::class, 'postListUserCreatedOnly']);
+    Route::get('forum/listcategoryusercrd', [ForumController::class, 'categorypostListUserCreatedOnly']);
+    Route::get('forum/singlepost/replies', [ForumController::class, 'singlePostReplies']);
+    Route::get('forum/post/allreplies', [ForumController::class, 'PostAllReplies']);
+    Route::post('forum/createpost', [ForumController::class, 'forumcreatepost']);
+    Route::post('forum/updatepost', [ForumController::class, 'forumupdatepost']);
+    Route::post('forum-likecout', [ForumController::class, 'likescountadded']);
+    Route::post('forum-discout', [ForumController::class, 'dislikescountadded']);
+    Route::post('forum-heartcout', [ForumController::class, 'heartcountadded']);
+    Route::post('forum-viewcout', [ForumController::class, 'viewcountadded']);
+    Route::post('forum-viewcout-insert', [ForumController::class, 'viewcountinsert']);
+    Route::post('forum-replies-insert', [ForumController::class, 'repliesinsert']);
+    Route::post('forum-replikecout', [ForumController::class, 'replikescountadded']);
+    Route::post('forum-repdislikecout', [ForumController::class, 'repdislikescountadded']);
+    Route::post('forum-repfavorits', [ForumController::class, 'repfavcountadded']);
+    Route::post('forum/threads/status/update', [ForumController::class, 'threadstatusupdate']);
+    Route::get('forum/usernames/autocomplete', [ForumController::class, 'usernameautocomplete']);
+    Route::get('forum/getuserid', [ForumController::class, 'getuserid']);
 
     // Test Result
     Route::get('get_testresult_exams', [ApiController::class, 'examslist']);
@@ -512,16 +512,16 @@ Route::group(['middleware' => ['auth:api', 'throttle:limit_per_user', 'logroute'
     // Techer list by class and section routes
     Route::post('teacher/list', [ApiController::class, 'getTeacherList']);
     // add to do list
-    Route::post('add_to_do_list', [ApiController::class, 'addToDoList']);
-    Route::post('update_to_do_list', [ApiController::class, 'updateToDoList']);
-    Route::get('get_to_do_list', [ApiController::class, 'getToDoList']);
-    Route::post('get_to_do_row', [ApiController::class, 'getToDoListRow']);
-    Route::post('delete_to_do_list', [ApiController::class, 'deleteToDoList']);
-    Route::get('get_to_do_list_dashboard', [ApiController::class, 'getToDoListDashboard']);
-    Route::post('read_update_todo', [ApiController::class, 'readUpdateTodo']);
-    Route::post('get_assign_class', [ApiController::class, 'getAssignClass']);
-    Route::post('to_do_comments', [ApiController::class, 'toDoComments']);
-    Route::get('get_to_do_teacher', [ApiController::class, 'getToDoTeacher']);
+    Route::post('add_to_do_list', [TaskController::class, 'addToDoList']);
+    Route::post('update_to_do_list', [TaskController::class, 'updateToDoList']);
+    Route::get('get_to_do_list', [TaskController::class, 'getToDoList']);
+    Route::post('get_to_do_row', [TaskController::class, 'getToDoListRow']);
+    Route::post('delete_to_do_list', [TaskController::class, 'deleteToDoList']);
+    Route::get('get_to_do_list_dashboard', [TaskController::class, 'getToDoListDashboard']);
+    Route::post('read_update_todo', [TaskController::class, 'readUpdateTodo']);
+    Route::post('get_assign_class', [TaskController::class, 'getAssignClass']);
+    Route::post('to_do_comments', [TaskController::class, 'toDoComments']);
+    Route::get('get_to_do_teacher', [TaskController::class, 'getToDoTeacher']);
 
     // Student routes
     Route::post('admission/add', [ApiController::class, 'addAdmission']);

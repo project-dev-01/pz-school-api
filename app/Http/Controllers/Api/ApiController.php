@@ -69,11 +69,11 @@ class ApiController extends BaseController
     public function getRoles(Request $request)
     {
         try {
-        if($request->status=='All')			
+        if($request->status=='All')
 		{$data = Role::get();}
 		else
 		{$data = Role::where('status', $request->status)->get();}
-	
+
         //$data = Role::where('status', '!=', '1')->get();
         return $this->successResponse($data, 'Section record fetch successfully');
         }
@@ -123,7 +123,7 @@ class ApiController extends BaseController
             return $this->commonHelper->generalReturn('403','error',$error,'addSection');
         }
     }
-    // get sections 
+    // get sections
     public function getSectionList(Request $request)
     {
         try{
@@ -150,8 +150,8 @@ class ApiController extends BaseController
                     $secConn = $this->createNewConnection($request->branch_id);
                     // get data
                     $section = $secConn->table('sections')->orderBy('name', 'asc')->get();
-                    Cache::put($cacheKey, $section, now()->addHours($cache_time)); // Cache for 24 hours  
-                    }                    
+                    Cache::put($cacheKey, $section, now()->addHours($cache_time)); // Cache for 24 hours
+                    }
             return $this->successResponse($section, 'Classes record fetch successfully');
         }
         }
@@ -159,8 +159,8 @@ class ApiController extends BaseController
             return $this->commonHelper->generalReturn('403','error',$error,'getSectionList');
         }
 
-     
-        
+
+
     }
     // get section row details
     public function getSectionDetails(Request $request)
@@ -172,7 +172,7 @@ class ApiController extends BaseController
                 'token' => 'required',
                 'branch_id' => 'required',
             ]);
-    
+
             if (!$validator->passes()) {
                 return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
             } else {
@@ -184,7 +184,7 @@ class ApiController extends BaseController
             }
 
         }
-       
+
         catch(Exception $error) {
             return $this->commonHelper->generalReturn('403','error',$error,'getSectionDetails');
         }
@@ -194,7 +194,7 @@ class ApiController extends BaseController
     {
 
        try{
-    
+
         $validator = \Validator::make($request->all(), [
             'token' => 'required',
             'name' => 'required',
@@ -269,9 +269,9 @@ class ApiController extends BaseController
         return $this->commonHelper->generalReturn('403', 'error', $error, 'Error in deleteSection');
     }
 
-        
+
     }
-    // get School Type 
+    // get School Type
     public function getSchoolType(Request $request)
     {
         try
@@ -324,7 +324,7 @@ class ApiController extends BaseController
 
     }
 
-    // get Home Page 
+    // get Home Page
     public function getHomePageDetails(Request $request)
     {
         try
@@ -350,7 +350,7 @@ class ApiController extends BaseController
     }
 
 
-    // add branch 
+    // add branch
     public function addBranch(Request $request)
     {
         try{
@@ -472,7 +472,7 @@ class ApiController extends BaseController
     }
 
     }
-    // get branch 
+    // get branch
     public function getBranchList(Request $request)
     {
         try
@@ -530,7 +530,7 @@ class ApiController extends BaseController
     catch(Exception $error) {
         return $this->commonHelper->generalReturn('403','error',$error,'getBranchDetails');
     }
-        
+
     }
     // update branch
     public function updateBranchDetails(Request $request)
@@ -625,7 +625,7 @@ class ApiController extends BaseController
             return $this->commonHelper->generalReturn('403','error',$error,'deleteBranch');
         }
     }
-   
+
     // add section allocations
     public function addSectionAllocation(Request $request)
     {
@@ -882,7 +882,7 @@ class ApiController extends BaseController
     }
     }
 
-    // get TeacherAllocation 
+    // get TeacherAllocation
     public function getTeacherAllocationList(Request $request)
     {
      try{
@@ -1129,7 +1129,7 @@ class ApiController extends BaseController
             $cache_time = config('constants.cache_time');
             $cache_subjects = config('constants.cache_subjects');
             $cacheKey = $cache_subjects . $request->branch_id;
-        
+
             // Check if the data is cached
             if (Cache::has($cacheKey)) {
                 // If cached, return cached data
@@ -1652,7 +1652,7 @@ class ApiController extends BaseController
                         ]
                     )
                     ->count();
-                  
+
             }
             // dd($getCount);
             // $getCount = $createConnection->table('subject_assigns')
@@ -1759,7 +1759,7 @@ class ApiController extends BaseController
         $this->commonHelper->generalReturn('403','error',$error,'Error in getAssignClassSubjects');
     }
     }
-    // branchIdByTeacherAllocation 
+    // branchIdByTeacherAllocation
     public function branchIdByTeacherAllocation(Request $request)
     {
         try {
@@ -1788,7 +1788,7 @@ class ApiController extends BaseController
         }
     }
 
-    // branchIdByClass 
+    // branchIdByClass
     public function branchIdByClass(Request $request)
     {
         try {
@@ -1809,7 +1809,7 @@ class ApiController extends BaseController
             $this->commonHelper->generalReturn('403','error',$error,'Error in branchIdByClass');
         }
     }
-    // branchIdBySection 
+    // branchIdBySection
     public function branchIdBySection(Request $request)
     {
         try {
@@ -2125,7 +2125,7 @@ class ApiController extends BaseController
     }
 
     }
-    // get Events 
+    // get Events
     public function getEventList(Request $request)
     {
         try{
@@ -2142,7 +2142,7 @@ class ApiController extends BaseController
             $cache_time = config('constants.cache_time');
             $cache_eventDetails = config('constants.cache_eventDetails');
             $cacheKey = $cache_eventDetails . $request->branch_id;
-    
+
             // Check if the data is cached
             if (Cache::has($cacheKey)) {
                 // If cached, return cached data
@@ -2251,7 +2251,7 @@ class ApiController extends BaseController
             }
             // dd($eventDetails);
             return $this->successResponse($eventDetails, 'Event record fetch successfully');
-      
+
         }
     }
     catch(\Exception $error) {
@@ -2366,7 +2366,7 @@ class ApiController extends BaseController
 
                 $conn->table('calendors')->where('event_id', $id)->delete();
             }
-            // 
+            //
 
             $eventId = $id;
             $title = $request->title;
@@ -2515,7 +2515,7 @@ class ApiController extends BaseController
             $this->commonHelper->generalReturn('403','error',$error,'Error in publishEvent');
         }
     }
-    // branchIdByEvent 
+    // branchIdByEvent
     public function branchIdByEvent(Request $request)
     {
         try {
@@ -2545,7 +2545,7 @@ class ApiController extends BaseController
             $this->commonHelper->generalReturn('403','error',$error,'Error in branchIdByEvent');
         }
     }
-    // Qualification  start 
+    // Qualification  start
 
     // add qualification
     public function add_qualifications(Request $request)
@@ -2708,7 +2708,7 @@ class ApiController extends BaseController
     }
     // Qualifaication end
 
-    // staff category start 
+    // staff category start
     // add qualification
     public function add_staffcategory(Request $request)
     {
@@ -2894,7 +2894,7 @@ class ApiController extends BaseController
                     'created_at' => date("Y-m-d H:i:s")
                 ]);
                 // Cache clear Start
-                $cache_departments = config('constants.cache_departments');               
+                $cache_departments = config('constants.cache_departments');
                 $this->clearCache($cache_departments,$request->branch_id);
              // Cache clear End
                 $success = [];
@@ -2927,7 +2927,7 @@ class ApiController extends BaseController
             $cache_time = config('constants.cache_time');
             $cache_departments = config('constants.cache_departments');
              // get data
-            
+
             $cacheKey = $cache_departments . $request->branch_id;
             //$this->clearCache($cache_departments,$request->branch_id);
             // Check if the data is cached
@@ -2941,7 +2941,7 @@ class ApiController extends BaseController
                 $Department = $staffConn->table('staff_departments')->get();
                 // Cache the fetched data for future requests
                 Cache::put($cacheKey, $Department, now()->addHours($cache_time)); // Cache for 24 hours
-                
+
             }
             return $this->successResponse($Department, 'Department record fetch successfully');
         }
@@ -3002,7 +3002,7 @@ class ApiController extends BaseController
                     'updated_at' => date("Y-m-d H:i:s")
                 ]);
                 // Cache clear Start
-            $cache_departments = config('constants.cache_departments');               
+            $cache_departments = config('constants.cache_departments');
             $this->clearCache($cache_departments,$request->branch_id);
              // Cache clear End
                 $success = [];
@@ -3038,7 +3038,7 @@ class ApiController extends BaseController
             // get data
             $query = $staffConn->table('staff_departments')->where('id', $id)->delete();
             // Cache clear Start
-            $cache_departments = config('constants.cache_departments');               
+            $cache_departments = config('constants.cache_departments');
             $this->clearCache($cache_departments,$request->branch_id);
              // Cache clear End
 
@@ -3581,7 +3581,7 @@ class ApiController extends BaseController
                         ->distinct()
                         ->where('school_roleid', '=', $rid)
                         ->pluck('role_id');
-                        
+
                         $rarray=[];
                         foreach($roleIds1 as $role)
                         {
@@ -3633,7 +3633,7 @@ class ApiController extends BaseController
         $cache_time = config('constants.cache_time');
         $cache_Staff = config('constants.cache_Staff');
         $cacheKey = $cache_Staff . $request->branch_id;
-        
+
         // Check if the data is cached
         if (Cache::has($cacheKey)) {
             // If cached, return cached data
@@ -3702,7 +3702,7 @@ class ApiController extends BaseController
         $cache_time = config('constants.cache_time');
         $cache_Staff = config('constants.cache_Staff');
         $cacheKey = $cache_Staff . $request->branch_id;
-        
+
         // Check if the data is cached
         if (Cache::has($cacheKey)) {
         //return ['CACHE'];
@@ -3711,16 +3711,16 @@ class ApiController extends BaseController
         } else {
         // create new connection
         $main_db = config('constants.main_db');
-       
+
         $Connection = $this->createNewConnection($request->branch_id);
-        
+
         $name_status = $request->name_status;
         $Staff = $Connection->table('staffs as s')
         ->select(
             DB::raw("CONCAT(s." . ($name_status == 0 ? 'last_name' : 'first_name') . ", ' ', s." . ($name_status == 1 ? 'first_name' : 'last_name') . ") as name"),
             DB::raw('CONCAT(s.' . ($name_status == 0 ? 'last_name_english' : 'first_name_english') . ', " ", s.' . ($name_status == 1 ? 'first_name_english' : 'last_name_english') . ") as english_emp_name"),
             DB::raw('CONCAT(s.' . ($name_status == 0 ? 'last_name_furigana' : 'first_name_furigana') . ', " ", s.' . ($name_status == 1 ? 'first_name_furigana' : 'last_name_furigana') . ") as furigana_emp_name"),
-            
+
            //  DB::raw("CONCAT(s.last_name, ' ', s.first_name) as name"),
            //  DB::raw('CONCAT(s.last_name_english, " ", s.first_name_english) as english_emp_name'),
            //  DB::raw('CONCAT(s.last_name_furigana, " ", s.first_name_furigana) as furigana_emp_name'),
@@ -3761,7 +3761,7 @@ class ApiController extends BaseController
         ->orderBy('s.salary_grade', 'desc')
         ->groupBy("s.id")
         ->get();
-      
+
         // Cache the fetched data for future requests
         Cache::put($cacheKey, $Staff, now()->addHours($cache_time)); // Cache for 24 hours
         }
@@ -3891,15 +3891,15 @@ class ApiController extends BaseController
     }
      // getEmployeeDetails PAGE row details
     public function getEmployeePageDetails(Request $request)
-    {     
+    {
         try {
         $validator = \Validator::make($request->all(), [
             'email' => 'required',
             'branch_id' => 'required',
             'token' => 'required'
         ]);
-    
-    
+
+
         if (!$validator->passes()) {
             return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
         } else {
@@ -3916,8 +3916,8 @@ class ApiController extends BaseController
                 )
             ->where('s.email', $email)
                 ->get();
-        
-        
+
+
             return $this->successResponse($getEmpDetails, 'Employee row fetch successfully');
         }
          }
@@ -4130,21 +4130,21 @@ class ApiController extends BaseController
                     'updated_at' => date("Y-m-d H:i:s")
                 ];
                 $oldData = $Connection->table('staffs')->find($id);
-                $query = $Connection->table('staffs')->where('id', $id)->update($data); 
+                $query = $Connection->table('staffs')->where('id', $id)->update($data);
                 $changes = $this->getChanges($oldData, $data);
                 $table_modify=[];
                 $table_modify['type']='Staff';
-                $table_modify['id']=$id;                
-                $table_modify['name']=$request->first_name.' '.$request->last_name;                
+                $table_modify['id']=$id;
+                $table_modify['name']=$request->first_name.' '.$request->last_name;
                 $table_modify['email']=$request->email;
 
                 $Connection->table('modify_datas')->insert([
-                  
+
                     'table_name' => 'Staff',
                     'table_dbname' => 'staffs',
                     'table_dbid' => $id,
-                    'table_id_name' => 'id', 
-                    'table_modify' => json_encode($table_modify),                  
+                    'table_id_name' => 'id',
+                    'table_modify' => json_encode($table_modify),
                     'modifydata' => json_encode($changes),
                     'createdby_id' => $request->login_userid,
                     'createdby_role' => $request->login_roleid
@@ -4161,7 +4161,7 @@ class ApiController extends BaseController
                         ->distinct()
                         ->where('school_roleid', '=', $rid)
                         ->pluck('role_id');
-                        
+
                         $rarray=[];
                         foreach($roleIds1 as $role)
                         {
@@ -4207,7 +4207,7 @@ class ApiController extends BaseController
                         $bankRow = $Connection->table('staff_bank_accounts')->where('staff_id', $id)->first();
                         if (isset($bankRow->id)) {
                             $oldData1 = $Connection->table('staff_bank_accounts')->where('staff_id', $id)->first();
-                            
+
                             $data= [
                                 'staff_id' => $id,
                                 'bank_name' => $request->bank_name,
@@ -4220,14 +4220,14 @@ class ApiController extends BaseController
                             ];
                             $bank = $Connection->table('staff_bank_accounts')->where('staff_id', $id)->update($data);
                             $changes = $this->getChanges($oldData1, $data);
-                            
+
                            $Connection->table('modify_datas')->insert([
-                               
+
                                 'table_name'=>'Staff Bank Info',
                                 'table_dbname'=>'staff_bank_accounts',
                                 'table_dbid' => $id,
-                                'table_id_name' => 'staff_id', 
-                                'table_modify'=> json_encode($table_modify),                  
+                                'table_id_name' => 'staff_id',
+                                'table_modify'=> json_encode($table_modify),
                                 'modifydata' => json_encode($changes),
                                 'createdby_id'=> $request->login_userid,
                                 'createdby_role'=> $request->login_roleid
@@ -4310,7 +4310,7 @@ class ApiController extends BaseController
     }
 
 
-    // SectionByClass 
+    // SectionByClass
     public function sectionByClass(Request $request)
     {
         try
@@ -4340,7 +4340,7 @@ class ApiController extends BaseController
     }
 
     }
-    // by class all 
+    // by class all
     public function allstdlist(Request $request)
     {
         try{
@@ -4356,7 +4356,7 @@ class ApiController extends BaseController
         } else {
             // create new connection
             $Connection = $this->createNewConnection($request->branch_id);
-            // get data             
+            // get data
 
             $grade_list_master = array();
             $allbysubject = array();
@@ -4378,7 +4378,7 @@ class ApiController extends BaseController
                 ->get();
             //array_push($teachers_list, $getteachername);
 
-            // common grade list 
+            // common grade list
             $getmastergrade = $Connection->table('grade_marks')
                 ->select(
                     'id',
@@ -4416,7 +4416,7 @@ class ApiController extends BaseController
                     ->get();
                 $object->totalstudentcount = $getstudentcount;
 
-                // subject division table check subject id is there 
+                // subject division table check subject id is there
                 $subject_division_tbl = $Connection->table('student_subjectdivision')
                     ->select('subject_division', 'credit_point', 'semester_id')
                     ->where('class_id', '=', $class_id)
@@ -4424,7 +4424,7 @@ class ApiController extends BaseController
                     ->where('subject_id', '=', $request->subject_id)
                     ->get();
                 $subject_division_matched = count($subject_division_tbl);
-                // Not matched subject division table go 2 if 
+                // Not matched subject division table go 2 if
                 if ($subject_division_matched == 0) {
                     $getexamattendance = $Connection->table('student_marks')
                         ->select(
@@ -4496,7 +4496,7 @@ class ApiController extends BaseController
     }
 
     }
-    // by subject chart 
+    // by subject chart
     public function getGradebysubject(Request $request)
     {
         try
@@ -4515,10 +4515,10 @@ class ApiController extends BaseController
             // create new connection
             $Connection = $this->createNewConnection($request->branch_id);
 
-            // get data     
+            // get data
             $allbygradecount = array();
             $object = new \stdClass();
-            // common grade list 
+            // common grade list
             $getmastergrade = $Connection->table('grade_marks')
                 ->select(
                     'id',
@@ -4623,7 +4623,7 @@ class ApiController extends BaseController
 
     }
 
-    // subjectByClass 
+    // subjectByClass
     public function subjectByClass(Request $request)
     {
         try{
@@ -4839,7 +4839,7 @@ try {
             $this->commonHelper->generalReturn('403','error',$error,'Error in getSubjectByPaper');
         }
     }
-    // Timetable Subject 
+    // Timetable Subject
     public function timetableSubject(Request $request)
     {
         try {
@@ -4898,7 +4898,7 @@ try {
                 ->where('sa.academic_session_id', $request->academic_session_id)
                 ->where('sa.type', '=', '0')
                 // ->where('sa.exam_exclude', '=', '0')
-                // get teacher 
+                // get teacher
                 // ->where('sa.teacher_id', '!=', '0')
                 ->get();
             $output['exam_hall'] = $classConn->table('exam_hall')->get();
@@ -5559,7 +5559,7 @@ try {
         }
     }
 
-    // edit 
+    // edit
     public function editTimetable(Request $request)
     {
         try {
@@ -6263,7 +6263,7 @@ try {
             return $this->commonHelper->generalReturn('403','error',$error,'Error in updateParentProfileInfo');
         }
     }
-    // forum Create Post 
+    // forum Create Post
     public function forumCreatePost(Request $request)
     {
     try {
@@ -6318,7 +6318,7 @@ try {
             return $this->commonHelper->generalReturn('403','error',$error,'Error in forumCreatePost');
         }
     }
-    // forum Update Post 
+    // forum Update Post
     public function forumUpdatePost(Request $request)
     {
         try{
@@ -6463,7 +6463,7 @@ try {
                 ->get();
 
 
-            // $subjectdata = DB::table('forum_posts')->select()   
+            // $subjectdata = DB::table('forum_posts')->select()
 
             ////////////////////////////////////////////////
             // ->leftJoin('forum_count_details', function ($join) {
@@ -6475,10 +6475,10 @@ try {
             //     $success = DB::query()->fromSub(function ($query) use ($branchid) {
             //         $query->from('forum_posts')
             //             ->select('id as created_post_id','topic_header,created_at','category')
-            //             ->where('forum_posts.branch_id','=',DB::raw("'$branchid'"))                              
+            //             ->where('forum_posts.branch_id','=',DB::raw("'$branchid'"))
             //             ->leftJoin('forum_count_details','forum_posts.id','=','forum_count_details.created_post_replies_id')
             //             ->select('created_post_id',DB::raw("SUM(forum_count_details.likes) as likes"),DB::raw("SUM(forum_count_details.dislikes) as dislikes"),DB::raw("SUM(forum_count_details.views) as views"),DB::raw("SUM(forum_count_details.replies) as replies"),DB::raw("SUM(forum_count_details.favorite) as favorite"),'activity')
-            //             ->Groupby('created_post_id') 
+            //             ->Groupby('created_post_id')
             //             ->leftJoin('forum_categorys','forum_posts.category','=','forum_categorys.category_id');
             //     },'aa')
             //     ->select('*');
@@ -6547,7 +6547,7 @@ try {
                 ->first();
 
 
-            // $subjectdata = DB::table('forum_posts')->select()   
+            // $subjectdata = DB::table('forum_posts')->select()
 
             ////////////////////////////////////////////////
             // ->leftJoin('forum_count_details', function ($join) {
@@ -6559,10 +6559,10 @@ try {
             //     $success = DB::query()->fromSub(function ($query) use ($branchid) {
             //         $query->from('forum_posts')
             //             ->select('id as created_post_id','topic_header,created_at','category')
-            //             ->where('forum_posts.branch_id','=',DB::raw("'$branchid'"))                              
+            //             ->where('forum_posts.branch_id','=',DB::raw("'$branchid'"))
             //             ->leftJoin('forum_count_details','forum_posts.id','=','forum_count_details.created_post_replies_id')
             //             ->select('created_post_id',DB::raw("SUM(forum_count_details.likes) as likes"),DB::raw("SUM(forum_count_details.dislikes) as dislikes"),DB::raw("SUM(forum_count_details.views) as views"),DB::raw("SUM(forum_count_details.replies) as replies"),DB::raw("SUM(forum_count_details.favorite) as favorite"),'activity')
-            //             ->Groupby('created_post_id') 
+            //             ->Groupby('created_post_id')
             //             ->leftJoin('forum_categorys','forum_posts.category','=','forum_categorys.category_id');
             //     },'aa')
             //     ->select('*');
@@ -6722,7 +6722,7 @@ try {
             // ->where('forum_count_details.branch_id','=',$request->branch_id)
             // ->where('forum_count_details.created_post_id','=',$request->id)
             // ->groupBy('created_post_id')
-            // ->get();            
+            // ->get();
 
             // DB::table('forum_posts')
             //     ->select('forum_posts.id', 'forum_posts.category as category', 'forum_posts.topic_title as topic_title', 'forum_posts.topic_header as topic_header', 'forum_posts.body_content as body_content', 'forum_posts.user_name as user_name', DB::raw('DATE_FORMAT(forum_posts.created_at, "%b %e %Y") as date'), 'forum_count_details.likes as likes', 'forum_count_details.dislikes as dislikes', 'forum_count_details.favorite as favorite', 'forum_count_details.replies as replies', 'forum_count_details.views as views', 'forum_count_details.activity as activity', 'forum_count_details.id as pkcount_details_id', 'forum_categorys.category_names', 'forum_posts.created_at')
@@ -6742,7 +6742,7 @@ try {
             return $this->commonHelper->generalReturn('403','error',$error,'Error in singlePost');
         }
     }
-    // forum post replies branch id and post id wise 
+    // forum post replies branch id and post id wise
     public function singlePostReplies(Request $request)
     {
     try {
@@ -6788,7 +6788,7 @@ try {
             return $this->commonHelper->generalReturn('403','error',$error,'Error in singlePostReplies');
         }
     }
-    // forum post all replies branch id and post id wise 
+    // forum post all replies branch id and post id wise
     public function PostAllReplies(Request $request)
     {
     try {
@@ -6940,7 +6940,7 @@ try{
             return $this->commonHelper->generalReturn('403','error',$error,'Error in getTeachersSubjectName');
         }
     }
-    // forum view count insert 
+    // forum view count insert
     public function viewcountinsert(Request $request)
     {
         try{
@@ -7041,7 +7041,7 @@ try{
             ])->first();
 
             if (empty($checkExist)) {
-                // echo "update";         
+                // echo "update";
                 DB::table('forum_count_details')->insert($likesinsert);
             } else {
                 $checkdislikecount = $checkExist->likes;
@@ -7098,7 +7098,7 @@ try{
             ])->first();
 
             if (empty($checkExist)) {
-                // echo "insert"; 
+                // echo "insert";
                 DB::table('forum_count_details')->insert($dislikesinsert);
             } else {
                 $checkdislikecount = $checkExist->dislikes;
@@ -7155,7 +7155,7 @@ try{
             ])->first();
 
             if (empty($checkExist)) {
-                // echo "insert";             
+                // echo "insert";
                 DB::table('forum_count_details')->insert($favoritsinsert);
             } else {
                 $checkfavoritscount = $checkExist->favorite;
@@ -8357,7 +8357,7 @@ try{
             ])->first();
 
             if (empty($checkExist)) {
-                // echo "update";         
+                // echo "update";
                 DB::table('forum_post_replie_counts')->insert($likesinsert);
             } else {
                 $checkdislikecount = $checkExist->likes;
@@ -8416,7 +8416,7 @@ try{
             ])->first();
 
             if (empty($checkExist)) {
-                // echo "insert"; 
+                // echo "insert";
                 DB::table('forum_post_replie_counts')->insert($dislikesinsert);
             } else {
                 $checkdislikecount = $checkExist->dislikes;
@@ -8479,7 +8479,7 @@ try{
             ])->first();
 
             if (empty($checkExist)) {
-                // echo "insert";             
+                // echo "insert";
                 DB::table('forum_post_replie_counts')->insert($favoritsinsert);
             } else {
                 $checkfavoritscount = $checkExist->favorits;
@@ -8753,7 +8753,7 @@ try{
     }
 
     }
-    // forum post replies branch id and post id wise 
+    // forum post replies branch id and post id wise
     public function userRepliespostall(Request $request)
     {
         try{
@@ -8808,7 +8808,7 @@ try{
         catch(Exception $error) {
             return $this->commonHelper->generalReturn('403','error',$error,'Error in threadstatusupdate');
         }
-    
+
 
     }
     public function usernameautocomplete(Request $request)
@@ -8822,10 +8822,10 @@ try{
         // if (!$validator->passes()) {
         //     return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
         // } else {
-        //        // create new connection              
+        //        // create new connection
         //     $success = DB::table('users')->select('id','name')
-        //     ->where('id','!=',1)  
-        //     ->where('id','!=',$request->user_id)           
+        //     ->where('id','!=',1)
+        //     ->where('id','!=',$request->user_id)
         //     ->get();
         //  //   $success = Category::all();
         //     return $this->successResponse($success, 'user name record fetch successfully');
@@ -8840,7 +8840,7 @@ try{
         if (!$validator->passes()) {
             return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
         } else {
-            // create new connection              
+            // create new connection
             $success = DB::table('roles')->select('id', 'role_name as name')
                 ->where('id', '!=', 1)
                 ->where('id', '!=', $request->user_id)
@@ -8866,7 +8866,7 @@ try{
         if (!$validator->passes()) {
             return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
         } else {
-            // create new connection              
+            // create new connection
             $success = DB::table('users')->select('id', 'name')
                 ->where('id', '!=', $request->branch_id)
                 ->get();
@@ -9214,7 +9214,7 @@ try{
     // getAttendanceList
     function getAttendanceList(Request $request)
     {
-    //  return $request;   
+    //  return $request;
         try{
         $validator = \Validator::make($request->all(), [
             'token' => 'required',
@@ -9261,7 +9261,7 @@ try{
                         'st.first_name',
                         'st.last_name',
                         'sad.student_id',
-                        'c.name as class_name', 
+                        'c.name as class_name',
                         's.name as section_name',
                         'sad.date',
                         'sad.status',
@@ -9291,7 +9291,7 @@ try{
                 ->where('en.academic_session_id', '=', $request->academic_session_id)
                 // ->groupBy('en.student_id')
                 ->get()->toArray();
-                
+
                 // dd($getAttendanceList);
                 $studentDetails = array();
                 if (!empty($getAttendanceList)) {
@@ -9378,16 +9378,16 @@ try{
             $year_month = explode('-', $request->year_month);
             // create new connection
             $Connection = $this->createNewConnection($request->branch_id);
-            
-            
-                
+
+
+
             $student_name = isset($request->student_name) ? $request->student_name : null;
             $session_id = isset($request->session_id) ? $request->session_id : null;
             $student_id = isset($request->student_id) ? $request->student_id : null;
             $class_id = isset($request->class_id) ? $request->class_id : null;
             $section_id = isset($request->section_id) ? $request->section_id : null;
             $attendance_academic_year = isset($request->academic_session_id) ? $request->academic_session_id : null;
-           
+
             // return $request;
             if($request->pattern=="Month"){
 
@@ -9402,7 +9402,7 @@ try{
                             'st.first_name',
                             'st.last_name',
                             'sad.student_id',
-                            'c.name as class_name', 
+                            'c.name as class_name',
                             's.name as section_name',
                             'sad.date',
                             'sad.status',
@@ -9439,13 +9439,13 @@ try{
                         // ->where('en.active_status', '=', "0")
                         ->groupBy('en.student_id')
                         ->get()->toArray();
-            
-    
+
+
                     $studentDetails = array();
                     if (!empty($getAttendanceList)) {
                         foreach ($getAttendanceList as $value) {
                             $object = new \stdClass();
-    
+
                             $object->first_name = $value->first_name;
                             $object->last_name = $value->last_name;
                             $object->student_id = $value->student_id;
@@ -9458,7 +9458,7 @@ try{
                             $date = $value->date;
                             $getStudentsAttData = $this->getAttendanceByDateStudentParent($request, $student_id, $date);
                             $object->attendance_details = $getStudentsAttData;
-    
+
                             array_push($studentDetails, $object);
                         }
                     }
@@ -9473,7 +9473,7 @@ try{
                         'st.first_name',
                         'st.last_name',
                         'sad.student_id',
-                        'c.name as class_name', 
+                        'c.name as class_name',
                         's.name as section_name',
                         'sad.date',
                         'sad.status',
@@ -9509,12 +9509,12 @@ try{
                 ->where('en.academic_session_id', '=', $attendance_academic_year)
                 ->groupBy('en.student_id')
                 ->get()->toArray();
-    
+
                     $studentDetails = array();
                     if (!empty($getAttendanceList)) {
                         foreach ($getAttendanceList as $value) {
                             $object = new \stdClass();
-    
+
                             $object->first_name = $value->first_name;
                             $object->last_name = $value->last_name;
                             $object->student_id = $value->student_id;
@@ -9528,7 +9528,7 @@ try{
                             $getStudentsAttData = $this->getAttendanceByDateStudent($request, $student_id, $date);
                             // dd($getStudentsAttData);
                             $object->attendance_details = $getStudentsAttData;
-    
+
                             $object->remarks = $value->remarks;
                             $object->homeroom_teacher_remarks = $value->homeroom_teacher_remarks;
                             array_push($studentDetails, $object);
@@ -9557,7 +9557,7 @@ try{
                     ->groupBy('sa.date')
                     ->get();
 
-                    
+
                 $data = [
                     'student_details' => $studentDetails,
                     'late_present_graph' => $getLatePresentData
@@ -9573,7 +9573,7 @@ try{
                             'st.first_name',
                             'st.last_name',
                             'sad.student_id',
-                            'c.name as class_name', 
+                            'c.name as class_name',
                             's.name as section_name',
                             'sad.date',
                             'sad.status',
@@ -9605,7 +9605,7 @@ try{
                     ->groupBy('en.student_id')
                     ->get()->toArray();
                 // dd($getAttendanceList);
-                
+
                 $presentCount = 0;
                 $absentCount = 0;
                 $totalCount = 0;
@@ -9623,11 +9623,11 @@ try{
                         $object->student_id = $value->student_id;
                         $object->status = $value->status;
                         $object->remarks = $value->remarks;
-                        
+
                         $object->photo = $value->photo;
                         $student_id = $value->student_id;
                         $date = $value->date;
-                        
+
                             if($value->presentCount!=0){
                                 $presentCount++;
                             }
@@ -9636,7 +9636,7 @@ try{
                             }
                             $totalCount++;
                         array_push($studentDetails, $object);
-                        
+
                     }
                 }
                 $count['totalCount'] = $totalCount;
@@ -9647,7 +9647,7 @@ try{
                     'count' => $count,
                 ];
             }else if($request->pattern=="Term"){
-                
+
                 $semester = $Connection->table('semester as s')
                         ->select('start_date', 'end_date','name')
                         ->where('id', $request->year_month)
@@ -9686,7 +9686,7 @@ try{
                         'st.first_name',
                         'st.last_name',
                         'sad.student_id',
-                        'c.name as class_name', 
+                        'c.name as class_name',
                         's.name as section_name',
                         'sad.date',
                         'sad.status',
@@ -9717,9 +9717,9 @@ try{
                 ->whereBetween(DB::raw('date(date)'), [$start, $end])
                 ->groupBy('en.student_id')
                 ->get()->toArray();
-            
+
                 // dd($getAttendanceList);
-                
+
                 $presentCount = 0;
                 $absentCount = 0;
                 $totalCount = 0;
@@ -9739,12 +9739,12 @@ try{
                         $object->semester_name = $semester->name;
                         $object->photo = $value->photo;
                         $student_id = $value->student_id;
-                        
+
                         $object->presentCount = $value->presentCount;
                         $object->absentCount = $value->absentCount;
                         $object->lateCount = $value->lateCount;
                         array_push($studentDetails, $object);
-                        
+
                     }
                 }
                 // dd(count($getAttendanceList));
@@ -9756,22 +9756,22 @@ try{
                     'count' => $count,
                 ];
             }else if($request->pattern=="Year"){
-                
+
                 // $academic_year = $Connection->table('academic_year as ay')
                 //         ->select('id','name')
                 //         ->where('id', $request->year_month)
                 //         ->first();
-                        
+
                 $yearData = $Connection->table('semester as sm')
                 ->select(DB::raw('MIN(sm.start_date) AS year_start_date, MAX(sm.end_date) AS year_end_date'))
                 ->where([
                     ['sm.academic_session_id', '=', $request->academic_session_id],
                 ])
                 ->get();
-                        
+
                 // $start_end = explode('-', $academic_year->name);
                 // dd($yearData);
-                
+
                 $start = $yearData[0]->year_start_date;
                 $end = $yearData[0]->year_end_date;
 
@@ -9805,7 +9805,7 @@ try{
                         'st.first_name',
                         'st.last_name',
                         'sad.student_id',
-                        'c.name as class_name', 
+                        'c.name as class_name',
                         's.name as section_name',
                         'sad.date',
                         'sad.status',
@@ -9836,7 +9836,7 @@ try{
                 ->whereBetween(DB::raw('date(date)'), [$start, $end])
                 ->groupBy('en.student_id')
                 ->get()->toArray();
-                
+
                 $presentCount = 0;
                 $absentCount = 0;
                 $totalCount = 0;
@@ -9859,7 +9859,7 @@ try{
                         $object->absentCount = $value->absentCount;
                         $object->lateCount = $value->lateCount;
                         array_push($studentDetails, $object);
-                        
+
                     }
                 }
                 $count['total_students'] = count($getAttendanceList);
@@ -9878,7 +9878,7 @@ try{
     }
 
     }
-    
+
     // get attendance list teacher
     function getAttendanceListTeacherBySubject(Request $request)
     {
@@ -9895,16 +9895,16 @@ try{
             $year_month = explode('-', $request->year_month);
             // create new connection
             $Connection = $this->createNewConnection($request->branch_id);
-            
-            
-                
+
+
+
             $student_name = isset($request->student_name) ? $request->student_name : null;
             $session_id = isset($request->session_id) ? $request->session_id : null;
             $student_id = isset($request->student_id) ? $request->student_id : null;
             $class_id = isset($request->class_id) ? $request->class_id : null;
             $section_id = isset($request->section_id) ? $request->section_id : null;
             $attendance_academic_year = isset($request->academic_session_id) ? $request->academic_session_id : null;
-           
+
             // return $request;
             if($request->pattern=="Month"){
 
@@ -9942,7 +9942,7 @@ try{
                     // if (!empty($getAttendanceList)) {
                     //     foreach ($getAttendanceList as $value) {
                     //         $object = new \stdClass();
-    
+
                     //         $object->first_name = $value->first_name;
                     //         $object->last_name = $value->last_name;
                     //         $object->student_id = $value->student_id;
@@ -9955,7 +9955,7 @@ try{
                     //         $date = $value->date;
                     //         $getStudentsAttData = $this->getAttendanceByDateStudentParent($request, $student_id, $date);
                     //         $object->attendance_details = $getStudentsAttData;
-    
+
                     //         array_push($studentDetails, $object);
                     //     }
                     // }
@@ -10000,7 +10000,7 @@ try{
                     if (!empty($getAttendanceList)) {
                         foreach ($getAttendanceList as $value) {
                             $object = new \stdClass();
-    
+
                             $object->first_name = $value->first_name;
                             $object->last_name = $value->last_name;
                             $object->student_id = $value->student_id;
@@ -10014,7 +10014,7 @@ try{
                             $getStudentsAttData = $this->getAttendanceByDateStudentBySubject($request, $student_id, $date);
                             // dd($getStudentsAttData);
                             $object->attendance_details = $getStudentsAttData;
-    
+
                             $object->remarks = $value->remarks;
                             $object->homeroom_teacher_remarks = $value->homeroom_teacher_remarks;
                             array_push($studentDetails, $object);
@@ -10045,7 +10045,7 @@ try{
                     ->groupBy('sa.date')
                     ->get();
 
-                    
+
                 $data = [
                     'student_details' => $studentDetails,
                     'late_present_graph' => $getLatePresentData
@@ -10142,7 +10142,7 @@ try{
             catch(Exception $error) {
                 return $this->commonHelper->generalReturn('403','error',$error,'Error in getAttendanceByDateStudentBySubject');
             }
-        
+
 
     }
     // by student ,date
@@ -10183,7 +10183,7 @@ try{
             }
         catch(Exception $error) {
             return $this->commonHelper->generalReturn('403','error',$error,'Error in getAttendanceByDateStudentParent');
-        }        
+        }
     }
     // getReasonsByStudent
     function getReasonsByStudent(Request $request)
@@ -10231,11 +10231,11 @@ try{
     }
     catch(Exception $error) {
         return $this->commonHelper->generalReturn('403','error',$error,'Error in getReasonsByStudent');
-    }        
+    }
     }
 
 
-    // view Homework 
+    // view Homework
     public function viewHomework(Request $request)
     {
         // dd($request);
@@ -10247,7 +10247,7 @@ try{
         if (!$validator->passes()) {
             return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
         } else {
-            // create new connection    
+            // create new connection
             $con = $this->createNewConnection($request->branch_id);
             // get data
             // $homework = $con->table('homework_evaluation as he')->select('he.*','s.first_name','s.last_name','s.register_no')->leftJoin('students as s', 'he.student_id', '=', 's.id')->where('he.homework_id',$request['homework_id'])->get();
@@ -10299,7 +10299,7 @@ try{
     }
     catch(Exception $error) {
         return $this->commonHelper->generalReturn('403','error',$error,'Error in viewHomework');
-    }   
+    }
 
     }
 
@@ -10388,7 +10388,7 @@ try{
     }
     catch(Exception $error) {
         return $this->commonHelper->generalReturn('403','error',$error,'Error in evaluateHomework');
-    }  
+    }
     }
 
 
@@ -10461,7 +10461,7 @@ try{
     }
     catch(Exception $error) {
         return $this->commonHelper->generalReturn('403','error',$error,'Error in studentHomework');
-    }  
+    }
 
     }
 
@@ -10536,12 +10536,12 @@ try{
     }
     catch(Exception $error) {
         return $this->commonHelper->generalReturn('403','error',$error,'Error in studentHomeworkFilter');
-    }  
+    }
 
     }
 
 
-    //  Student submits Homework 
+    //  Student submits Homework
     public function submitHomework(Request $request)
     {
         try{
@@ -10654,7 +10654,7 @@ try{
     }
     catch(Exception $error) {
         return $this->commonHelper->generalReturn('403','error',$error,'Error in submitHomework');
-    } 
+    }
     }
     // getTimetableCalendor
     public function getTimetableCalendor(Request $request)
@@ -10736,7 +10736,7 @@ try{
     }
     catch(Exception $error) {
         return $this->commonHelper->generalReturn('403','error',$error,'Error in getTimetableCalendor');
-    } 
+    }
 
     }
     // getBirthdayCalendorTeacher
@@ -10783,7 +10783,7 @@ try{
     }
     catch(Exception $error) {
         return $this->commonHelper->generalReturn('403','error',$error,'Error in getBirthdayCalendorTeacher');
-    } 
+    }
 
     }
     // getBirthdayCalendorAdmin
@@ -10829,7 +10829,7 @@ try{
     }
     catch(Exception $error) {
         return $this->commonHelper->generalReturn('403','error',$error,'Error in getBirthdayCalendorAdmin');
-    } 
+    }
 
     }
 
@@ -10932,7 +10932,7 @@ try{
     }
     catch(Exception $error) {
         return $this->commonHelper->generalReturn('403','error',$error,'Error in getEventCalendor');
-    } 
+    }
 
 
     }
@@ -10975,7 +10975,7 @@ try{
     }
     catch(Exception $error) {
         return $this->commonHelper->generalReturn('403','error',$error,'Error in getPublicHolidays');
-    } 
+    }
 
     }
     // getEventCalendorStud
@@ -11063,8 +11063,8 @@ try{
     }
     catch(Exception $error) {
         return $this->commonHelper->generalReturn('403','error',$error,'Error in getEventCalendorStud');
-    } 
-    
+    }
+
     }
     // getEventCalendorAdmin
     public function getEventCalendorAdmin(Request $request)
@@ -11110,7 +11110,7 @@ try{
     }
     catch(Exception $error) {
         return $this->commonHelper->generalReturn('403','error',$error,'Error in getEventCalendorAdmin');
-    } 
+    }
 
     }
 
@@ -11199,7 +11199,7 @@ try{
     }
     catch(Exception $error) {
         return $this->commonHelper->generalReturn('403','error',$error,'Error in getEventGroupCalendor');
-    } 
+    }
 
     }
 
@@ -11283,7 +11283,7 @@ try{
     }
     catch(Exception $error) {
         return $this->commonHelper->generalReturn('403','error',$error,'Error in getEventGroupCalendorStud');
-    } 
+    }
     }
 
     // getEventGroupCalendorAdmin
@@ -11337,7 +11337,7 @@ try{
     }
     catch(Exception $error) {
         return $this->commonHelper->generalReturn('403','error',$error,'Error in getEventGroupCalendorAdmin');
-    } 
+    }
 
     }
 
@@ -11388,7 +11388,7 @@ try{
         }
     } catch(Exception $error) {
         return $this->commonHelper->generalReturn('403','error',$error,'Error in getEventGroupCalendorParent');
-    } 
+    }
 
     }
 
@@ -11475,7 +11475,7 @@ try{
         }
     }catch(Exception $error) {
         return $this->commonHelper->generalReturn('403','error',$error,'Error in getTimetableCalendorStud');
-    } 
+    }
 
     }
     function addCalendorTimetable($request, $row, $getObjRow, $insertOrUpdateID, $bulkID)
@@ -11483,7 +11483,7 @@ try{
         // Create new connection
         try{
         $Connection = $this->createNewConnection($request->branch_id);
-        
+
         // Delete existing calendar data
         $calendarsCount = $Connection->table('calendors')->where('time_table_id', $insertOrUpdateID)->where('sem_id', $request->semester_id)->count();
         if ($calendarsCount > 0) {
@@ -11528,7 +11528,7 @@ try{
     }
     catch(Exception $error) {
         return $this->commonHelper->generalReturn('403','error',$error,'Error in addCalendorTimetable');
-    } 
+    }
     }
 
     function addTimetableCalendor($request, $startDate, $endDate, $day, $row, $insertOrUpdateID, $bulkID)
@@ -11568,9 +11568,9 @@ try{
     }
     catch(Exception $error) {
         return $this->commonHelper->generalReturn('403','error',$error,'Error in addTimetableCalendor');
-    } 
     }
-    // get semester 
+    }
+    // get semester
     public function getSemesterList(Request $request)
     {
         try{
@@ -11586,7 +11586,7 @@ try{
             $cache_time = config('constants.cache_time');
             $cache_semester = config('constants.cache_semester');
             $cacheKey = $cache_semester . $request->branch_id;
-            
+
             // Check if the data is cached
             if (Cache::has($cacheKey)) {
                 // If cached, return cached data
@@ -11616,11 +11616,11 @@ try{
     }
     catch(Exception $error) {
         return $this->commonHelper->generalReturn('403','error',$error,'Error in getSemesterList');
-    } 
+    }
 
     }
 
-    // get Session 
+    // get Session
     public function getSessionList(Request $request)
     {
         try{
@@ -11641,7 +11641,7 @@ try{
     }
     catch(Exception $error) {
         return $this->commonHelper->generalReturn('403','error',$error,'Error in getSessionList');
-    } 
+    }
 
     }
 
@@ -11734,7 +11734,7 @@ try{
             $cache_time = config('constants.cache_time');
             $cache_exam_term = config('constants.cache_exam_term');
             $cacheKey = $cache_exam_term . $request->branch_id;
-        
+
             // Check if the data is cached
             if (Cache::has($cacheKey)) {
                 // If cached, return cached data
@@ -12061,7 +12061,7 @@ try{
             $cache_time = config('constants.cache_time');
             $cache_exam = config('constants.cache_exam');
             $cacheKey = $cache_exam . $request->academic_session_id . $request->branch_id;
-        
+
             // Check if the data is cached
             if (Cache::has($cacheKey)) {
                 // If cached, return cached data
@@ -12298,7 +12298,7 @@ try{
         return $this->commonHelper->generalReturn('403','error',$error,'Error in addExamTimetable');
     }
     }
-    // list Exam Timetable 
+    // list Exam Timetable
     public function listExamTimetable(Request $request)
     {
         try{
@@ -12334,7 +12334,7 @@ try{
 
     }
 
-    // get Exam Timetable 
+    // get Exam Timetable
     public function getExamTimetable(Request $request)
     {
         try{
@@ -12423,7 +12423,7 @@ try{
             $exam_name = $con->table('exam')->where('id', $exam_id)->first();
             $details['details']['exam_name'] = $exam_name->name;
             return $this->successResponse($details, 'Exam Timetable record fetch successfully');
-       
+
      }
     }
     catch(Exception $error) {
@@ -12448,7 +12448,7 @@ try{
         } else {
             // create new connection
             $con = $this->createNewConnection($request->branch_id);
-            // delete 
+            // delete
             $query = $con->table('timetable_exam')->where([
                 ['exam_id', $request->exam_id],
                 ['class_id', $request->class_id],
@@ -12636,12 +12636,12 @@ try{
                     $score_type=$exampaper->score_type;
                     $grade = $Connection->table('grade_marks')->select('id','grade')
                     ->where('score_type', '=', $score_type)->get();
-                    $success=[]  ;     
+                    $success=[]  ;
                     $data = [
                         'get_subject_marks' => $getSubjectMarks,
                         'grade' => $grade,
                         'exampaper' => $exampaper
-                    ];   
+                    ];
                 return $this->successResponse($data, 'Subject vs marks record fetch successfully');
             }
         }
@@ -12669,10 +12669,10 @@ try{
             $grade_category =  $request->grade_category;
 
             $Connection = $this->createNewConnection($branch_id);
-            // $success = $Connection->table('grade_marks')         
+            // $success = $Connection->table('grade_marks')
             // ->select('id','grade')
             // ->where([
-            //     ['min_mark', '>=', $marks_range]             
+            //     ['min_mark', '>=', $marks_range]
             // ])
             $success['grade_details'] = $Connection->table('grade_marks')
                 ->select('grade', 'status')
@@ -12717,7 +12717,7 @@ try{
         if (!$validator->passes()) {
             return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
         } else {
-            // create new connection     
+            // create new connection
             $Connection = $this->createNewConnection($request->branch_id);
             $subjectmarks = $request->subjectmarks;
             $class_id = $request->class_id;
@@ -12735,7 +12735,7 @@ try{
 
                 $student_id = (isset($value['student_id']) ? $value['student_id'] : "");
                 $score = (isset($value['score']) ? $value['score'] : "");
-                $points = (isset($value['points']) ? $value['points'] : "");								
+                $points = (isset($value['points']) ? $value['points'] : "");
                 $freetext = (isset($value['freetext']) ? $value['freetext'] : "");
                 $grade = (isset($value['grade']) ? $value['grade'] : "");
                 $ranking = (isset($value['score']) ? $value['ranking'] : "");
@@ -12813,21 +12813,21 @@ try{
                         ];
                         $student_data=$Connection->table('students')->where('id', $value['student_id'])->first();
                         $oldData = $Connection->table('student_marks')->where('id', $row->id)->first();
-                $query = $Connection->table('student_marks')->where('id', $row->id)->update($data); 
+                $query = $Connection->table('student_marks')->where('id', $row->id)->update($data);
                 $changes = $this->getChanges($oldData, $data);
                 $table_modify=[];
                 $table_modify['type']='Student';
-                $table_modify['id']=$value['student_id'];                
-                $table_modify['name']=$student_data->first_name.' '.$student_data->last_name;                
+                $table_modify['id']=$value['student_id'];
+                $table_modify['name']=$student_data->first_name.' '.$student_data->last_name;
                 $table_modify['email']=$student_data->email;
 
                 $Connection->table('modify_datas')->insert([
-                    
+
                     'table_name' => 'Student Mark',
                     'table_dbname' => 'student_marks',
                     'table_dbid' => $row->id,
-                    'table_id_name' => 'id', 
-                    'table_modify' => json_encode($table_modify),                  
+                    'table_id_name' => 'id',
+                    'table_modify' => json_encode($table_modify),
                     'modifydata' => json_encode($changes),
                     'createdby_id' => $request->login_userid,
                     'createdby_role' => $request->login_roleid
@@ -12860,21 +12860,21 @@ try{
                     ];
                     $student_data=$Connection->table('students')->where('id', $value['student_id'])->first();
                     $oldData = $Connection->table('student_marks')->where('id', $value['studentmarks_tbl_pk_id'])->first();
-                    $query = $Connection->table('student_marks')->where('id', $value['studentmarks_tbl_pk_id'])->update($data); 
+                    $query = $Connection->table('student_marks')->where('id', $value['studentmarks_tbl_pk_id'])->update($data);
                     $changes = $this->getChanges($oldData, $data);
                     $table_modify=[];
                     $table_modify['type']='Student';
-                    $table_modify['id']=$value['student_id'];                
-                    $table_modify['name']=$student_data->first_name.' '.$student_data->last_name;                
+                    $table_modify['id']=$value['student_id'];
+                    $table_modify['name']=$student_data->first_name.' '.$student_data->last_name;
                     $table_modify['email']=$student_data->email;
 
                     $Connection->table('modify_datas')->insert([
-                    
+
                         'table_name' => 'Student Mark',
                         'table_dbname' => 'student_marks',
                         'table_dbid' => $value['studentmarks_tbl_pk_id'],
-                        'table_id_name' => 'id', 
-                        'table_modify' => json_encode($table_modify),                  
+                        'table_id_name' => 'id',
+                        'table_modify' => json_encode($table_modify),
                         'modifydata' => json_encode($changes),
                         'createdby_id' => $request->login_userid,
                         'createdby_role' => $request->login_roleid
@@ -12932,8 +12932,8 @@ try{
                 ->leftJoin('students as st', 'st.id', '=', 'en.student_id')
                 ->leftJoin('student_subjectdivision_inst as ssdiv', function ($q) use ($class_id, $subject_id, $exam_id) {
                     $q->on('ssdiv.student_id', '=', 'st.id')
-                        ->on('ssdiv.exam_id', '=', DB::raw("'$exam_id'")) //second join condition                           
-                        ->on('ssdiv.subject_id', '=', DB::raw("'$subject_id'")); //need to add subject id also later                           
+                        ->on('ssdiv.exam_id', '=', DB::raw("'$exam_id'")) //second join condition
+                        ->on('ssdiv.subject_id', '=', DB::raw("'$subject_id'")); //need to add subject id also later
                 })
                 ->where([
                     ['en.class_id', '=', $request->class_id],
@@ -13508,7 +13508,7 @@ try{
     }
     // get HostelRoom row details
     public function getHostelRoomDetails(Request $request)
-    { 
+    {
         try{
         $validator = \Validator::make($request->all(), [
             'id' => 'required',
@@ -13738,7 +13738,7 @@ try{
                     return $this->send500Error('Something went wrong.', ['error' => 'Something went wrong']);
                 }
             }
-        
+
         }
     }
     catch(Exception $error) {
@@ -13779,7 +13779,7 @@ try{
 
     }
 
-    // floor By Block 
+    // floor By Block
     public function floorByBlock(Request $request)
     {
         try{
@@ -13810,7 +13810,7 @@ try{
 
     }
 
-    // vehicle By Route 
+    // vehicle By Route
     public function vehicleByRoute(Request $request)
     {
         try{
@@ -13843,7 +13843,7 @@ try{
 
     }
 
-    // room By Hostel 
+    // room By Hostel
     public function roomByHostel(Request $request)
     {
      try{
@@ -13870,7 +13870,7 @@ try{
     }
     }
 
-    
+
     // add Admission
     public function addAdmission(Request $request)
     {
@@ -13892,29 +13892,29 @@ try{
             'section_id' => 'required',
 
             'branch_id' => 'required',
-            
+
         ]);
-        
-        
+
+
         $previous['school_name'] = $request->school_name;
         $previous['qualification'] = $request->qualification;
         $previous['remarks'] = $request->remarks;
 
         $previous_details = json_encode($previous);
-        
+
 
         if (!$validator->passes()) {
-          
+
             return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
         } else {
             // create new connection
             $conn = $this->createNewConnection($request->branch_id);
             // insert data
-           
+
             if ($conn->table('students')->where('email', '=', $request->email)->count() > 0) {
                 return $this->send422Error('Student Email Already Exist', ['error' => 'Student Email Already Exist']);
             } else {
-                
+
                 $fileName = "";
                 if ($request->photo) {
                     $path = '/public/' . $request->branch_id . '/users/images/';
@@ -13976,9 +13976,9 @@ try{
                     $nric_now = now();
                     $nric_name = strtotime($nric_now);
                     $nric_extension = $request->nric_file_extension;
-    
+
                     $nric_fileName = "nric_".$nric_name . '.' . $nric_extension;
-    
+
                     // return $fileName;
                     $nric_path = '/public/' . $request->branch_id . '/users/images/';
                     $nric_base64 = base64_decode($request->nric_photo);
@@ -13998,7 +13998,7 @@ try{
                 $permanent_address = isset($request->permanent_address) ? Crypt::encryptString($request->permanent_address) : "";
                 $father_mobile_no = isset($request->father_mobile_no) ? Crypt::encryptString($request->father_mobile_no) : "";
                 $mother_mobile_no = isset($request->mother_mobile_no) ? Crypt::encryptString($request->mother_mobile_no) : "";
-                
+
                 $father_id = "";
                 $mother_id = "";
                 $guardian_id = "";
@@ -14026,7 +14026,7 @@ try{
                                     'status' => '0', // Assuming you want to update the status as well
                                     'updated_at' => now()
                                 ]);
-                               
+
                             }else {
                                     $father_id = $conn->table('parent')->insertGetId([
 
@@ -14051,8 +14051,8 @@ try{
                         }
                 }
 
-                
-                    if ($request->mother_first_name) 
+
+                    if ($request->mother_first_name)
                     {
                             if($request->mother_id){
                                  $mother_id = $request->mother_id;
@@ -14117,8 +14117,8 @@ try{
                             $query->password = bcrypt($request->guardian_email);
                             $query->save();
                     }
-                    
-                
+
+
                 $regData = [
                     'branch_id' => $request->branch_id,
                     'academic_year' => $request->year
@@ -14263,7 +14263,7 @@ try{
         return $this->commonHelper->generalReturn('403','error',$error,'Error in addAdmission');
     }
     }
-    // get Teacher list 
+    // get Teacher list
     public function getTeacherList(Request $request)
     {
        try{
@@ -14967,7 +14967,7 @@ try{
             ])->first();
 
             if (empty($checkExist)) {
-                // echo "update";         
+                // echo "update";
                 $query = $Connection->table('read_to_do_list')->insert([
                     'to_do_list_id' => $request->to_do_list_id,
                     'user_id' => $request->user_id,
@@ -15108,7 +15108,7 @@ try{
             $now = Carbon::now()->format('Y-m-d');
             // 1st get assign teachers
             $Connection = $this->createNewConnection($request->branch_id);
-            // any one come 
+            // any one come
             if ($request->student_id) {
                 $getTeachersClassName = $Connection->table('enrolls as en')
                     ->select('en.class_id', 'en.section_id')
@@ -15243,7 +15243,7 @@ try{
         $section_id = isset($request->section_id) ? $request->section_id : null;
         $status = isset($request->status) ? $request->status : null;
         $name = isset($request->student_name) ? $request->student_name : null;
- 
+
         if (!$validator->passes()) {
             return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
         }
@@ -15251,7 +15251,7 @@ try{
             // get data
             $cache_time = config('constants.cache_time');
             $cache_students = config('constants.cache_students');
- 
+
             $cacheKey = $cache_students . $request->branch_id;
             // Check if the data is cached
             if (Cache::has($cacheKey) && !($department_id || $class_id || $session_id || $section_id || $status)) {
@@ -15275,27 +15275,27 @@ try{
                     'e.attendance_no'
                 )
                 ->join('students as s', 'e.student_id', '=', 's.id');
-           
+
                 if (isset($request->department_id) && filled($request->department_id)) {
                     $query->where('e.department_id', $request->department_id);
                 }
- 
+
                 if (isset($request->class_id) && filled($request->class_id)) {
                     $query->where('e.class_id', $request->class_id);
                 }
- 
+
                 // if (isset($request->session_id) && filled($request->session_id)) {
                 //     $query->where('e.session_id', $request->session_id);
                 // }
- 
+
                 if (isset($request->section_id) && filled($request->section_id)) {
                     $query->where('e.section_id', $request->section_id);
                 }
- 
+
                 if (isset($request->status) && filled($request->status)) {
                     $query->where('e.active_status', $request->status);
                 }
- 
+
                 if (isset($request->student_name) && filled($request->student_name)) {
                     $name = $request->student_name;
                     $query->where(function ($q) use ($name) {
@@ -15303,9 +15303,9 @@ try{
                             ->orWhere('s.last_name', 'like', '%' . $name . '%');
                     });
                 }
- 
+
                 $students = $query->groupBy('e.student_id')->get()->toArray();
- 
+
                 // Cache the fetched data for future requests, only if no filters are applied
                 if (!($department_id || $class_id || $session_id || $section_id || $status)) {
                     Cache::put($cacheKey, $students, now()->addHours($cache_time)); // Cache for 24 hours
@@ -15327,14 +15327,14 @@ try{
         $validator = \Validator::make($request->all(), [
             'branch_id' => 'required',
         ]);
- 
+
         $department_id = isset($request->department_id) ? $request->department_id : null;
         $class_id = isset($request->class_id) ? $request->class_id : null;
         $session_id = isset($request->session_id) ? $request->session_id : 0;
         $section_id = isset($request->section_id) ? $request->section_id : null;
         $status = isset($request->status) ? $request->status : null;
         $name = isset($request->student_name) ? $request->student_name : null;
- 
+
         if (!$validator->passes()) {
             return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
         }
@@ -15342,7 +15342,7 @@ try{
             // get data
             $cache_time = config('constants.cache_time');
             $cache_students = config('constants.cache_students');
- 
+
             $cacheKey = $cache_students . $request->branch_id;
             // Check if the data is cached
             if (Cache::has($cacheKey) && !($department_id || $class_id || $session_id || $section_id || $status)) {
@@ -15352,15 +15352,15 @@ try{
             } else {
                 // create new connection
                 $con = $this->createNewConnection($request->branch_id);
-             
+
                 $name_status = $request->name_status;
-            
+
                 $query = $con->table('enrolls as e')
                 ->select(
                     's.id',
                     DB::raw("CONCAT(s." . ($name_status == 0 ? 'last_name' : 'first_name') . ", ' ', s." . ($name_status == 1 ? 'first_name' : 'last_name') . ") as name"),
                     DB::raw('CONCAT(s.' . ($name_status == 0 ? 'last_name_common' : 'first_name_common') . ', " ", s.' . ($name_status == 1 ? 'first_name_common' : 'last_name_common') . ") as name_common"),
-                   
+
                     // DB::raw('CONCAT(s.last_name, " ", s.first_name) as name'),
                     // DB::raw('CONCAT(s.last_name_common, " ", s.first_name_common) as name_common'),
                     's.register_no',
@@ -15372,27 +15372,27 @@ try{
                     'e.attendance_no'
                 )
                 ->join('students as s', 'e.student_id', '=', 's.id');
-           
+
                 if (isset($request->department_id) && filled($request->department_id)) {
                     $query->where('e.department_id', $request->department_id);
                 }
- 
+
                 if (isset($request->class_id) && filled($request->class_id)) {
                     $query->where('e.class_id', $request->class_id);
                 }
- 
+
                 // if (isset($request->session_id) && filled($request->session_id)) {
                 //     $query->where('e.session_id', $request->session_id);
                 // }
- 
+
                 if (isset($request->section_id) && filled($request->section_id)) {
                     $query->where('e.section_id', $request->section_id);
                 }
- 
+
                 if (isset($request->status) && filled($request->status)) {
                     $query->where('e.active_status', $request->status);
                 }
- 
+
                 if (isset($request->student_name) && filled($request->student_name)) {
                     $name = $request->student_name;
                     $query->where(function ($q) use ($name) {
@@ -15400,9 +15400,9 @@ try{
                             ->orWhere('s.last_name', 'like', '%' . $name . '%');
                     });
                 }
- 
+
                 $students = $query->groupBy('e.student_id')->get()->toArray();
- 
+
                 // Cache the fetched data for future requests, only if no filters are applied
                 if (!($department_id || $class_id || $session_id || $section_id || $status)) {
                     Cache::put($cacheKey, $students, now()->addHours($cache_time)); // Cache for 24 hours
@@ -15462,9 +15462,9 @@ try{
     //             )
     //             ->join('students as s', 'e.student_id', '=', 's.id')
     //             ->join('termination as t' ,'s.id','=','t.student_id');
-               
+
     //             // Corrected join condition
-            
+
     //             if (isset($request->department_id) && filled($request->department_id)) {
     //                 $query->where('e.department_id', $request->department_id);
     //             }
@@ -15528,7 +15528,7 @@ try{
             'branch_id' => 'required',
            // 'token' => 'required',
         ]);
-   
+
 
        // return $request;
         $previous['school_name'] = $request->school_name;
@@ -15617,13 +15617,13 @@ try{
                 }
                 $nric_fileName = $request->nric_old_photo;
                 if ($request->nric_photo) {
-    
+
                     $nric_now = now();
                     $nric_name = strtotime($nric_now);
                     $nric_extension = $request->nric_file_extension;
-    
+
                     $nric_fileName = "nric_".$nric_name . '.' . $nric_extension;
-    
+
                     // return $fileName;
                     $nric_path = '/public/' . $request->branch_id . '/users/images/';
                     $nric_base64 = base64_decode($request->nric_photo);
@@ -15636,16 +15636,16 @@ try{
                         }
                     }
                 }
-    
+
                 // $image_principal_fileName = $request->image_principal_old_photo;
                 // if ($request->image_principal_photo) {
-    
+
                 //     $image_principal_now = now();
                 //     $image_principal_name = strtotime($image_principal_now);
                 //     $image_principal_extension = "principal_".$request->image_principal_file_extension;
-    
+
                 //     $image_principal_fileName = $image_principal_name . '.' . $image_principal_extension;
-    
+
                 //     // return $fileName;
                 //     $image_principal_path = '/public/' . $request->branch_id . '/users/images/';
                 //     $image_principal_base64 = base64_decode($request->image_principal_photo);
@@ -15727,7 +15727,7 @@ try{
                         'updated_at' => now()
                     ]);
                 }
-               
+
 
 
                 $data = [
@@ -15806,17 +15806,17 @@ try{
                 $changes = $this->getChanges($oldData, $data);
                 $table_modify=[];
                 $table_modify['type']='Student';
-                $table_modify['id']=$request->student_id;                
-                $table_modify['name']=$request->first_name.' '.$request->last_name;                
+                $table_modify['id']=$request->student_id;
+                $table_modify['name']=$request->first_name.' '.$request->last_name;
                 $table_modify['email']=$request->email;
 
                 $conn->table('modify_datas')->insert([
-                    
+
                     'table_name' => 'Student',
                     'table_dbname' => 'students',
                     'table_dbid' => $request->student_id,
-                    'table_id_name' => 'id', 
-                    'table_modify' => json_encode($table_modify),                  
+                    'table_id_name' => 'id',
+                    'table_modify' => json_encode($table_modify),
                     'modifydata' => json_encode($changes),
                     'createdby_id' => $request->login_userid,
                     'createdby_role' => $request->login_roleid
@@ -15921,7 +15921,7 @@ try{
             if($request->id!==0)
             {
                 $id = $request->id;
-                // create new connection            
+                // create new connection
                 $conn = $this->createNewConnection($request->branch_id);
                 // get data
                 // $studentDetail['student'] = $conn->table('students as s')
@@ -16028,7 +16028,7 @@ try{
                             ->leftJoin('enrolls as e', 's.id', '=', 'e.student_id')
                             ->where('s.id', $id)
                             ->first();
-    
+
             if (!$student) {
                 return $this->send404Error('Student not found.', ['error' => 'Student not found']);
             }
@@ -16044,19 +16044,19 @@ try{
                                     ->where('role_id', 6)
                                     ->where('branch_id', $branch_id)
                                     ->delete();
-    
+
             // Delete enrollment records
             $enrollDeleteCount = $conn->table('enrolls')->where('student_id', $id)->delete();
-    
+
             // Delete student record
             $studentDeleteCount = $conn->table('students')->where('id', $id)->delete();
-    
+
             // Clear cache
             $cache_students = config('constants.cache_students');
             $this->clearCache($cache_students, $branch_id);
-    
+
             \Log::info("Deleted student with ID $id. User records deleted: $deletedUserCount, Enrollment records deleted: $enrollDeleteCount, Student records deleted: $studentDeleteCount");
-    
+
             return $this->successResponse([], 'Student has been deleted successfully');
         } catch (\Exception $e) {
             \Log::error('Error deleting student: ' . $e->getMessage());
@@ -16106,16 +16106,16 @@ try{
                     $file = base_path() . $path . $fileName;
                     $suc = file_put_contents($file, $base64);
                 }*/
-                
+
                 $image_principal_fileName = "";
                 if ($request->image_principal_photo) {
-    
+
                     $image_principal_now = now();
                     $image_principal_name = strtotime($image_principal_now);
                     $image_principal_extension = $request->image_principal_file_extension;
-    
+
                     $image_principal_fileName = "principal_".$image_principal_name . '.' . $image_principal_extension;
-    
+
                     // return $fileName;
                     $image_principal_path = '/public/' . $request->branch_id . '/users/images/';
                     $image_principal_base64 = base64_decode($request->image_principal_photo);
@@ -16238,7 +16238,7 @@ try{
 // return $request;
                 $name = $request->first_name . " " . $request->last_name;
                 // insert data
-               
+
                 $mobile_no = isset($request->mobile_no) ? Crypt::encryptString($request->mobile_no) : "";
                 /* $passport = isset($request->passport) ? Crypt::encryptString($request->passport) : "";
                 $nric = isset($request->nric) ? Crypt::encryptString($request->nric) : "";
@@ -16272,20 +16272,20 @@ try{
                     'facebook_url' => $request->facebook_url,
                     'linkedin_url' => $request->linkedin_url,
                     'twitter_url' => $request->twitter_url,*/
-                    
+
                     'occupation' => $request->occupation,
                     'email' => $request->email,
                     'mobile_no' => $mobile_no,
                     'status' => $request->status,
-                    
-                    
+
+
                     'first_name_english' => $request->first_name_english,
-                    'middle_name_english' => $request->middle_name_english,                    
+                    'middle_name_english' => $request->middle_name_english,
                     'last_name_english' => $request->last_name_english,
                     'first_name_furigana' => $request->first_name_furigana,
-                    'middle_name_furigana' => $request->middle_name_furigana, 
+                    'middle_name_furigana' => $request->middle_name_furigana,
                     'last_name_furigana' => $request->last_name_furigana,
-                    
+
                     // 'nationality' => $request->nationality,
                    /* 'passport_number' => $passport,
                     'passport_expiry_date' => $request->passport_expiry_date,
@@ -16299,7 +16299,7 @@ try{
                     'company_name_local' => $request->guardian_company_name_local,
                     'company_phone_number' => isset($request->guardian_company_phone_number) ? Crypt::encryptString($request->guardian_company_phone_number) : "",
                     'employment_status' => $request->guardian_employment_status,
-                    // 'guardian_remarks' => $request->guardian_remarks,                   
+                    // 'guardian_remarks' => $request->guardian_remarks,
 
 
                     // 'mother_last_name_furigana' => $request->mother_last_name_furigana,
@@ -16308,25 +16308,25 @@ try{
                     // 'mother_last_name_english' => $request->mother_last_name_english,
                     // 'mother_middle_name_english' => $request->mother_middle_name_english,
                     // 'mother_first_name_english' => $request->mother_first_name_english,
-                    // 'mother_nationality' => $request->mother_nationality,           
+                    // 'mother_nationality' => $request->mother_nationality,
                     // 'mother_first_name' => $request->mother_first_name,
                     // 'mother_last_name' => $request->mother_last_name,
                     // 'mother_middle_name' => $request->mother_middle_name,
                     // 'mother_phone_number' => $request->mother_phone_number,
                     // 'mother_occupation' => $request->mother_occupation,
                     // 'mother_email' => $request->mother_email,
-                    // 'visa_mother_photo' => $mother_visa_fileName, 
-                    // 'passport_mother_photo' => $mother_passport_fileName, 
-                    /*     
+                    // 'visa_mother_photo' => $mother_visa_fileName,
+                    // 'passport_mother_photo' => $mother_passport_fileName,
+                    /*
                     'mother_nric' => $request->mother_nric,
                     'mother_visa_number' => $request->mother_visa_number,
                     'mother_visa_expiry_date' => $request->mother_visa_expiry_date,
-                                     
+
                     'mother_passport_number' => $request->mother_passport_number,
-                         
+
                     'mother_passport_expiry_date' => $request->mother_passport_expiry_date,*/
-        
-                    
+
+
                     // 'father_last_name_furigana' => $request->father_last_name_furigana,
                     // 'father_middle_name_furigana' => $request->father_middle_name_furigana,
                     // 'father_first_name_furigana' => $request->father_first_name_furigana,
@@ -16340,12 +16340,12 @@ try{
                     // 'father_phone_number' => $request->father_phone_number,
                     // 'father_occupation' => $request->father_occupation,
                     // 'father_email' => $request->father_email,
-                    // 'visa_father_photo' => $father_visa_fileName, 
-                    // 'passport_father_photo' => $father_passport_fileName,                              
+                    // 'visa_father_photo' => $father_visa_fileName,
+                    // 'passport_father_photo' => $father_passport_fileName,
                    /* 'father_nric' => $request->father_nric,
                     'father_visa_number' => $request->father_visa_number,
-                    'father_visa_expiry_date' => $request->father_visa_expiry_date,     
-                    'father_passport_number' => $request->father_passport_number, 
+                    'father_visa_expiry_date' => $request->father_visa_expiry_date,
+                    'father_passport_number' => $request->father_passport_number,
                     'father_passport_expiry_date' => $request->father_passport_expiry_date,*/
 
                     'japanese_association_membership_image_principal' => $image_principal_fileName,
@@ -16415,7 +16415,7 @@ try{
             // dd($request);
             // if ($status === null) {
             //     // Cache enabled for status filtering
-            //     $cacheKey = $cache_parentDetails . $request->branch_id; 
+            //     $cacheKey = $cache_parentDetails . $request->branch_id;
             //     if (Cache::has($cacheKey)) {
             //         $parentDetails = Cache::get($cacheKey);
             //     } else {
@@ -16438,7 +16438,7 @@ try{
     private function fetchParentDetails($branch_id, $status = null, $academic_session_id) {
         try{
         $conn = $this->createNewConnection($branch_id);
-    
+
         if ($status == "1") {
             $inactive1 = $conn->table('parent as pt')
                         ->select("pt.id", 'pt.email', 'pt.occupation', DB::raw("CONCAT(pt.last_name, ' ', pt.first_name) as name"))
@@ -16471,7 +16471,7 @@ try{
                         ->groupBy('st.father_id')
                         ->get()->toArray();
 
-            
+
             $parentDetails = array_merge($inactive2, $inactive1);
         } else {
             $parentDetails = $conn->table('parent as pt')
@@ -16515,7 +16515,7 @@ try{
             $student_id = $request->student_id;
             // $parentDetails = $conn->table('parent_change_info as pi')->select("p.email","pi.status", "pi.status_parent", "p.id as parent_id", "pi.id", "p.occupation", DB::raw("CONCAT(p.last_name, ' ', p.first_name) as name"))
             //     ->leftJoin('parent as p', 'pi.parent_id', '=', 'p.id')->where('pi.parent_id', $parent_id)->get()->toArray();
-            
+
             $parentDetails = $conn->table('parent_change_info as pi')
                             ->select("p.email", "pi.status", "pi.status_parent", "p.id as parent_id", "pi.id", "p.occupation", DB::raw("CONCAT(p.last_name, ' ', p.first_name) as name"))
                             ->leftJoin('students as s', function($join) {
@@ -16600,19 +16600,19 @@ try{
              'branch_id' => 'required',
              'token' => 'required',
          ]);
- 
+
          if (!$validator->passes()) {
              return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
          } else {
              // create new connection
              $conn = $this->createNewConnection($request->branch_id);
-        
-             $name_status = $brdata->name_status; 
+
+             $name_status = $brdata->name_status;
              // get data
              $studentDetails = $conn->table('student_change_info as si')
                                      ->select("s.email",
-                                     "s.id as student_id", 'si.id', "s.roll_no", 
- 
+                                     "s.id as student_id", 'si.id', "s.roll_no",
+
                                      DB::raw("CONCAT(s." . ($name_status == 0 ? 'last_name' : 'first_name') . ", ' ', s." . ($name_status == 1 ? 'first_name' : 'last_name') . ") as name"),
                                      // DB::raw("CONCAT(s.last_name, ' ', s.first_name) as name")
                                      )
@@ -16777,7 +16777,7 @@ try{
                             ${$key}['new_value'] =  Helper::decryptStringData($suc);
                         } else if ($key == "relation"){
                             $realtion = $conn->table('students')->select('relation')->where('guardian_id', '=', $parent_id)->first();
-                            
+
                             ${$key} = [];
                             ${$key}['old_value'] =   ($realtion!==null)?$realtion->$key:'';
                             ${$key}['new_value'] =  $suc;
@@ -16791,24 +16791,24 @@ try{
                     }
                     // dd($parentObj);
                     // $date_of_birth = [];
-                    // $date_of_birth['old_value'] =  $old->date_of_birth; 
-                    // $date_of_birth['new_value'] = $suc->date_of_birth; 
+                    // $date_of_birth['old_value'] =  $old->date_of_birth;
+                    // $date_of_birth['new_value'] = $suc->date_of_birth;
 
 
                     // $passport = [];
-                    // $passport['old_value'] = Helper::decryptStringData($old->passport); 
-                    // $passport['new_value'] = Helper::decryptStringData($suc->passport); 
+                    // $passport['old_value'] = Helper::decryptStringData($old->passport);
+                    // $passport['new_value'] = Helper::decryptStringData($suc->passport);
 
 
 
                     // $nric = [];
-                    // $nric['old_value'] = Helper::decryptStringData($old->nric); 
-                    // $nric['new_value'] = Helper::decryptStringData($suc->nric); 
+                    // $nric['old_value'] = Helper::decryptStringData($old->nric);
+                    // $nric['new_value'] = Helper::decryptStringData($suc->nric);
 
 
                     // $mobile_no = [];
-                    // $mobile_no['old_value'] = Helper::decryptStringData($old->mobile_no); 
-                    // $mobile_no['new_value'] = Helper::decryptStringData($suc->mobile_no); 
+                    // $mobile_no['old_value'] = Helper::decryptStringData($old->mobile_no);
+                    // $mobile_no['new_value'] = Helper::decryptStringData($suc->mobile_no);
 
                     // $parentObj->date_of_birth = $date_of_birth;
                     // $parentObj->passport = $passport;
@@ -16900,7 +16900,7 @@ try{
             // return $request;
             // create new connection
             $staffConn = $this->createNewConnection($request->branch_id);
-            
+
             // check exist email
             // if ($staffConn->table('parent')->where([['email', '=', $request->email], ['id', '!=', $id]])->count() > 0) {
             //     return $this->send422Error('Email Already Exist', ['error' => 'Email Already Exist']);
@@ -16908,7 +16908,7 @@ try{
 
                 if ($request->role_id == "5") {
                     if($request->father_id){
-                        
+
                         $father_visa_fileName = null;
                         if ($request->visa_father_photo) {
 
@@ -16943,9 +16943,9 @@ try{
                             'last_name_english','middle_name_english','first_name_english',
                             'nationality','mobile_no','occupation','passport_photo','visa_photo',
                             'email','id'
-    
+
                         )->where('id', '=', $request->father_id)->first();
-    
+
                         $father_data = [
                             'id' => $request->father_id,
                             "last_name_furigana" => $request->father_last_name_furigana,
@@ -16954,7 +16954,7 @@ try{
                             "last_name_english" => $request->father_last_name_english,
                             "middle_name_english" => $request->father_middle_name_english,
                             "first_name_english" => $request->father_first_name_english,
-                            "nationality" => $request->father_nationality,           
+                            "nationality" => $request->father_nationality,
                             'first_name' => $request->father_first_name,
                             'last_name' => $request->father_last_name,
                             "middle_name" => $request->father_middle_name,
@@ -16996,19 +16996,19 @@ try{
                             // }else{
                             //     $father_query = $staffConn->table('parent_change_info')->insertGetId($father_insertArr);
                             // }
-    
+
                             if ($staffConn->table('parent_change_info')->where('parent_id', $request->father_id)->count() > 0) {
                                 $staffConn->table('parent_change_info')->where('parent_id', '=', $request->father_id)->delete();
                             }
                             $father_query = $staffConn->table('parent_change_info')->insertGetId($father_insertArr);
                             // dd($father_insertArr);
                             // send Termination notifications
-    
+
                             $father_user = User::where([
                                 ['branch_id', '=', $request->branch_id],
                                 ['role_id', '=', 2]
                             ])->get();
-    
+
                             $father_info_update = [];
                             $father_info_update['parent_name'] = $request->father_last_name . ' ' .$request->father_first_name;
                             $details = [
@@ -17020,7 +17020,7 @@ try{
                             // notifications sent
                             Notification::send($father_user, new ParentInfoUpdate($details));
                         }
-    
+
                     }
 
                     if($request->mother_id){
@@ -17060,9 +17060,9 @@ try{
                             'last_name_english','middle_name_english','first_name_english',
                             'nationality','mobile_no','occupation','passport_photo','visa_photo',
                             'email','id'
-    
+
                         )->where('id', '=', $request->mother_id)->first();
-    
+
                         // dd($mother_old);
                         $mother_data = [
                             'id' => $request->mother_id,
@@ -17072,7 +17072,7 @@ try{
                             "last_name_english" => $request->mother_last_name_english,
                             "middle_name_english" => $request->mother_middle_name_english,
                             "first_name_english" => $request->mother_first_name_english,
-                            "nationality" => $request->mother_nationality,           
+                            "nationality" => $request->mother_nationality,
                             'first_name' => $request->mother_first_name,
                             'last_name' => $request->mother_last_name,
                             "middle_name" => $request->mother_middle_name,
@@ -17101,7 +17101,7 @@ try{
                                         $mother_insertArr[$key] = $mother_data[$key];
                                     }
                                 }
-                                
+
                             // }
                         }
                         if (count($mother_insertArr) > 0) {
@@ -17114,7 +17114,7 @@ try{
                             // }else{
                             //     $mother_query = $staffConn->table('parent_change_info')->insertGetId($mother_insertArr);
                             // }
-    
+
                             if ($staffConn->table('parent_change_info')->where('parent_id', $request->mother_id)->count() > 0) {
                                 $staffConn->table('parent_change_info')->where('parent_id', '=', $request->mother_id)->delete();
                             }
@@ -17122,12 +17122,12 @@ try{
 
                             // dd($mother_insertArr);
                             // send Termination notifications
-    
+
                             $mother_user = User::where([
                                 ['branch_id', '=', $request->branch_id],
                                 ['role_id', '=', 2]
                             ])->get();
-    
+
                             $mother_info_update = [];
                             $mother_info_update['parent_name'] = $request->mother_last_name . ' ' .$request->mother_first_name ;
                             $details = [
@@ -17139,7 +17139,7 @@ try{
                             // notifications sent
                             Notification::send($mother_user, new ParentInfoUpdate($details));
                         }
-    
+
                     }
                     if($request->student_id){
                         $namesArray= $request->full_name;
@@ -17148,7 +17148,7 @@ try{
                         $dobString = implode(',', $dobArray);
                         $relationshipArray= $request->relationship;
                         $relationshipString = implode(',', $relationshipArray);
-                       
+
                         $staffConn->table('students')->where('id', '=', $request->student_id)->update([
                            'sibling_full_name' =>  $namesString ,
                            'sibling_dob' =>  $dobString,
@@ -17160,7 +17160,7 @@ try{
 
                     if($request->guardian_id){
 
-                        
+
                         $image_principal_fileName = "";
                         if ($request->image_principal_photo) {
 
@@ -17185,9 +17185,9 @@ try{
                         $supplimental_fileName = "";
                         if ($request->japanese_association_membership_image_supplimental) {
                             $extension = $request->japanese_association_membership_image_supplimental_file_extension;
-    
+
                             $supplimental_fileName = 'JM-IMG_' . date('Ymd') . uniqid() . '.' . $extension;
-    
+
                             // return $supplimental_fileName;
                             $path = '/public/' . $request->branch_id . '/users/images/';
                             $base64 = base64_decode($request->japanese_association_membership_image_supplimental);
@@ -17200,7 +17200,7 @@ try{
                             'p.middle_name_furigana','p.first_name_furigana','p.last_name_furigana',
                             'p.last_name_english','p.middle_name_english','p.first_name_english',
                             'p.mobile_no','p.occupation',
-                            'p.email','p.id','st.relation', 
+                            'p.email','p.id','st.relation',
                             'p.company_name_japan','p.company_name_local','p.company_phone_number',
                             'p.employment_status','p.japan_postalcode','p.japan_emergency_sms',
                             'p.japan_contact_no','p.japan_address','p.stay_category',
@@ -17210,7 +17210,7 @@ try{
                         )
                         ->leftJoin('students as st', 'p.id', '=', 'st.guardian_id')
                         ->where('p.id', '=', $request->guardian_id)->first();
-    
+
                         // dd($guardian_old);
                         $guardian_data = [
                             'id' => $request->guardian_id,
@@ -17219,7 +17219,7 @@ try{
                             "first_name_furigana" => $request->guardian_first_name_furigana,
                             "last_name_english" => $request->guardian_last_name_english,
                             "middle_name_english" => $request->guardian_middle_name_english,
-                            "first_name_english" => $request->guardian_first_name_english,        
+                            "first_name_english" => $request->guardian_first_name_english,
                             'first_name' => $request->guardian_first_name,
                             'last_name' => $request->guardian_last_name,
                             "middle_name" => $request->guardian_middle_name,
@@ -17235,8 +17235,8 @@ try{
                             'japan_contact_no' => $request->japan_contact_no,
                             'japan_emergency_sms' => $request->japan_emergency_sms,
                             'japan_address' => $request->japan_address,
-                            'stay_category' => $request->stay_category,  
-                            
+                            'stay_category' => $request->stay_category,
+
                         ];
                         $guardian_insertArr = [];
                         foreach ($guardian_old as $key => $o) {
@@ -17258,7 +17258,7 @@ try{
                                         $guardian_insertArr[$key] = $guardian_data[$key];
                                     }
                                 }
-                                
+
                             // }
                         }
                         if (count($guardian_insertArr) > 0) {
@@ -17271,21 +17271,21 @@ try{
                             }else{
                                 $guardian_query = $staffConn->table('parent_change_info')->insertGetId($guardian_insertArr);
                             }
-    
+
                             // if ($staffConn->table('parent_change_info')->where('parent_id', $request->guardian_id)->count() > 0) {
                             //     $staffConn->table('parent_change_info')->where('parent_id', '=', $request->guardian_id)->delete();
                             // }
                             // $guardian_query = $staffConn->table('parent_change_info')->insertGetId($guardian_insertArr);
 
-    
+
                             // dd($guardian_insertArr);
                             // send Termination notifications
-    
+
                             $guardian_user = User::where([
                                 ['branch_id', '=', $request->branch_id],
                                 ['role_id', '=', 2]
                             ])->get();
-    
+
                             $guardian_info_update = [];
                             $guardian_info_update['parent_name'] = $request->guardian_last_name . ' ' .$request->guardian_first_name ;
                             $details = [
@@ -17300,7 +17300,7 @@ try{
                         $query = 1;
                     }
                 } else {
-                
+
                     // update data
                     $passport = isset($request->passport) ? Crypt::encryptString($request->passport) : "";
                     $nric = isset($request->nric) ? Crypt::encryptString($request->nric) : "";
@@ -17309,7 +17309,7 @@ try{
                     $address_2 = isset($request->address_2) ? Crypt::encryptString($request->address_2) : "";
                     $father_mobile_no = isset($request->father_phone_number) ? Crypt::encryptString($request->father_phone_number) : "";
                     $mother_mobile_no = isset($request->mother_phone_number) ? Crypt::encryptString($request->mother_phone_number) : "";
-                    
+
                     $image_principal_fileName = $request->image_principal_old_photo;
                     if ($request->image_principal_photo) {
 
@@ -17428,8 +17428,8 @@ try{
                             'middle_name_english' => $request->father_middle_name_english ?? '',
                             'first_name_english' => $request->father_first_name_english ?? '',
                             'mobile_no' =>  $father_mobile_no ,
-                           'visa_photo' => $father_visa_fileName, 
-                             'passport_photo' => $father_passport_fileName,  
+                           'visa_photo' => $father_visa_fileName,
+                             'passport_photo' => $father_passport_fileName,
                             'status' => '0', // Assuming you want to update the status as well
                             'updated_at' => now()
                         ]);
@@ -17477,8 +17477,8 @@ try{
                             'nationality' => $request->mother_nationality,
                             'occupation' => $request->mother_occupation,
                             'mobile_no' =>   $mother_mobile_no,
-                            'passport_photo' => $mother_passport_fileName,  
-                            'visa_photo' => $mother_visa_fileName, 
+                            'passport_photo' => $mother_passport_fileName,
+                            'visa_photo' => $mother_visa_fileName,
                             'status' => '0', // Assuming you want to update the status as well
                             'updated_at' => now()
                         ]);
@@ -17490,7 +17490,7 @@ try{
                         $dobString = implode(',', $dobArray);
                         $relationshipArray= $request->relationship;
                         $relationshipString = implode(',', $relationshipArray);
-                       
+
                         $staffConn->table('students')->where('id', '=', $request->student_id)->update([
                            'sibling_full_name' =>  $namesString ,
                            'sibling_dob' =>  $dobString,
@@ -17503,7 +17503,7 @@ try{
 
 
                     $query = $staffConn->table('parent')->where('id', $id)->update([
-                        
+
                         'first_name' => isset($request->first_name) ? $request->first_name : "",
                         'last_name' => isset($request->last_name) ? $request->last_name : "",
                         'middle_name' => isset($request->middle_name) ? $request->middle_name : "",
@@ -17537,10 +17537,10 @@ try{
                         'twitter_url' => $request->twitter_url,*/
                         'status' => $request->status,
                         'first_name_english' => $request->first_name_english,
-                        'middle_name_english' => $request->middle_name_english,                    
+                        'middle_name_english' => $request->middle_name_english,
                         'last_name_english' => $request->last_name_english,
                         'first_name_furigana' => $request->first_name_furigana,
-                        'middle_name_furigana' => $request->middle_name_furigana, 
+                        'middle_name_furigana' => $request->middle_name_furigana,
                         'last_name_furigana' => $request->last_name_furigana,
                        /* 'passport_expiry_date' => $request->passport_expiry_date,
                         'visa_number' => $request->visa_number,
@@ -17553,7 +17553,7 @@ try{
                     'company_name_japan' => $request->guardian_company_name_japan,
                     'company_name_local' => $request->guardian_company_name_local,
                     'company_phone_number' => isset($request->guardian_company_phone_number) ? Crypt::encryptString($request->guardian_company_phone_number) : "",
-                    'employment_status' => $request->guardian_employment_status,               
+                    'employment_status' => $request->guardian_employment_status,
 
 
                     //'japanese_association_membership_image_principal' => $image_principal_fileName,
@@ -17569,24 +17569,24 @@ try{
                     // 'mother_last_name_english' => $request->mother_last_name_english,
                     // 'mother_middle_name_english' => $request->mother_middle_name_english,
                     // 'mother_first_name_english' => $request->mother_first_name_english,
-                    // 'mother_nationality' => $request->mother_nationality,           
+                    // 'mother_nationality' => $request->mother_nationality,
                     // 'mother_first_name' => $request->mother_first_name,
                     // 'mother_last_name' => $request->mother_last_name,
                     // 'mother_middle_name' => $request->mother_middle_name,
                     // 'mother_phone_number' => $request->mother_phone_number,
                     // 'mother_occupation' => $request->mother_occupation,
                     // 'mother_email' => $request->mother_email,
-                    // 'passport_mother_photo' => $mother_passport_fileName,  
-                    // 'visa_mother_photo' => $mother_visa_fileName,       
+                    // 'passport_mother_photo' => $mother_passport_fileName,
+                    // 'visa_mother_photo' => $mother_visa_fileName,
                     /*'mother_nric' => $request->mother_nric,
                     'mother_visa_number' => $request->mother_visa_number,
                     'mother_visa_expiry_date' => $request->mother_visa_expiry_date,
-                    'visa_mother_photo' => $mother_visa_fileName,                    
+                    'visa_mother_photo' => $mother_visa_fileName,
                     'mother_passport_number' => $request->mother_passport_number,
-                    'passport_mother_photo' => $mother_passport_fileName,            
+                    'passport_mother_photo' => $mother_passport_fileName,
                     'mother_passport_expiry_date' => $request->mother_passport_expiry_date,*/
-        
-                    
+
+
                     // 'father_last_name_furigana' => $request->father_last_name_furigana,
                     // 'father_middle_name_furigana' => $request->father_middle_name_furigana,
                     // 'father_first_name_furigana' => $request->father_first_name_furigana,
@@ -17600,14 +17600,14 @@ try{
                     // 'father_phone_number' => $request->father_phone_number,
                     // 'father_occupation' => $request->father_occupation,
                     // 'father_email' => $request->father_email,
-                    // 'visa_father_photo' => $father_visa_fileName, 
-                    // 'passport_father_photo' => $father_passport_fileName,  
+                    // 'visa_father_photo' => $father_visa_fileName,
+                    // 'passport_father_photo' => $father_passport_fileName,
                     /*'father_nric' => $request->father_nric,
                     'father_visa_number' => $request->father_visa_number,
                     'father_visa_expiry_date' => $request->father_visa_expiry_date,
-                    'visa_father_photo' => $father_visa_fileName,                         
+                    'visa_father_photo' => $father_visa_fileName,
                     'father_passport_number' => $request->father_passport_number,
-                    'passport_father_photo' => $father_passport_fileName,            
+                    'passport_father_photo' => $father_passport_fileName,
                     'father_passport_expiry_date' => $request->father_passport_expiry_date,*/
 
                         'updated_at' => date("Y-m-d H:i:s")
@@ -17617,14 +17617,14 @@ try{
                 $cache_parentDetails = config('constants.cache_parentDetails');
                 $this->clearCache($cache_parentDetails,$request->branch_id);
                 // cache clear end
-                
+
                 $success = [];
                 if ($query) {
                     return $this->successResponse($success, 'Parent Details have Been updated');
                 } else {
                     return $this->send500Error('Something went wrong.', ['error' => 'Something went wrong']);
                 }
-            
+
         }
     }
     catch(Exception $error) {
@@ -17708,15 +17708,15 @@ try{
             $changeInfo['status_parent'] = $status_count;
 
             $relation['relation'] = isset($insertArr['relation']) ? $insertArr['relation'] : null;
-            
+
             unset($insertArr['relation']);
-            
+
             if($status_count == "Remand" || $status_count == "Reject"){
                 $update_parent = $conn->table('parent')->where('id', '=', $id)->first();
                 $update_parent_email = $update_parent->guardian_email;
                 $data = array(
                     'parent_name' => $update_parent->last_name . ' '. $update_parent->first_name ,
-                    'status' => $status_count, 
+                    'status' => $status_count,
                 );
                 $mailFromAddress = env('MAIL_FROM_ADDRESS', config('constants.client_email'));
                 $query = Mail::send('auth.parent_update_info', $data, function ($message) use ($update_parent_email,$mailFromAddress) {
@@ -17724,19 +17724,19 @@ try{
                     $message->from($mailFromAddress, 'Parent Profile Details');
                 });
             }
-            
+
             // return $insertArr;
             // $query = true;
             if (!empty($insertArr)) {
                 // return $insertArr;
                 $query = $conn->table('parent')->where('id', '=', $id)->update($insertArr);
-                
+
             }
             if (!empty($changeInfo)) {
                 $query = $conn->table('parent_change_info')->where('parent_id', $id)->update($changeInfo);
             }
             // return $query;
-            
+
             // dd($relation);
             // dd($insertArr);
             // if (!empty($relation)) {
@@ -18538,7 +18538,7 @@ try{
             $cache_time = config('constants.cache_time');
             $cache_religions = config('constants.cache_religions');
             $cacheKey = $cache_religions . $request->branch_id;
-           
+
             // Check if the data is cached
             if (Cache::has($cacheKey)) {
                 // If cached, return cached data
@@ -18843,7 +18843,7 @@ try{
         return $this->commonHelper->generalReturn('403','error',$error,'Error in deleteRace');
     }
     }
-    // studnet leave start 
+    // studnet leave start
     // parent dashboard : parent id wise get student
     public function get_studentsparentdashboard(Request $request)
     {
@@ -18893,7 +18893,7 @@ try{
         return $this->commonHelper->generalReturn('403','error',$error,'Error in get_studentsparentdashboard');
     }
     }
-    // student leave apply insert 
+    // student leave apply insert
     public function student_leaveapply(Request $request)
     {
         try{
@@ -19250,7 +19250,7 @@ try{
                 $cache_time = config('constants.cache_time');
                 $cache_leaveTypeWiseAllReason = config('constants.cache_leaveTypeWiseAllReason');
                 $cacheKey = $cache_leaveTypeWiseAllReason . $request->branch_id;
-              
+
                     // create new connection
                     $conn = $this->createNewConnection($request->branch_id);
                     $studentDetails = $conn->table('student_leaves as lev')
@@ -19269,12 +19269,12 @@ try{
                                             'lev.status',
                                             'lev.remarks',
                                             'lev.teacher_remarks',
-                                            'lev.reasonId',                                            
+                                            'lev.reasonId',
                                         )
                                         ->where('id', $request->id)
                                         ->first();
                     $jsonResult = json_encode($studentDetails);
-               
+
                 return $this->successResponse($studentDetails, 'student leave fetch successfully');
             }
         } catch (Exception $error) {
@@ -19282,11 +19282,11 @@ try{
         }
     }
 
-    //Delete student leav    
+    //Delete student leav
     public function studentleaveDelete(Request $request)
     {
     try{
-        $id = $request->id;        
+        $id = $request->id;
         $validator = \Validator::make($request->all(), [
             'token' => 'required',
             'branch_id' => 'required',
@@ -19313,7 +19313,7 @@ try{
         }
     }
 
-    //get particular student leave 
+    //get particular student leave
     function get_particular_studentleave_list(Request $request)
     {
         try{
@@ -19387,12 +19387,12 @@ try{
             // create new connection
             $Conn = $this->createNewConnection($request->branch_id);
             $status = isset($request->status) ? $request->status : null;
-            // nursing teacher 
+            // nursing teacher
             $nursing_leave_type = isset($request->nursing_leave_type) ? $request->nursing_leave_type : null;
             $nursing_reason_id = isset($request->nursing_reason_id) ? $request->nursing_reason_id : null;
             $nursing_teacher_remarks = isset($request->nursing_teacher_remarks) ? $request->nursing_teacher_remarks : null;
             $nursing_teacher_status = isset($request->nursing_teacher_status) ? $request->nursing_teacher_status : null;
-            // homeroom teacher 
+            // homeroom teacher
             $teacher_leave_type = isset($request->teacher_leave_type) ? $request->teacher_leave_type : null;
             $teacher_reason_id = isset($request->teacher_reason_id) ? $request->teacher_reason_id : null;
             $teacher_remarks = isset($request->teacher_remarks) ? $request->teacher_remarks : null;
@@ -19532,7 +19532,7 @@ try{
                             'date' => date("Y-m-d H:i:s"),
                         );
                         // return $data;
-                        
+
                         $mailFromAddress = env('MAIL_FROM_ADDRESS', config('constants.client_email'));
                         Mail::send('auth.absent_reason', $data, function ($message) use ($email,$mailFromAddress) {
                             $message->to($email, 'Parent')->subject('Absent Reason Suggestions');
@@ -19553,7 +19553,7 @@ try{
     }
 
     }
-    // studnet leave end 
+    // studnet leave end
     // get all student leave list
     function getAllStudentLeaves(Request $request)
     {
@@ -19667,7 +19667,7 @@ try{
                         return $query;
                     }
                 })
-                
+
                 ->where('en.active_status', '=', '0')
                 ->where('en.academic_session_id', '=', $request->academic_session_id)
                 ->orderBy('lev.from_leave', 'desc')
@@ -19783,9 +19783,9 @@ try{
             // get data
             $cache_time = config('constants.cache_time');
             $cache_leave_types = config('constants.cache_leave_types');
-            
+
             $cacheKey = $cache_leave_types . $request->branch_id;
-        
+
             // Check if the data is cached
             if (Cache::has($cacheKey)) {
                 // If cached, return cached data
@@ -21078,7 +21078,7 @@ try{
             if (isset($request->level_three_status)) {
                 $level_three_status = $request->level_three_status;
             }
-            
+
             $staff_id = $request->staff_id;
             // echo $level_one_status;
             // echo $level_two_status;
@@ -21187,7 +21187,7 @@ try{
                         }
                         // reduce one level
                         $oneLevelReduce = $checkYourAllocatedLevel - 1;
-                        // $checkYourAllocatedLevel 
+                        // $checkYourAllocatedLevel
                         if ($oneLevelReduce == $approveOldStatusLevel) {
                             $levelToShowArray[] = $val; // Push the modified item to the new array
                         }
@@ -21772,20 +21772,20 @@ try{
                     ];
                         $staff_data=$Connection->table('staffs')->where('id', $employee)->first();
                         $oldData = $Connection->table('staff_attendances')->where('id',  $att['id'])->first();
-                        $query =  $Connection->table('staff_attendances')->where('id',  $att['id'])->update($data); 
+                        $query =  $Connection->table('staff_attendances')->where('id',  $att['id'])->update($data);
                         $changes = $this->getChanges($oldData, $data);
                         $table_modify=[];
                         $table_modify['type']='Student Attentance';
-                        $table_modify['id']=$employee;                
-                        $table_modify['name']=$staff_data->first_name.' '.$staff_data->last_name;                
+                        $table_modify['id']=$employee;
+                        $table_modify['name']=$staff_data->first_name.' '.$staff_data->last_name;
                         $table_modify['email']=$staff_data->email;
                         $Connection->table('modify_datas')->insert([
-                        
+
                             'table_name' => 'Staff Attentance',
                             'table_dbname' => 'staff_attendances',
                             'table_dbid' => $att['id'],
-                            'table_id_name' => 'id', 
-                            'table_modify' => json_encode($table_modify),                  
+                            'table_id_name' => 'id',
+                            'table_modify' => json_encode($table_modify),
                             'modifydata' => json_encode($changes),
                             'createdby_id' => $request->login_userid,
                             'createdby_role' => $request->login_roleid
@@ -22277,7 +22277,7 @@ try{
             $cache_time = config('constants.cache_time');
             $cache_educations = config('constants.cache_educations');
             $cacheKey = $cache_educations . $request->branch_id;
-            
+
             // Check if the data is cached
             if (Cache::has($cacheKey)) {
                 // If cached, return cached data
@@ -22300,7 +22300,7 @@ try{
     }
     // get Education row details
     public function getEducationDetails(Request $request)
-    { 
+    {
         try
         {
         $validator = \Validator::make($request->all(), [
@@ -22535,7 +22535,7 @@ try{
         if (!$validator->passes()) {
             return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
         } else {
-            // create new connection    
+            // create new connection
             $con = $this->createNewConnection($request->branch_id);
             // get data
             $homework = $con->table('homeworks as h')->select(
@@ -22568,10 +22568,10 @@ try{
                     if (isset($home->date)) {
                         $submitDate = $home->date;
                         $submitDate = date('Y-m-d', strtotime($submitDate));
-                        // echo $submitDate; // echos today! 
+                        // echo $submitDate; // echos today!
                         // $date_of_homework = date('Y-m-d', strtotime($home->date_of_homework));
                         $date_of_submission = date('Y-m-d', strtotime($home->date_of_submission));
-                        // echo $date_of_submission; // echos today! 
+                        // echo $date_of_submission; // echos today!
 
                         if ($submitDate > $date_of_submission) {
                             $lateSubmission++; // late submited
@@ -23079,8 +23079,8 @@ try{
                 )
                 ->join('timetable_exam as tex', function ($q) {
                     $q->on('tex.class_id', '=', 'sa.class_id')
-                        ->on('tex.section_id', '=', 'sa.section_id') //second join condition                           
-                        ->on('tex.subject_id', '=', 'sa.subject_id'); //need to add subject id also later                           
+                        ->on('tex.section_id', '=', 'sa.section_id') //second join condition
+                        ->on('tex.subject_id', '=', 'sa.subject_id'); //need to add subject id also later
                 })
                 ->join('classes as cl', 'tex.class_id', '=', 'cl.id')
                 ->join('sections as sc', 'tex.section_id', '=', 'sc.id')
@@ -23501,7 +23501,7 @@ try{
         }
         catch(Exception $error) {
             return $this->commonHelper->generalReturn('403','error',$error,'Error in markAsRead');
-        }   
+        }
     }
 
     // add TransportAssign
@@ -23541,7 +23541,7 @@ try{
         }
     }        catch(Exception $error) {
         return $this->commonHelper->generalReturn('403','error',$error,'Error in addTransportAssign');
-    }  
+    }
 
     }
     // getTransportAssignList
@@ -23569,7 +23569,7 @@ try{
     }
     catch(Exception $error) {
         return $this->commonHelper->generalReturn('403','error',$error,'Error in getTransportAssignList');
-    }  
+    }
 
 
     }
@@ -23596,7 +23596,7 @@ try{
     }
     catch(Exception $error) {
         return $this->commonHelper->generalReturn('403','error',$error,'Error in getTransportAssignDetails');
-    }  
+    }
     }
     // update TransportAssign
     public function updateTransportAssign(Request $request)
@@ -23635,7 +23635,7 @@ try{
     }
     catch(Exception $error) {
         return $this->commonHelper->generalReturn('403','error',$error,'Error in updateTransportAssign');
-    } 
+    }
     }
     // delete TransportAssign
     public function deleteTransportAssign(Request $request)
@@ -23666,7 +23666,7 @@ try{
     }
     catch(Exception $error) {
         return $this->commonHelper->generalReturn('403','error',$error,'Error in deleteTransportAssign');
-    } 
+    }
     }
 
     // add HostelBlock
@@ -23716,7 +23716,7 @@ try{
     }
     catch(Exception $error) {
         return $this->commonHelper->generalReturn('403','error',$error,'Error in addHostelBlock');
-    } 
+    }
     }
     // getHostelBlockList
     public function getHostelBlockList(Request $request)
@@ -23743,7 +23743,7 @@ try{
         }
     }catch(Exception $error) {
         return $this->commonHelper->generalReturn('403','error',$error,'Error in getHostelBlockList');
-    } 
+    }
 
     }
     // get HostelBlock row details
@@ -23769,11 +23769,11 @@ try{
     }
     catch(Exception $error) {
         return $this->commonHelper->generalReturn('403','error',$error,'Error in getHostelBlockDetails');
-    } 
+    }
     }
     // update HostelBlock
     public function updateHostelBlock(Request $request)
-    {   
+    {
         try{
         $id = $request->id;
         $validator = \Validator::make($request->all(), [
@@ -23819,7 +23819,7 @@ try{
     }
     catch(Exception $error) {
         return $this->commonHelper->generalReturn('403','error',$error,'Error in updateHostelBlock');
-    } 
+    }
     }
     // delete HostelBlock
     public function deleteHostelBlock(Request $request)
@@ -23850,7 +23850,7 @@ try{
     }
     catch(Exception $error) {
         return $this->commonHelper->generalReturn('403','error',$error,'Error in deleteHostelBlock');
-    } 
+    }
     }
 
     // add HostelFloor
@@ -23900,7 +23900,7 @@ try{
     }
     catch(Exception $error) {
         return $this->commonHelper->generalReturn('403','error',$error,'Error in addHostelFloor');
-    } 
+    }
     }
     // getHostelFloorList
     public function getHostelFloorList(Request $request)
@@ -23928,7 +23928,7 @@ try{
         }
     } catch(Exception $error) {
         return $this->commonHelper->generalReturn('403','error',$error,'Error in getHostelFloorList');
-    } 
+    }
     }
     // get HostelFloor row details
     public function getHostelFloorDetails(Request $request)
@@ -23953,7 +23953,7 @@ try{
     }
     catch(Exception $error) {
         return $this->commonHelper->generalReturn('403','error',$error,'Error in getHostelFloorDetails');
-    } 
+    }
     }
     // update HostelFloor
     public function updateHostelFloor(Request $request)
@@ -24004,7 +24004,7 @@ try{
     }
     catch(Exception $error) {
         return $this->commonHelper->generalReturn('403','error',$error,'Error in updateHostelFloor');
-    } 
+    }
     }
     // delete HostelFloor
     public function deleteHostelFloor(Request $request)
@@ -24033,7 +24033,7 @@ try{
         }
     }    catch(Exception $error) {
         return $this->commonHelper->generalReturn('403','error',$error,'Error in deleteHostelFloor');
-    } 
+    }
 
 
     }
@@ -24069,12 +24069,12 @@ try{
         }
     }catch(Exception $error) {
         return $this->commonHelper->generalReturn('403','error',$error,'Error in getAbsentLateExcuse');
-    } 
+    }
 
     }
-    // get teacher absent  excuse 
+    // get teacher absent  excuse
     public function getTeacherAbsentExcuse(Request $request)
-    {   
+    {
         try{
         $validator = \Validator::make($request->all(), [
             'branch_id' => 'required',
@@ -24105,7 +24105,7 @@ try{
     }
     catch(Exception $error) {
         return $this->commonHelper->generalReturn('403','error',$error,'Error in getTeacherAbsentExcuse');
-    } 
+    }
     }
 
     // add Group
@@ -24155,10 +24155,10 @@ try{
         }
     }catch(Exception $error) {
         return $this->commonHelper->generalReturn('403','error',$error,'Error in addGroup');
-    } 
+    }
 
     }
-    // get Groups 
+    // get Groups
     public function getGroupList(Request $request)
     {
         try{
@@ -24178,7 +24178,7 @@ try{
         }
     }catch(Exception $error) {
         return $this->commonHelper->generalReturn('403','error',$error,'Error in getGroupList');
-    } 
+    }
 
     }
     // get Group row details
@@ -24250,7 +24250,7 @@ try{
     }
     catch(Exception $error) {
         return $this->commonHelper->generalReturn('403','error',$error,'Error in getGroupDetails');
-    } 
+    }
     }
     // update Group
     public function updateGroup(Request $request)
@@ -24302,7 +24302,7 @@ try{
     }
     catch(Exception $error) {
         return $this->commonHelper->generalReturn('403','error',$error,'Error in updateGroup');
-    } 
+    }
     }
     // delete Group
     public function deleteGroup(Request $request)
@@ -24330,7 +24330,7 @@ try{
         }
     }catch(Exception $error) {
         return $this->commonHelper->generalReturn('403','error',$error,'Error in deleteGroup');
-    } 
+    }
 
     }
 
@@ -24376,7 +24376,7 @@ try{
         }
     }catch(Exception $error) {
         return $this->commonHelper->generalReturn('403','error',$error,'Error in getStudentName');
-    } 
+    }
 
     }
 
@@ -24419,7 +24419,7 @@ try{
         }
     }catch(Exception $error) {
         return $this->commonHelper->generalReturn('403','error',$error,'Error in getStaffName');
-    } 
+    }
 
     }
 
@@ -24456,7 +24456,7 @@ try{
         }
     }catch(Exception $error) {
         return $this->commonHelper->generalReturn('403','error',$error,'Error in getSemesterSession');
-    } 
+    }
 
     }
 
@@ -24480,7 +24480,7 @@ try{
         }
     }catch(Exception $error) {
         return $this->commonHelper->generalReturn('403','error',$error,'Error in gradeCategory');
-    } 
+    }
 
     }
     // addExam Paper
@@ -24508,7 +24508,7 @@ try{
                 if($record!=null)
                 {
                     return $this->send422Error('Exam Paper Already Exist.', ['error' => "Exam Paper Already Exist."]);
-                    
+
                 }
                 else
                 {
@@ -24520,8 +24520,8 @@ try{
                 "paper_name" => $request->paper_name,
                 "paper_type" => isset($request->paper_type) ? $request->paper_type : "",
                 "grade_category" => $request->grade_category,
-                "academic_session_id" => $request->academic_session_id,               
-                "score_type" => $request->score_type,             
+                "academic_session_id" => $request->academic_session_id,
+                "score_type" => $request->score_type,
                 'pdf_report' => isset($request->pdf_report) ? $request->pdf_report : 0,
                 "subject_weightage" => isset($request->subject_weightage) ? $request->subject_weightage : "",
                 "notes" => isset($request->notes) ? $request->notes : "",
@@ -24544,7 +24544,7 @@ try{
     }
     catch(Exception $error) {
         return $this->commonHelper->generalReturn('403','error',$error,'Error in addExamPaper');
-    } 
+    }
     }
     // get Exam Paper List
     public function getExamPaperList(Request $request)
@@ -24562,7 +24562,7 @@ try{
             $cache_time = config('constants.cache_time');
             $cache_exam_papers = config('constants.cache_exam_papers');
             $cacheKey = $cache_exam_papers . $request->academic_session_id . $request->branch_id;
-            
+
             // Check if the data is cached
             if (Cache::has($cacheKey)) {
                 // If cached, return cached data
@@ -24599,7 +24599,7 @@ try{
         }
     } catch(Exception $error) {
         return $this->commonHelper->generalReturn('403','error',$error,'Error in getExamPaperList');
-    } 
+    }
 
     }
     // get exam paper row details
@@ -24624,7 +24624,7 @@ try{
         }
     }catch(Exception $error) {
         return $this->commonHelper->generalReturn('403','error',$error,'Error in getExamPaperDetails');
-    } 
+    }
 
     }
     // update exam paper
@@ -24654,8 +24654,8 @@ try{
                 "subject_id" => $request->subject_id,
                 "paper_name" => $request->paper_name,
                 "paper_type" => isset($request->paper_type) ? $request->paper_type : "",
-                "grade_category" => $request->grade_category,                
-                "score_type" => $request->score_type,                             
+                "grade_category" => $request->grade_category,
+                "score_type" => $request->score_type,
                 'pdf_report' => isset($request->pdf_report) ? $request->pdf_report : 0,
                 "academic_session_id" => $request->academic_session_id,
                 "subject_weightage" => isset($request->subject_weightage) ? $request->subject_weightage : "",
@@ -24678,7 +24678,7 @@ try{
     }
     catch(Exception $error) {
         return $this->commonHelper->generalReturn('403','error',$error,'Error in updateExamPaper');
-    } 
+    }
     }
     // delete exam paper
     public function deleteExamPaper(Request $request)
@@ -24711,7 +24711,7 @@ try{
         }
     }catch(Exception $error) {
         return $this->commonHelper->generalReturn('403','error',$error,'Error in deleteExamPaper');
-    } 
+    }
 
     }
     // add HostelGroup
@@ -24755,10 +24755,10 @@ try{
         }
     }catch(Exception $error) {
         return $this->commonHelper->generalReturn('403','error',$error,'Error in addHostelGroup');
-    } 
+    }
 
     }
-    // get HostelGroups 
+    // get HostelGroups
     public function getHostelGroupList(Request $request)
     {
         try{
@@ -24792,7 +24792,7 @@ try{
         }
     }catch(Exception $error) {
         return $this->commonHelper->generalReturn('403','error',$error,'Error in getHostelGroupList');
-    } 
+    }
     }
     // get HostelGroup row details
     public function getHostelGroupDetails(Request $request)
@@ -24827,7 +24827,7 @@ try{
         }
     }catch(Exception $error) {
         return $this->commonHelper->generalReturn('403','error',$error,'Error in getHostelGroupDetails');
-    } 
+    }
 
     }
     // update HostelGroup
@@ -24871,7 +24871,7 @@ try{
         }
     }catch(Exception $error) {
         return $this->commonHelper->generalReturn('403','error',$error,'Error in updateHostelGroup');
-    } 
+    }
 
     }
     // delete HostelGroup
@@ -24900,7 +24900,7 @@ try{
         }
     }catch(Exception $error) {
         return $this->commonHelper->generalReturn('403','error',$error,'Error in deleteHostelGroup');
-    } 
+    }
 
     }
 
@@ -24941,7 +24941,7 @@ try{
         }
     }catch(Exception $error) {
         return $this->commonHelper->generalReturn('403','error',$error,'Error in addAbsentReason');
-    } 
+    }
 
     }
     // getAbsentReasonList
@@ -24959,7 +24959,7 @@ try{
             $cache_time = config('constants.cache_time');
             $cache_absent_reasons = config('constants.cache_absent_reasons');
             $cacheKey = $cache_absent_reasons . $request->branch_id;
-        
+
             // Check if the data is cached
             if (Cache::has($cacheKey)) {
                 // If cached, return cached data
@@ -24976,7 +24976,7 @@ try{
         }
     }catch(Exception $error) {
         return $this->commonHelper->generalReturn('403','error',$error,'Error in getAbsentReasonList');
-    } 
+    }
 
     }
     // get AbsentReason row details
@@ -25001,8 +25001,8 @@ try{
         }
       }catch(Exception $error) {
         return $this->commonHelper->generalReturn('403','error',$error,'Error in getAbsentReasonDetails');
-    } 
-    
+    }
+
     }
     // update AbsentReason
     public function updateAbsentReason(Request $request)
@@ -25043,7 +25043,7 @@ try{
         }
     }catch(Exception $error) {
         return $this->commonHelper->generalReturn('403','error',$error,'Error in updateAbsentReason');
-    } 
+    }
 
     }
     // delete AbsentReason
@@ -25076,7 +25076,7 @@ try{
         }
     }catch(Exception $error) {
         return $this->commonHelper->generalReturn('403','error',$error,'Error in deleteAbsentReason');
-    } 
+    }
 
 
     }
@@ -25120,7 +25120,7 @@ try{
     }
     catch(Exception $error) {
         return $this->commonHelper->generalReturn('403','error',$error,'Error in addLateReason');
-    } 
+    }
     }
     // getLateReasonList
     public function getLateReasonList(Request $request)
@@ -25138,7 +25138,7 @@ try{
             $cache_time = config('constants.cache_time');
             $cache_late_reasons = config('constants.cache_late_reasons');
             $cacheKey = $cache_late_reasons . $request->branch_id;
-        
+
             // Check if the data is cached
             if (Cache::has($cacheKey)) {
                 // If cached, return cached data
@@ -25156,7 +25156,7 @@ try{
     }
     catch(Exception $error) {
         return $this->commonHelper->generalReturn('403','error',$error,'Error in getLateReasonList');
-    } 
+    }
 
     }
     // get LateReason row details
@@ -25181,7 +25181,7 @@ try{
         }
     }catch(Exception $error) {
         return $this->commonHelper->generalReturn('403','error',$error,'Error in getLateReasonDetails');
-    } 
+    }
 
     }
     // update LateReason
@@ -25223,7 +25223,7 @@ try{
         }
     }catch(Exception $error) {
         return $this->commonHelper->generalReturn('403','error',$error,'Error in updateLateReason');
-    } 
+    }
 
     }
     // delete LateReason
@@ -25259,7 +25259,7 @@ try{
     }
     catch(Exception $error) {
         return $this->commonHelper->generalReturn('403','error',$error,'Error in deleteLateReason');
-    } 
+    }
     }
 
     // addExcusedReason
@@ -25299,7 +25299,7 @@ try{
         }
     }catch(Exception $error) {
         return $this->commonHelper->generalReturn('403','error',$error,'Error in addExcusedReason');
-    } 
+    }
 
     }
     // getExcusedReasonList
@@ -25318,7 +25318,7 @@ try{
             $cache_time = config('constants.cache_time');
             $cache_excused_reasons = config('constants.cache_excused_reasons');
             $cacheKey = $cache_excused_reasons . $request->branch_id;
-           
+
             // Check if the data is cached
             if (Cache::has($cacheKey)) {
                 // If cached, return cached data
@@ -25336,7 +25336,7 @@ try{
     }
     catch(Exception $error) {
         return $this->commonHelper->generalReturn('403','error',$error,'Error in getExcusedReasonList');
-    } 
+    }
     }
     // get ExcusedReason row details
     public function getExcusedReasonDetails(Request $request)
@@ -25359,7 +25359,7 @@ try{
         }
     }catch(Exception $error) {
         return $this->commonHelper->generalReturn('403','error',$error,'Error in getExcusedReasonDetails');
-    } 
+    }
 
     }
     // update ExcusedReason
@@ -25402,7 +25402,7 @@ try{
     }
     catch(Exception $error) {
         return $this->commonHelper->generalReturn('403','error',$error,'Error in updateExcusedReason');
-    } 
+    }
     }
     // delete ExcusedReason
     public function deleteExcusedReason(Request $request)
@@ -25548,7 +25548,7 @@ try {
                 $cache_semester = config('constants.cache_semester');
                 $this->clearCache($cache_semester,$request->branch_id);
                 // cache clear end
-                
+
                 $success = [];
                 if ($query) {
                     return $this->successResponse($success, 'Semester Details have Been updated');
@@ -26134,7 +26134,7 @@ try {
                     ['role_id', '=', 2]
                 ])->get();
 
-               
+
 
                 // return $parent_name;
                 $info_update = [];
@@ -26220,7 +26220,7 @@ try{
                     // return $update;
                     $link = $request->url . '/guest/login';
                     $data = array('link' => $link, 'email' => $email, 'password' => $guest->email);
-                    
+
                     $mailFromAddress = env('MAIL_FROM_ADDRESS', config('constants.client_email'));
                     $query = Mail::send('auth.login_credentials_mail', $data, function ($message) use ($email,$mailFromAddress) {
                         $message->to($email, 'Guest')->subject('Login Details');
@@ -26432,7 +26432,7 @@ try{
                 ->select(
                     's.*',
                     'academic_cl.name as academic_grade',
-                    'ay.name as academic_year',    
+                    'ay.name as academic_year',
                 )
                 ->leftJoin('academic_year as ay', 's.expected_academic_year', '=', 'ay.id')
                 ->leftJoin('classes as academic_cl', 's.expected_grade', '=', 'academic_cl.id')
@@ -26452,7 +26452,7 @@ try{
         }
 
     }
-    
+
     // student Application
     public function getApplicationGuardianDetails(Request $request)
     {
@@ -26517,7 +26517,7 @@ try{
         } else {
             // create new connection
             $conn = $this->createNewConnection($request->branch_id);
-            
+
 
 
             $visa_fileName = $request->visa_old_photo;
@@ -26727,7 +26727,7 @@ try{
 
                 $registerNumber = $request->register_number;
             }else{
-                
+
                 $registerNumber = null;
                 if ($request->role_id == "2") {
                     if ($request->status == "Approved" && $request->phase_2_status == "Approved") {
@@ -26738,7 +26738,7 @@ try{
             $parent_name = $request->guardian_last_name. ' ' .$request->guardian_first_name ;
             if ($request->role_id == "2") {
                 if ($request->status == "Approved" && $request->phase_2_status == "Approved" && $request->status_after_approval == "Grade and class fixed") {
-                    
+
                     $email_space_remove = str_replace(' ', '', $request->last_name_english).str_replace(' ', '', $request->first_name_english);
                     $email_name_english = strtolower($email_space_remove);
                     $studentEmail = $registerNumber.$email_name_english. config('constants.student_email_domain');
@@ -26746,10 +26746,10 @@ try{
                     $father_id = "";
                     $mother_id = "";
                     $guardian_id = "";
-                    
+
                     $relation = $conn->table('relations')->where('id',$request->guardian_relation)->first();
 
-                    
+
                     if ($request->guardian_first_name) {
                         // return $request;
                         $guardian_data = [
@@ -26774,13 +26774,13 @@ try{
                                 'japanese_association_membership_image_supplimental' => $image_supplimental_fileName,
                                 'status' => "0",
                         ];
-                        
+
                         if($relation->parent == "1"){
-                            //father is guardian 
+                            //father is guardian
                             $guardian_data['passport_photo'] = $passport_father_fileName;
                             $guardian_data['visa_photo'] = $visa_father_fileName;
                         }else if($relation->parent == "2"){
-                            //mother is guardian 
+                            //mother is guardian
                             $guardian_data['passport_photo'] = $passport_mother_fileName;
                             $guardian_data['visa_photo'] = $visa_mother_fileName;
                         }
@@ -26793,16 +26793,16 @@ try{
                         } else {
                             $guardian_data['created_at'] = date("Y-m-d H:i:s");
                             $guardian_id = $conn->table('parent')->insertGetId($guardian_data);
-                                
+
                             $guardian_name = $request->guardian_first_name . ' ' . $request->guardian_last_name;
                             if (!$guardian_id) {
                                 return $this->send500Error('Something went wrong.', ['error' => 'Something went wrong add Parent']);
                             } else {
 
                                 // add Userwhere([['email', '=', $request->guardian_email], ['branch_id', '=', $request->branch_id], ['role_id', '=', 5]])->count < 1
-                                
+
                                 if(User::where([['email', '=', $request->guardian_email],['branch_id', '=', $request->branch_id], ['role_id', '=', "5"]])->count() < 1){
-                                    
+
 
                                     $par_uppercase = Str::random(1,'ABCDEFGHIJKLMNOPQRSTUVWXYZ'); // Generate 1 random uppercase character
                                     $par_lowercase = Str::random(6,'abcdefghijklmnopqrstuvwxyz'); // Generate 6 random lowercase characters
@@ -26827,11 +26827,11 @@ try{
                                     $parent_link = $request->url . '/parent/login';
                                     $data = array(
                                         'parent_name' => $parent_name,
-                                        'parent_link' => $parent_link, 
-                                        'parent_email' => $parent_email, 
+                                        'parent_link' => $parent_link,
+                                        'parent_email' => $parent_email,
                                         'parent_password' => $parent_password,
                                     );
-                                    
+
                                     $mailFromAddress = env('MAIL_FROM_ADDRESS', config('constants.client_email'));
                                     $query = Mail::send('auth.application', $data, function ($message) use ($parent_email,$mailFromAddress) {
                                         $message->to($parent_email, 'Parent')->subject('Login Details');
@@ -26852,9 +26852,9 @@ try{
                         $conn->table('guest')->where('email', $request->guardian_email)->delete();
                         User::where('email',$request->guardian_email)->where('role_id',"7")->where('branch_id',$request->branch_id)->delete();
                     }
-                   
+
                     if($relation->parent == "1"){
-                        //father is guardian 
+                        //father is guardian
                         $father_id = $guardian_id;
                     }else{
 
@@ -26887,13 +26887,13 @@ try{
                                 $father_data['created_at'] = date("Y-m-d H:i:s");
                                 $father_id = $conn->table('parent')->insertGetId($father_data);
                             }
-    
+
                             $father_name = $request->father_first_name . ' ' . $request->father_last_name;
                         }
                     }
 
                     if($relation->parent == "2"){
-                        //father is guardian 
+                        //father is guardian
                         $mother_id = $guardian_id;
                     }else{
                         if ($request->mother_first_name) {
@@ -26997,7 +26997,7 @@ try{
                         $student_get = $conn->table('students')->where('email', '=', $studentEmail)->first();
                         $studentId = $student_get->id;
 
-                        
+
                         $session_id = 0;
                         $semester_id = 0;
                         $enroll = $conn->table('enrolls')->where('student_id', '=', $studentId)->where('active_status',"=","0")->update([
@@ -27040,7 +27040,7 @@ try{
                             $user->password = bcrypt($student_password);
                             $query = $user->save();
                             // return $user->id;
-                            
+
                             $session_id = 0;
                             $semester_id = 0;
                             $enroll = $conn->table('enrolls')->insert([
@@ -27164,7 +27164,7 @@ try{
                 "expected_enroll_date" => $request->expected_enroll_date,
                 "remarks" => $request->remarks,
 
-                
+
                 "address_unit_no" => $request->address_unit_no,
                 "address_condominium" => $request->address_condominium,
                 "address_street" => $request->address_street,
@@ -27195,16 +27195,16 @@ try{
             if ($request->role_id == "2") {
                 if ($request->status != $request->status_old){
                     if($request->status != "Applied"){
-                        
-                    
+
+
                         $phase_1_email = $request->guardian_email;
                         $data = array(
                             'parent_name' => $request->guardian_last_name .' '. $request->guardian_first_name ,
                             'child_name' => $request->last_name  .' '. $request->first_name,
-                            'status' => $request->status, 
-                            'phase' => "Phase 1", 
+                            'status' => $request->status,
+                            'phase' => "Phase 1",
                         );
-                        
+
                         $mailFromAddress = env('MAIL_FROM_ADDRESS', config('constants.client_email'));
                         $query = Mail::send('auth.application_status', $data, function ($message) use ($phase_1_email,$mailFromAddress) {
                             $message->to($phase_1_email, 'Parent')->subject('Student Application');
@@ -27217,16 +27217,16 @@ try{
             if ($request->role_id == "2") {
                 if ($request->phase_2_status != $request->phase_2_status_old){
                     if($request->phase_2_status != "Applied"){
-                        
-                    
+
+
                         $phase_2_email = $request->guardian_email;
                         $data = array(
                             'parent_name' => $request->guardian_last_name .' '. $request->guardian_first_name ,
                             'child_name' => $request->last_name  .' '. $request->first_name,
-                            'status' => $request->phase_2_status,  
-                            'phase' => "Phase 2", 
+                            'status' => $request->phase_2_status,
+                            'phase' => "Phase 2",
                         );
-                        
+
                         $mailFromAddress = env('MAIL_FROM_ADDRESS', config('constants.client_email'));
                         $query = Mail::send('auth.application_status', $data, function ($message) use ($phase_2_email,$mailFromAddress) {
                             $message->to($phase_2_email, 'Parent')->subject('Student Application');
@@ -27782,7 +27782,7 @@ try{
             return $this->commonHelper->generalReturn('403','error',$error,'Error in addBankAccount');
         }
     }
-    // get BankAccounts 
+    // get BankAccounts
     public function getBankAccountList(Request $request)
     {
         try{
@@ -28115,7 +28115,7 @@ try{
         }
     }
 
-    // get bulletin 
+    // get bulletin
     public function getBuletinBoardList(Request $request)
     {
         try{
@@ -28348,7 +28348,7 @@ try{
         if (!$validator->passes()) {
             return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
         } else {
-            // create new connection              
+            // create new connection
             $success = DB::table('roles')->select('id', 'role_name as name')
                 ->where('id', '!=', 1)
                 ->where('id', '!=', 3)
@@ -29195,11 +29195,11 @@ try{
         $conn = $this->createNewConnection($request->branch_id);
         $grade = $conn->table('grade_marks')->select('id','grade','status')
         ->where('id', '=', $id)->first();
-        $success=[]  ;     
-        $data = [            
-            'grade' => $grade           
+        $success=[]  ;
+        $data = [
+            'grade' => $grade
         ];
-        return $this->successResponse($data, 'Exam Point Status Get Successfully'); 
+        return $this->successResponse($data, 'Exam Point Status Get Successfully');
         }
         catch(Exception $error) {
             return $this->commonHelper->generalReturn('403','error',$error,'Error in get_pointsresult');
@@ -29550,8 +29550,8 @@ try{
             'branch_id' => 'required',
             'token' => 'required',
         ]);
-       
-        
+
+
         // return $request['old_photo'];
 
         $id = $request->student_id;
@@ -29774,7 +29774,7 @@ try{
                     'sci.school_postal_code',
                     'sci.school_enrollment_status',
                     'sci.school_enrollment_status_tendency',
-                    
+
                     're.name as religion',
                     // 'rc.name as race',
                     // DB::raw("CONCAT(s.last_name, ' ', s.first_name) as name")
@@ -29947,12 +29947,12 @@ try{
         }
     }
     public function registerNumber($request)
-    {        
+    {
     try{
         $conn = $this->createNewConnection($request['branch_id']);
         $academic_year = $conn->table('academic_year')->where('id', $request['academic_year'])->first();
         // $start_end = explode('-', $academic_year->name);
-                
+
         $current_year = $academic_year->name;
         $yearStart = "9" .substr($current_year, 2);
         $application = $conn->table('student_applications')->where("register_number", 'LIKE', $yearStart.'%')->max("register_number");
@@ -29962,7 +29962,7 @@ try{
 
             if($application >= $admission){
                 $lastRemove = substr($application,0,-1);
-                
+
             }else{
                 $lastRemove = substr($admission,0,-1);
             }
@@ -30117,7 +30117,7 @@ try{
                         'sci.id',
                         'sci.student_id',
                         'sci.parent_id',
-                        
+
                     'sci.last_name',
                     'sci.middle_name',
                     'sci.first_name',
@@ -30195,7 +30195,7 @@ try{
                                 ${$key}['old_value'] =  Helper::decryptStringData($old->$key);
                                 ${$key}['new_value'] =  Helper::decryptStringData($suc);
                             } else {
-                                
+
                                 // if($key == "religion")
                                 // {
                                 //     $religion_old_name = "";
@@ -30216,7 +30216,7 @@ try{
                                 //     ${$key}['new_value'] =  $religionNewValue->name;
                                 //     // dd($key);
                                 // }else{
-                                    
+
                                     ${$key} = [];
                                     ${$key}['old_value'] =  $old->$key;
                                     ${$key}['new_value'] =  $suc;
@@ -30340,7 +30340,7 @@ try{
             return $this->commonHelper->generalReturn('403','error',$error,'Error in addTermination');
         }
     }
-    // get Terminations 
+    // get Terminations
     public function getTerminationList(Request $request)
     {
         try{
@@ -30489,7 +30489,7 @@ try{
                 Notification::send($user, new ParentTermination($details));
             }
 
-            
+
             if ($request->role_id == "2") {
                 if ($request->termination_status != $request->termination_status_old){
                     if($request->termination_status != "Pending"){
@@ -30499,9 +30499,9 @@ try{
                             $data = array(
                                 'parent_name' => $parent_name->name,
                                 'child_name' => $student_name->name,
-                                'status' => $request->status, 
+                                'status' => $request->status,
                             );
-                            
+
                             $mailFromAddress = env('MAIL_FROM_ADDRESS', config('constants.client_email'));
                             $query = Mail::send('auth.termination', $data, function ($message) use ($term_email,$mailFromAddress) {
                                 $message->to($term_email, 'Parent')->subject('Student Termination');
@@ -30647,7 +30647,7 @@ try{
         try {
         $conn = $this->createNewConnection($request->branch_id);
         $success = [];
-        if ($conn->table('students')->where('register_no', '=', $request->register_no)->count() > 0) 
+        if ($conn->table('students')->where('register_no', '=', $request->register_no)->count() > 0)
         {
             $student=$conn->table('students')->where('register_no', '=', $request->register_no)->first();
             $fileName = "";
@@ -30663,19 +30663,19 @@ try{
             }
             $studentId = $conn->table('students')->where('id', $student->id)->update([
 
-                'photo' => $fileName,                   
+                'photo' => $fileName,
                 'created_at' => date("Y-m-d H:i:s")
             ]);
             $query = User::where([['user_id', '=', $student->id], ['role_id', '=', "6"], ['branch_id', '=', $request->branch_id]])
                     ->update([
-                        'picture' => $fileName                            
+                        'picture' => $fileName
                     ]);
             return $this->successResponse($success, 'Student Photo uploaded successfully');
-        } 
+        }
         else
-        {  
+        {
             return $this->send422Error('Student Regsiter Number Exist', ['error' => 'Student Regsiter Number Not Exist']);
-            
+
         }
         return $this->successResponse($success, 'Student Photo uploaded successfully');
         }
@@ -30692,7 +30692,7 @@ try{
             if($key!='updated_at')
             {
                 if ($oldData->$key != $value) {
-                    
+
                     $changes[$key] = [
                         'field'=> $key,
                         'old' => $oldData->$key,
@@ -30729,8 +30729,8 @@ try{
             })
             ->groupBy('us.id', 'us.name', 'us.email')
             ->get();
-            
-            
+
+
             return $this->successResponse($logusers, 'Get Log Modify Users successfully');
         }
         }
@@ -30750,13 +30750,13 @@ try{
             // create new connection
             $branchID=$request->branch_id;
             $Connection = $this->createNewConnection($request->branch_id);
-            
+
             $logusers = $Connection->table('modify_datas')
             ->select('table_name')
             ->distinct()
             ->get();
-            
-            
+
+
             return $this->successResponse($logusers, 'Get Log Modify Tables successfully');
         }
         }
@@ -30772,7 +30772,7 @@ try{
         $branchID=$request->branch_id;
         $Connection = $this->createNewConnection($request->branch_id);
         $main_db = config('constants.main_db');
-        
+
         if ($request->user_id == 'All' && $request->tablename == 'All') {
             $data = $Connection->table('modify_datas as t1')
                 ->select('t1.*','us.id', 'us.name', 'us.email')
@@ -30782,7 +30782,7 @@ try{
                 })
                 ->whereBetween('t1.created_at', [$fromDate, $toDate])
                 ->get();
-        } 
+        }
         else if ($request->user_id != 'All' && $request->tablename == 'All') {
             $data = $Connection->table('modify_datas as t1')
                 ->select('t1.*','us.id', 'us.name', 'us.email')
@@ -30804,9 +30804,9 @@ try{
                 ->where('t1.table_name', $request->tablename)
                 ->whereBetween('t1.created_at', [$fromDate, $toDate])
                 ->get();
-        }  
+        }
         else {
-           
+
             $data = $Connection->table('modify_datas as t1')
             ->select('t1.*','us.id', 'us.name', 'us.email')
             ->join('' . $main_db . '.users as us', function ($join) use ($branchID) {
@@ -30836,22 +30836,22 @@ try{
                     $new=($val['new']!=null)?Helper::decryptStringData($val['new']):'-';
                     $old=($val['old']!=null)?Helper::decryptStringData($val['old']):'-';
                 }
-                
-             
+
+
                 $mdatas.=$k.".".$val['field']."<br> Old : ".$old."<br> New : ".$new."<br><br>";
             }
             //dd($mdatas);
-            $items = array();   
-            $items['id'] = $j;         
+            $items = array();
+            $items['id'] = $j;
             $items['user_id'] = $item->id;
             $items['user_name'] = $item->name;
             $items['user_email'] = $item->email;
-            
+
             $items['tablename'] = $item->table_name;
             $items['user'] = "ID :".$item->createdby_id."<br>Name :".$item->name."<br>Email :".$item->email;
-           
+
             $items['table_user']="ID :".$table_modifydata['id']." <br>Name :".$table_modifydata['name']."<br>Email :".$table_modifydata['email'];
-            
+
             $items['modifydata'] =$mdatas;
             $items['created_at'] = date('d-m-Y h:i:a', strtotime($item->created_at));
             array_push($history, $items);
@@ -30874,10 +30874,10 @@ try{
             // create new connection
             $branchID=$request->branch_id;
             $Connection = $this->createNewConnection($request->branch_id);
-            
+
             $pdflist = $Connection->table('pdf_report')->select('id','pdf_name')->get();
-            
-            
+
+
             return $this->successResponse($pdflist, 'Get Pdf Report successfully');
         }
         }
@@ -30937,7 +30937,7 @@ try{
     {
 try {
         $validator = \Validator::make($request->all(), [
-            
+
             'branch_id' => 'required',
             'token' => 'required',
         ]);
@@ -30952,7 +30952,7 @@ try {
             if($record!=null)
             {
                 $id=$record->id;
-                $query = $conn->table('student_interview')->where('id', $id)->update([                      
+                $query = $conn->table('student_interview')->where('id', $id)->update([
                     'interview_date' => $request->interview_date,
                     'question_situation' => $request->question_situation,
                     'question_improved' => $request->question_improved,
@@ -30963,7 +30963,7 @@ try {
                     'updated_by' => $request->staff_id,
                     'updated_at' => date("Y-m-d H:i:s")
                 ]);
-            } 
+            }
             else
             {
                 // insert data
@@ -30991,7 +30991,7 @@ try {
             } else {
                 return $this->successResponse($success, 'Student Persoanl Interview updated Successfully.');
             }
-            
+
         }
         }
         catch(Exception $error) {
@@ -31005,7 +31005,7 @@ try {
         $validator = \Validator::make($request->all(), [
             'branch_id' => 'required',
             //'token' => 'required',
-        ]);     
+        ]);
         $conn = $this->createNewConnection($request->branch_id);
         $record=$conn->table('student_interview')->where([['academic_year', '=', $request->academic_year],['department_id', '=', $request->department_id],['class_id', '=', $request->class_id],['section_id', '=', $request->section_id],['student_id', '=', $request->student_id],['semester_id', '=', $request->semester_id]])->first();
         if($record!=null)
@@ -31014,14 +31014,14 @@ try {
         }
         else
         {
-            
+
             return $this->successResponse([1], 'No Record Found');
         }
 }
         catch(Exception $error) {
             return $this->commonHelper->generalReturn('403','error',$error,'Error in personalinterviewdata');
         }
-        
+
     }
     public function personalinterviewlist(Request $request)
     {
@@ -31029,8 +31029,8 @@ try {
         $validator = \Validator::make($request->all(), [
             'branch_id' => 'required',
             //'token' => 'required',
-        ]);     
-        $conn = $this->createNewConnection($request->branch_id);        
+        ]);
+        $conn = $this->createNewConnection($request->branch_id);
         $record=$conn->table('student_interview as int')
         ->select('int.id','int.interview_date','int.student_id','s.first_name as name','s.roll_no', 's.email')
         ->leftjoin("students as s", 's.id', '=', 'int.student_id')
@@ -31040,7 +31040,7 @@ try {
         catch(Exception $error) {
             return $this->commonHelper->generalReturn('403','error',$error,'Error in personalinterviewlist');
         }
-        
+
     }
     public function personalinterview_individual(Request $request)
     {
@@ -31048,30 +31048,30 @@ try {
         $validator = \Validator::make($request->all(), [
             'branch_id' => 'required',
             //'token' => 'required',
-        ]);     
-        $conn = $this->createNewConnection($request->branch_id);        
-        
+        ]);
+        $conn = $this->createNewConnection($request->branch_id);
+
         $record = $conn->table('student_interview as inter')
         ->select('inter.*', 's.first_name as name', 's.roll_no', 's.email', 'sem.name as semester_name',
-        $conn->raw('(SELECT t2.first_name FROM subject_assigns as t1 
-                    LEFT JOIN staffs as t2 ON t1.teacher_id = t2.id 
-                    WHERE t2.first_name != "" AND t2.teacher_type IS NULL 
-                    AND inter.academic_year = t1.academic_session_id 
-                    AND inter.class_id = t1.class_id 
-                    AND inter.section_id = t1.section_id 
-                    AND inter.department_id = t1.department_id 
+        $conn->raw('(SELECT t2.first_name FROM subject_assigns as t1
+                    LEFT JOIN staffs as t2 ON t1.teacher_id = t2.id
+                    WHERE t2.first_name != "" AND t2.teacher_type IS NULL
+                    AND inter.academic_year = t1.academic_session_id
+                    AND inter.class_id = t1.class_id
+                    AND inter.section_id = t1.section_id
+                    AND inter.department_id = t1.department_id
                     LIMIT 1) as home_teacher')
             )
-        ->leftJoin('students as s', 's.id', '=', 'inter.student_id')  
+        ->leftJoin('students as s', 's.id', '=', 'inter.student_id')
         ->leftJoin('semester as sem', 'sem.id', '=', 'inter.semester_id')
         ->where('inter.id', '=', $request->id)
-        ->first();        
+        ->first();
         return $this->successResponse($record, 'Personal Interview Informations get Successfully');
         }
         catch(Exception $error) {
             return $this->commonHelper->generalReturn('403','error',$error,'Error in personalinterview_individual');
         }
-        
+
     }
     public function personalinterview_overall(Request $request)
     {
@@ -31079,17 +31079,17 @@ try {
         $validator = \Validator::make($request->all(), [
             'branch_id' => 'required',
             //'token' => 'required',
-        ]);     
-        $conn = $this->createNewConnection($request->branch_id);        
+        ]);
+        $conn = $this->createNewConnection($request->branch_id);
         $record = $conn->table('student_interview as inter')
         ->select('inter.*', 's.first_name as name', 's.roll_no', 's.email', 'sem.name as semester_name',
-        $conn->raw('(SELECT t2.first_name FROM subject_assigns as t1 
-                    LEFT JOIN staffs as t2 ON t1.teacher_id = t2.id 
-                    WHERE t2.first_name != "" AND t2.teacher_type IS NULL 
-                    AND inter.academic_year = t1.academic_session_id 
-                    AND inter.class_id = t1.class_id 
-                    AND inter.section_id = t1.section_id 
-                    AND inter.department_id = t1.department_id 
+        $conn->raw('(SELECT t2.first_name FROM subject_assigns as t1
+                    LEFT JOIN staffs as t2 ON t1.teacher_id = t2.id
+                    WHERE t2.first_name != "" AND t2.teacher_type IS NULL
+                    AND inter.academic_year = t1.academic_session_id
+                    AND inter.class_id = t1.class_id
+                    AND inter.section_id = t1.section_id
+                    AND inter.department_id = t1.department_id
                     LIMIT 1) as home_teacher')
         )
         ->leftjoin("students as s", 's.id', '=', 'inter.student_id')
@@ -31100,7 +31100,7 @@ try {
         catch(Exception $error) {
             return $this->commonHelper->generalReturn('403','error',$error,'Error in personalinterview_overall');
         }
-        
+
     }
     protected function clearCache($cache_name,$branchId)
     {
