@@ -1185,6 +1185,7 @@ Route::group(['middleware' => ['auth:api', 'throttle:limit_per_user', 'logroute'
     Route::post('email-password-encrypt', [ApiControllerThree::class, 'emailPasswordEncrypt']);
     Route::post('teacher/student/list', [ApiControllerThree::class, 'getTeacherStudentList']);
     Route::post('std_leave_update', [ApiControllerNameSeq::class, 'student_leaveupdate']);
+    Route::post('change_user_status', [ApiControllerThree::class, 'changeUserStatus']);
 
 
     //new api on name sequence condition

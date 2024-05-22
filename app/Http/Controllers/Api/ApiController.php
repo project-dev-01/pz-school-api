@@ -13833,7 +13833,7 @@ try{
                                     'middle_name_english' => $request->father_middle_name_english ?? '',
                                     'first_name_english' => $request->father_first_name_english ?? '',
                                     'mobile_no' =>  $father_mobile_no ,
-                                    'status' => '0', // Assuming you want to update the status as well
+                                    // 'status' => '0', // Assuming you want to update the status as well
                                     'updated_at' => now()
                                 ]);
                                
@@ -13883,7 +13883,7 @@ try{
                                     'nationality' => $request->mother_nationality,
                                     'occupation' => $request->mother_occupation,
                                     'mobile_no' =>   $mother_mobile_no,
-                                    'status' => '0', // Assuming you want to update the status as well
+                                    // 'status' => '0', // Assuming you want to update the status as well
                                     'updated_at' => now()
                                 ]);
                             } else {
@@ -13947,10 +13947,10 @@ try{
                     // 'roll_no' => $request->roll_no,
                     //  'admission_date' => $request->admission_date,
 
-                    'enrollment' => isset($request->enrollment) ? $request->enrollment : "",
-                    'trail_date' => isset($request->trail_date) ? $request->trail_date : "",
-                    'trail_end_date' => isset($request->trail_end_date) ? $request->trail_end_date : "",
-                    'official_date' => isset($request->official_date) ? $request->official_date : "",
+                    'enrollment' => isset($request->enrollment) ? $request->enrollment : null,
+                    'trail_date' => isset($request->trail_date) ? $request->trail_date : null,
+                    'trail_end_date' => isset($request->trail_end_date) ? $request->trail_end_date : null,
+                    'official_date' => isset($request->official_date) ? $request->official_date : null,
 
                     'category_id' => $request->category_id,
                     'first_name' => isset($request->first_name) ? $request->first_name : "",
@@ -16112,7 +16112,7 @@ try{
                     'occupation' => $request->occupation,
                     'email' => $request->email,
                     'mobile_no' => $mobile_no,
-                    'status' => $request->status,
+                    'status' => 0,
                     
                     
                     'first_name_english' => $request->first_name_english,
@@ -16247,7 +16247,7 @@ try{
                 $cache_time = config('constants.cache_time');
                 $cache_parentDetails = config('constants.cache_parentDetails');
                 $academic_session_id = $request->academic_session_id;
-                $status = $request->status ?? null;
+                $status = $request->status ?? 0;
                 // dd($request);
                 if ($status === null) {
                     // Cache enabled for status filtering
@@ -17336,7 +17336,15 @@ try{
                         ]);
                     }
 
-
+                    $updateData = ['status' => $request->status];
+                    if ($request->status == 0) {
+                        $updateData['login_attempt'] = 0;
+                    }
+ 
+                    $update_user = User::where([
+                        ['branch_id', '=', $request->branch_id],
+                        ['user_id', '=', $id]
+                    ])->update($updateData);
 
                     $query = $staffConn->table('parent')->where('id', $id)->update([
                         
@@ -17346,7 +17354,7 @@ try{
                         'occupation' => $request->occupation,
                         'email' => $request->email,
                         'mobile_no' => $mobile_no,
-                        'status' => $request->status,
+                        // 'status' => $request->status,
                         'email' => $request->email,
                         'mobile_no' => $mobile_no,
                        /* 'gender' => $request->gender,
@@ -17371,7 +17379,7 @@ try{
                         'facebook_url' => $request->facebook_url,
                         'linkedin_url' => $request->linkedin_url,
                         'twitter_url' => $request->twitter_url,*/
-                        'status' => $request->status,
+                        // 'status' => $request->status,
                         'first_name_english' => $request->first_name_english,
                         'middle_name_english' => $request->middle_name_english,                    
                         'last_name_english' => $request->last_name_english,

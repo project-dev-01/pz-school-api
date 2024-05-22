@@ -3513,4 +3513,39 @@ class ApiControllerThree extends BaseController
             return $this->commonHelper->generalReturn('403', 'error', $error, 'Error in getTeacherStudentList');
         }
     }
+
+    
+    // change User Status
+    public function changeUserStatus(Request $request)
+    {
+        try {
+        $validator = \Validator::make($request->all(), [
+            'id' => 'required',
+            'status' => 'required',
+        ]);
+        $user_id = $request->id;
+        if (!$validator->passes()) {
+            return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
+        } else {
+            $query = User::where('id', $user_id)->update([
+                'status' => $request->status,
+                'updated_at' => date("Y-m-d H:i:s")
+            ]);
+            if ($request->status == "1") {
+                $status = "Locked";
+            } else {
+                $status = "Unlocked";
+            }
+            $success = [];
+            if ($query) {
+                return $this->successResponse($success, $request->type.' have been ' . $status . ' successfully');
+            } else {
+                return $this->send500Error('Something went wrong.', ['error' => 'Something went wrong']);
+            }
+        }
+         }
+        catch(\Exception $error) {
+            $this->commonHelper->generalReturn('403','error',$error,'Error in publishEvent');
+        }
+    }
 }
