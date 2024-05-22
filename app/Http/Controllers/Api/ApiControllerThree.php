@@ -151,7 +151,7 @@ class ApiControllerThree extends BaseController
                         array_push($fileNames, $fileName);
                     }
                 }
-                
+
                 // if (isset($request->file)) {
                 //     $now = now();
                 //     $name = strtotime($now);
@@ -487,7 +487,7 @@ class ApiControllerThree extends BaseController
 
                 //dd($assignerID);
                 $user = User::where('email', "karthik@aibots.my")
-                ->get();
+                    ->get();
 
                 Notification::send($user, new StudentEmail($request->branch_id));
 
@@ -497,7 +497,7 @@ class ApiControllerThree extends BaseController
             return $this->commonHelper->generalReturn('403', 'error', $error, 'Error in  bulletinCronJob');
         }
     }
-    
+
     public function usernameBuletin(Request $request)
     {
         try {
@@ -1124,7 +1124,7 @@ class ApiControllerThree extends BaseController
                     //     $query->where('b.publish_end_date', '>', $currentDateTime)
                     //         ->orWhereNull('b.publish_end_date');
                     // })
-                     ->where('b.publish_date', '<=', now())
+                    ->where('b.publish_date', '<=', now())
                     ->groupBy("b.id")
                     ->orderBy('b.id', 'desc')
                     ->get()->toArray();
@@ -1265,7 +1265,7 @@ class ApiControllerThree extends BaseController
 
         try {
             $validator = \Validator::make($request->all(), [
-               // 'token' => 'required',
+                // 'token' => 'required',
                 'branch_id' => 'required',
             ]);
 
@@ -1293,7 +1293,7 @@ class ApiControllerThree extends BaseController
                         $join->where('bi.user_id', '=', $staff_id);
                     })
                     ->leftJoin('staffs as s', 'b.department_id', '=', 's.department_id')
-                   
+
                     ->where(function ($query) use ($departmentArray, $role_id) {
                         $query->whereRaw("FIND_IN_SET('$departmentArray', b.department_id)")
                             ->orWhereNull('b.department_id')
@@ -1305,7 +1305,7 @@ class ApiControllerThree extends BaseController
                     //     $query->where('b.publish_end_date', '>', $currentDateTime)
                     //         ->orWhereNull('b.publish_end_date');
                     // })
-                     ->where('b.publish_date', '<=', now())
+                    ->where('b.publish_date', '<=', now())
                     ->groupBy("b.id")
                     ->orderBy('b.id', 'desc')
                     ->get()->toArray();
@@ -1339,7 +1339,7 @@ class ApiControllerThree extends BaseController
                 $role_id = $request->role_id;
                 $dep = $conn->table('staffs')->select('department_id')->where('id', $staff_id)->first();
                 $departmentArray = $dep->department_id;
-              
+
                 $buletinDetails = $conn->table('bulletin_boards as b')
                     ->select("b.id", "b.title", "b.file", "b.discription", "bi.parent_imp", "b.publish_date")
                     ->leftJoin('' . $main_db . '.roles as rol', function ($join) {
@@ -1362,7 +1362,7 @@ class ApiControllerThree extends BaseController
                     //     $query->where('b.publish_end_date', '>', $currentDateTime)
                     //         ->orWhereNull('b.publish_end_date');
                     // })
-                     ->where('b.publish_date', '<=', now())
+                    ->where('b.publish_date', '<=', now())
                     ->groupBy("b.id")
                     ->orderBy('b.id', 'desc')
                     ->get()->toArray();
@@ -2667,7 +2667,8 @@ class ApiControllerThree extends BaseController
             $validator = \Validator::make($request->all(), [
                 'branch_id' => 'required',
                 'staff_id' => 'required',
-                'academic_session_id' => 'required'
+                'academic_session_id' => 'required',
+                'pattern' => 'required'
             ]);
 
             if (!$validator->passes()) {
@@ -2675,24 +2676,22 @@ class ApiControllerThree extends BaseController
             } else {
                 // create new connection
                 $createConnection = $this->createNewConnection($request->branch_id);
-                if ($request->department_id || $request->class_id || $request->section_id || $request->section_id) {
+                if ($request->department_id || $request->class_id || $request->section_id) {
                     $department_id = isset($request->department_id) ? $request->department_id : null;
                     $class_id = isset($request->class_id) ? $request->class_id : null;
                     $section_id = isset($request->section_id) ? $request->section_id : null;
-                    // pattern is compulsory
-                    $pattern = isset($request->pattern) ? $request->pattern : null;
                 } else {
-                    $attReport = $createConnection->table('attendance_report_settings')
+                    $attReport = $createConnection->table('widget_hide_unhide')
                         ->where('staff_id', $request->staff_id)
                         ->first();
+                    // dd($attReport);
                     $department_id = isset($attReport->department_id) ? $attReport->department_id : null;
                     $class_id = isset($attReport->class_id) ? $attReport->class_id : null;
                     $section_id = isset($attReport->section_id) ? $attReport->section_id : null;
-                    // pattern is compulsory
-                    $pattern = isset($attReport->pattern) ? $attReport->pattern : null;
                 }
+                $pattern = $request->pattern;
                 $Day = $Month = $Term = $Year = null;
-                $startDate = $endDate = $endDate = $termData = $yearData =  "";
+                $startDate = $endDate = $termData = $yearData =  "";
                 $currentDate = date('Y-m-d');
                 $type = "";
                 if ($pattern == "Day") {
@@ -2831,6 +2830,46 @@ class ApiControllerThree extends BaseController
                             ['class_id', $class_id],
                             ['section_id', $section_id]
                         ])
+                        ->get();
+                } else if ($department_id === null && $class_id === null && $section_id === null) {
+
+                    $type = "Overall Faculty";
+                    // Department exists, Class is null, Section is null
+                    $allClasses = $createConnection->table('classes')
+                        ->select('id')
+                        ->get()->toArray();
+                    // dd($allClasses);
+                    $classID = [];
+                    if (isset($allClasses)) {
+                        foreach ($allClasses as $key => $value) {
+                            array_push($classID, $value->id);
+                        }
+                    }
+                    $absentCountDetails = $createConnection->table('student_attendances_day')
+                        ->select(
+                            DB::raw('COUNT(*) as no_of_days_attendance'),
+                            DB::raw('SUM(CASE WHEN status = "present" THEN 1 ELSE 0 END) as presentCount'),
+                            DB::raw('SUM(CASE WHEN status = "absent" THEN 1 ELSE 0 END) as absentCount'),
+                            DB::raw('SUM(CASE WHEN status = "late" THEN 1 ELSE 0 END) as lateCount'),
+                            DB::raw('SUM(CASE WHEN status = "excused" THEN 1 ELSE 0 END) as excusedCount')
+                        )
+                        ->whereIn('class_id', $classID)
+                        // when not null comes here
+                        ->when($Day, function ($q)  use ($currentDate) {
+                            $q->where('date', $currentDate);
+                        })
+                        ->when($Month, function ($qs) use ($startDate, $endDate) {
+                            $qs->where('date', '>=', $startDate)
+                                ->where('date', '<=', $endDate);
+                        })
+                        ->when($Term, function ($qd)  use ($termData) {
+                            $qd->where('date', '>=', $termData->start_date ?? now())
+                                ->where('date', '<=', $termData->end_date ?? now());
+                        })
+                        ->when($Year, function ($qds)  use ($yearData) {
+                            $qds->where('date', '>=', $yearData[0]->year_start_date ?? now())
+                                ->where('date', '<=', $yearData[0]->year_end_date ?? now());
+                        })
                         ->get();
                 } else {
                     // Default scenario
@@ -3514,38 +3553,37 @@ class ApiControllerThree extends BaseController
         }
     }
 
-    
+
     // change User Status
     public function changeUserStatus(Request $request)
     {
         try {
-        $validator = \Validator::make($request->all(), [
-            'id' => 'required',
-            'status' => 'required',
-        ]);
-        $user_id = $request->id;
-        if (!$validator->passes()) {
-            return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
-        } else {
-            $query = User::where('id', $user_id)->update([
-                'status' => $request->status,
-                'updated_at' => date("Y-m-d H:i:s")
+            $validator = \Validator::make($request->all(), [
+                'id' => 'required',
+                'status' => 'required',
             ]);
-            if ($request->status == "1") {
-                $status = "Locked";
+            $user_id = $request->id;
+            if (!$validator->passes()) {
+                return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
             } else {
-                $status = "Unlocked";
+                $query = User::where('id', $user_id)->update([
+                    'status' => $request->status,
+                    'updated_at' => date("Y-m-d H:i:s")
+                ]);
+                if ($request->status == "1") {
+                    $status = "Locked";
+                } else {
+                    $status = "Unlocked";
+                }
+                $success = [];
+                if ($query) {
+                    return $this->successResponse($success, $request->type . ' have been ' . $status . ' successfully');
+                } else {
+                    return $this->send500Error('Something went wrong.', ['error' => 'Something went wrong']);
+                }
             }
-            $success = [];
-            if ($query) {
-                return $this->successResponse($success, $request->type.' have been ' . $status . ' successfully');
-            } else {
-                return $this->send500Error('Something went wrong.', ['error' => 'Something went wrong']);
-            }
-        }
-         }
-        catch(\Exception $error) {
-            $this->commonHelper->generalReturn('403','error',$error,'Error in publishEvent');
+        } catch (\Exception $error) {
+            $this->commonHelper->generalReturn('403', 'error', $error, 'Error in publishEvent');
         }
     }
 }
