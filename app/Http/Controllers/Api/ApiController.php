@@ -13833,7 +13833,7 @@ try{
                                     'middle_name_english' => $request->father_middle_name_english ?? '',
                                     'first_name_english' => $request->father_first_name_english ?? '',
                                     'mobile_no' =>  $father_mobile_no ,
-                                    // 'status' => '0', // Assuming you want to update the status as well
+                                    // 'status' => '0', // Assuming you want to update the status as well 
                                     'updated_at' => now()
                                 ]);
                                
@@ -15958,11 +15958,6 @@ try{
                     File::ensureDirectoryExists(base_path() . $image_principal_path);
                     $image_principal_file = base_path() . $image_principal_path . $image_principal_fileName;
                     $image_principal_suc = file_put_contents($image_principal_file, $image_principal_base64);
-                    if ($request->image_principal_old_photo) {
-                        if (\File::exists(base_path($nric_path . $request->image_principal_old_photo))) {
-                            \File::delete(base_path($nric_path . $request->image_principal_old_photo));
-                        }
-                    }
                 }
                 $fileName = "";
                 if ($request->japanese_association_membership_image_supplimental) {
@@ -16112,7 +16107,7 @@ try{
                     'occupation' => $request->occupation,
                     'email' => $request->email,
                     'mobile_no' => $mobile_no,
-                    'status' => 0,
+                    'status' => "0",
                     
                     
                     'first_name_english' => $request->first_name_english,
@@ -16506,9 +16501,7 @@ try{
                 ->leftJoin('sections as sec', 'e.section_id', '=', 'sec.id')
                 ->where('e.active_status', '=', "0")
                 ->where('e.academic_session_id',$academic_session_id)
-                ->where('s.father_id', $id)
-                ->orWhere('s.mother_id', $id)
-                ->orWhere('s.guardian_id', $id)
+                ->where('s.guardian_id', $id)
                 ->groupBy('e.student_id')->get();
            /* $staffRoles = array('5');
             $sql = "";
@@ -16685,9 +16678,9 @@ try{
             // get data
             $data = $conn->table('parent')
                 ->select("id", DB::raw("CONCAT(last_name, ' ', first_name) as name"), 'email')
+                ->where("status",'=',"0")
                 ->where("first_name", "LIKE", "%{$request->name}%")
                 ->orWhere("last_name", "LIKE", "%{$request->name}%")
-                ->where("status",'=','0')
                 ->get();
 
             $output = '';
@@ -17400,7 +17393,7 @@ try{
                     'employment_status' => $request->guardian_employment_status,               
 
 
-                    //'japanese_association_membership_image_principal' => $image_principal_fileName,
+                    'japanese_association_membership_image_principal' => $image_principal_fileName,
                     'japanese_association_membership_image_supplimental' => $fileName,
                     'japan_postalcode' => $request->japan_postalcode,
                     'japan_contact_no' =>  isset($request->japan_contact_no) ? Crypt::encryptString($request->japan_contact_no) : "",
