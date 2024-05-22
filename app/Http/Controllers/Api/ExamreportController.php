@@ -128,6 +128,40 @@ class ExamreportController extends BaseController
         ];
         return $this->successResponse($data, 'Get student Detatils');
     }
+    public function adhocexam_file_name(Request $request)
+    { 
+        $department_id = $request->department_id;
+        $exam_id = $request->exam_id;
+        $class_id = $request->class_id;
+        $section_id = $request->section_id;
+        $subject_id = $request->subject_id;
+        $academic_session_id = $request->academic_session_id; 
+        $Connection = $this->createNewConnection($request->branch_id);
+        $getpapers = $Connection->table('subjects as sb')
+        ->select('sb.name as subject_name')
+        ->where('sb.id', '=', $subject_id)
+        ->first(); 
+        $getclass = $Connection->table('classes')
+        ->select(
+            'classes.name as class_name',
+            'dp.name as department_name'          
+        )       
+        ->leftJoin('staff_departments as dp', 'dp.id', '=', 'classes.department_id')
+        ->where('classes.id', '=', $class_id)        
+        ->first();
+        $getsection = $Connection->table('sections')->select('name as section_name')->where('id', '=', $section_id)->first();
+        $getexam = $Connection->table('exam')->select('name as exam_name')->where('id', '=', $exam_id)->first();
+        $data=[
+            "department_name"=> $getclass->department_name, 
+            "class_name"=> $getclass->class_name,              
+            "section_name"=> $getsection->section_name,
+            "subject_name"=> $getpapers->subject_name,
+            "exam_name"=> $getexam->exam_name,
+           
+        ];
+        return $this->successResponse($data, 'Get File Detatils');
+    }
+   
     public function exam_student_list(Request $request)
     {
         
@@ -227,6 +261,98 @@ class ExamreportController extends BaseController
         }
         return $this->successResponse($student_list, 'Get student Detatils');
     }
+    
+    public function adhocexam_student_list(Request $request)
+    {
+        
+        $department_id = $request->department_id;
+        $exam_id = $request->exam_id;
+        $class_id = $request->class_id;
+        $section_id = $request->section_id;
+        $subject_id = $request->subject_id;
+        $academic_session_id = $request->academic_session_id; 
+        $Connection = $this->createNewConnection($request->branch_id);
+        
+        $getstudentDetails = $Connection->table('enrolls')
+        ->select(
+            DB::raw('CONCAT(students.last_name, " ", students.first_name) as student_name'),
+            'students.register_no',
+            'students.id'
+        )
+        ->leftJoin('students', 'enrolls.student_id', '=', 'students.id')
+        ->where('enrolls.class_id', '=', $class_id)
+        ->where('enrolls.section_id', '=', $section_id)
+        ->where('enrolls.department_id', '=', $department_id)
+        ->where('enrolls.academic_session_id', '=', $academic_session_id)
+        ->get(); 
+        $getpapers = $Connection->table('subjects as sb')
+        ->select('sb.name as subject_name')
+        ->where('sb.id', '=', $subject_id)
+        ->first(); 
+        $student_list=[];
+        $k=0;
+        foreach($getstudentDetails as $stu)
+        {
+            $k++;
+            $student_id=$stu->id;
+            /*$row = $Connection->table('student_marks')->select('*')->where([
+                ['class_id', '=', $class_id],
+                ['section_id', '=', $section_id],
+                ['subject_id', '=', $subject_id],
+                ['student_id', '=', $student_id],
+                ['exam_id', '=', $exam_id],
+                ['semester_id', '=', $semester_id],
+                ['session_id', '=', $session_id],
+                ['paper_id', '=', $paper_id],
+                ['academic_session_id', '=', $academic_session_id]
+                ])->first();
+            if($row!==null)
+            {
+                if($getpapers->score_type=='Points')
+                {
+                    $mark=isset($row->points)?$row->points:'';
+                }
+                elseif($getpapers->score_type=='Freetext')
+                {
+                    $mark=isset($row->freetext)?$row->freetext:'';
+                }
+                else
+                {
+                    $mark=isset($row->score)?$row->score:'';
+                }
+                $status=isset($row->status)?$row->status:'';
+                $memo=isset($row->memo)?$row->memo:'';
+            $data=[
+                "sno"=> $k, 
+                "register_no"=> $stu->register_no,               
+                "student_name"=> $stu->student_name,            
+                "mark"=> $mark,  
+                "attandance"=>  $status[0],             
+                "memo"=> $memo    
+            ];
+        }
+        else
+        {
+            $data=[
+                "sno"=> $k, 
+                "register_no"=> $stu->register_no,               
+                "student_name"=> $stu->student_name,            
+                "mark"=> "",  
+                "attandance"=>  "",             
+                "memo"=> ""   
+            ];
+        }*/
+             $data=[
+                "sno"=> $k, 
+                "register_no"=> $stu->register_no,               
+                "student_name"=> $stu->student_name,            
+                "mark"=> "",  
+               
+            ];
+            array_push($student_list, $data);
+        }
+        return $this->successResponse($student_list, 'Get student Detatils');
+    }
     public function mark_comparison(Request $request)
     {
         $Connection = $this->createNewConnection($request->branch_id);
@@ -285,6 +411,62 @@ class ExamreportController extends BaseController
                     "points"=>"" ,         
                     "freetext"=> "" ,         
                     "status"=>"" ,                 
+                    "memo"=>""           
+                ];
+            }
+
+        return $this->successResponse($data, 'Get student Detatils');
+    }
+    public function adhocmark_comparison(Request $request)
+    {
+        $Connection = $this->createNewConnection($request->branch_id);
+        $department_id = $request->department_id;
+        
+        $class_id = $request->class_id;
+        $section_id = $request->section_id;
+        $exam_id = $request->exam_id;
+        $subject_id = $request->subject_id;
+        $exam_date = $request->exam_date;
+       
+        $academic_session_id = $request->academic_session_id;
+        $student_regno = $request->student_regno;
+        $row=0;
+        
+            $students = $Connection->table('students')->select('id', 'first_name', 'last_name')->where('register_no', '=', $student_regno)->first();
+            
+            if($students!==null)
+            {
+                $student_id = $students->id;
+                $student_name= $students->first_name.' '.$students->last_name;
+                $row = $Connection->table('adhocexam_marks')->select('*')->where([
+                ['department_id', '=', $department_id],
+                ['class_id', '=', $class_id],
+                ['section_id', '=', $section_id],
+                ['subject_id', '=', $subject_id],
+                ['student_id', '=', $student_id],
+                ['exam_id', '=', $exam_id],
+                ['exam_date', '=', $exam_date],
+                ['academic_session_id', '=', $academic_session_id]
+                ])->first();
+
+                $data=[
+                
+                    "register_no"=>  $student_regno,
+                    "student_id"=>  $student_id,
+                    "student_name"=>  $student_name,              
+                    "mark_id"=> ($row!==null)?$row->id:'',               
+                    "mark"=> ($row!==null)?$row->mark:'',                          
+                    "memo"=> ($row!==null)?$row->memo:''   
+                ];
+            }
+            else
+            {
+                $data=[
+                    "register_no"=>  $student_regno,
+                    "student_id"=> "",
+                    "student_name"=> "", 
+                    "mark_id"=>"",              
+                    "mark"=> "", 
                     "memo"=>""           
                 ];
             }
@@ -425,7 +607,7 @@ class ExamreportController extends BaseController
         return $this->successResponse($success, 'Exam Mark Upload Successfully');
     }*/
     public function examuploadmark(Request $request)
-{
+    {
     // Extracting request parameters
     $Connection = $this->createNewConnection($request->branch_id);
     $department_id = $request->department_id;
@@ -548,6 +730,88 @@ class ExamreportController extends BaseController
         }
     }
 
+    // Returning success response
+    $success[] = '';
+    return $this->successResponse($success, 'Exam Mark Upload Successfully');
+}
+public function adhocexamuploadmark(Request $request)
+    {
+    // Extracting request parameters
+    $Connection = $this->createNewConnection($request->branch_id);
+    $department_id = $request->department_id;
+    $class_id = $request->class_id;
+    $section_id = $request->section_id;
+    $exam_id = $request->exam_id;
+    $subject_id = $request->subject_id;
+    $exam_date = $request->exam_date;
+    $score_type = $request->score_type;
+    $academic_session_id = $request->academic_session_id;
+    $fdata = $request->fdata;
+    
+    $row=0;
+
+    // Processing each row of data
+    foreach ($fdata as $importData) {
+        // Incrementing row count
+        $row++;
+
+        // Checking if student roll number is provided
+        if ($importData[1] != '') {
+            $student_roll = $importData[1];
+
+            // Determining student status
+           
+            $mark = $importData[3];
+            $memo='';
+
+            // Retrieving student details
+            $students = $Connection->table('students')->select('id')->where('register_no', '=', $student_roll)->first();
+            $student_id = $students->id;
+
+            // Retrieving paper details
+            
+
+                // Constructing student marks array
+                $arrayStudentMarks = [
+                    'student_id' => $student_id,
+                    'department_id' => $department_id,
+                    'class_id' => $class_id,
+                    'section_id' => $section_id,
+                    'subject_id' => $subject_id,
+                    'exam_id' => $exam_id,
+                    'exam_date' => $exam_date,
+                    'score_type' => $score_type,          
+                   
+                    'mark' => $mark ?? null,                    
+                    'memo' => $memo ?? null,
+                    'academic_session_id' => $academic_session_id,
+                    'created_at' => date("Y-m-d H:i:s")
+                ];
+
+                // Checking if student marks exist
+                $existingRow = $Connection->table('adhocexam_marks')->select('id')->where([
+                    ['class_id', '=', $class_id],
+                    ['section_id', '=', $section_id],
+                    ['subject_id', '=', $subject_id],
+                    ['student_id', '=', $student_id],
+                    ['exam_id', '=', $exam_id],
+                    ['exam_date', '=', $exam_date],
+                    ['academic_session_id', '=', $academic_session_id]
+                ])->first();
+
+                // Inserting or updating student marks
+                if (isset($existingRow->id)) {
+                    $Connection->table('adhocexam_marks')->where('id', $existingRow->id)->update([
+                        'mark' => $mark ?? null,                       
+                        'memo' => $memo ?? null,
+                        'updated_at' => date("Y-m-d H:i:s")
+                    ]);
+                } else {
+                    $Connection->table('adhocexam_marks')->insert($arrayStudentMarks);
+                }
+            }
+      
+        }
     // Returning success response
     $success[] = '';
     return $this->successResponse($success, 'Exam Mark Upload Successfully');
