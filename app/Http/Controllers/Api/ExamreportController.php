@@ -43,10 +43,13 @@ use Illuminate\Support\Facades\Hash;
 use App\Models\Menus;
 use App\Models\Menuaccess;
 
-
+use App\Helpers\CommonHelper;
 class ExamreportController extends BaseController
 {
-    
+    protected CommonHelper $commonHelper;
+    public function __construct(CommonHelper $commonHelper) {
+        $this->commonHelper = $commonHelper;
+    }
     public function getec_marks(Request $request)
     {
         try{
@@ -67,10 +70,11 @@ class ExamreportController extends BaseController
             'sb.id as subject_id',
             'sb.name'
         )       
-        ->where('sb.name', '=', 'EC')
-        ->orWhere('sb.name', '=', 'English Comminication')
+        // ->where('sb.name', '=', 'EC')
+        ->where('sb.name', '=', 'English Communication')
         ->first();
         $subject_id = $getsubject->subject_id;
+        // return $getsubject;
         $getSubjectMarks = $Connection->table('exam_papers as ep')        
         ->select(           
             'ep.id',
@@ -624,7 +628,7 @@ class ExamreportController extends BaseController
                 DB::raw('CONCAT(st.first_name, " ", st.last_name) as name'),
                 'st.register_no',
             )
-            ->leftJoin('students as st', 'st.id', '=', 'en.student_id')               
+            ->join('students as st', 'st.id', '=', 'en.student_id')               
             ->where([
                 ['en.department_id', '=', $request->department_id],
                 ['en.class_id', '=', $request->class_id],

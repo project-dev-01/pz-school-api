@@ -11870,7 +11870,7 @@ try{
             // get data
             $cache_time = config('constants.cache_time');
             $cache_exam = config('constants.cache_exam');
-            $cacheKey = $cache_exam . $request->academic_session_id . $request->branch_id;
+            $cacheKey = $cache_exam  . $request->branch_id;
         
             // Check if the data is cached
             if (Cache::has($cacheKey)) {
@@ -24403,7 +24403,7 @@ try{
             // get data
             $cache_time = config('constants.cache_time');
             $cache_exam_papers = config('constants.cache_exam_papers');
-            $cacheKey = $cache_exam_papers . $request->academic_session_id . $request->branch_id;
+            $cacheKey = $cache_exam_papers . $request->branch_id;
             
             // Check if the data is cached
             if (Cache::has($cacheKey)) {
