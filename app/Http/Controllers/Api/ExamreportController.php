@@ -683,7 +683,7 @@ class ExamreportController extends BaseController
                     'exam_id' => $exam_id,
                     'paper_id' => $paper_id,
                     'semester_id' => $semester_id,
-                    'session_id' => $session_id,
+                    'session_id' => $session_id ?? 0,
                     'grade_category' => $grade_category ?? null,
                     'score' => $score ?? null,
                     'points' => $points ?? null,
@@ -704,8 +704,7 @@ class ExamreportController extends BaseController
                     ['subject_id', '=', $subject_id],
                     ['student_id', '=', $student_id],
                     ['exam_id', '=', $exam_id],
-                    ['semester_id', '=', $semester_id],
-                    ['session_id', '=', $session_id],
+                    ['semester_id', '=', $semester_id],                   
                     ['paper_id', '=', $paper_id],
                     ['academic_session_id', '=', $academic_session_id]
                 ])->first();

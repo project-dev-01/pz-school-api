@@ -11867,7 +11867,7 @@ try{
         if (!$validator->passes()) {
             return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
         } else {
-            // get data
+           /* // get data
             $cache_time = config('constants.cache_time');
             $cache_exam = config('constants.cache_exam');
             $cacheKey = $cache_exam . $request->academic_session_id . $request->branch_id;
@@ -11876,7 +11876,7 @@ try{
             if (Cache::has($cacheKey)) {
                 // If cached, return cached data
                 $details = Cache::get($cacheKey);
-            } else {
+            } else {*/
             // create new connection
             $con = $this->createNewConnection($request->branch_id);
             // get data
@@ -11886,8 +11886,8 @@ try{
                 ->where('ex.academic_session_id', '=', $request->academic_session_id)
                 ->get();
                 // Cache the fetched data for future requests
-                Cache::put($cacheKey, $details, now()->addHours($cache_time)); // Cache for 24 hours
-            }
+                //Cache::put($cacheKey, $details, now()->addHours($cache_time)); // Cache for 24 hours
+           // }
             return $this->successResponse($details, 'Exam record fetch successfully');
         }
     }
