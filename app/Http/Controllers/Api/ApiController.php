@@ -13948,7 +13948,7 @@ try{
                     //  'admission_date' => $request->admission_date,
 
                     'enrollment' => isset($request->enrollment) ? $request->enrollment : null,
-                    'trail_date' => isset($request->trail_date) ? $request->trail_date : null,
+                    'trail_start_date' => isset($request->trail_start_date) ? $request->trail_start_date : null,
                     'trail_end_date' => isset($request->trail_end_date) ? $request->trail_end_date : null,
                     'official_date' => isset($request->official_date) ? $request->official_date : null,
 
@@ -15577,6 +15577,11 @@ try{
                     'year' => $request->year,
                     // 'roll_no' => $request->roll_no,
                     //  'admission_date' => $request->admission_date,
+                    'enrollment' => $request->enrollment,
+                    'trail_start_date' => $request->trail_start_date,
+                    'trail_end_date' => $request->trail_end_date,
+                    'official_date' => $request->official_date,
+
                     'category_id' => $request->category_id,
                     'first_name' => isset($request->first_name) ? $request->first_name : "",
                     'last_name' => isset($request->last_name) ? $request->last_name : "",
@@ -26826,7 +26831,7 @@ try{
                         'nric_photo' => $nric_fileName,
 
                         'enrollment' => $request->enrollment,
-                        'trail_date' => $request->trail_date,
+                        'trail_start_date' => $request->trail_start_date,
                         'trail_end_date' => $request->trail_end_date,
                         'official_date' => $request->official_date,
 
