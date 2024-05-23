@@ -138,11 +138,15 @@ class ApiControllerThree extends BaseController
                 $fileNames = [];
                 if ($fileDetails) {
                     foreach ($fileDetails as $key => $value) {
-                        $now = now();
-                        $name = strtotime($now);
-                        $extension = $value['extension'];
-                        $originalfilename = $value['filename'];
-                        $fileName = $originalfilename . "." . $extension;
+                         // Set timezone to Malaysia
+                         $now = now()->setTimezone('Asia/Kuala_Lumpur');
+
+                         // Generate formatted timestamp
+                         $timestamp = $now->format('ymdHis'); // Example format: 20240522153000 (YYYYMMDDHHMMSS)
+                         $extension = $value['extension'];
+                         $originalfilename = $value['filename'];
+                         // Construct the file name with the timestamp
+                        $fileName = $originalfilename . '_' . $timestamp . '.' . $extension;
                         $path = '/public/' . $request->branch_id . '/admin-documents/buletin_files/';
                         $base64 = base64_decode($value['base64']);
                         File::ensureDirectoryExists(base_path() . $path);
@@ -638,11 +642,14 @@ class ApiControllerThree extends BaseController
                         $fileDetails = $request->file;
                         $fileNames = [];
                         foreach ($fileDetails as $key => $value) {
-                            $now = now();
-                            $name = strtotime($now);
+                             // Set timezone to Malaysia
+                             $now = now()->setTimezone('Asia/Kuala_Lumpur');
+
+                             // Generate formatted timestamp
+                             $timestamp = $now->format('YmdHis'); // Example format: 20240522153000 (YYYYMMDDHHMMSS)
                             $extension = $value['extension'];
                             $originalfilename = $value['filename'];
-                            $fileName = $originalfilename . "." . $extension;
+                            $fileName = $originalfilename . '_' . $timestamp . '.' . $extension;
                             $path = '/public/' . $request->branch_id . '/admin-documents/buletin_files/';
                             $base64 = base64_decode($value['base64']);
                             File::ensureDirectoryExists(base_path() . $path);
@@ -3584,6 +3591,337 @@ class ApiControllerThree extends BaseController
             }
         } catch (\Exception $error) {
             $this->commonHelper->generalReturn('403', 'error', $error, 'Error in publishEvent');
+        }
+    }
+    public function addStudentMedicalRecord(Request $request){
+        //return $request;
+        $validator = \Validator::make($request->all(), [
+            // 'token' => 'required',
+            'branch_id' => 'required',
+        ]);
+
+        //    return $request;
+        if (!$validator->passes()) {
+            return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
+        } else {
+
+            // create new connection
+            $conn = $this->createNewConnection($request->branch_id);
+            $studentId = $request->student_id;
+
+            // Update or Insert student medical histories
+            $histories_id = $conn->table('student_medical_histories')->updateOrInsert(
+                ['student_id' => $studentId],
+                [
+                    'heart_problem' => $request->heart_problem,
+                    'epilepsy' => $request->epilepsy,
+                    'measles' => $request->measles,
+                    'kawasaki_disease' => $request->kawasaki_disease,
+                    'febrile_convulsions' => $request->febrile_convulsion,
+                    'chicken_pox' => $request->chicken_pox,
+                    'scoliosis' => $request->scoliosis,
+                    'tuberculosis' => $request->tuberculosis,
+                    'mumps' => $request->mumps,
+                    'kidny_problems' => $request->kidney_problems,
+                    'others' => $request->others,
+                    'rubella' => $request->rubella,
+                    'diabetes' => $request->diabetes,
+                    'dengue_fever' => $request->dengue_fever,
+                    'operated_disease' => $request->operated_disease,
+                    'injury' => $request->injury,
+                    'illness' => $request->illness,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]
+            );
+            
+            // Update or Insert student immunization histories
+            $immunization_history_id = $conn->table('student_immunization_histories')->updateOrInsert(
+                ['student_id' => $studentId],
+                [
+                    'japanese_encephalitis' => $request->japanese_encephalitis,
+                    'streptococcus_pneumoniae' => $request->streptococcus_pneumoniae,
+                    'triple_antigen' => $request->triple_antigen,
+                    'hib' => $request->hib,
+                    'quadruple_antigen' => $request->quadruple_antigen,
+                    'covid_19' => $request->covid,
+                    'bcg' => $request->bcg,
+                    'rabies_vaccine' => $request->rabies_vaccine,
+                    'measles_rubella' => $request->measles,
+                    'tetanus' => $request->tetanus,
+                    'chicken_pox_imm' => $request->chicken_pox_imm,
+                    'mumps_imm' => $request->mumps_imm,
+                    'doctors_advised' => $request->doctors_advised,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]
+            );
+            
+            // Update or Insert current health conditions
+            $current_health_condition_id = $conn->table('current_health_condition')->updateOrInsert(
+                ['student_id' => $studentId],
+                [
+                    'develops_fever_easily' => $request->develops_fever,
+                    'frequent_headaches' => $request->frequent_headaches,
+                    'dyspepsia_stomachache_cliarrhea' => $request->dyspepsia,
+                    'constipates' => $request->constipates,
+                    'vomits' => $request->vomits,
+                    'faints' => $request->faints,
+                    'dizziness' => $request->dizziness,
+                    'nettle_rash' => $request->nettle_rash,
+                    'prone_to_car_sickness' => $request->prone_car_sickness,
+                    'has_poor_hearing' => $request->poor_hearing,
+                    'has_had_otitis_media_before' => $request->otitis_media,
+                    'bleeds_from_the_nose' => $request->bleeds_nose,
+                    'nasal_congestion' => $request->nasal_congestion_nose,
+                    'throat_is_swollen' => $request->throat_swollen,
+                    'squinted_eyes' => $request->squinted_eyes,
+                    'eye_irritation_redness' => $request->eye_irritation,
+                    'glasses_lenses' => $request->glasses_lenses,
+                    'wrong_colour' => $request->wrong_colour,
+                    'tooth_toothache' => $request->sensistive_tooth,
+                    'bleed_gum' => $request->bleed_from_gum,
+                    'pain_sound_jaw_joint' => $request->pain_sound_jaw_joint,
+                    'orthodontics' => $request->orthodontics,
+                    'any_medicine_take_daily' => $request->medicine_to_take_daily,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]
+            );
+           
+            
+            // Update or Insert student medical records
+            if ($histories_id) {
+               $student_medical_record_id =  $conn->table('student_medical_records')->updateOrInsert(
+                    ['student_id' => $studentId, 'academic_session_id' => $request->academic_session_id],
+                    [
+                        'parent_id' => $request->parent_id,
+                        'normal_temperature' => $request->normal_temp,
+                        'hospital_name' => $request->hospital_name,
+                        'doctor_name' => $request->doctor_name,
+                        'insurance_yes_no' => $request->insurance,
+                        'company_name' => $request->company_name,
+                        'allergen_if_any' => $request->remark_allergen,
+                        'anaphylactic_shock' => $request->anaphylactic,
+                        'epinephrine_autoinjector' => $request->epinephrine,
+                        'other_medicines' => $request->other_medicines,
+                        'medical_history_id' => $histories_id,
+                        'immunization_history_id' => $immunization_history_id,
+                        'current_health_condition_id' => $current_health_condition_id,
+                        'date' => $request->date,
+                        'remarks' => $request->remarks,
+                        'created_at' => now(),
+                        'updated_at' => now(),
+                    ]
+                );
+                foreach ($request->allergies as $allergyType => $allergyDetails) {
+                    // Retrieve the allergy ID from the student_allergies table
+                    $allergyId = $conn->table('student_allergies')
+                        ->where('name', $allergyDetails['name'])
+                        ->value('id');
+            
+                    // Update or Insert into allergies_details table
+                    $conn->table('allergies_details')->updateOrInsert(
+                        [
+                            'allergies_id' => $allergyId,
+                            'student_id' => $studentId,
+                            'student_medical_record_id' => $student_medical_record_id,
+                        ],
+                        [
+                            'age_onset' => $allergyDetails['age_onset'] ?? null,
+                            'under_treatment' => $allergyDetails['treatment'] ?? null,
+                            'follow_up' => $allergyDetails['follow_up'] ?? null,
+                            'age_treat' => $allergyDetails['treated'] ?? null,
+                            'created_at' => now(),
+                            'update_at' => now(),
+                        ]
+                    );
+                }
+            }
+            $success = [];
+            if (!$histories_id) {
+                return $this->send500Error('Something went wrong.', ['error' => 'Something went wrong']);
+            } else {
+                return $this->successResponse($success, 'Student Medical Form  has been successfully saved');
+            }
+        }
+    }
+    public function getStudentMedicalRecord(Request $request)
+    {
+        $validator = \Validator::make($request->all(), [
+            // 'token' => 'required',
+            'branch_id' => 'required',
+        ]);
+
+        //    return $request;
+        if (!$validator->passes()) {
+            return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
+        } else {
+
+            // create new connection
+            $conn = $this->createNewConnection($request->branch_id);
+
+             // Fetch medical records for the specified student_id
+             $medicalRecords = $conn->table('student_medical_records as stm')
+             ->select(
+                 'stm.*', 
+                 'sth.*', 
+                 'sti.*', 
+                 'stc.*'
+             )
+             ->leftJoin('student_medical_histories as sth', 'stm.medical_history_id', '=', 'sth.id')
+             ->leftJoin('student_immunization_histories as sti', 'stm.immunization_history_id', '=', 'sti.id')
+             ->leftJoin('current_health_condition as stc', 'stm.current_health_condition_id', '=', 'stc.id')
+             ->where('stm.student_id', $request->student_id)
+             ->where('stm.academic_session_id', $request->academic_session_id)
+             ->first();
+         
+         // Query to fetch details from allergies_details table based on the allergies associated with the student
+         $allergiesDetails = $conn->table('student_allergies as sa')     
+         ->leftJoin('allergies_details as ad', function ($join) use ($request) {        
+             $join->on('ad.allergies_id', '=', 'sa.id')              
+             ->where('ad.student_id', '=', $request->student_id);     }) 
+        ->leftJoin('student_medical_records as stm', 'ad.student_medical_record_id', '=', 'stm.id')    
+         ->select('ad.*', 'sa.id as sa_id')     ->get();
+       
+         $indexedAllergies = [];
+ 
+         foreach ($allergiesDetails as $key => $allergies) {
+             $indexedAllergies[$allergies->sa_id] = $allergies;
+                
+         }
+         $results = [];
+         $results['student'] = $medicalRecords;
+         $results['allergies'] = $indexedAllergies;
+         
+             return $this->successResponse($results, 'Studennt Medical list record fetch successfully');
+        }
+    }
+    public function getStudentMedicalReportAdmin(Request $request)
+    {
+        try {
+            $validator = \Validator::make($request->all(), [
+                'branch_id' => 'required',
+                'class_id' => 'required',
+                'section_id' => 'required',
+                'academic_session_id' => 'required'
+            ]);
+
+            if (!$validator->passes()) {
+                return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
+            } else {
+                // create new connection
+                $branchID = $request->branch_id;
+                $academic_session_id = $request->academic_session_id;
+                $conn = $this->createNewConnection($request->branch_id);
+                $student_id = $request->student_id;
+                // get data
+                $studentData = $conn->table('enrolls as en')
+                    ->select(
+                        'en.student_id',
+                        "sd.name as deptName",
+                        'cl.name as class_name',
+                        'sc.name as section_name',
+                        'st.photo',
+                        DB::raw('CONCAT(st.last_name, " ", st.first_name) as name'),
+                        DB::raw('CASE WHEN smr.student_id IS NOT NULL THEN "Download" ELSE "N/A" END as medical_record_status')
+                    )
+                    // ->join('enrolls as en', 'en.student_id', '=', 'fa.student_id')
+                    ->leftJoin('students as st', 'en.student_id', '=', 'st.id')
+                    ->leftJoin('classes as cl', 'en.class_id', '=', 'cl.id')
+                    ->leftJoin('sections as sc', 'en.section_id', '=', 'sc.id')
+                    ->leftJoin('staff_departments as sd', 'en.department_id', '=', 'sd.id')
+                    ->leftJoin('student_medical_records as smr', 'en.student_id', '=', 'smr.student_id')
+                    ->where([
+                        ['en.class_id', '=', $request->class_id],
+                        ['en.section_id', '=', $request->section_id],
+                        ['en.academic_session_id', '=', $request->academic_session_id],
+                        ['en.department_id', '=', $request->department_id]
+                    ])
+                    ->when($student_id, function ($q)  use ($student_id) {
+                        $q->where('en.student_id', $student_id);
+                    })
+                    ->groupBy('en.student_id')
+                    ->orderBy('st.id', 'ASC')
+                    ->get()->toArray();
+                return $this->successResponse($studentData, 'get student details fetch successfully');
+            }
+        } catch (Exception $error) {
+            return $this->commonHelper->generalReturn('403', 'error', $error, 'Error in getStudentMedicalReportAdmin');
+        }
+    }
+    public function getAllergiesNameList(Request $request){
+        $validator = \Validator::make($request->all(), [
+            // 'token' => 'required',
+            'branch_id' => 'required',
+        ]);
+
+        //    return $request;
+        if (!$validator->passes()) {
+            return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
+        } else {
+
+            // create new connection
+            $conn = $this->createNewConnection($request->branch_id);
+             // Fetch medical records for the specified student_id
+             $allergiesNameList = $conn->table('student_allergies')
+             ->select(
+                 'id',
+                 'name'
+             )->get();
+
+             return $this->successResponse($allergiesNameList, 'Allergies Name list record fetch successfully');
+        }
+    }
+    public function getStudentMedicalRecordpdf(Request $request)
+    {
+        $validator = \Validator::make($request->all(), [
+            // 'token' => 'required',
+            'branch_id' => 'required',
+        ]);
+
+        //    return $request;
+        if (!$validator->passes()) {
+            return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
+        } else {
+
+            // create new connection
+            $conn = $this->createNewConnection($request->branch_id);
+              // Fetch medical records for the specified student_id
+              $medicalRecords = $conn->table('student_medical_records as stm')
+              ->select(
+                  'stm.*', 
+                  'sth.*', 
+                  'sti.*', 
+                  'stc.*',
+                  DB::raw("CONCAT(st1.last_name, ' ', st1.first_name) as name"),
+              )
+              ->leftJoin('student_medical_histories as sth', 'stm.medical_history_id', '=', 'sth.id')
+              ->leftJoin('student_immunization_histories as sti', 'stm.immunization_history_id', '=', 'sti.id')
+              ->leftJoin('current_health_condition as stc', 'stm.current_health_condition_id', '=', 'stc.id')
+              ->leftJoin('students as st1', 'st1.id', '=', 'stm.student_id')
+              ->where('stm.student_id', $request->student_id)
+              ->where('stm.academic_session_id', $request->academic_session_id)
+              ->first();
+              // Query to fetch details from allergies_details table based on the allergies associated with the student
+         $allergiesDetails = $conn->table('student_allergies as sa')     
+         ->leftJoin('allergies_details as ad', function ($join) use ($request) {        
+             $join->on('ad.allergies_id', '=', 'sa.id')              
+             ->where('ad.student_id', '=', $request->student_id);     }) 
+        ->leftJoin('student_medical_records as stm', 'ad.student_medical_record_id', '=', 'stm.id')    
+         ->select('ad.*', 'sa.id as sa_id')     ->get();
+       
+         $indexedAllergies = [];
+ 
+         foreach ($allergiesDetails as $key => $allergies) {
+             $indexedAllergies[$allergies->sa_id] = $allergies;
+                
+         }
+         $getpdfData = [];
+         $getpdfData['student'] = $medicalRecords;
+         $getpdfData['allergies'] = $indexedAllergies;
+
+             return $this->successResponse($getpdfData, 'Student Medical record pdf fetch successfully');
         }
     }
 }
