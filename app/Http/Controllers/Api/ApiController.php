@@ -11867,7 +11867,7 @@ try{
         if (!$validator->passes()) {
             return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
         } else {
-            // get data
+           /* // get data
             $cache_time = config('constants.cache_time');
             $cache_exam = config('constants.cache_exam');
             $cacheKey = $cache_exam  . $request->branch_id;
@@ -11876,7 +11876,7 @@ try{
             if (Cache::has($cacheKey)) {
                 // If cached, return cached data
                 $details = Cache::get($cacheKey);
-            } else {
+            } else {*/
             // create new connection
             $con = $this->createNewConnection($request->branch_id);
             // get data
@@ -11886,8 +11886,8 @@ try{
                 ->where('ex.academic_session_id', '=', $request->academic_session_id)
                 ->get();
                 // Cache the fetched data for future requests
-                Cache::put($cacheKey, $details, now()->addHours($cache_time)); // Cache for 24 hours
-            }
+                //Cache::put($cacheKey, $details, now()->addHours($cache_time)); // Cache for 24 hours
+           // }
             return $this->successResponse($details, 'Exam record fetch successfully');
         }
     }
@@ -15156,6 +15156,116 @@ try{
 
     }
 
+    public function getGraduateStudentList(Request $request)
+    {
+        try
+        {
+            $validator = \Validator::make($request->all(), [
+                'branch_id' => 'required',
+            ]);
+            $department_id = isset($request->department_id) ? $request->department_id : null;
+            $class_id = isset($request->class_id) ? $request->class_id : null;
+            $session_id = isset($request->session_id) ? $request->session_id : 0;
+            $section_id = isset($request->section_id) ? $request->section_id : null;
+            // $status = $request->status;
+            $name = isset($request->student_name) ? $request->student_name : null;
+            
+            $stu_status = isset($request->stu_status) ? $request->stu_status : null;
+            $academic_session_id = isset($request->academic_session_id) ? $request->academic_session_id : null;
+            // \Log::info('Status = ' . $status);
+            
+            
+            $status = 2;
+            if(isset($request->status)){
+                if($request->status=='1'){
+                    $status = 1;
+                }
+            }
+            if (!$validator->passes()) {
+                return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
+            }
+            else {
+               
+                    // create new connection
+                    $con = $this->createNewConnection($request->branch_id);
+                    $query = $con->table('enrolls as e')
+                    ->select(
+                        's.id',
+                        DB::raw('CONCAT(s.last_name, " ", s.first_name) as name'),
+                        DB::raw('CONCAT(s.last_name_common, " ", s.first_name_common) as name_common'),
+                        's.register_no',
+                        's.roll_no',
+                        's.mobile_no',
+                        's.email',
+                        's.gender',
+                        's.photo',
+                        'e.attendance_no',
+                        't.id as termination_id',
+                        't.termination_status'
+                    )
+                    ->join('students as s', 'e.student_id', '=', 's.id')
+                    ->leftJoin('termination as t', 't.student_id', '=', 's.id');
+            
+                    if (isset($request->department_id) && filled($request->department_id)) {
+                        $query->where('e.department_id', $request->department_id);
+                    }
+    
+                    if (isset($request->class_id) && filled($request->class_id)) {
+                        $query->where('e.class_id', $request->class_id);
+                    }
+    
+                    // if (isset($request->academic_session_id) && filled($request->academic_session_id)) {
+                    //     $query->where('e.academic_session_id', $request->academic_session_id);
+                    // }
+    
+                    if (isset($request->section_id) && filled($request->section_id)) {
+                        $query->where('e.section_id', $request->section_id);
+                    }
+                    if (isset($request->stu_status) && filled($request->stu_status) && ($request->stu_status=='Termination') ){
+                        $query->where('t.id','!=','');
+                    }
+                    if (isset($request->stu_status) && filled($request->stu_status) && ($request->stu_status=='Active') ){
+                        $query->whereNull('t.id');;
+                    }
+                    if (isset($status)) {
+                        if ($status == 2) {
+                            // Retrieve currently active students only
+                            $query->where('e.active_status', 0)
+                                ->where('e.academic_session_id', $academic_session_id);
+                        } elseif ($status == 1) {
+                            // Retrieve inactive students, ensuring they are not currently active in any other records
+                            // $query->where('e.active_status', 1)
+                            //       ->where('e.academic_session_id', '!=', $academic_session_id)
+                                $query->whereNotExists(function ($subQuery) use ($academic_session_id) {
+                                    $subQuery->select(DB::raw(1))
+                                        ->from('enrolls as sub_e')
+                                        ->whereRaw('sub_e.student_id = e.student_id')
+                                        ->where('sub_e.active_status', 0)
+                                        ->where('sub_e.academic_session_id', $academic_session_id);
+                                });
+                        }
+                    }
+                    
+    
+                    if (isset($request->student_name) && filled($request->student_name)) {
+                        $name = $request->student_name;
+                        $query->where(function ($q) use ($name) {
+                            $q->where('s.first_name', 'like', '%' . $name . '%')
+                                ->orWhere('s.last_name', 'like', '%' . $name . '%');
+                        });
+                    }
+    
+                    $students = $query->groupBy('e.student_id')->get()->toArray();
+    
+                    
+                return $this->successResponse($students, 'Student record fetch successfully');
+            }
+        }
+        catch(Exception $error) {
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in getStudentList');
+        }
+
+    }
 //getStudentListNew
      public function getStudentListNew(Request $request)
     {
@@ -15183,7 +15293,7 @@ try{
             // Check if the data is cached
             if (Cache::has($cacheKey) && !($department_id || $class_id || $session_id || $section_id || $status)) {
                 // If cached and no filters are applied, return cached data
-                \Log::info('cacheKey ' . json_encode($cacheKey));
+                // \Log::info('cacheKey ' . json_encode($cacheKey));
                 $students = Cache::get($cacheKey);
             } else {
                 // create new connection
@@ -28106,10 +28216,10 @@ try{
                     $q->where('role_id', 6);
                 })->get();
                 // Before sending the notification
-                \Log::info('Sending notification to users: ' . json_encode($user));
+                //\Log::info('Sending notification to users: ' . json_encode($user));
                 Notification::send($user, new StudentEmail($request->branch_id));
                 // After sending the notification
-                \Log::info('Notification sent successfully to users: ' . json_encode($user));
+               // \Log::info('Notification sent successfully to users: ' . json_encode($user));
             }
             if ($target_user_array == [2, 5]) {
                 $class_id =   $request->class_id;
@@ -28148,10 +28258,10 @@ try{
                     $q->where('role_id', 5);
                 })->get();
                 // Before sending the notification
-                \Log::info('Sending notification to users: ' . json_encode($user));
+                //\Log::info('Sending notification to users: ' . json_encode($user));
                 Notification::send($user, new ParentEmail($request->branch_id));
                 // After sending the notification
-                \Log::info('Notification sent successfully to users: ' . json_encode($user));
+               // \Log::info('Notification sent successfully to users: ' . json_encode($user));
             }
             if ($target_user_array == [2, 4]) {
                 $deptId = $request->department_id;
@@ -30975,7 +31085,7 @@ try {
     protected function clearCache($cache_name,$branchId)
     {
         $cacheKey = $cache_name . $branchId;
-        \Log::info('cacheClear ' . json_encode($cacheKey));
+        // \Log::info('cacheClear ' . json_encode($cacheKey));
         Cache::forget($cacheKey);
     }
 }

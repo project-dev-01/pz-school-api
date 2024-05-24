@@ -271,7 +271,9 @@ class MenuAccessController extends BaseController
     }
     public function setmenupermission(Request $request)
     {
+        ini_set('max_input_vars', 5000);
         try {
+            //dd($request->branch_id);
             //dd($request->branch_id);
             // insert data
             foreach ($request->menu_id as $menuid) {
