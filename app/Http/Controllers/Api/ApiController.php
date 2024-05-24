@@ -16617,7 +16617,8 @@ try{
                 ->where('e.active_status', '=', "0")
                 ->where('e.academic_session_id',$academic_session_id)
                 ->where('s.guardian_id', $id)
-                ->groupBy('e.student_id')->get();
+                ->groupBy('s.id', 's.first_name', 's.last_name', 's.photo', 'c.name', 'sec.name')
+                ->get();
            /* $staffRoles = array('5');
             $sql = "";
             for ($x = 0; $x < count($staffRoles); $x++) {
