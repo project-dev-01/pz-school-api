@@ -15092,7 +15092,7 @@ try{
                         's.email',
                         's.gender',
                         's.photo',
-                        'e.attendance_no'
+                        DB::raw('MAX(e.attendance_no) as attendance_no')
                     )
                     ->join('students as s', 'e.student_id', '=', 's.id');
             
