@@ -26965,7 +26965,7 @@ try{
                 'blood_group' => $request->blood_group,
                 'nationality' => $request->nationality,
                 'enrollment' => $request->enrollment,
-                'trail_date' => $request->trail_date,
+                'trail_start_date' => $request->trail_start_date,
                 'trail_end_date' => $request->trail_end_date,
                 'official_date' => $request->official_date,
                 'nric' => $request->nric,
