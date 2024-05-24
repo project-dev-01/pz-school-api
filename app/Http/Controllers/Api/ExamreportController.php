@@ -42,11 +42,15 @@ use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Hash;
 use App\Models\Menus;
 use App\Models\Menuaccess;
+use App\Helpers\CommonHelper;
 
 
 class ExamreportController extends BaseController
 {
-    
+    protected CommonHelper $commonHelper;
+    public function __construct(CommonHelper $commonHelper) {
+        $this->commonHelper = $commonHelper;
+    }
     public function get_jsklsubjectlist(Request $request)
     { 
         $Connection = $this->createNewConnection($request->branch_id);
@@ -224,7 +228,11 @@ class ExamreportController extends BaseController
             {
                 if($getpapers->score_type=='Points')
                 {
-                    $mark=isset($row->points)?$row->points:'';
+                    $id=isset($row->points)?$row->points:'.';
+                    $grade_marks = $Connection->table('grade_marks')->select('id','grade', 'status')->where([
+                    ['id', '=', $id]
+                    ])->first();
+                    $mark=isset($grade_marks->grade)?$grade_marks->grade:'';
                 }
                 elseif($getpapers->score_type=='Freetext')
                 {
@@ -364,13 +372,24 @@ class ExamreportController extends BaseController
         $subject_id = $request->subject_id;
         $paper_id = $request->paper_id;
         $semester_id = $request->semester_id;
-        $session_id = $request->session_id;
+        $session_id = $request->session_id;        
+        $score_type = $request->score_type;
+        $mark = $request->mark;
         $academic_session_id = $request->academic_session_id;
         $student_regno = $request->student_regno;
+       
         $row=0;
         
             $students = $Connection->table('students')->select('id', 'first_name', 'last_name')->where('register_no', '=', $student_regno)->first();
-            
+            $points ='';
+            if($score_type=='Points')
+            {
+                $grade_marks = $Connection->table('grade_marks')->select('id','grade', 'status')->where([
+                
+                ['grade', '=', $mark]
+                ])->first();
+                $points = ($grade_marks != null) ? $grade_marks->id : '';
+            }
             if($students!==null)
             {
                 $student_id = $students->id;
@@ -382,7 +401,6 @@ class ExamreportController extends BaseController
                 ['student_id', '=', $student_id],
                 ['exam_id', '=', $exam_id],
                 ['semester_id', '=', $semester_id],
-                ['session_id', '=', $session_id],
                 ['paper_id', '=', $paper_id],
                 ['academic_session_id', '=', $academic_session_id]
                 ])->first();
@@ -397,7 +415,8 @@ class ExamreportController extends BaseController
                     "points"=>($row!==null)?$row->points:'',
                     "freetext"=> ($row!==null)?$row->freetext:'', 
                     "status"=>($row!==null)?$row->status:'',         
-                    "memo"=> ($row!==null)?$row->memo:''   
+                    "memo"=> ($row!==null)?$row->memo:'',
+                    "point_grade"=> ($points!==null)?$points:''     
                 ];
             }
             else
@@ -411,7 +430,8 @@ class ExamreportController extends BaseController
                     "points"=>"" ,         
                     "freetext"=> "" ,         
                     "status"=>"" ,                 
-                    "memo"=>""           
+                    "memo"=>"",
+                    "point_grade"=> ($points!==null)?$points:''             
                 ];
             }
 
@@ -427,13 +447,12 @@ class ExamreportController extends BaseController
         $exam_id = $request->exam_id;
         $subject_id = $request->subject_id;
         $exam_date = $request->exam_date;
-       
         $academic_session_id = $request->academic_session_id;
         $student_regno = $request->student_regno;
         $row=0;
         
             $students = $Connection->table('students')->select('id', 'first_name', 'last_name')->where('register_no', '=', $student_regno)->first();
-            
+           
             if($students!==null)
             {
                 $student_id = $students->id;
@@ -456,7 +475,8 @@ class ExamreportController extends BaseController
                     "student_name"=>  $student_name,              
                     "mark_id"=> ($row!==null)?$row->id:'',               
                     "mark"=> ($row!==null)?$row->mark:'',                          
-                    "memo"=> ($row!==null)?$row->memo:''   
+                    "memo"=> ($row!==null)?$row->memo:''                          
+                     
                 ];
             }
             else
@@ -467,7 +487,7 @@ class ExamreportController extends BaseController
                     "student_name"=> "", 
                     "mark_id"=>"",              
                     "mark"=> "", 
-                    "memo"=>""           
+                    "memo"=>""      
                 ];
             }
 
@@ -661,11 +681,11 @@ class ExamreportController extends BaseController
                     $pass_fail = ($grade_marks != null) ? $grade_marks->status : '';
                 } elseif ($score_type == 'Points') {
                     // Processing points
-                    $grade_marks = $Connection->table('grade_marks')->select('grade', 'status')->where([
+                    $grade_marks = $Connection->table('grade_marks')->select('id','grade', 'status')->where([
                         ['grade_category', '=', $grade_category],
                         ['grade', '=', $mark]
                     ])->first();
-                    $points = $mark;
+                    $points = ($grade_marks != null) ? $grade_marks->id : '';
                     $grade = ($grade_marks != null) ? $grade_marks->grade : '';
                     $pass_fail = ($grade_marks != null) ? $grade_marks->status : '';
                 } elseif ($score_type == 'Freetext') {
@@ -728,7 +748,6 @@ class ExamreportController extends BaseController
             }
         }
     }
-
     // Returning success response
     $success[] = '';
     return $this->successResponse($success, 'Exam Mark Upload Successfully');
@@ -897,7 +916,7 @@ public function adhocexamuploadmark(Request $request)
             'sb.id as subject_id',
             'sb.name'
         )       
-        ->where('sb.name', '=', 'EC')
+        ->where('sb.name', '=', '英語コミュニケーション')
         ->orWhere('sb.name', '=', 'English Comminication')
         ->first();
         $subject_id = $getsubject->subject_id;
@@ -1349,13 +1368,13 @@ public function adhocexamuploadmark(Request $request)
                     ->whereYear('sa.date', $year)
                     ->first();
                     $totalcoming= $totaldays-$suspension;
-                                $totpres=$getAttendance->presentCount;
-                                
-                                $totabs=$getAttendance->absentCount;
-                                
-                                $totlate=$getAttendance->lateCount;
-                                
-                                $totexc=$getAttendance->excusedCount;
+                    $totpres=$getAttendance->presentCount;
+                    
+                    $totabs=$getAttendance->absentCount;
+                    
+                    $totlate=$getAttendance->lateCount;
+                    
+                    $totexc=$getAttendance->excusedCount;
                     $data=[
                         "month"=>$mon,
                         "no_schooldays"=>$totaldays,
