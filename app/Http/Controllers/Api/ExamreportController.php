@@ -50,11 +50,91 @@ class ExamreportController extends BaseController
     public function __construct(CommonHelper $commonHelper) {
         $this->commonHelper = $commonHelper;
     }
+    public function getSubjectByPaper(Request $request)
+    {
+        
+        
+        try {
+        $validator = \Validator::make($request->all(), [
+            'branch_id' => 'required',
+            'token' => 'required',
+            'class_id' => 'required',
+            'section_id' => 'required',
+            'exam_id' => 'required',
+            'academic_session_id' => 'required',
+            'subject_id' => 'required',
+        ]);
+
+        if (!$validator->passes()) {
+            return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
+        } else {
+            // create new connection
+            $Connection = $this->createNewConnection($request->branch_id);
+            $examPapers = $Connection->table('timetable_exam as tex')
+                ->select(
+                    'tex.id as id',
+                    'exp.id as paper_id',
+                    'exp.paper_name',
+                    'exp.grade_category'
+                )
+                ->join('exam_papers as exp', 'tex.paper_id', '=', 'exp.id')
+                
+                ->where([
+                    ['tex.class_id', $request->class_id],
+                    ['tex.section_id', $request->section_id],
+                    ['tex.subject_id', $request->subject_id],
+                    ['tex.academic_session_id', $request->academic_session_id],
+                    ['tex.exam_id', $request->exam_id]
+                ])
+                ->groupBy('exp.id')
+                ->get();
+                
+                $enrollCount = $Connection->table('enrolls as en')
+                ->select(1)
+                ->where([
+                    ['en.class_id', '=', $request->class_id],
+                    ['en.section_id', '=', $request->section_id],                  
+                    ['en.academic_session_id', '=', $request->academic_session_id]                    
+                ])->count();
+               
+                $paper_list=[];
+                foreach($examPapers as $paper)
+                {
+                $markcount = $Connection->table('student_marks')->select('1')->where([
+                    ['class_id', '=',$request->class_id],
+                    ['section_id', '=', $request->section_id],
+                    ['subject_id', '=', $request->subject_id],
+                    ['exam_id', '=', $request->exam_id],
+                    ['semester_id', '=', $request->semester_id],
+                    ['paper_id', '=', $paper->id],
+                    ['academic_session_id', '=', $request->academic_session_id]
+                    ])->count();
+                    
+                    $data = [
+                        'id'=> $paper->id,
+                        'paper_id'=> $paper->paper_id,
+                        'paper_name'=> $paper->paper_name,
+                        'grade_category'=> $paper->grade_category,
+                        'totstu' => $enrollCount,
+                        'examstu' =>  $markcount                      
+                    ];
+                    
+                    array_push($paper_list, $data);
+                }
+
+            return $this->successResponse($paper_list, 'get papers fetch successfully');
+        }
+
+        }
+        catch(\Exception $error) {
+            $this->commonHelper->generalReturn('403','error',$error,'Error in getSubjectByPaper');
+        }
+    }
     public function get_jsklsubjectlist(Request $request)
     { 
         $Connection = $this->createNewConnection($request->branch_id);
 
-        $subjectdetails = $Connection->table('subjects_jskl as sa')
+        $subjectdetails = $Connection->table('subjects_pdf as sa')
             ->select(
                 'sa.name_jp',
                 'sa.name_en'
@@ -69,7 +149,7 @@ class ExamreportController extends BaseController
     { 
         $Connection = $this->createNewConnection($request->branch_id);
         
-        $exampaperdetails = $Connection->table('exam_papers_jskl as ep')
+        $exampaperdetails = $Connection->table('exam_papers_pdf as ep')
             ->select(
                 'ep.name_jp',
                 'ep.name_en',
@@ -93,21 +173,7 @@ class ExamreportController extends BaseController
         $session_id = $request->session_id;
         $academic_session_id = $request->academic_session_id; 
         $Connection = $this->createNewConnection($request->branch_id);
-        $getpapers = $Connection->table('exam_papers as ep')
-        ->select(
-            'ep.paper_name',
-            'ep.score_type',
-            'sb.name as subject_name'
-        )   
-        ->leftJoin('subjects as sb', 'sb.id', '=', 'ep.subject_id')               
-        ->where([
-            ['ep.department_id', '=', $request->department_id],
-            ['ep.class_id', '=', $request->class_id],
-            ['ep.subject_id', '=', $subject_id],
-            ['ep.academic_session_id', '=', $request->academic_session_id],
-            ['ep.id', '=', $paper_id]
-        ])
-        ->first(); 
+        
         $getclass = $Connection->table('classes')
         ->select(
             'classes.name as class_name',
@@ -119,15 +185,31 @@ class ExamreportController extends BaseController
         $getsection = $Connection->table('sections')->select('name as section_name')->where('id', '=', $section_id)->first();
         $getexam = $Connection->table('exam')->select('name as exam_name')->where('id', '=', $exam_id)->first();
         $getsem = $Connection->table('semester')->select('name as semester_name')->where('id', '=', $semester_id)->first();
+        $getSubjectteacher = $Connection->table('subject_assigns as sa')        
+        ->select(           
+            'st.id',         
+            'st.first_name',         
+            'st.last_name',
+            'sb.name as subject_name'
+        )
+        ->leftJoin('staffs as st', 'st.id', '=', 'sa.teacher_id') 
+        ->leftJoin('subjects as sb', 'sb.id', '=', 'sa.subject_id')
+        ->where([
+            ['sa.class_id', '=', $class_id],
+            ['sa.subject_id', '=', $subject_id],
+            ['sa.section_id', '=', $section_id],
+            ['sa.academic_session_id', '=', $academic_session_id],
+            ['sa.department_id', '=', $department_id]
+        ])   
+        ->first();
         $data=[
             "department_name"=> $getclass->department_name, 
             "class_name"=> $getclass->class_name,              
             "section_name"=> $getsection->section_name,
-            "subject_name"=> $getpapers->subject_name,               
-            "paper_name"=> $getpapers->paper_name,               
+            "subject_name"=> $getSubjectteacher->subject_name,
             "exam_name"=> $getexam->exam_name,
             "semester_name"=> $getsem->semester_name,
-            "score_type"=> $getpapers->score_type
+            "teachername"=> isset($getSubjectteacher)?($getSubjectteacher->last_name.' '.$getSubjectteacher->first_name):''
         ];
         return $this->successResponse($data, 'Get student Detatils');
     }
@@ -191,8 +273,9 @@ class ExamreportController extends BaseController
         ->where('enrolls.department_id', '=', $department_id)
         ->where('enrolls.academic_session_id', '=', $academic_session_id)
         ->get(); 
-        $getpapers = $Connection->table('exam_papers as ep')
+        $getpapersQuery = $Connection->table('exam_papers as ep')
         ->select(
+            'ep.id',
             'ep.paper_name',
             'ep.score_type',
             'sb.name as subject_name'
@@ -202,17 +285,23 @@ class ExamreportController extends BaseController
             ['ep.department_id', '=', $request->department_id],
             ['ep.class_id', '=', $request->class_id],
             ['ep.subject_id', '=', $subject_id],
-            ['ep.academic_session_id', '=', $request->academic_session_id],
-            ['ep.id', '=', $paper_id]
-        ])
-        ->first(); 
+            ['ep.academic_session_id', '=', $request->academic_session_id]
+        ]);
+
+        if ($paper_id != 'All') {
+            $getpapersQuery->where('ep.id', '=', $paper_id);
+        }
+
+        $getpapers = $getpapersQuery->get();
         $student_list=[];
         $k=0;
         foreach($getstudentDetails as $stu)
         {
-            $k++;
-            $student_id=$stu->id;
-            $row = $Connection->table('student_marks')->select('*')->where([
+            foreach($getpapers as $paper)
+            {   
+                $k++;
+                $student_id=$stu->id;
+                $row = $Connection->table('student_marks')->select('points','freetext','score','grade','status','memo')->where([
                 ['class_id', '=', $class_id],
                 ['section_id', '=', $section_id],
                 ['subject_id', '=', $subject_id],
@@ -220,51 +309,56 @@ class ExamreportController extends BaseController
                 ['exam_id', '=', $exam_id],
                 ['semester_id', '=', $semester_id],
                 ['session_id', '=', $session_id],
-                ['paper_id', '=', $paper_id],
+                ['paper_id', '=', $paper->id],
                 ['academic_session_id', '=', $academic_session_id]
                 ])->first();
-            if($row!==null)
-            {
-                if($getpapers->score_type=='Points')
-                {
-                    $id=isset($row->points)?$row->points:'.';
-                    $grade_marks = $Connection->table('grade_marks')->select('id','grade', 'status')->where([
-                    ['id', '=', $id]
-                    ])->first();
-                    $mark=isset($grade_marks->grade)?$grade_marks->grade:'';
-                }
-                elseif($getpapers->score_type=='Freetext')
-                {
-                    $mark=isset($row->freetext)?$row->freetext:'';
+                    if($row!==null)
+                    {
+                        if($paper->score_type=='Points')
+                        {
+                            $id=isset($row->points)?$row->points:'.';
+                            $grade_marks = $Connection->table('grade_marks')->select('id','grade', 'status')->where([
+                            ['id', '=', $id]
+                            ])->first();
+                            $mark=isset($grade_marks->grade)?$grade_marks->grade:'';
+                        }
+                        elseif($paper->score_type=='Freetext')
+                        {
+                            $mark=isset($row->freetext)?$row->freetext:'';
+                        }
+                        else
+                        {
+                            $mark=isset($row->score)?$row->score:'';
+                        }
+                        $status=isset($row->status)?$row->status:'';
+                        $memo=isset($row->memo)?$row->memo:'';
+                        $data=[
+                        "sno"=> $k, 
+                        "register_no"=> $stu->register_no,               
+                        "student_name"=> $stu->student_name, 
+                        "paper_name"=> $paper->paper_name, 
+                        "score_type"=>  $paper->score_type,           
+                        "mark"=> $mark,  
+                        "attandance"=>  $status[0],             
+                        "memo"=> $memo    
+                    ];
                 }
                 else
                 {
-                    $mark=isset($row->score)?$row->score:'';
+                    $data=[
+                        "sno"=> $k, 
+                        "register_no"=> $stu->register_no,               
+                        "student_name"=> $stu->student_name,
+                        "paper_name"=> $paper->paper_name,
+                        "score_type"=>  $paper->score_type,                
+                        "mark"=> "",  
+                        "attandance"=>  "",             
+                        "memo"=> ""   
+                    ];
                 }
-                $status=isset($row->status)?$row->status:'';
-                $memo=isset($row->memo)?$row->memo:'';
-            $data=[
-                "sno"=> $k, 
-                "register_no"=> $stu->register_no,               
-                "student_name"=> $stu->student_name,            
-                "mark"=> $mark,  
-                "attandance"=>  $status[0],             
-                "memo"=> $memo    
-            ];
-        }
-        else
-        {
-            $data=[
-                "sno"=> $k, 
-                "register_no"=> $stu->register_no,               
-                "student_name"=> $stu->student_name,            
-                "mark"=> "",  
-                "attandance"=>  "",             
-                "memo"=> ""   
-            ];
-        }
             
             array_push($student_list, $data);
+            }
         }
         return $this->successResponse($student_list, 'Get student Detatils');
     }
@@ -371,14 +465,40 @@ class ExamreportController extends BaseController
         $subject_id = $request->subject_id;
         $paper_id = $request->paper_id;
         $semester_id = $request->semester_id;
-        $session_id = $request->session_id;        
+        $session_id = $request->session_id; 
+        $papername = $request->papername;       
         $score_type = $request->score_type;
         $mark = $request->mark;
         $academic_session_id = $request->academic_session_id;
         $student_regno = $request->student_regno;
        
         $row=0;
-        
+        $getpapersQuery = $Connection->table('exam_papers as ep')
+        ->select(
+            'ep.id',
+            'ep.paper_name',
+            'ep.score_type',
+            'sb.name as subject_name'
+        )   
+        ->leftJoin('subjects as sb', 'sb.id', '=', 'ep.subject_id')               
+        ->where([
+            ['ep.department_id', '=', $request->department_id],
+            ['ep.class_id', '=', $request->class_id],
+            ['ep.subject_id', '=', $subject_id],
+            ['ep.academic_session_id', '=', $request->academic_session_id]
+        ]);
+
+        if ($paper_id != 'All') {
+            $getpapersQuery->where('ep.id', '=', $paper_id);
+        }
+        else
+        {
+            $getpapersQuery->where('ep.paper_name', '=', $papername); 
+            $getpapersQuery->where('ep.score_type', '=', $score_type);  
+        }
+
+        $getpapers = $getpapersQuery->first();
+        $paperID=($getpapers!==null)?$getpapers->id:'0';
             $students = $Connection->table('students')->select('id', 'first_name', 'last_name')->where('register_no', '=', $student_regno)->first();
             $points ='';
             if($score_type=='Points')
@@ -393,6 +513,7 @@ class ExamreportController extends BaseController
             {
                 $student_id = $students->id;
                 $student_name= $students->first_name.' '.$students->last_name;
+
                 $row = $Connection->table('student_marks')->select('*')->where([
                 ['class_id', '=', $class_id],
                 ['section_id', '=', $section_id],
@@ -400,7 +521,7 @@ class ExamreportController extends BaseController
                 ['student_id', '=', $student_id],
                 ['exam_id', '=', $exam_id],
                 ['semester_id', '=', $semester_id],
-                ['paper_id', '=', $paper_id],
+                ['paper_id', '=', $paperID],
                 ['academic_session_id', '=', $academic_session_id]
                 ])->first();
 
@@ -650,19 +771,45 @@ class ExamreportController extends BaseController
         // Checking if student roll number is provided
         if ($importData[1] != '') {
             $student_roll = $importData[1];
-
+            $papername = $importData[3];
+            $score_type = $importData[4];
             // Determining student status
-            $att = strtolower($importData[4]);
+            $att = strtolower($importData[6]);
             $status = ($att == "p" || $att == "present") ? "present" : "absent";
-            $mark = ($att != 'a') ? $importData[3] : 0;
-            $memo = $importData[5];
+            $mark = ($att != 'a') ? $importData[5] : 0;
+            $memo = $importData[7];
 
             // Retrieving student details
             $students = $Connection->table('students')->select('id')->where('register_no', '=', $student_roll)->first();
             $student_id = $students->id;
 
             // Retrieving paper details
-            $paper = $Connection->table('exam_papers')->select('grade_category', 'score_type')->where('id', '=', $paper_id)->first();
+            //$paper = $Connection->table('exam_papers')->select('grade_category', 'score_type')->where('id', '=', $paper_id)->first();
+            $getpapersQuery = $Connection->table('exam_papers as ep')
+            ->select(
+                'ep.id',
+                'ep.paper_name',
+                'ep.score_type',
+                'ep.grade_category'
+            )                    
+            ->where([
+                ['ep.department_id', '=', $request->department_id],
+                ['ep.class_id', '=', $request->class_id],
+                ['ep.subject_id', '=', $subject_id],
+                ['ep.academic_session_id', '=', $request->academic_session_id]
+            ]);
+
+            if ($paper_id != 'All') {
+                $getpapersQuery->where('ep.id', '=', $paper_id);
+            }
+            else
+            {
+                $getpapersQuery->where('ep.paper_name', '=', $papername); 
+                $getpapersQuery->where('ep.score_type', '=', $score_type);  
+            }
+
+            $paper = $getpapersQuery->first();
+            $paperID=($paper!==null)?$paper->id:'0';
             if ($paper != null) {
                 $grade_category = $paper->grade_category;
                 $score_type = $paper->score_type;
@@ -700,7 +847,7 @@ class ExamreportController extends BaseController
                     'section_id' => $section_id,
                     'subject_id' => $subject_id,
                     'exam_id' => $exam_id,
-                    'paper_id' => $paper_id,
+                    'paper_id' => $paperID ?? 0,
                     'semester_id' => $semester_id,
                     'session_id' => $session_id ?? 0,
                     'grade_category' => $grade_category ?? null,
@@ -724,7 +871,7 @@ class ExamreportController extends BaseController
                     ['student_id', '=', $student_id],
                     ['exam_id', '=', $exam_id],
                     ['semester_id', '=', $semester_id],                   
-                    ['paper_id', '=', $paper_id],
+                    ['paper_id', '=', $paperID],
                     ['academic_session_id', '=', $academic_session_id]
                 ])->first();
 
