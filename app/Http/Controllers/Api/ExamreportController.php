@@ -44,7 +44,6 @@ use App\Models\Menus;
 use App\Models\Menuaccess;
 use App\Helpers\CommonHelper;
 
-use App\Helpers\CommonHelper;
 class ExamreportController extends BaseController
 {
     protected CommonHelper $commonHelper;
