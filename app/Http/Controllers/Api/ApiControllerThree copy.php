@@ -2556,7 +2556,6 @@ class ApiControllerThree extends BaseController
                 $startDate = date('Y-m-d', strtotime('April 1st, ' . $currentYear));
                 $endDate = date('Y-m-d', strtotime('March 31st, ' . $endYear));
 
-                // $regNum = "9".date('y');
                 $data = $Connection->table('enrolls as en')
                     ->select(
                         'en.id',
@@ -2589,7 +2588,6 @@ class ApiControllerThree extends BaseController
                     ->when($section_id, function ($query, $section_id) {
                         return $query->where('en.section_id', $section_id);
                     })
-                    // ->where('stud.register_no', 'like', $regNum . '%')
                     ->where('en.active_status', '=', '0')
                     ->whereBetween('stud.official_date', [$startDate, $endDate])
                     // ->groupBy("stud.id")

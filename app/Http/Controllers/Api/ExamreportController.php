@@ -50,6 +50,9 @@ class ExamreportController extends BaseController
     public function __construct(CommonHelper $commonHelper) {
         $this->commonHelper = $commonHelper;
     }
+    public function get_jsklsubjectlist(Request $request)
+    { 
+        $Connection = $this->createNewConnection($request->branch_id);
 
         $subjectdetails = $Connection->table('subjects_jskl as sa')
             ->select(
