@@ -160,6 +160,36 @@ class ExamreportController extends BaseController
             ->get();
         
         return $this->successResponse($exampaperdetails, 'Get Exam Papers Lists');
+    }
+    public function get_subject_wise_paper_list(Request $request)
+    {
+        try {
+            $validator = \Validator::make($request->all(), [
+                'branch_id' => 'required',
+                'department_id' => 'required',
+                'codes' => 'required',
+            ]);
+
+            if (!$validator->passes()) {
+                return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
+            } else {
+                // create new connection
+                $Connection = $this->createNewConnection($request->branch_id);
+                $exampaperdetails = $Connection->table('exam_papers_pdf as ep')
+                    ->select(
+                        'ep.name_jp',
+                        'ep.name_en',
+                        'ep.score_type',
+                    )
+                    ->where('ep.codes', '=', $request->codes)
+                    ->whereRaw("FIND_IN_SET($request->department_id,ep.department)")
+                    ->orderBy('ep.id', 'asc')
+                    ->get();
+                return $this->successResponse($exampaperdetails, 'Get Exam Papers Lists');
+            }
+        } catch (\Exception $error) {
+            $this->commonHelper->generalReturn('403', 'error', $error, 'Error in get Subject Wise Paper List');
+        }
     }    
     public function exam_file_name(Request $request)
     { 

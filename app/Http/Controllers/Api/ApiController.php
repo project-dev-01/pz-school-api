@@ -892,6 +892,13 @@ class ApiController extends BaseController
             if ($createConnection->table('subjects')->where([['name', $request->name]])->count() > 0) {
                 return $this->send422Error('Already Allocated Subjects', ['error' => 'Already Allocated Subjects']);
             } else {
+                $subjectspdfID = $createConnection->table('subjects_pdf')
+                    ->where('name_jp', $request->name)
+                    ->orWhere('name_en', $request->name)
+                    ->pluck('id')
+                    ->toArray(); // Ensure it is an array
+                // Check if $subjectspdfID is empty
+                $subjectspdfID = !empty($subjectspdfID) ? $subjectspdfID[0] : null;
                 // insert data
                 $query = $createConnection->table('subjects')->insert([
                     'name' => $request->name,
@@ -905,6 +912,7 @@ class ApiController extends BaseController
                     'times_per_week' => isset($request->times_per_week) ? $request->times_per_week : null,
                     'exam_exclude' => $request->exam_exclude,
                     'order_code' => isset($request->order_code) ? $request->order_code : null,
+                    'subjects_pdf_id' => $subjectspdfID,
                     'created_at' => date("Y-m-d H:i:s")
                 ]);
                 // cache clear start
@@ -1003,6 +1011,13 @@ class ApiController extends BaseController
             if ($createConnection->table('subjects')->where([['name', $request->name], ['id', '!=', $request->id]])->count() > 0) {
                 return $this->send422Error('Already Allocated Subjects', ['error' => 'Already Allocated Subjects']);
             } else {
+                $subjectspdfID = $createConnection->table('subjects_pdf')
+                    ->where('name_jp', $request->name)
+                    ->orWhere('name_en', $request->name)
+                    ->pluck('id')
+                    ->toArray(); // Ensure it is an array
+                // Check if $subjectspdfID is empty
+                $subjectspdfID = !empty($subjectspdfID) ? $subjectspdfID[0] : null;
                 // update data
                 $query = $createConnection->table('subjects')->where('id', $request->id)->update([
                     'name' => $request->name,
@@ -1016,6 +1031,7 @@ class ApiController extends BaseController
                     'times_per_week' => isset($request->times_per_week) ? $request->times_per_week : null,
                     'exam_exclude' => $request->exam_exclude,
                     'order_code' => isset($request->order_code) ? $request->order_code : null,
+                    'subjects_pdf_id' => $subjectspdfID,
                     'updated_at' => date("Y-m-d H:i:s")
                 ]);
                 // cache clear start
