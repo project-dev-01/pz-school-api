@@ -125,7 +125,88 @@ class ExamreportController extends BaseController
 
             return $this->successResponse($paper_list, 'get papers fetch successfully');
         }
+        }
+        catch(\Exception $error) {
+            $this->commonHelper->generalReturn('403','error',$error,'Error in getSubjectByPaper');
+        }
+    }
+    public function getExamByPaper(Request $request)
+    {
+        
+        
+        try {
+        $validator = \Validator::make($request->all(), [
+            'branch_id' => 'required',
+            'token' => 'required',
+            'class_id' => 'required',
+            'section_id' => 'required',
+            'exam_id' => 'required',
+            'academic_session_id' => 'required',
+            'subject_id' => 'required'
+        ]);
 
+        if (!$validator->passes()) {
+            return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
+        } else {
+            // create new connection
+            $Connection = $this->createNewConnection($request->branch_id);
+            $getpapersQuery = $Connection->table('timetable_exam as tex')
+                ->select(
+                    'tex.id as id',
+                    'exp.id as paper_id',
+                    'exp.paper_name',
+                    'exp.score_type'
+                )
+                ->join('exam_papers as exp', 'tex.paper_id', '=', 'exp.id')
+                
+                ->where([
+                    ['tex.class_id', $request->class_id],
+                    ['tex.section_id', $request->section_id],
+                    ['tex.subject_id', $request->subject_id],
+                    ['tex.academic_session_id', $request->academic_session_id],
+                    ['tex.exam_id', $request->exam_id]
+                ])
+                ->groupBy('exp.id');
+                if ($request->paper_id != 'All') {
+                    $getpapersQuery->where('exp.id', '=', $request->paper_id);
+                }
+                $examPapers = $getpapersQuery->get();
+                
+                $enrollCount = $Connection->table('enrolls as en')
+                ->select(1)
+                ->where([
+                    ['en.class_id', '=', $request->class_id],
+                    ['en.section_id', '=', $request->section_id],                  
+                    ['en.academic_session_id', '=', $request->academic_session_id]                    
+                ])->count();
+            
+                $paper_list=[];
+                foreach($examPapers as $paper)
+                {
+                    $markcount = $Connection->table('student_marks')->select('1')->where([
+                    ['class_id', '=',$request->class_id],
+                    ['section_id', '=', $request->section_id],
+                    ['subject_id', '=', $request->subject_id],
+                    ['exam_id', '=', $request->exam_id],
+                    ['semester_id', '=', $request->semester_id],
+                    ['paper_id', '=', $paper->id],
+                    ['academic_session_id', '=', $request->academic_session_id]
+                    ])->count();
+                    
+                    $data = [
+                        'id'=> $paper->id,
+                        'paper_id'=> $paper->paper_id,
+                        'paper_name'=> $paper->paper_name,
+                        'score_type'=> $paper->score_type,
+                        'totstu' => $enrollCount,
+                        'examstu' =>  $markcount                      
+                    ];
+                    
+                    array_push($paper_list, $data);
+                }
+
+            return $this->successResponse($paper_list, 'get papers fetch successfully');
+        }
         }
         catch(\Exception $error) {
             $this->commonHelper->generalReturn('403','error',$error,'Error in getSubjectByPaper');
@@ -203,6 +284,13 @@ class ExamreportController extends BaseController
             ['sa.department_id', '=', $department_id]
         ])   
         ->first();
+        $enrollCount = $Connection->table('enrolls as en')
+        ->select(1)
+        ->where([
+            ['en.class_id', '=', $request->class_id],
+            ['en.section_id', '=', $request->section_id],                  
+            ['en.academic_session_id', '=', $request->academic_session_id]                    
+        ])->count();
         $data=[
             "department_name"=> $getclass->department_name, 
             "class_name"=> $getclass->class_name,              
@@ -210,7 +298,8 @@ class ExamreportController extends BaseController
             "subject_name"=> $getSubjectteacher->subject_name,
             "exam_name"=> $getexam->exam_name,
             "semester_name"=> $getsem->semester_name,
-            "teachername"=> isset($getSubjectteacher)?($getSubjectteacher->last_name.' '.$getSubjectteacher->first_name):''
+            "teachername"=> isset($getSubjectteacher)?($getSubjectteacher->last_name.' '.$getSubjectteacher->first_name):'',
+            "totalstudent" => $enrollCount ?? 0
         ];
         return $this->successResponse($data, 'Get student Detatils');
     }
@@ -296,9 +385,9 @@ class ExamreportController extends BaseController
         $getpapers = $getpapersQuery->get();
         $student_list=[];
         $k=0;
-        foreach($getstudentDetails as $stu)
+        foreach($getpapers as $paper)
         {
-            foreach($getpapers as $paper)
+            foreach($getstudentDetails as $stu)
             {   
                 $k++;
                 $student_id=$stu->id;
@@ -502,7 +591,7 @@ class ExamreportController extends BaseController
         $paperID=($getpapers!==null)?$getpapers->id:'0';
             $students = $Connection->table('students')->select('id', 'first_name', 'last_name')->where('register_no', '=', $student_regno)->first();
             $points ='';
-            if($score_type=='Points')
+            if($score_type=='Points' && $mark!='')
             {
                 $grade_marks = $Connection->table('grade_marks')->select('id','grade', 'status')->where([
                 
