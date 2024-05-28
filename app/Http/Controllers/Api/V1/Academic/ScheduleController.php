@@ -17,6 +17,46 @@ class ScheduleController extends BaseController
     {
         $this->commonHelper = $commonHelper;
     }
+
+    function addTimetableCalendor($request, $startDate, $endDate, $day, $row, $insertOrUpdateID, $bulkID)
+    {
+        // Create new connection
+        try{
+        $Connection = $this->createNewConnection($request->branch_id);
+        // Loop through each date in the range
+        while ($startDate <= $endDate) {
+            // Check if the current date matches the desired day of the week
+            if ($startDate->format('w') == $day) {
+                $start = $startDate->format('Y-m-d') . " " . $row['time_start'];
+                $end = $startDate->format('Y-m-d') . " " . $row['time_end'];
+
+                // Construct the data to insert into the calendar table
+                $arrayInsert = [
+                    "title" => "timetable",
+                    "class_id" => $request['class_id'],
+                    "section_id" => $request['section_id'],
+                    "sem_id" => $request['semester_id'],
+                    "session_id" => $request['session_id'],
+                    "subject_id" => $row['subject'],
+                    "teacher_id" => implode(",", $row['teacher']),
+                    "start" => $start,
+                    "end" => $end,
+                    "time_table_id" => $insertOrUpdateID,
+                    "academic_session_id" => $request['academic_session_id'],
+                    'created_at' => date("Y-m-d H:i:s")
+                ];
+
+                // Insert the data into the calendar table
+                $Connection->table('calendors')->insert($arrayInsert);
+            }
+            // Move to the next date
+            $startDate->modify('+1 day');
+        }
+    }
+    catch(Exception $error) {
+        return $this->commonHelper->generalReturn('403','error',$error,'Error in addTimetableCalendor');
+    }
+    }
     /**
      * @Chandru @since May 15,2024
      * @desc List section
@@ -62,7 +102,6 @@ class ScheduleController extends BaseController
 
                 if (isset($diff)) {
                     foreach ($diff as $del) {
-
                         // $delete =  $staffConn->table('timetable_class')->where('id', $del)->delete();
                         // // delete calendor data
                         // $staffConn->table('calendors')->where('time_table_id', $del)->delete();
@@ -88,7 +127,6 @@ class ScheduleController extends BaseController
                     // return $table;
                     $session_id = 0;
                     $semester_id = 0;
-
                     $break_type = NULL;
                     $break = 0;
                     $subject_id = 0;
@@ -113,13 +151,16 @@ class ScheduleController extends BaseController
                     if (isset($table['subject'])) {
                         $subject_id = $table['subject'];
                     }
-                    //  dd($break_type);
+
+                    //  return $break_type;
                     $insertOrUpdateID = 0;
                     if (isset($table['id'])) {
+                        // return $table['id'];
                         // echo "<pre>";
                         // echo $teacher_id;
+                        // return $table['id']; 
                         $query = $staffConn->table('timetable_class')->where('id', $table['id'])->update([
-                            'class_id' => $request['class_id'],
+                              'class_id' => $request['class_id'],
                             'section_id' => $request['section_id'],
                             'break' => $break,
                             'break_type' => $break_type,
@@ -134,11 +175,9 @@ class ScheduleController extends BaseController
                             'academic_session_id' => $request['academic_session_id'],
                             'updated_at' => date("Y-m-d H:i:s")
                         ]);
+                        // return $query;
                         $insertOrUpdateID = $table['id'];
                     } else {
-                        // echo "<pre>";
-                        // echo $teacher_id;
-                        // exit;
                         $query = $staffConn->table('timetable_class')->insertGetId([
                             'class_id' => $request['class_id'],
                             'section_id' => $request['section_id'],
@@ -181,7 +220,7 @@ class ScheduleController extends BaseController
         try {
             $validator = \Validator::make($request->all(), [
                 'branch_id' => 'required',
-                'token' => 'required',
+                // 'token' => 'required',
                 'class_id' => 'required',
                 'section_id' => 'required',
                 'academic_session_id' => 'required'
@@ -462,4 +501,5 @@ class ScheduleController extends BaseController
         \Log::info('cacheClear ' . json_encode($cacheKey));
         Cache::forget($cacheKey);
     }
+
 }

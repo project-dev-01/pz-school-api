@@ -22,6 +22,97 @@ class TimetableController extends BaseController
      * @desc List section
      */
     // Timetable Subject Bulk
+
+    function addCalendorTimetable($request, $row, $getObjRow, $insertOrUpdateID, $bulkID)
+    {
+        // Create new connection
+        try {
+            $Connection = $this->createNewConnection($request->branch_id);
+
+            // Delete existing calendar data
+            $calendarsCount = $Connection->table('calendors')->where('time_table_id', $insertOrUpdateID)->where('sem_id', $request->semester_id)->count();
+            if ($calendarsCount > 0) {
+                $Connection->table('calendors')->where('time_table_id', $insertOrUpdateID)->where('sem_id', $request->semester_id)->delete();
+            }
+            if (!empty($getObjRow) && isset($request->day)) {
+                // Determine the day of the week
+                $day = null;
+                switch ($request->day) {
+                    case "monday":
+                        $day = 1;
+                        break;
+                    case "tuesday":
+                        $day = 2;
+                        break;
+                    case "wednesday":
+                        $day = 3;
+                        break;
+                    case "thursday":
+                        $day = 4;
+                        break;
+                    case "friday":
+                        $day = 5;
+                        break;
+                    case "saturday":
+                        $day = 6;
+                        break;
+                }
+
+                // If day is set
+                if ($day !== null) {
+                    // Loop through each combination of elements from $getObjRow
+                    foreach ($getObjRow as $val) {
+                        $start = new DateTime($val->start_date);
+                        $end = new DateTime($val->end_date);
+
+                        // Call addTimetableCalendor function for each combination of elements
+                        $this->addTimetableCalendor($request, $start, $end, $day, $row, $insertOrUpdateID, $bulkID);
+                    }
+                }
+            }
+        } catch (Exception $error) {
+            return $this->commonHelper->generalReturn('403', 'error', $error, 'Error in addCalendorTimetable');
+        }
+    }
+    function addTimetableCalendor($request, $startDate, $endDate, $day, $row, $insertOrUpdateID, $bulkID)
+    {
+        // Create new connection
+        try{
+        $Connection = $this->createNewConnection($request->branch_id);
+        // Loop through each date in the range
+        while ($startDate <= $endDate) {
+            // Check if the current date matches the desired day of the week
+            if ($startDate->format('w') == $day) {
+                $start = $startDate->format('Y-m-d') . " " . $row['time_start'];
+                $end = $startDate->format('Y-m-d') . " " . $row['time_end'];
+
+                // Construct the data to insert into the calendar table
+                $arrayInsert = [
+                    "title" => "timetable",
+                    "class_id" => $request['class_id'],
+                    "section_id" => $request['section_id'],
+                    "sem_id" => $request['semester_id'],
+                    "session_id" => $request['session_id'],
+                    "subject_id" => $row['subject'],
+                    "teacher_id" => implode(",", $row['teacher']),
+                    "start" => $start,
+                    "end" => $end,
+                    "time_table_id" => $insertOrUpdateID,
+                    "academic_session_id" => $request['academic_session_id'],
+                    'created_at' => date("Y-m-d H:i:s")
+                ];
+
+                // Insert the data into the calendar table
+                $Connection->table('calendors')->insert($arrayInsert);
+            }
+            // Move to the next date
+            $startDate->modify('+1 day');
+        }
+    }
+    catch(Exception $error) {
+        return $this->commonHelper->generalReturn('403','error',$error,'Error in addTimetableCalendor');
+    }
+    }
     public function timetableSubjectBulk(Request $request)
     {
         try {
