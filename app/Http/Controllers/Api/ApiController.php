@@ -15108,7 +15108,8 @@ try{
                         's.email',
                         's.gender',
                         's.photo',
-                        DB::raw('MAX(e.attendance_no) as attendance_no')
+                        'e.attendance_no'
+                        // DB::raw('MAX(e.attendance_no) as attendance_no')
                     )
                     ->join('students as s', 'e.student_id', '=', 's.id');
             
@@ -15485,13 +15486,12 @@ try{
 
             'department_id' => 'required',
             'class_id' => 'required',
-            'section_id' => 'required',
+            // 'section_id' => 'required',
 
             'branch_id' => 'required',
            // 'token' => 'required',
         ]);
    
-
        // return $request;
         $previous['school_name'] = $request->school_name;
         $previous['qualification'] = $request->qualification;
@@ -15766,17 +15766,17 @@ try{
                     "japanese_association_membership_number_student" => $request->japanese_association_membership_number_student,
                     'nric_photo' => $nric_fileName,
                     // 'japanese_association_membership_image_principal' => $image_principal_fileName,
-                    'created_at' => date("Y-m-d H:i:s")
+                    'updated_at' => date("Y-m-d H:i:s")
                 ];
+                
                 $oldData = $conn->table('students')->find($request->student_id);
-                $conn->table('students')->where('id', $request->student_id)->update($data);
+                $query = $conn->table('students')->where('id', $request->student_id)->update($data);
                 $changes = $this->getChanges($oldData, $data);
                 $table_modify=[];
                 $table_modify['type']='Student';
                 $table_modify['id']=$request->student_id;                
                 $table_modify['name']=$request->first_name.' '.$request->last_name;                
                 $table_modify['email']=$request->email;
-
                 $conn->table('modify_datas')->insert([
                     
                     'table_name' => 'Student',
@@ -15805,66 +15805,70 @@ try{
                     'attendance_no' => $request->roll_no,
                     'session_id' => $session_id,
                     'semester_id' => $semester_id,
+                    'updated_at' => date("Y-m-d H:i:s")
                 ]);
-
-
+                // dd($enroll);
                 $studentId = $request->student_id;
                 $studentName = $request->first_name . ' ' . $request->last_name;
 
-            }
+                // dd($query);
+                if (!$studentId) {
+                    return $this->send500Error('Something went wrong.', ['error' => 'Something went wrong add Student']);
+                } else {
+                    // add User
 
-            if (!$studentId) {
-                return $this->send500Error('Something went wrong.', ['error' => 'Something went wrong add Student']);
-            } else {
-                // add User
+                    $password = $request->password;
+                    if ($password) {
 
-                $password = $request->password;
-                if ($password) {
+                        $passvalidator = \Validator::make($request->all(), [
+                            'password' => 'required|min:6',
+                            'confirm_password' => 'required|same:password|min:6',
+                        ]);
 
-                    $passvalidator = \Validator::make($request->all(), [
-                        'password' => 'required|min:6',
-                        'confirm_password' => 'required|same:password|min:6',
-                    ]);
+                        if (!$passvalidator->passes()) {
+                            return $this->send422Error('Validation error.', ['error' => $passvalidator->errors()->toArray()]);
+                        } else {
 
-                    if (!$passvalidator->passes()) {
-                        return $this->send422Error('Validation error.', ['error' => $passvalidator->errors()->toArray()]);
+                         User::where([['user_id', '=', $request->student_id], ['role_id', '=', "6"], ['branch_id', '=', $request->branch_id]])
+                                ->update([
+                                    'name' => $studentName,
+                                    'email' => $request->email,
+                                    'school_roleid' => $request->school_roleid,
+                                    'status' => $request->status,
+                                    'google2fa_secret_enable' => isset($request->google2fa_secret_enable) ? '1' : '0',
+                                    'password' => bcrypt($request->password),
+                                    'updated_at' => date("Y-m-d H:i:s")
+                                ]);
+                        }
                     } else {
-
-                        $query = User::where([['user_id', '=', $request->student_id], ['role_id', '=', "6"], ['branch_id', '=', $request->branch_id]])
+                         User::where([['user_id', '=', $request->student_id], ['role_id', '=', "6"], ['branch_id', '=', $request->branch_id]])
                             ->update([
                                 'name' => $studentName,
                                 'email' => $request->email,
                                 'school_roleid' => $request->school_roleid,
                                 'status' => $request->status,
                                 'google2fa_secret_enable' => isset($request->google2fa_secret_enable) ? '1' : '0',
-                                'password' => bcrypt($request->password)
+                                'updated_at' => date("Y-m-d H:i:s")
                             ]);
                     }
-                } else {
-                    $query = User::where([['user_id', '=', $request->student_id], ['role_id', '=', "6"], ['branch_id', '=', $request->branch_id]])
-                        ->update([
-                            'name' => $studentName,
-                            'email' => $request->email,
-                            'school_roleid' => $request->school_roleid,
-                            'status' => $request->status,
-                            'google2fa_secret_enable' => isset($request->google2fa_secret_enable) ? '1' : '0'
-                        ]);
+
+                    // dd($query);
+
+
+                    // cache clear start
+                    $cache_students = config('constants.cache_students');
+                    $this->clearCache($cache_students,$request->branch_id);
+                    // cache clear end
                 }
-
-
-
-
-                // cache clear start
-                $cache_students = config('constants.cache_students');
-                $this->clearCache($cache_students,$request->branch_id);
-                // cache clear end
+                // dd($query);
                 $success = [];
-                if (!$query) {
-                    return $this->send500Error('Something went wrong.', ['error' => 'Something went wrong']);
-                } else {
+                if ($query) {
                     return $this->successResponse($success, 'Student has been successfully Updated');
+                } else {
+                    return $this->send500Error('Something went wrong.', ['error' => 'Something went wrong']);
                 }
             }
+
         }
     }
     catch(Exception $error) {
@@ -16633,8 +16637,10 @@ try{
                 ->where('e.active_status', '=', "0")
                 ->where('e.academic_session_id',$academic_session_id)
                 ->where('s.guardian_id', $id)
-                ->groupBy('s.id', 's.first_name', 's.last_name', 's.photo', 'c.name', 'sec.name')
-                ->get();
+                // ->groupBy('s.id', 's.first_name', 's.last_name', 's.photo', 'c.name', 'sec.name')
+                // ->get();
+                ->groupBy('e.student_id')->get();
+
            /* $staffRoles = array('5');
             $sql = "";
             for ($x = 0; $x < count($staffRoles); $x++) {
@@ -26795,6 +26801,7 @@ try{
                                     $query->name = $guardian_name;
                                     $query->user_id = $guardian_id;
                                     $query->role_id = "5";
+                                    $query->school_roleid = $request->school_roleid;
                                     $query->branch_id = $request->branch_id;
                                     $query->email = $request->guardian_email;
                                     $query->status = "0";
@@ -27012,7 +27019,7 @@ try{
                             $user->name = $studentName;
                             $user->user_id = $studentId;
                             $user->role_id = "6";
-                            $user->school_roleid = $request->school_roleid;
+                            // $user->school_roleid = $request->school_roleid;
                             $user->branch_id = $request->branch_id;
                             $user->email = $studentEmail;
                             $user->status = "0";
