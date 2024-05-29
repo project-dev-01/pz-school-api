@@ -1106,6 +1106,7 @@ Route::group(['middleware' => ['auth:api', 'throttle:limit_per_user', 'logroute'
     Route::post('exam_result/get_subject_wise_paper_list', [ExamreportController::class, 'get_subject_wise_paper_list']);
     
     Route::post('examsubject-by-papers', [ExamreportController::class, 'getSubjectByPaper']);
+    Route::post('exammark-by-papers', [ExamreportController::class, 'getExamByPaper']);
     Route::post('exam_result/stuexam_marklist', [ExamreportController::class, 'stuexam_marklist']);
     Route::post('exam_result/stuexam_avgmarklist', [ExamreportController::class, 'stuexam_avgmarklist']);
 
