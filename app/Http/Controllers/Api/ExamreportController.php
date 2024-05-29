@@ -71,7 +71,7 @@ class ExamreportController extends BaseController
         } else {
             // create new connection
             $Connection = $this->createNewConnection($request->branch_id);
-            $examPapers = $Connection->table('timetable_exam as tex')
+            /*$examPapers = $Connection->table('timetable_exam as tex')
                 ->select(
                     'tex.id as id',
                     'exp.id as paper_id',
@@ -88,8 +88,19 @@ class ExamreportController extends BaseController
                     ['tex.exam_id', $request->exam_id]
                 ])
                 ->groupBy('exp.id')
+                ->get();*/
+                $examPapers = $Connection->table('exam_papers as exp')
+                ->select(
+                    'exp.id',
+                    'exp.paper_name',
+                    'exp.grade_category'
+                )               
+                ->where([
+                    ['exp.class_id', $request->class_id],
+                    ['exp.subject_id', $request->subject_id],
+                    ['exp.academic_session_id', $request->academic_session_id]
+                ])               
                 ->get();
-                
                 $enrollCount = $Connection->table('enrolls as en')
                 ->select(1)
                 ->where([
@@ -1196,22 +1207,22 @@ public function adhocexamuploadmark(Request $request)
         foreach($request->papers as $paper)
         {
             $getpapers = $Connection->table('exam_papers as ep')
-        ->select(
-            'ep.id',
-            'ep.paper_name',
-            'ep.score_type',
-            'sb.name'
-        )   
-        ->leftJoin('subjects as sb', 'sb.id', '=', 'ep.subject_id')               
-        ->where([
-            ['ep.department_id', '=', $request->department_id],
-            ['ep.class_id', '=', $request->class_id],
-            ['ep.subject_id', '=', $subject_id],
-            ['ep.academic_session_id', '=', $request->academic_session_id],
-            ['ep.paper_name', 'like', $paper]
-        ])
-        ->first();
-        $getsemester = $Connection->table('semester')->where('academic_session_id',$request->academic_session_id)->orderBy('start_date', 'asc')->get();
+            ->select(
+                'ep.id',
+                'ep.paper_name',
+                'ep.score_type',
+                'sb.name'
+            )   
+            ->leftJoin('subjects as sb', 'sb.id', '=', 'ep.subject_id')               
+            ->where([
+                ['ep.department_id', '=', $request->department_id],
+                ['ep.class_id', '=', $request->class_id],
+                ['ep.subject_id', '=', $subject_id],
+                ['ep.academic_session_id', '=', $request->academic_session_id],
+                ['ep.paper_name', 'like', $paper]
+            ])
+            ->first();
+            $getsemester = $Connection->table('semester')->where('academic_session_id',$request->academic_session_id)->orderBy('start_date', 'asc')->get();
             $mark=['','',''];
             if(!empty($getpapers))
             {

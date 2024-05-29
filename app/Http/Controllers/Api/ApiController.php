@@ -4498,7 +4498,7 @@ class ApiController extends BaseController
             $today = date('Y-m-d', strtotime($request->today));
             // create new connection
             $Connection = $this->createNewConnection($request->branch_id);
-            $getExamsNames = $Connection->table('timetable_exam as tex')
+           /* $getExamsNames = $Connection->table('timetable_exam as tex')
                 ->select(
                     'tex.exam_id as id',
                     'ex.name as name',
@@ -4510,6 +4510,13 @@ class ApiController extends BaseController
                 ->where('tex.section_id', '=', $request->section_id)
                 ->where('tex.academic_session_id', '=', $request->academic_session_id)
                 ->groupBy('ex.id')
+                ->get();*/
+                $getExamsNames = $Connection->table('exam as ex')
+                ->select(
+                    'ex.id',
+                    'ex.name as name'
+                )
+                ->where('ex.academic_session_id', '=', $request->academic_session_id)                
                 ->get();
             return $this->successResponse($getExamsNames, 'Exam test fetch successfully');
         }
