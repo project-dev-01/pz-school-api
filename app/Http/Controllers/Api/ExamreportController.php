@@ -100,7 +100,7 @@ class ExamreportController extends BaseController
                     ['exp.subject_id', $request->subject_id],
                     ['exp.academic_session_id', $request->academic_session_id]
                 ])               
-                ->get();
+                ->get();                
                 $enrollCount = $Connection->table('enrolls as en')
                 ->select(1)
                 ->where([
@@ -108,11 +108,11 @@ class ExamreportController extends BaseController
                     ['en.section_id', '=', $request->section_id],                  
                     ['en.academic_session_id', '=', $request->academic_session_id]                    
                 ])->count();
-               
+                
                 $paper_list=[];
                 foreach($examPapers as $paper)
                 {
-                $markcount = $Connection->table('student_marks')->select('1')->where([
+                    $markcount = $Connection->table('student_marks')->select('1')->where([
                     ['class_id', '=',$request->class_id],
                     ['section_id', '=', $request->section_id],
                     ['subject_id', '=', $request->subject_id],
@@ -124,7 +124,7 @@ class ExamreportController extends BaseController
                     
                     $data = [
                         'id'=> $paper->id,
-                        'paper_id'=> $paper->paper_id,
+                        'paper_id'=> $paper->id,
                         'paper_name'=> $paper->paper_name,
                         'grade_category'=> $paper->grade_category,
                         'totstu' => $enrollCount,
@@ -161,7 +161,7 @@ class ExamreportController extends BaseController
         } else {
             // create new connection
             $Connection = $this->createNewConnection($request->branch_id);
-            $getpapersQuery = $Connection->table('timetable_exam as tex')
+            /*$getpapersQuery = $Connection->table('timetable_exam as tex')
                 ->select(
                     'tex.id as id',
                     'exp.id as paper_id',
@@ -181,6 +181,21 @@ class ExamreportController extends BaseController
                 if ($request->paper_id != 'All') {
                     $getpapersQuery->where('exp.id', '=', $request->paper_id);
                 }
+                $examPapers = $getpapersQuery->get();*/
+                $getpapersQuery = $Connection->table('exam_papers as exp')
+                ->select(
+                    'exp.id',
+                    'exp.paper_name',
+                    'exp.score_type'
+                )               
+                ->where([
+                    ['exp.class_id', $request->class_id],
+                    ['exp.subject_id', $request->subject_id],
+                    ['exp.academic_session_id', $request->academic_session_id]
+                ]); 
+                if ($request->paper_id != 'All') {
+                    $getpapersQuery->where('exp.id', '=', $request->paper_id);
+                }              
                 $examPapers = $getpapersQuery->get();
                 
                 $enrollCount = $Connection->table('enrolls as en')
@@ -206,7 +221,7 @@ class ExamreportController extends BaseController
                     
                     $data = [
                         'id'=> $paper->id,
-                        'paper_id'=> $paper->paper_id,
+                        'paper_id'=> $paper->id,
                         'paper_name'=> $paper->paper_name,
                         'score_type'=> $paper->score_type,
                         'totstu' => $enrollCount,

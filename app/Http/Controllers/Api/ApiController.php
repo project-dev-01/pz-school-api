@@ -4542,7 +4542,7 @@ try {
         } else {
             // create new connection
             $Connection = $this->createNewConnection($request->branch_id);
-            $getTimetableSubjects = $Connection->table('timetable_exam as tex')
+            /*$getTimetableSubjects = $Connection->table('timetable_exam as tex')
                 ->select(
                     'tex.id as id',
                     's.id as subject_id',
@@ -4557,6 +4557,18 @@ try {
                     ['s.exam_exclude', '=', '0']
                 ])
                 ->groupBy('s.id')
+                ->get();*/
+                $getTimetableSubjects = $Connection->table('subject_assigns as sa')
+                ->select(
+                    'subj.id as subject_id',
+                    'subj.name as subject_name'                )
+                ->join('subjects as subj', 'sa.subject_id', '=', 'subj.id')
+                ->where([
+                    ['sa.class_id', '=', $request->class_id],
+                    ['sa.section_id', '=', $request->section_id],
+                    ['sa.academic_session_id', '=', $request->academic_session_id],
+                ])
+                //->orderBy('subj.name')
                 ->get();
             return $this->successResponse($getTimetableSubjects, 'get Subjects fetch successfully');
         }

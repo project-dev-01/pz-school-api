@@ -1210,7 +1210,7 @@ class ApiControllerOne extends BaseController
                 $today = date('Y-m-d', strtotime($request->today));
                 $class_id = $request->class_id;
                 $section_id = $request->section_id;
-                $getExamsName = $Connection->table('timetable_exam as texm')
+                /*$getExamsName = $Connection->table('timetable_exam as texm')
                     ->select(
                         'texm.exam_id as id',
                         'ex.name as name',
@@ -1224,6 +1224,13 @@ class ApiControllerOne extends BaseController
                     ->where('texm.section_id', '=', $section_id)
                     ->where('texm.academic_session_id', '=', $request->academic_session_id)
                     ->groupBy('texm.exam_id')
+                    ->get();*/
+                    $getExamsName = $Connection->table('exam as ex')
+                    ->select(
+                        'ex.id',
+                        'ex.name as name'                    )
+                    ->where('ex.academic_session_id', '=', $request->academic_session_id)
+                    
                     ->get();
                 return $this->successResponse($getExamsName, 'Exams  list of Name record fetch successfully');
             }
