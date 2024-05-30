@@ -892,6 +892,13 @@ class ApiController extends BaseController
             if ($createConnection->table('subjects')->where([['name', $request->name]])->count() > 0) {
                 return $this->send422Error('Already Allocated Subjects', ['error' => 'Already Allocated Subjects']);
             } else {
+                $subjectspdfID = $createConnection->table('subjects_pdf')
+                    ->where('name_jp', $request->name)
+                    ->orWhere('name_en', $request->name)
+                    ->pluck('id')
+                    ->toArray(); // Ensure it is an array
+                // Check if $subjectspdfID is empty
+                $subjectspdfID = !empty($subjectspdfID) ? $subjectspdfID[0] : null;
                 // insert data
                 $query = $createConnection->table('subjects')->insert([
                     'name' => $request->name,
@@ -905,6 +912,7 @@ class ApiController extends BaseController
                     'times_per_week' => isset($request->times_per_week) ? $request->times_per_week : null,
                     'exam_exclude' => $request->exam_exclude,
                     'order_code' => isset($request->order_code) ? $request->order_code : null,
+                    'subjects_pdf_id' => $subjectspdfID,
                     'created_at' => date("Y-m-d H:i:s")
                 ]);
                 // cache clear start
@@ -1003,6 +1011,13 @@ class ApiController extends BaseController
             if ($createConnection->table('subjects')->where([['name', $request->name], ['id', '!=', $request->id]])->count() > 0) {
                 return $this->send422Error('Already Allocated Subjects', ['error' => 'Already Allocated Subjects']);
             } else {
+                $subjectspdfID = $createConnection->table('subjects_pdf')
+                    ->where('name_jp', $request->name)
+                    ->orWhere('name_en', $request->name)
+                    ->pluck('id')
+                    ->toArray(); // Ensure it is an array
+                // Check if $subjectspdfID is empty
+                $subjectspdfID = !empty($subjectspdfID) ? $subjectspdfID[0] : null;
                 // update data
                 $query = $createConnection->table('subjects')->where('id', $request->id)->update([
                     'name' => $request->name,
@@ -1016,6 +1031,7 @@ class ApiController extends BaseController
                     'times_per_week' => isset($request->times_per_week) ? $request->times_per_week : null,
                     'exam_exclude' => $request->exam_exclude,
                     'order_code' => isset($request->order_code) ? $request->order_code : null,
+                    'subjects_pdf_id' => $subjectspdfID,
                     'updated_at' => date("Y-m-d H:i:s")
                 ]);
                 // cache clear start
@@ -11889,7 +11905,7 @@ try{
            /* // get data
             $cache_time = config('constants.cache_time');
             $cache_exam = config('constants.cache_exam');
-            $cacheKey = $cache_exam . $request->academic_session_id . $request->branch_id;
+            $cacheKey = $cache_exam  . $request->branch_id;
         
             // Check if the data is cached
             if (Cache::has($cacheKey)) {
@@ -13852,7 +13868,7 @@ try{
                                     'middle_name_english' => $request->father_middle_name_english ?? '',
                                     'first_name_english' => $request->father_first_name_english ?? '',
                                     'mobile_no' =>  $father_mobile_no ,
-                                    'status' => '0', // Assuming you want to update the status as well
+                                    // 'status' => '0', // Assuming you want to update the status as well 
                                     'updated_at' => now()
                                 ]);
                                
@@ -13902,7 +13918,7 @@ try{
                                     'nationality' => $request->mother_nationality,
                                     'occupation' => $request->mother_occupation,
                                     'mobile_no' =>   $mother_mobile_no,
-                                    'status' => '0', // Assuming you want to update the status as well
+                                    // 'status' => '0', // Assuming you want to update the status as well
                                     'updated_at' => now()
                                 ]);
                             } else {
@@ -13966,10 +13982,10 @@ try{
                     // 'roll_no' => $request->roll_no,
                     //  'admission_date' => $request->admission_date,
 
-                    'enrollment' => isset($request->enrollment) ? $request->enrollment : "",
-                    'trail_date' => isset($request->trail_date) ? $request->trail_date : "",
-                    'trail_end_date' => isset($request->trail_end_date) ? $request->trail_end_date : "",
-                    'official_date' => isset($request->official_date) ? $request->official_date : "",
+                    'enrollment' => isset($request->enrollment) ? $request->enrollment : null,
+                    'trail_start_date' => isset($request->trail_start_date) ? $request->trail_start_date : null,
+                    'trail_end_date' => isset($request->trail_end_date) ? $request->trail_end_date : null,
+                    'official_date' => isset($request->official_date) ? $request->official_date : null,
 
                     'category_id' => $request->category_id,
                     'first_name' => isset($request->first_name) ? $request->first_name : "",
@@ -15112,6 +15128,7 @@ try{
                         's.gender',
                         's.photo',
                         'e.attendance_no'
+                        // DB::raw('MAX(e.attendance_no) as attendance_no')
                     )
                     ->join('students as s', 'e.student_id', '=', 's.id');
             
@@ -15488,13 +15505,12 @@ try{
 
             'department_id' => 'required',
             'class_id' => 'required',
-            'section_id' => 'required',
+            // 'section_id' => 'required',
 
             'branch_id' => 'required',
            // 'token' => 'required',
         ]);
    
-
        // return $request;
         $previous['school_name'] = $request->school_name;
         $previous['qualification'] = $request->qualification;
@@ -15706,6 +15722,11 @@ try{
                     'year' => $request->year,
                     // 'roll_no' => $request->roll_no,
                     //  'admission_date' => $request->admission_date,
+                    'enrollment' => $request->enrollment,
+                    'trail_start_date' => $request->trail_start_date,
+                    'trail_end_date' => $request->trail_end_date,
+                    'official_date' => $request->official_date,
+
                     'category_id' => $request->category_id,
                     'first_name' => isset($request->first_name) ? $request->first_name : "",
                     'last_name' => isset($request->last_name) ? $request->last_name : "",
@@ -15764,17 +15785,17 @@ try{
                     "japanese_association_membership_number_student" => $request->japanese_association_membership_number_student,
                     'nric_photo' => $nric_fileName,
                     // 'japanese_association_membership_image_principal' => $image_principal_fileName,
-                    'created_at' => date("Y-m-d H:i:s")
+                    'updated_at' => date("Y-m-d H:i:s")
                 ];
+                
                 $oldData = $conn->table('students')->find($request->student_id);
-                $conn->table('students')->where('id', $request->student_id)->update($data);
+                $query = $conn->table('students')->where('id', $request->student_id)->update($data);
                 $changes = $this->getChanges($oldData, $data);
                 $table_modify=[];
                 $table_modify['type']='Student';
                 $table_modify['id']=$request->student_id;                
                 $table_modify['name']=$request->first_name.' '.$request->last_name;                
                 $table_modify['email']=$request->email;
-
                 $conn->table('modify_datas')->insert([
                     
                     'table_name' => 'Student',
@@ -15803,66 +15824,70 @@ try{
                     'attendance_no' => $request->roll_no,
                     'session_id' => $session_id,
                     'semester_id' => $semester_id,
+                    'updated_at' => date("Y-m-d H:i:s")
                 ]);
-
-
+                // dd($enroll);
                 $studentId = $request->student_id;
                 $studentName = $request->first_name . ' ' . $request->last_name;
 
-            }
+                // dd($query);
+                if (!$studentId) {
+                    return $this->send500Error('Something went wrong.', ['error' => 'Something went wrong add Student']);
+                } else {
+                    // add User
 
-            if (!$studentId) {
-                return $this->send500Error('Something went wrong.', ['error' => 'Something went wrong add Student']);
-            } else {
-                // add User
+                    $password = $request->password;
+                    if ($password) {
 
-                $password = $request->password;
-                if ($password) {
+                        $passvalidator = \Validator::make($request->all(), [
+                            'password' => 'required|min:6',
+                            'confirm_password' => 'required|same:password|min:6',
+                        ]);
 
-                    $passvalidator = \Validator::make($request->all(), [
-                        'password' => 'required|min:6',
-                        'confirm_password' => 'required|same:password|min:6',
-                    ]);
+                        if (!$passvalidator->passes()) {
+                            return $this->send422Error('Validation error.', ['error' => $passvalidator->errors()->toArray()]);
+                        } else {
 
-                    if (!$passvalidator->passes()) {
-                        return $this->send422Error('Validation error.', ['error' => $passvalidator->errors()->toArray()]);
+                         User::where([['user_id', '=', $request->student_id], ['role_id', '=', "6"], ['branch_id', '=', $request->branch_id]])
+                                ->update([
+                                    'name' => $studentName,
+                                    'email' => $request->email,
+                                    'school_roleid' => $request->school_roleid,
+                                    'status' => $request->status,
+                                    'google2fa_secret_enable' => isset($request->google2fa_secret_enable) ? '1' : '0',
+                                    'password' => bcrypt($request->password),
+                                    'updated_at' => date("Y-m-d H:i:s")
+                                ]);
+                        }
                     } else {
-
-                        $query = User::where([['user_id', '=', $request->student_id], ['role_id', '=', "6"], ['branch_id', '=', $request->branch_id]])
+                         User::where([['user_id', '=', $request->student_id], ['role_id', '=', "6"], ['branch_id', '=', $request->branch_id]])
                             ->update([
                                 'name' => $studentName,
                                 'email' => $request->email,
                                 'school_roleid' => $request->school_roleid,
                                 'status' => $request->status,
                                 'google2fa_secret_enable' => isset($request->google2fa_secret_enable) ? '1' : '0',
-                                'password' => bcrypt($request->password)
+                                'updated_at' => date("Y-m-d H:i:s")
                             ]);
                     }
-                } else {
-                    $query = User::where([['user_id', '=', $request->student_id], ['role_id', '=', "6"], ['branch_id', '=', $request->branch_id]])
-                        ->update([
-                            'name' => $studentName,
-                            'email' => $request->email,
-                            'school_roleid' => $request->school_roleid,
-                            'status' => $request->status,
-                            'google2fa_secret_enable' => isset($request->google2fa_secret_enable) ? '1' : '0'
-                        ]);
+
+                    // dd($query);
+
+
+                    // cache clear start
+                    $cache_students = config('constants.cache_students');
+                    $this->clearCache($cache_students,$request->branch_id);
+                    // cache clear end
                 }
-
-
-
-
-                // cache clear start
-                $cache_students = config('constants.cache_students');
-                $this->clearCache($cache_students,$request->branch_id);
-                // cache clear end
+                // dd($query);
                 $success = [];
-                if (!$query) {
-                    return $this->send500Error('Something went wrong.', ['error' => 'Something went wrong']);
-                } else {
+                if ($query) {
                     return $this->successResponse($success, 'Student has been successfully Updated');
+                } else {
+                    return $this->send500Error('Something went wrong.', ['error' => 'Something went wrong']);
                 }
             }
+
         }
     }
     catch(Exception $error) {
@@ -16087,11 +16112,6 @@ try{
                     File::ensureDirectoryExists(base_path() . $image_principal_path);
                     $image_principal_file = base_path() . $image_principal_path . $image_principal_fileName;
                     $image_principal_suc = file_put_contents($image_principal_file, $image_principal_base64);
-                    if ($request->image_principal_old_photo) {
-                        if (\File::exists(base_path($nric_path . $request->image_principal_old_photo))) {
-                            \File::delete(base_path($nric_path . $request->image_principal_old_photo));
-                        }
-                    }
                 }
                 $fileName = "";
                 if ($request->japanese_association_membership_image_supplimental) {
@@ -16241,7 +16261,7 @@ try{
                     'occupation' => $request->occupation,
                     'email' => $request->email,
                     'mobile_no' => $mobile_no,
-                    'status' => $request->status,
+                    'status' => "0",
                     
                     
                     'first_name_english' => $request->first_name_english,
@@ -16376,7 +16396,7 @@ try{
                 $cache_time = config('constants.cache_time');
                 $cache_parentDetails = config('constants.cache_parentDetails');
                 $academic_session_id = $request->academic_session_id;
-                $status = $request->status ?? null;
+                $status = $request->status ?? 0;
                 // dd($request);
                 if ($status === null) {
                     // Cache enabled for status filtering
@@ -16635,10 +16655,11 @@ try{
                 ->leftJoin('sections as sec', 'e.section_id', '=', 'sec.id')
                 ->where('e.active_status', '=', "0")
                 ->where('e.academic_session_id',$academic_session_id)
-                ->where('s.father_id', $id)
-                ->orWhere('s.mother_id', $id)
-                ->orWhere('s.guardian_id', $id)
+                ->where('s.guardian_id', $id)
+                // ->groupBy('s.id', 's.first_name', 's.last_name', 's.photo', 'c.name', 'sec.name')
+                // ->get();
                 ->groupBy('e.student_id')->get();
+
            /* $staffRoles = array('5');
             $sql = "";
             for ($x = 0; $x < count($staffRoles); $x++) {
@@ -16814,9 +16835,9 @@ try{
             // get data
             $data = $conn->table('parent')
                 ->select("id", DB::raw("CONCAT(last_name, ' ', first_name) as name"), 'email')
+                ->where("status",'=',"0")
                 ->where("first_name", "LIKE", "%{$request->name}%")
                 ->orWhere("last_name", "LIKE", "%{$request->name}%")
-                ->where("status",'=','0')
                 ->get();
 
             $output = '';
@@ -17465,7 +17486,15 @@ try{
                         ]);
                     }
 
-
+                    $updateData = ['status' => $request->status];
+                    if ($request->status == 0) {
+                        $updateData['login_attempt'] = 0;
+                    }
+ 
+                    $update_user = User::where([
+                        ['branch_id', '=', $request->branch_id],
+                        ['user_id', '=', $id]
+                    ])->update($updateData);
 
                     $query = $staffConn->table('parent')->where('id', $id)->update([
                         
@@ -17475,7 +17504,7 @@ try{
                         'occupation' => $request->occupation,
                         'email' => $request->email,
                         'mobile_no' => $mobile_no,
-                        'status' => $request->status,
+                        // 'status' => $request->status,
                         'email' => $request->email,
                         'mobile_no' => $mobile_no,
                        /* 'gender' => $request->gender,
@@ -17500,7 +17529,7 @@ try{
                         'facebook_url' => $request->facebook_url,
                         'linkedin_url' => $request->linkedin_url,
                         'twitter_url' => $request->twitter_url,*/
-                        'status' => $request->status,
+                        // 'status' => $request->status,
                         'first_name_english' => $request->first_name_english,
                         'middle_name_english' => $request->middle_name_english,                    
                         'last_name_english' => $request->last_name_english,
@@ -17521,7 +17550,7 @@ try{
                     'employment_status' => $request->guardian_employment_status,               
 
 
-                    //'japanese_association_membership_image_principal' => $image_principal_fileName,
+                    'japanese_association_membership_image_principal' => $image_principal_fileName,
                     'japanese_association_membership_image_supplimental' => $fileName,
                     'japan_postalcode' => $request->japan_postalcode,
                     'japan_contact_no' =>  isset($request->japan_contact_no) ? Crypt::encryptString($request->japan_contact_no) : "",
@@ -24526,7 +24555,7 @@ try{
             // get data
             $cache_time = config('constants.cache_time');
             $cache_exam_papers = config('constants.cache_exam_papers');
-            $cacheKey = $cache_exam_papers . $request->academic_session_id . $request->branch_id;
+            $cacheKey = $cache_exam_papers . $request->branch_id;
             
             // Check if the data is cached
             if (Cache::has($cacheKey)) {
@@ -26791,6 +26820,7 @@ try{
                                     $query->name = $guardian_name;
                                     $query->user_id = $guardian_id;
                                     $query->role_id = "5";
+                                    $query->school_roleid = $request->school_roleid;
                                     $query->branch_id = $request->branch_id;
                                     $query->email = $request->guardian_email;
                                     $query->status = "0";
@@ -26947,7 +26977,7 @@ try{
                         'nric_photo' => $nric_fileName,
 
                         'enrollment' => $request->enrollment,
-                        'trail_date' => $request->trail_date,
+                        'trail_start_date' => $request->trail_start_date,
                         'trail_end_date' => $request->trail_end_date,
                         'official_date' => $request->official_date,
 
@@ -27008,7 +27038,7 @@ try{
                             $user->name = $studentName;
                             $user->user_id = $studentId;
                             $user->role_id = "6";
-                            $user->school_roleid = $request->school_roleid;
+                            // $user->school_roleid = $request->school_roleid;
                             $user->branch_id = $request->branch_id;
                             $user->email = $studentEmail;
                             $user->status = "0";
@@ -27088,7 +27118,7 @@ try{
                 'blood_group' => $request->blood_group,
                 'nationality' => $request->nationality,
                 'enrollment' => $request->enrollment,
-                'trail_date' => $request->trail_date,
+                'trail_start_date' => $request->trail_start_date,
                 'trail_end_date' => $request->trail_end_date,
                 'official_date' => $request->official_date,
                 'nric' => $request->nric,

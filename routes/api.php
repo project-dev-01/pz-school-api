@@ -1103,6 +1103,7 @@ Route::group(['middleware' => ['auth:api', 'throttle:limit_per_user', 'logroute'
 
     Route::get('exam_result/get_jsklsubjectlist', [ExamreportController::class, 'get_jsklsubjectlist']);
     Route::get('exam_result/getjsklexampaper_list', [ExamreportController::class, 'getjsklexampaper_list']);
+    Route::post('exam_result/get_subject_wise_paper_list', [ExamreportController::class, 'get_subject_wise_paper_list']);
     
     Route::post('examsubject-by-papers', [ExamreportController::class, 'getSubjectByPaper']);
     Route::post('exammark-by-papers', [ExamreportController::class, 'getExamByPaper']);
@@ -1203,6 +1204,12 @@ Route::group(['middleware' => ['auth:api', 'throttle:limit_per_user', 'logroute'
     Route::post('teacher/student/list', [ApiControllerThree::class, 'getTeacherStudentList']);
     Route::post('std_leave_update', [ApiControllerNameSeq::class, 'student_leaveupdate']);
     Route::post('change_user_status', [ApiControllerThree::class, 'changeUserStatus']);
+    Route::post('student_medical_record_add',[ApiControllerThree::class, 'addStudentMedicalRecord']);
+    Route::post('get_student_medical_record',[ApiControllerThree::class, 'getStudentMedicalRecord']);
+    Route::post('get_student_medical_record_admin',[ApiControllerThree::class, 'getStudentMedicalReportAdmin']);
+    Route::get('get_allergies_name_list',[ApiControllerThree::class, 'getAllergiesNameList']);
+    Route::post('student_medical_report_pdf',[ApiControllerThree::class, 'getStudentMedicalRecordpdf']);
+
 
 
     //new api on name sequence condition

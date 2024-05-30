@@ -44,7 +44,6 @@ use App\Models\Menus;
 use App\Models\Menuaccess;
 use App\Helpers\CommonHelper;
 
-
 class ExamreportController extends BaseController
 {
     protected CommonHelper $commonHelper;
@@ -268,6 +267,36 @@ class ExamreportController extends BaseController
             ->get();
         
         return $this->successResponse($exampaperdetails, 'Get Exam Papers Lists');
+    }
+    public function get_subject_wise_paper_list(Request $request)
+    {
+        try {
+            $validator = \Validator::make($request->all(), [
+                'branch_id' => 'required',
+                'department_id' => 'required',
+                'codes' => 'required',
+            ]);
+
+            if (!$validator->passes()) {
+                return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
+            } else {
+                // create new connection
+                $Connection = $this->createNewConnection($request->branch_id);
+                $exampaperdetails = $Connection->table('exam_papers_pdf as ep')
+                    ->select(
+                        'ep.name_jp',
+                        'ep.name_en',
+                        'ep.score_type',
+                    )
+                    ->where('ep.codes', '=', $request->codes)
+                    ->whereRaw("FIND_IN_SET($request->department_id,ep.department)")
+                    ->orderBy('ep.id', 'asc')
+                    ->get();
+                return $this->successResponse($exampaperdetails, 'Get Exam Papers Lists');
+            }
+        } catch (\Exception $error) {
+            $this->commonHelper->generalReturn('403', 'error', $error, 'Error in get Subject Wise Paper List');
+        }
     }    
     public function exam_file_name(Request $request)
     { 
@@ -1117,10 +1146,11 @@ public function adhocexamuploadmark(Request $request)
             'sb.id as subject_id',
             'sb.name'
         )       
-        ->where('sb.name', '=', '英語コミュニケーション')
-        ->orWhere('sb.name', '=', 'English Comminication')
+        ->where('sb.name', '=', 'EC')
+        ->where('sb.name', '=', 'English Communication')
         ->first();
         $subject_id = $getsubject->subject_id;
+        // return $getsubject;
         $getSubjectMarks = $Connection->table('exam_papers as ep')        
         ->select(           
             'ep.id',
@@ -1675,7 +1705,7 @@ public function adhocexamuploadmark(Request $request)
                 DB::raw('CONCAT(st.first_name, " ", st.last_name) as name'),
                 'st.register_no',
             )
-            ->leftJoin('students as st', 'st.id', '=', 'en.student_id')               
+            ->join('students as st', 'st.id', '=', 'en.student_id')               
             ->where([
                 ['en.department_id', '=', $request->department_id],
                 ['en.class_id', '=', $request->class_id],

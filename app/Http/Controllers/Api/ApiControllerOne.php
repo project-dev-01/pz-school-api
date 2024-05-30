@@ -200,10 +200,12 @@ class ApiControllerOne extends BaseController
                     ->select(
                         'sa.subject_id',
                         'sb.name as subject_name',
+                        'sub_pdf.codes',
                         DB::raw('CONCAT(stf.first_name, " ", stf.last_name) as teacher_name'),
                     )
                     ->leftJoin('staffs as stf', 'sa.teacher_id', '=', 'stf.id')
                     ->join('subjects as sb', 'sa.subject_id', '=', 'sb.id')
+                    ->leftJoin('subjects_pdf as sub_pdf', 'sb.subjects_pdf_id', '=', 'sub_pdf.id')
                     ->where([
                         ['sa.type', '=', '0'],
                         ['sb.exam_exclude', '=', '0'],
