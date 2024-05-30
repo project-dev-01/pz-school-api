@@ -484,7 +484,7 @@ class ExamreportController extends BaseController
                         "paper_name"=> $paper->paper_name, 
                         "score_type"=>  $paper->score_type,           
                         "mark"=> $mark,  
-                        "attandance"=>  $status[0],             
+                        "attandance"=> $status[0],             
                         "memo"=> $memo    
                     ];
                 }
@@ -497,7 +497,7 @@ class ExamreportController extends BaseController
                         "paper_name"=> $paper->paper_name,
                         "score_type"=>  $paper->score_type,                
                         "mark"=> "",  
-                        "attandance"=>  "",             
+                        "attandance"=>  "p",             
                         "memo"=> ""   
                     ];
                 }
