@@ -1720,6 +1720,35 @@ public function adhocexamuploadmark(Request $request)
             return $this->commonHelper->generalReturn('403','error',$error,'Error in exam_studentslist');
         }
     }
+    public function exam_individualstudentslist(Request $request)
+    {
+        try{ 
+        $Connection = $this->createNewConnection($request->branch_id);
+
+        $studentdetails = $Connection->table('enrolls as en')
+            ->select(
+                'en.student_id',
+                'en.roll',
+                'en.attendance_no', 
+                DB::raw('CONCAT(st.first_name, " ", st.last_name) as name'),
+                'st.register_no',
+            )
+            ->join('students as st', 'st.id', '=', 'en.student_id')               
+            ->where([
+                ['en.department_id', '=', $request->department_id],
+                ['en.class_id', '=', $request->class_id],
+                ['en.section_id', '=', $request->section_id],
+                ['en.academic_session_id', '=', $request->academic_session_id],
+                ['en.student_id', '=', $request->student_id],
+            ])
+            ->first();
+
+            
+        return $this->successResponse($studentdetails, 'Student Lists');
+        } catch(Exception $error) {
+            return $this->commonHelper->generalReturn('403','error',$error,'Error in exam_studentslist');
+        }
+    }
     public function get_subjectlist(Request $request)
     {
         try{ 

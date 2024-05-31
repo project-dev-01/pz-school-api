@@ -814,7 +814,7 @@ class MenuAccessController extends BaseController
     {
         try {
             // Generate cache key based on request parameters
-            $cache_time = config('constants.cache_time');
+            /*$cache_time = config('constants.cache_time');
             $school_role_access = config('constants.school_role_access');
             $cacheKey = $school_role_access . $request->role_id . '_' . $request->school_roleid;
             // Cache::forget($cacheKey);
@@ -822,7 +822,7 @@ class MenuAccessController extends BaseController
             if (Cache::has($cacheKey)) {
                 // If data exists in cache, return cached data
                 return $this->successResponse(Cache::get($cacheKey), 'School Role row fetched successfully from cache');
-            }
+            }*/
 
             // If data is not cached, proceed with fetching from the database
 
@@ -856,7 +856,7 @@ class MenuAccessController extends BaseController
             }
 
             // Cache the fetched data for future requests
-            Cache::put($cacheKey, $schoolroleDetails, now()->addMinutes($cache_time)); // Cache for 10 minutes
+           // Cache::put($cacheKey, $schoolroleDetails, now()->addMinutes($cache_time)); // Cache for 10 minutes
 
             return $this->successResponse($schoolroleDetails, 'School Role row fetched successfully');
         } catch (Exception $error) {

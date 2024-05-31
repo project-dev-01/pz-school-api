@@ -1097,6 +1097,8 @@ Route::group(['middleware' => ['auth:api', 'throttle:limit_per_user', 'logroute'
 
     // Student English Communication Result
     Route::post('exam_result/students', [ExamreportController::class, 'exam_studentslist']);
+    
+    Route::post('exam_result/exam_individualstudentslist', [ExamreportController::class, 'exam_individualstudentslist']);
     Route::post('exam_result/get_subjectlist', [ExamreportController::class, 'get_subjectlist']);
     Route::post('exam_result/get_mainsubjectlist', [ExamreportController::class, 'get_mainsubjectlist']);
     Route::post('exam_result/getsubjecpapertlist', [ExamreportController::class, 'getsubjecpapertlist']);
