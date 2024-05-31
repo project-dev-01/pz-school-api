@@ -3578,6 +3578,7 @@ class ApiControllerThree extends BaseController
             } else {
                 $query = User::where('id', $user_id)->update([
                     'status' => $request->status,
+                    'login_attempt' => "0",
                     'updated_at' => date("Y-m-d H:i:s")
                 ]);
                 if ($request->status == "1") {
