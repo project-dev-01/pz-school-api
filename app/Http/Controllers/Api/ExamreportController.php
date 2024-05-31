@@ -1146,8 +1146,8 @@ public function adhocexamuploadmark(Request $request)
             'sb.id as subject_id',
             'sb.name'
         )       
-        ->where('sb.name', '=', 'EC')
-        ->where('sb.name', '=', 'English Communication')
+        // ->where('sb.name', '=', 'EC')
+        ->where('sb.name', '=', '英語コミュニケーション')
         ->first();
         $subject_id = $getsubject->subject_id;
         // return $getsubject;
