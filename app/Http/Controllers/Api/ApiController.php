@@ -4659,7 +4659,7 @@ try {
         } else {
             // create new connection
             $Connection = $this->createNewConnection($request->branch_id);
-            $examPapers = $Connection->table('timetable_exam as tex')
+            /*$examPapers = $Connection->table('timetable_exam as tex')
                 ->select(
                     'tex.id as id',
                     'exp.id as paper_id',
@@ -4675,6 +4675,18 @@ try {
                     ['tex.exam_id', $request->exam_id]
                 ])
                 ->groupBy('exp.id')
+                ->get();*/
+                $examPapers = $Connection->table('exam_papers as exp')
+                ->select(                  
+                    'exp.id as paper_id',
+                    'exp.paper_name',
+                    'exp.grade_category'
+                )              
+                ->where([
+                    ['exp.class_id', $request->class_id],
+                    ['exp.subject_id', $request->subject_id],
+                    ['exp.academic_session_id', $request->academic_session_id]
+                ])                
                 ->get();
             return $this->successResponse($examPapers, 'get papers fetch successfully');
         }
@@ -12420,7 +12432,7 @@ try{
             $paper_id = isset($request->paper_id) ? $request->paper_id : null;
             $Connection = $this->createNewConnection($request->branch_id);
             // timetable exam result exists
-            $examResultexist = $Connection->table('timetable_exam')
+           /* $examResultexist = $Connection->table('timetable_exam')
                 ->where([
                     ['exam_id', '=', $exam_id],
                     ['class_id', '=', $class_id],
@@ -12434,7 +12446,7 @@ try{
                 ->count();
             if ($examResultexist == 0) {
                 return $this->send422Error('Timetables for exams will not be available', ['error' => 'Timetables for exams will not be available']);
-            } else {
+            } else {*/
                 $getSubjectMarks = $Connection->table('enrolls as en')
                     ->select(
                         'en.student_id',
@@ -12488,7 +12500,7 @@ try{
                         'exampaper' => $exampaper
                     ];   
                 return $this->successResponse($data, 'Subject vs marks record fetch successfully');
-            }
+           // }
         }
     }
     catch(Exception $error) {
