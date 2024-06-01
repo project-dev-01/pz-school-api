@@ -11949,8 +11949,7 @@ try{
         try{
         $validator = \Validator::make($request->all(), [
             'id' => 'required',
-            'branch_id' => 'required',
-            'token' => 'required'
+            'branch_id' => 'required'
         ]);
         if (!$validator->passes()) {
             return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
@@ -11959,7 +11958,15 @@ try{
             // create new connection
             $con = $this->createNewConnection($request->branch_id);
             // get data
-            $details = $con->table('exam')->where('id', $id)->first();
+            // $details = $con->table('exam')
+            // ->where('id', $id)
+            // exam_term
+            // ->first();
+            $details = $con->table('exam as ex')
+                ->select('ex.*', 'et.name as term_name')
+                ->leftJoin('exam_term as et', 'ex.term_id', '=', 'et.id')
+                ->where('ex.id', $id)
+                ->first();
             return $this->successResponse($details, 'Exam row fetch successfully');
         }
     }

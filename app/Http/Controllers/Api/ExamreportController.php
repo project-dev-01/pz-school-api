@@ -892,7 +892,7 @@ class ExamreportController extends BaseController
         return $this->successResponse($success, 'Exam Mark Upload Successfully');
     }*/
     public function examuploadmark(Request $request)
-    {
+{
     // Extracting request parameters
     $Connection = $this->createNewConnection($request->branch_id);
     $department_id = $request->department_id;
@@ -906,7 +906,7 @@ class ExamreportController extends BaseController
     $academic_session_id = $request->academic_session_id;
     $fdata = $request->fdata;
     
-    $row=0;
+    $row = 0;
 
     // Processing each row of data
     foreach ($fdata as $importData) {
@@ -921,47 +921,57 @@ class ExamreportController extends BaseController
             // Determining student status
             $att = strtolower($importData[6]);
             $status = ($att == "p" || $att == "present") ? "present" : "absent";
-            $mark = ($att != 'a') ? $importData[5] : 0;
+            $mark = ($att != 'a' && !empty($importData[5])) ? $importData[5] : 0;
             $memo = $importData[7];
 
             // Retrieving student details
             $students = $Connection->table('students')->select('id')->where('register_no', '=', $student_roll)->first();
+            if (!$students) {
+                continue; // If student not found, skip to next iteration
+            }
             $student_id = $students->id;
 
             // Retrieving paper details
-            //$paper = $Connection->table('exam_papers')->select('grade_category', 'score_type')->where('id', '=', $paper_id)->first();
             $getpapersQuery = $Connection->table('exam_papers as ep')
-            ->select(
-                'ep.id',
-                'ep.paper_name',
-                'ep.score_type',
-                'ep.grade_category'
-            )                    
-            ->where([
-                ['ep.department_id', '=', $request->department_id],
-                ['ep.class_id', '=', $request->class_id],
-                ['ep.subject_id', '=', $subject_id],
-                ['ep.academic_session_id', '=', $request->academic_session_id]
-            ]);
+                ->select(
+                    'ep.id',
+                    'ep.paper_name',
+                    'ep.score_type',
+                    'ep.grade_category'
+                )                    
+                ->where([
+                    ['ep.department_id', '=', $department_id],
+                    ['ep.class_id', '=', $class_id],
+                    ['ep.subject_id', '=', $subject_id],
+                    ['ep.academic_session_id', '=', $academic_session_id]
+                ]);
 
             if ($paper_id != 'All') {
                 $getpapersQuery->where('ep.id', '=', $paper_id);
-            }
-            else
-            {
+            } else {
                 $getpapersQuery->where('ep.paper_name', '=', $papername); 
                 $getpapersQuery->where('ep.score_type', '=', $score_type);  
             }
 
             $paper = $getpapersQuery->first();
-            $paperID=($paper!==null)?$paper->id:'0';
-            if ($paper != null) {
-                $grade_category = $paper->grade_category;
-                $score_type = $paper->score_type;
+            if (!$paper) {
+                continue; // If paper not found, skip to next iteration
+            }
+            $paperID = $paper->id;
+            $grade_category = $paper->grade_category;
+            $score_type = $paper->score_type;
+            // return $score_type;
+            // Initialize variables
+            $score = null;
+            $points = null;
+            $freetext = null;
+            $grade = null;
+            $pass_fail = null;
+            $ranking = null; // Initialize ranking variable
 
-                // Processing based on score type
-                if ($score_type == 'Grade' || $score_type == 'Mark') {
-                    // Processing score and grade
+            // Processing based on score type
+            if ($score_type == 'Grade' || $score_type == 'Mark') {
+                if (!empty($mark)) {
                     $grade_marks = $Connection->table('grade_marks')->select('grade', 'status')->where([
                         ['grade_category', '=', $grade_category],
                         ['min_mark', '<=', $mark],
@@ -970,79 +980,78 @@ class ExamreportController extends BaseController
                     $score = $mark;
                     $grade = ($grade_marks != null) ? $grade_marks->grade : '';
                     $pass_fail = ($grade_marks != null) ? $grade_marks->status : '';
-                } elseif ($score_type == 'Points') {
-                    // Processing points
-                    $grade_marks = $Connection->table('grade_marks')->select('id','grade', 'status')->where([
+                }
+            } elseif ($score_type == 'Points') {
+                if (!empty($mark)) {
+                    $grade_marks = $Connection->table('grade_marks')->select('id', 'grade', 'status')->where([
                         ['grade_category', '=', $grade_category],
                         ['grade', '=', $mark]
                     ])->first();
                     $points = ($grade_marks != null) ? $grade_marks->id : '';
                     $grade = ($grade_marks != null) ? $grade_marks->grade : '';
                     $pass_fail = ($grade_marks != null) ? $grade_marks->status : '';
-                } elseif ($score_type == 'Freetext') {
-                    // Processing freetext
-                    $freetext = $mark;
-                    $pass_fail = 'Pass';
                 }
+            } elseif ($score_type == 'Freetext') {
+                $freetext = $mark;
+                $pass_fail = 'Pass';
+            }
 
-                // Constructing student marks array
-                $arrayStudentMarks = [
-                    'student_id' => $student_id,
-                    'class_id' => $class_id,
-                    'section_id' => $section_id,
-                    'subject_id' => $subject_id,
-                    'exam_id' => $exam_id,
-                    'paper_id' => $paperID ?? 0,
-                    'semester_id' => $semester_id,
-                    'session_id' => $session_id ?? 0,
-                    'grade_category' => $grade_category ?? null,
+            // Constructing student marks array
+            $arrayStudentMarks = [
+                'student_id' => $student_id,
+                'class_id' => $class_id,
+                'section_id' => $section_id,
+                'subject_id' => $subject_id,
+                'exam_id' => $exam_id,
+                'paper_id' => $paperID ?? 0,
+                'semester_id' => $semester_id,
+                'session_id' => $session_id ?? 0,
+                'grade_category' => $grade_category ?? null,
+                'score' => $score ?? null,
+                'points' => $points ?? null,
+                'freetext' => $freetext ?? null,
+                'grade' => $grade ?? null,
+                'pass_fail' => $pass_fail ?? null,
+                'ranking' => $ranking ?? null,
+                'status' => $status ?? null,
+                'memo' => $memo ?? null,
+                'academic_session_id' => $academic_session_id,
+                'created_at' => date("Y-m-d H:i:s")
+            ];
+
+            // Checking if student marks exist
+            $existingRow = $Connection->table('student_marks')->select('id')->where([
+                ['class_id', '=', $class_id],
+                ['section_id', '=', $section_id],
+                ['subject_id', '=', $subject_id],
+                ['student_id', '=', $student_id],
+                ['exam_id', '=', $exam_id],
+                ['semester_id', '=', $semester_id],                   
+                ['paper_id', '=', $paperID],
+                ['academic_session_id', '=', $academic_session_id]
+            ])->first();
+
+            // Inserting or updating student marks
+            if (isset($existingRow->id)) {
+                $Connection->table('student_marks')->where('id', $existingRow->id)->update([
                     'score' => $score ?? null,
                     'points' => $points ?? null,
                     'freetext' => $freetext ?? null,
                     'grade' => $grade ?? null,
-                    'pass_fail' => $pass_fail ?? null,
+                    'pass_fail' => $pass_fail,
                     'ranking' => $ranking ?? null,
                     'status' => $status ?? null,
                     'memo' => $memo ?? null,
-                    'academic_session_id' => $academic_session_id,
-                    'created_at' => date("Y-m-d H:i:s")
-                ];
-
-                // Checking if student marks exist
-                $existingRow = $Connection->table('student_marks')->select('id')->where([
-                    ['class_id', '=', $class_id],
-                    ['section_id', '=', $section_id],
-                    ['subject_id', '=', $subject_id],
-                    ['student_id', '=', $student_id],
-                    ['exam_id', '=', $exam_id],
-                    ['semester_id', '=', $semester_id],                   
-                    ['paper_id', '=', $paperID],
-                    ['academic_session_id', '=', $academic_session_id]
-                ])->first();
-
-                // Inserting or updating student marks
-                if (isset($existingRow->id)) {
-                    $Connection->table('student_marks')->where('id', $existingRow->id)->update([
-                        'score' => $score ?? null,
-                        'points' => $points ?? null,
-                        'freetext' => $freetext ?? null,
-                        'grade' => $grade ?? null,
-                        'pass_fail' => $pass_fail,
-                        'ranking' => $ranking ?? null,
-                        'status' => $status ?? null,
-                        'memo' => $memo ?? null,
-                        'updated_at' => date("Y-m-d H:i:s")
-                    ]);
-                } else {
-                    $Connection->table('student_marks')->insert($arrayStudentMarks);
-                }
+                    'updated_at' => date("Y-m-d H:i:s")
+                ]);
+            } else {
+                $Connection->table('student_marks')->insert($arrayStudentMarks);
             }
         }
     }
-    // Returning success response
-    $success[] = '';
-    return $this->successResponse($success, 'Exam Mark Upload Successfully');
+    return $this->successResponse([], 'Exam Mark Upload Successfully');
 }
+
 public function adhocexamuploadmark(Request $request)
     {
     // Extracting request parameters
@@ -1702,7 +1711,7 @@ public function adhocexamuploadmark(Request $request)
                 'en.student_id',
                 'en.roll',
                 'en.attendance_no', 
-                DB::raw('CONCAT(st.first_name, " ", st.last_name) as name'),
+                DB::raw('CONCAT(st.last_name_english, " ", st.first_name_english) as name'),
                 'st.register_no',
             )
             ->join('students as st', 'st.id', '=', 'en.student_id')               
