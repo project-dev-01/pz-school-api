@@ -15685,7 +15685,7 @@ try{
                     'trail_start_date' => $request->trail_start_date,
                     'trail_end_date' => $request->trail_end_date,
                     'official_date' => $request->official_date,
-
+                    'date_of_termination' => $request->date_of_termination,
                     'category_id' => $request->category_id,
                     'first_name' => isset($request->first_name) ? $request->first_name : "",
                     'last_name' => isset($request->last_name) ? $request->last_name : "",
