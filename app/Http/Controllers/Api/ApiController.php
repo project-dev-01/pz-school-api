@@ -3,63 +3,62 @@
 namespace App\Http\Controllers\Api;
 
 // use App\Http\Controllers\Controller;
-use App\Helpers\CommonHelper;
-use App\Helpers\Helper;
-use App\Http\Controllers\Api\BaseController as BaseController;
-use App\Models\Branches;
-use App\Models\Classes;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Auth;
+use Symfony\Component\HttpFoundation\Response;
 // base controller add
-use App\Models\EventType;
-use App\Models\Forum_count_details;
-use App\Models\Forum_post_replie_counts;
-use App\Models\Forum_post_replies;
-use App\Models\Forum_posts;
-use App\Models\Menuaccess;
-use App\Models\Menus;
-use App\Models\Role;
-use App\Models\Section;
-use App\Models\User;
-use App\Notifications\AdminTermination;
-use App\Notifications\LeaveApply;
-use App\Notifications\LeaveApprove;
-use App\Notifications\LeaveReasonNotification;
-use App\Notifications\NewApplication;
-// db connection
-use App\Notifications\ParentEmail;
-use App\Notifications\ParentInfoUpdate;
-use App\Notifications\ParentTermination;
-use App\Notifications\SendEmail;
-use App\Notifications\StudentEmail;
-use App\Notifications\StudentHomeworkSubmit;
-// notifications
-use App\Notifications\StudentInfoUpdate;
-use App\Notifications\StudentLeaveApply;
-use App\Notifications\TeacherEmail;
-use App\Notifications\TeacherHomework;
-use App\Notifications\UpdateApplication;
-use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
+use App\Http\Controllers\Api\BaseController as BaseController;
+use Illuminate\Validation\Rule;
+use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Mail;
+use DateTime;
 use DateInterval;
 use DatePeriod;
-use DateTime;
-use Exception;
-use File;
-use Illuminate\Contracts\Encryption\DecryptException;
-use Illuminate\Http\Request;
+use App\Models\Branches;
+use App\Models\Section;
+use App\Helpers\Helper;
+use App\Models\Classes;
+use App\Models\Role;
+use App\Models\EventType;
+use App\Models\User;
+// db connection
+use App\Models\Forum_posts;
+use App\Models\Forum_count_details;
+use App\Models\Forum_post_replies;
+use Carbon\Carbon;
+use App\Models\Forum_post_replie_counts;
 use Illuminate\Support\Arr;
-use Illuminate\Support\Facades\Auth;
+// notifications
+use App\Notifications\SendEmail;
+use App\Notifications\LeaveApply;
+use App\Notifications\StudentLeaveApply;
+use App\Notifications\LeaveApprove;
+use App\Notifications\StudentHomeworkSubmit;
+use App\Notifications\TeacherHomework;
+use App\Notifications\ParentEmail;
+use App\Notifications\StudentEmail;
+use App\Notifications\TeacherEmail;
+use App\Notifications\ParentTermination;
+use App\Notifications\AdminTermination;
+use App\Notifications\ParentInfoUpdate;
+use App\Notifications\StudentInfoUpdate;
+use App\Notifications\LeaveReasonNotification;
+use App\Notifications\NewApplication;
 
-use Illuminate\Support\Facades\Cache;
-// encrypt and decrypt
-use Illuminate\Support\Facades\Config;
-use Illuminate\Support\Facades\Crypt;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Notification;
-use Illuminate\Support\Facades\Validator;
-use Illuminate\Support\Str;
-use Illuminate\Validation\Rule;
-use Symfony\Component\HttpFoundation\Response;
+// encrypt and decrypt
+use Illuminate\Support\Facades\Crypt;
+use Illuminate\Contracts\Encryption\DecryptException;
+use File;
+use Exception;
+use Illuminate\Support\Facades\Config;
+use Illuminate\Support\Facades\Hash;
+use App\Models\Menus;
+use App\Models\Menuaccess;
+use App\Helpers\CommonHelper;
 
 class ApiController extends BaseController
 {
@@ -12458,7 +12457,7 @@ try{
                 $getSubjectMarks = $Connection->table('enrolls as en')
                     ->select(
                         'en.student_id',
-                        'en.roll',
+                        // 'en.roll',
                         DB::raw('CONCAT(st.last_name, " ", st.first_name) as name'),
                         'st.register_no',
                         'sa.id as att_id',
@@ -16937,7 +16936,7 @@ try{
                             'email' => $request->father_email,
                             'relation' => $request->relation,
                         ];
-                        return $father_data;
+                        // return $father_data;
                         $father_insertArr = [];
                         foreach ($father_old as $key => $o) {
                             // if (isset($father_data[$key])) {

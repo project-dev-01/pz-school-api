@@ -43,6 +43,7 @@ use Illuminate\Support\Facades\Hash;
 use App\Models\Menus;
 use App\Models\Menuaccess;
 use App\Helpers\CommonHelper;
+use Illuminate\Support\Facades\Log;
 
 class ExamreportController extends BaseController
 {
@@ -221,8 +222,8 @@ class ExamreportController extends BaseController
                         'paper_id' => $paper->id,
                         'paper_name' => $paper->paper_name,
                         'score_type' => $paper->score_type,
-                        'totstu' => $enrollCount,
-                        'examstu' =>  $markcount
+                        'totstu' => $enrollCount ?? 0,
+                        'examstu' =>  $markcount ?? 0
                     ];
 
                     array_push($paper_list, $data);
@@ -341,7 +342,8 @@ class ExamreportController extends BaseController
             ->where([
                 ['en.class_id', '=', $request->class_id],
                 ['en.section_id', '=', $request->section_id],
-                ['en.academic_session_id', '=', $request->academic_session_id]
+                ['en.academic_session_id', '=', $request->academic_session_id],
+                ['en.active_status', '=', '0']
             ])->count();
         $data = [
             "department_name" => $getclass->department_name,
@@ -414,6 +416,7 @@ class ExamreportController extends BaseController
             ->where('enrolls.section_id', '=', $section_id)
             ->where('enrolls.department_id', '=', $department_id)
             ->where('enrolls.academic_session_id', '=', $academic_session_id)
+            ->where('enrolls.active_status', '=', '0')
             ->get();
         $getpapersQuery = $Connection->table('exam_papers as ep')
             ->select(
@@ -870,6 +873,7 @@ class ExamreportController extends BaseController
     }*/
     public function examuploadmark(Request $request)
     {
+        set_time_limit(300); // 5 minutes
         // Extracting request parameters
         $Connection = $this->createNewConnection($request->branch_id);
         $department_id = $request->department_id;
@@ -1011,6 +1015,8 @@ class ExamreportController extends BaseController
 
                 // Inserting or updating student marks
                 if (isset($existingRow->id)) {
+                Log::info('existingRow ID: ' . json_encode($existingRow->id));
+
                     $Connection->table('student_marks')->where('id', $existingRow->id)->update([
                         'score' => $score ?? null,
                         'points' => $points ?? null,
@@ -1023,13 +1029,195 @@ class ExamreportController extends BaseController
                         'updated_at' => date("Y-m-d H:i:s")
                     ]);
                 } else {
+                    Log::info('student_marsk: ' . json_encode($arrayStudentMarks));
                     $Connection->table('student_marks')->insert($arrayStudentMarks);
                 }
             }
         }
         return $this->successResponse([], 'Exam Mark Upload Successfully');
     }
-
+    // public function examuploadmark(Request $request)
+    // {
+    //     set_time_limit(300); // 5 minutes
+    //     // Extracting request parameters
+    //     $Connection = $this->createNewConnection($request->branch_id);
+    //     $department_id = $request->department_id;
+    //     $class_id = $request->class_id;
+    //     $section_id = $request->section_id;
+    //     $exam_id = $request->exam_id;
+    //     $subject_id = $request->subject_id;
+    //     $paper_id = $request->paper_id;
+    //     $semester_id = $request->semester_id;
+    //     $session_id = $request->session_id;
+    //     $academic_session_id = $request->academic_session_id;
+    //     $fdata = $request->fdata;
+    
+    //     $batchSize = 100; // Number of records to process in a single batch
+    //     $batchInserts = [];
+    //     $batchUpdates = [];
+    
+    //     DB::beginTransaction();
+    
+    //     try {
+    //         // Processing each row of data
+    //         foreach ($fdata as $importData) {
+    //             if ($importData[1] != '') {
+    //                 $student_roll = $importData[1];
+    //                 $papername = $importData[3];
+    //                 $score_type = $importData[4];
+    //                 $att = strtolower($importData[6]);
+    //                 $status = ($att == "p" || $att == "present") ? "present" : "absent";
+    //                 $mark = ($att != 'a' && !empty($importData[5])) ? $importData[5] : null;
+    //                 $memo = $importData[7];
+    
+    //                 $students = $Connection->table('students')->select('id')->where('register_no', '=', $student_roll)->first();
+    //                 if (!$students) {
+    //                     continue; // If student not found, skip to next iteration
+    //                 }
+    //                 $student_id = $students->id;
+    
+    //                 $getpapersQuery = $Connection->table('exam_papers as ep')
+    //                     ->select('ep.id', 'ep.paper_name', 'ep.score_type', 'ep.grade_category')
+    //                     ->where([
+    //                         ['ep.department_id', '=', $department_id],
+    //                         ['ep.class_id', '=', $class_id],
+    //                         ['ep.subject_id', '=', $subject_id],
+    //                         ['ep.academic_session_id', '=', $academic_session_id]
+    //                     ]);
+    
+    //                 if ($paper_id != 'All') {
+    //                     $getpapersQuery->where('ep.id', '=', $paper_id);
+    //                 } else {
+    //                     $getpapersQuery->where('ep.paper_name', '=', $papername);
+    //                     $getpapersQuery->where('ep.score_type', '=', $score_type);
+    //                 }
+    
+    //                 $paper = $getpapersQuery->first();
+    //                 if (!$paper) {
+    //                     continue; // If paper not found, skip to next iteration
+    //                 }
+    //                 $paperID = $paper->id;
+    //                 $grade_category = $paper->grade_category;
+    //                 $score_type = $paper->score_type;
+    
+    //                 $score = null;
+    //                 $points = null;
+    //                 $freetext = null;
+    //                 $grade = null;
+    //                 $pass_fail = null;
+    //                 $ranking = null;
+    
+    //                 if ($score_type == 'Grade' || $score_type == 'Mark') {
+    //                     if (!empty($mark)) {
+    //                         $grade_marks = $Connection->table('grade_marks')->select('grade', 'status')->where([
+    //                             ['grade_category', '=', $grade_category],
+    //                             ['min_mark', '<=', $mark],
+    //                             ['max_mark', '>=', $mark]
+    //                         ])->first();
+    //                         $score = $mark;
+    //                         $grade = ($grade_marks != null) ? $grade_marks->grade : '';
+    //                         $pass_fail = ($grade_marks != null) ? $grade_marks->status : '';
+    //                     }
+    //                 } elseif ($score_type == 'Points') {
+    //                     if (!empty($mark)) {
+    //                         $grade_marks = $Connection->table('grade_marks')->select('id', 'grade', 'status')->where([
+    //                             ['grade_category', '=', $grade_category],
+    //                             ['grade', '=', $mark]
+    //                         ])->first();
+    //                         $points = ($grade_marks != null) ? $grade_marks->id : '';
+    //                         $grade = ($grade_marks != null) ? $grade_marks->grade : '';
+    //                         $pass_fail = ($grade_marks != null) ? $grade_marks->status : '';
+    //                     }
+    //                 } elseif ($score_type == 'Freetext') {
+    //                     $freetext = $mark;
+    //                     $pass_fail = 'Pass';
+    //                 }
+    
+    //                 $arrayStudentMarks = [
+    //                     'student_id' => $student_id,
+    //                     'class_id' => $class_id,
+    //                     'section_id' => $section_id,
+    //                     'subject_id' => $subject_id,
+    //                     'exam_id' => $exam_id,
+    //                     'paper_id' => $paperID ?? 0,
+    //                     'semester_id' => $semester_id,
+    //                     'session_id' => $session_id ?? 0,
+    //                     'grade_category' => $grade_category ?? null,
+    //                     'score' => $score ?? null,
+    //                     'points' => $points ?? null,
+    //                     'freetext' => $freetext ?? null,
+    //                     'grade' => $grade ?? null,
+    //                     'pass_fail' => $pass_fail ?? null,
+    //                     'ranking' => $ranking ?? null,
+    //                     'status' => $status ?? null,
+    //                     'memo' => $memo ?? null,
+    //                     'academic_session_id' => $academic_session_id,
+    //                     'created_at' => date("Y-m-d H:i:s"),
+    //                     'updated_at' => date("Y-m-d H:i:s")
+    //                 ];
+    
+    //                 $existingRow = $Connection->table('student_marks')->select('id')->where([
+    //                     ['class_id', '=', $class_id],
+    //                     ['section_id', '=', $section_id],
+    //                     ['subject_id', '=', $subject_id],
+    //                     ['student_id', '=', $student_id],
+    //                     ['exam_id', '=', $exam_id],
+    //                     ['semester_id', '=', $semester_id],
+    //                     ['paper_id', '=', $paperID],
+    //                     ['academic_session_id', '=', $academic_session_id]
+    //                 ])->first();
+    
+    //                 if (isset($existingRow->id)) {
+    //                     $batchUpdates[] = [
+    //                         'id' => $existingRow->id,
+    //                         'data' => [
+    //                             'score' => $score ?? null,
+    //                             'points' => $points ?? null,
+    //                             'freetext' => $freetext ?? null,
+    //                             'grade' => $grade ?? null,
+    //                             'pass_fail' => $pass_fail,
+    //                             'ranking' => $ranking ?? null,
+    //                             'status' => $status ?? null,
+    //                             'memo' => $memo ?? null,
+    //                             'updated_at' => date("Y-m-d H:i:s")
+    //                         ]
+    //                     ];
+    //                 } else {
+    //                     $batchInserts[] = $arrayStudentMarks;
+    //                 }
+    
+    //                 if (count($batchInserts) >= $batchSize) {
+    //                     $Connection->table('student_marks')->insert($batchInserts);
+    //                     $batchInserts = [];
+    //                 }
+    
+    //                 if (count($batchUpdates) >= $batchSize) {
+    //                     foreach ($batchUpdates as $update) {
+    //                         $Connection->table('student_marks')->where('id', $update['id'])->update($update['data']);
+    //                     }
+    //                     $batchUpdates = [];
+    //                 }
+    //             }
+    //         }
+    
+    //         if (!empty($batchInserts)) {
+    //             $Connection->table('student_marks')->insert($batchInserts);
+    //         }
+    
+    //         if (!empty($batchUpdates)) {
+    //             foreach ($batchUpdates as $update) {
+    //                 $Connection->table('student_marks')->where('id', $update['id'])->update($update['data']);
+    //             }
+    //         }
+    
+    //         DB::commit();
+    //         return $this->successResponse([], 'Exam Mark Upload Successfully');
+    //     } catch (\Exception $e) {
+    //         DB::rollBack();
+    //         return $this->errorResponse($e->getMessage(), 'Error in uploading exam marks');
+    //     }
+    // }
+    
     public function adhocexamuploadmark(Request $request)
     {
         // Extracting request parameters
@@ -1549,11 +1737,14 @@ class ExamreportController extends BaseController
                 $branchID = $request->branch_id;
                 $Connection = $this->createNewConnection($request->branch_id);
                 $getsemester = $Connection->table('semester')->where('academic_session_id', $request->academic_session_id)->orderBy('start_date', 'asc')->get();
+
                 $attendance_list = [];
                 foreach ($getsemester as $sem) {
 
                     $semester_id = $sem->id;
+
                     $fromdate = $sem->start_date;
+
                     $enddate = $sem->end_date;
                     $froms = date('Y-m-01', strtotime($fromdate));
                     $start = new DateTime($froms);
@@ -1588,18 +1779,45 @@ class ExamreportController extends BaseController
                             $fromdate1 = trim($date->format('Y-m-01') . PHP_EOL);
                             $todate = trim($date->format('Y-m-t') . PHP_EOL);
                         }
-
-
-
                         $suspension = 0;
-                        $holidays = $Connection->table('holidays as hl')
-                            ->select('hl.id')
-                            ->whereRaw('hl.date between "' . $fromdate1 . '" and "' . $todate . '"')
-                            ->count();
+                        $holidaydatas = $Connection->table('events as hl')
+                            ->select('start_date', 'end_date')
+                            ->where('hl.holiday', '=', '0')
+                            ->where(function ($query) use ($fromdate1, $todate) {
+                                $query->whereBetween('hl.start_date', [$fromdate1,  $todate])
+                                    ->orWhereBetween('hl.end_date', [$fromdate1,  $todate])
+                                    ->orWhere(function ($query)  use ($fromdate1, $todate) {
+                                        $query->where('hl.start_date', '<', $fromdate1)
+                                            ->where('hl.end_date', '>',  $todate);
+                                    });
+                            })->get();
+                        $holidaydatas;
+                        $holidays = 0;
+                        $holidays_array = [];
+                        if (!empty($holidaydatas)) {
+                            foreach ($holidaydatas as $holy) {
+
+                                $start_date = strtotime($holy->start_date);
+                                $end_date = strtotime($holy->end_date);
+                                $current_date = $start_date;
+                                // Loop through each day
+                                while ($current_date <= $end_date) {
+                                    $hdate = date('Y-m-d', $current_date);
+
+                                    // Check if the current date is in May
+                                    if (date("m", $current_date) == $mon) {
+                                        $holidays++;
+                                        array_push($holidays_array, $hdate);
+                                    }
+                                    // Move to the next day
+                                    $current_date = strtotime("+1 day", $current_date);
+                                }
+                            }
+                        }
                         $start = strtotime($fromdate1);
                         $end = strtotime($todate);
                         $datediff = $end - $start;
-                        $montotaldays = round($datediff / (60 * 60 * 24));
+                        $montotaldays = round($datediff / (60 * 60 * 24)) + 1;
                         $iter = 24 * 60 * 60; // whole day in seconds
                         $count = 0; // keep a count of Sats & Suns
 
@@ -1612,28 +1830,118 @@ class ExamreportController extends BaseController
                         $totalweekends = $count;
 
                         $totaldays = $montotaldays - $holidays - $totalweekends;
-                        $getAttendance = $Connection->table('student_attendances_day as sa')
-                            ->select(
-                                DB::raw('COUNT(CASE WHEN sa.status = "present" then 1 ELSE NULL END) as "presentCount"'),
-                                DB::raw('COUNT(CASE WHEN sa.status = "absent" then 1 ELSE NULL END) as "absentCount"'),
-                                DB::raw('COUNT(CASE WHEN sa.status = "late" then 1 ELSE NULL END) as "lateCount"'),
-                                DB::raw('COUNT(CASE WHEN sa.status = "excused" then 1 ELSE NULL END) as "excusedCount"'),
-                            )
-                            ->where('sa.student_id', '=', $request->student_id)
-                            ->where('sa.class_id', '=', $request->class_id)
-                            ->where('sa.section_id', '=', $request->section_id)
-                            ->where('sa.semester_id', '=', $semester_id)
-                            ->whereMonth('sa.date', $mon)
-                            ->whereYear('sa.date', $year)
-                            ->first();
-                        $totalcoming = $totaldays - $suspension;
-                        $totpres = $getAttendance->presentCount;
+                        $getleaves = $Connection->table('student_leaves')
+                            ->where('student_id', $request->student_id)
+                            ->where('class_id', $request->class_id)
+                            ->where('section_id', $request->section_id)
+                            ->where('status', '=', "Approve")
+                            ->where(function ($query) use ($fromdate1, $todate) {
+                                $query->whereBetween('from_leave', [$fromdate1,  $todate])
+                                    ->orWhereBetween('to_leave', [$fromdate1,  $todate])
+                                    ->orWhere(function ($query)  use ($fromdate1, $todate) {
+                                        $query->where('from_leave', '<', $fromdate1)
+                                            ->where('to_leave', '>',  $todate);
+                                    });
+                            })->get();
+                        $absent = 0;
+                        $sus = 0;
+                        $late1 = 0;
+                        $early = 0;
+                        foreach ($getleaves as $leave) {
+                            if ($leave->change_lev_type == 1 || $leave->change_lev_type == 1) {
+                                $weekday = array('Saturday', 'Sunday');
+                                $start_date = strtotime($leave->from_leave);
+                                $end_date = strtotime($leave->to_leave);
+                                $current_date = $start_date;
+                                // Loop through each day
+                                while ($current_date <= $end_date) {
+                                    $hdate = date('Y-m-d', $current_date);
+                                    $curday = date('l', strtotime($hdate));
+                                    // Check if the current date is in May
+                                    if (date("m", $current_date) == $mon) {
+                                        if (in_array($curday, $weekday)) {
+                                        } elseif (in_array($curday, $holidays_array)) {
+                                        } else {
+                                            $absent++;
+                                        }
+                                    }
+                                    // Move to the next day
+                                    $current_date = strtotime("+1 day", $current_date);
+                                }
+                            }
+                            if ($leave->change_lev_type == 3 || $leave->change_lev_type == 4) {
+                                $weekday = array('Saturday', 'Sunday');
+                                $start_date = strtotime($leave->from_leave);
+                                $end_date = strtotime($leave->to_leave);
+                                $current_date = $start_date;
+                                // Loop through each day
+                                while ($current_date <= $end_date) {
+                                    $hdate = date('Y-m-d', $current_date);
+                                    $curday = date('l', strtotime($hdate));
+                                    // Check if the current date is in May
+                                    if (date("m", $current_date) == $mon) {
+                                        if (in_array($curday, $weekday)) {
+                                        } elseif (in_array($curday, $holidays_array)) {
+                                        } else {
+                                            $sus++;
+                                        }
+                                    }
+                                    // Move to the next day
+                                    $current_date = strtotime("+1 day", $current_date);
+                                }
+                            }
+                            if ($leave->change_lev_type == 5) {
+                                $weekday = array('Saturday', 'Sunday');
+                                $start_date = strtotime($leave->from_leave);
+                                $end_date = strtotime($leave->to_leave);
+                                $current_date = $start_date;
+                                // Loop through each day
+                                while ($current_date <= $end_date) {
+                                    $hdate = date('Y-m-d', $current_date);
+                                    $curday = date('l', strtotime($hdate));
+                                    // Check if the current date is in May
+                                    if (date("m", $current_date) == $mon) {
+                                        if (in_array($curday, $weekday)) {
+                                        } elseif (in_array($curday, $holidays_array)) {
+                                        } else {
+                                            $late1++;
+                                        }
+                                    }
+                                    // Move to the next day
+                                    $current_date = strtotime("+1 day", $current_date);
+                                }
+                            }
+                            if ($leave->change_lev_type == 6) {
+                                $weekday = array('Saturday', 'Sunday');
+                                $start_date = strtotime($leave->from_leave);
+                                $end_date = strtotime($leave->to_leave);
+                                $current_date = $start_date;
+                                // Loop through each day
+                                while ($current_date <= $end_date) {
+                                    $hdate = date('Y-m-d', $current_date);
+                                    $curday = date('l', strtotime($hdate));
+                                    // Check if the current date is in May
+                                    if (date("m", $current_date) == $mon) {
+                                        if (in_array($curday, $weekday)) {
+                                        } elseif (in_array($curday, $holidays_array)) {
+                                        } else {
+                                            $early++;
+                                        }
+                                    }
+                                    // Move to the next day
+                                    $current_date = strtotime("+1 day", $current_date);
+                                }
+                            }
+                        }
+                        $totalcoming = $totaldays - $sus;
+                        $suspension = $sus;
+                        $totpres = $totalcoming - $absent;
 
-                        $totabs = $getAttendance->absentCount;
+                        $totabs =  $absent;
 
-                        $totlate = $getAttendance->lateCount;
+                        $totlate = $late1;
 
-                        $totexc = $getAttendance->excusedCount;
+                        $totexc = $early;
                         $data = [
                             "month" => $mon,
                             "no_schooldays" => $totaldays,
@@ -1643,6 +1951,9 @@ class ExamreportController extends BaseController
                             "totabs" => $totabs,
                             "totlate" => $totlate,
                             "totexc" => $totexc,
+                            "holidays" => $holidays,
+                            "holidays_array" => $holidays_array
+                            // "datas" => $getleaves
                         ];
                         array_push($attendance_list, $data);
                     }
@@ -1664,7 +1975,7 @@ class ExamreportController extends BaseController
             $studentdetails = $Connection->table('enrolls as en')
                 ->select(
                     'en.student_id',
-                    'en.roll',
+                    // 'en.roll',
                     'en.attendance_no',
                     DB::raw('CONCAT(st.last_name_english, " ", st.first_name_english) as eng_name'),
                     DB::raw('CONCAT(st.last_name, " ", st.first_name) as name'),
@@ -1693,7 +2004,7 @@ class ExamreportController extends BaseController
             $studentdetails = $Connection->table('enrolls as en')
                 ->select(
                     'en.student_id',
-                    'en.roll',
+                    // 'en.roll',
                     'en.attendance_no',
                     DB::raw('CONCAT(st.last_name_english, " ", st.first_name_english) as eng_name'),
                     DB::raw('CONCAT(st.last_name, " ", st.first_name) as name'),
