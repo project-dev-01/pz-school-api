@@ -1571,13 +1571,10 @@ class ExamreportController extends BaseController
                             $fromdate1 = trim($date->format('Y-m-01') . PHP_EOL);
                             $todate = trim($date->format('Y-m-t') . PHP_EOL);
                         }
-
-
-
                         $suspension = 0;
                         $holidaydatas = $Connection->table('events as hl')
                         ->select('start_date','end_date')
-                        ->where('hl.holiday', '=', '1')                        
+                        ->where('hl.holiday', '=', '0')                        
                         ->where(function ($query) use ($fromdate1,$todate) {
                             $query->whereBetween('hl.start_date', [$fromdate1,  $todate])
                                 ->orWhereBetween('hl.end_date', [$fromdate1,  $todate])
