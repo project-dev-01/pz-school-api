@@ -3,63 +3,62 @@
 namespace App\Http\Controllers\Api;
 
 // use App\Http\Controllers\Controller;
-use App\Helpers\CommonHelper;
-use App\Helpers\Helper;
-use App\Http\Controllers\Api\BaseController as BaseController;
-use App\Models\Branches;
-use App\Models\Classes;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Auth;
+use Symfony\Component\HttpFoundation\Response;
 // base controller add
-use App\Models\EventType;
-use App\Models\Forum_count_details;
-use App\Models\Forum_post_replie_counts;
-use App\Models\Forum_post_replies;
-use App\Models\Forum_posts;
-use App\Models\Menuaccess;
-use App\Models\Menus;
-use App\Models\Role;
-use App\Models\Section;
-use App\Models\User;
-use App\Notifications\AdminTermination;
-use App\Notifications\LeaveApply;
-use App\Notifications\LeaveApprove;
-use App\Notifications\LeaveReasonNotification;
-use App\Notifications\NewApplication;
-// db connection
-use App\Notifications\ParentEmail;
-use App\Notifications\ParentInfoUpdate;
-use App\Notifications\ParentTermination;
-use App\Notifications\SendEmail;
-use App\Notifications\StudentEmail;
-use App\Notifications\StudentHomeworkSubmit;
-// notifications
-use App\Notifications\StudentInfoUpdate;
-use App\Notifications\StudentLeaveApply;
-use App\Notifications\TeacherEmail;
-use App\Notifications\TeacherHomework;
-use App\Notifications\UpdateApplication;
-use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
+use App\Http\Controllers\Api\BaseController as BaseController;
+use Illuminate\Validation\Rule;
+use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Mail;
+use DateTime;
 use DateInterval;
 use DatePeriod;
-use DateTime;
-use Exception;
-use File;
-use Illuminate\Contracts\Encryption\DecryptException;
-use Illuminate\Http\Request;
+use App\Models\Branches;
+use App\Models\Section;
+use App\Helpers\Helper;
+use App\Models\Classes;
+use App\Models\Role;
+use App\Models\EventType;
+use App\Models\User;
+// db connection
+use App\Models\Forum_posts;
+use App\Models\Forum_count_details;
+use App\Models\Forum_post_replies;
+use Carbon\Carbon;
+use App\Models\Forum_post_replie_counts;
 use Illuminate\Support\Arr;
-use Illuminate\Support\Facades\Auth;
+// notifications
+use App\Notifications\SendEmail;
+use App\Notifications\LeaveApply;
+use App\Notifications\StudentLeaveApply;
+use App\Notifications\LeaveApprove;
+use App\Notifications\StudentHomeworkSubmit;
+use App\Notifications\TeacherHomework;
+use App\Notifications\ParentEmail;
+use App\Notifications\StudentEmail;
+use App\Notifications\TeacherEmail;
+use App\Notifications\ParentTermination;
+use App\Notifications\AdminTermination;
+use App\Notifications\ParentInfoUpdate;
+use App\Notifications\StudentInfoUpdate;
+use App\Notifications\LeaveReasonNotification;
+use App\Notifications\NewApplication;
 
-use Illuminate\Support\Facades\Cache;
-// encrypt and decrypt
-use Illuminate\Support\Facades\Config;
-use Illuminate\Support\Facades\Crypt;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Notification;
-use Illuminate\Support\Facades\Validator;
-use Illuminate\Support\Str;
-use Illuminate\Validation\Rule;
-use Symfony\Component\HttpFoundation\Response;
+// encrypt and decrypt
+use Illuminate\Support\Facades\Crypt;
+use Illuminate\Contracts\Encryption\DecryptException;
+use File;
+use Exception;
+use Illuminate\Support\Facades\Config;
+use Illuminate\Support\Facades\Hash;
+use App\Models\Menus;
+use App\Models\Menuaccess;
+use App\Helpers\CommonHelper;
 
 class ApiController extends BaseController
 {
@@ -15686,7 +15685,7 @@ try{
                     'trail_start_date' => $request->trail_start_date,
                     'trail_end_date' => $request->trail_end_date,
                     'official_date' => $request->official_date,
-                    'date_of_termination' => $request->date_of_termination,
+
                     'category_id' => $request->category_id,
                     'first_name' => isset($request->first_name) ? $request->first_name : "",
                     'last_name' => isset($request->last_name) ? $request->last_name : "",
@@ -16708,27 +16707,7 @@ try{
             if (!empty($getparentDetails)) {
                 foreach ($getparentDetails as $key => $suc) {
 
-                    $old = $conn->table('parent as p')                  
-                    ->where('p.id', '=', $parent_id)
-                    ->first();
-
-
-                    // $guardian_old = $staffConn->table('parent as p')->select(
-                    //     'p.middle_name','p.first_name','p.last_name',
-                    //     'p.middle_name_furigana','p.first_name_furigana','p.last_name_furigana',
-                    //     'p.last_name_english','p.middle_name_english','p.first_name_english',
-                    //     'p.mobile_no','p.occupation',
-                    //     'p.email','p.id','st.relation', 
-                    //     'p.company_name_japan','p.company_name_local','p.company_phone_number',
-                    //     'p.employment_status','p.japan_postalcode','p.japan_emergency_sms',
-                    //     'p.japan_contact_no','p.japan_address','p.stay_category',
-                    //     'p.japanese_association_membership_image_supplimental',
-                    //     'p.japanese_association_membership_image_principal'
-
-                    // )
-                    // ->leftJoin('students as st', 'p.id', '=', 'st.guardian_id')
-                    // ->where('p.id', '=', $request->guardian_id)->first();
-
+                    $old = $conn->table('parent')->where('id', '=', $parent_id)->first();
 
                     // dd(${$key});
                     if ($suc) {
@@ -16742,19 +16721,11 @@ try{
                             ${$key}['old_value'] =  Helper::decryptStringData($old->$key);
                             ${$key}['new_value'] =  Helper::decryptStringData($suc);
                         } else if ($key == "relation"){
-                            $realtion = $conn->table('students as stud')
-                            ->select('r.name as old_name')
-                            ->leftJoin('relations as r', function($join) {
-                                $join->on('r.id', '=', 'stud.relation')
-                                    ->whereNotNull('stud.relation');
-                            })
-                            ->where('stud.guardian_id', '=', $parent_id)
-                            ->first();
-                            $realtionnewname = $conn->table('relations')->select('name as new_name')->where('id', '=', $suc)->first();
+                            $realtion = $conn->table('students')->select('relation')->where('guardian_id', '=', $parent_id)->first();
                             
                             ${$key} = [];
-                            ${$key}['old_value'] =   ($realtion!==null)?$realtion->old_name:'';
-                            ${$key}['new_value'] =  $realtionnewname->new_name;
+                            ${$key}['old_value'] =   ($realtion!==null)?$realtion->$key:'';
+                            ${$key}['new_value'] =  $suc;
                         }else {
                             ${$key} = [];
                             ${$key}['old_value'] =  $old->$key;
@@ -16935,9 +16906,7 @@ try{
                             'mobile_no' => $request->father_phone_number,
                             'occupation' => $request->father_occupation,
                             'email' => $request->father_email,
-                            'relation' => $request->relation,
                         ];
-                        // return $father_data;
                         $father_insertArr = [];
                         foreach ($father_old as $key => $o) {
                             // if (isset($father_data[$key])) {
@@ -17055,7 +17024,6 @@ try{
                             'mobile_no' => $request->mother_phone_number,
                             'occupation' => $request->mother_occupation,
                             'email' => $request->mother_email,
-                            'relation' => $request->guardian_relation,
                         ];
                         $mother_insertArr = [];
                         foreach ($mother_old as $key => $o) {
@@ -17119,7 +17087,6 @@ try{
     
                     }
                     if($request->student_id){
-
                         $namesArray= $request->full_name;
                         $namesString = implode(',', $namesArray);
                         $dobArray= $request->sblingdob;
@@ -17189,8 +17156,7 @@ try{
                         ->leftJoin('students as st', 'p.id', '=', 'st.guardian_id')
                         ->where('p.id', '=', $request->guardian_id)->first();
     
-                        // return $request;
-                        // return $guardian_old;
+                        // dd($guardian_old);
                         $guardian_data = [
                             'id' => $request->guardian_id,
                             "last_name_furigana" => $request->guardian_last_name_furigana,
@@ -27256,26 +27222,6 @@ try{
                 "guardian_employment_status" => $request->guardian_employment_status,
                 "stay_category" => $request->stay_category,
             ]);
-
-
-            $notifyuser = User::where([
-                ['branch_id', '=', $request->branch_id],
-                ['role_id', '=', 2]
-            ])->get();
-
-              $info_update = [];
-              // $info_update['parent_name'] = $parent_name->name;
-              // $info_update['student_name'] = $old->last_name . ' ' . $old->first_name;
-              $details = [
-                  'branch_id' => $request->branch_id,
-                  'parent_id' => $request->parent_id,
-                  'application_id' => $query,
-                  'student_name' => $request->last_name. ' ' . $request->first_name,
-                  // 'info_update' => $info_update
-              ];
-              // return $details;
-              // notifications sent
-              Notification::send($notifyuser, new UpdateApplication($details));
 
             $success = [];
             if (!$query) {
