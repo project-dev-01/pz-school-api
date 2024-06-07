@@ -160,7 +160,27 @@ class ExamreportController extends BaseController
             } else {
                 // create new connection
                 $Connection = $this->createNewConnection($request->branch_id);
+                /*$getpapersQuery = $Connection->table('timetable_exam as tex')
+                ->select(
+                    'tex.id as id',
+                    'exp.id as paper_id',
+                    'exp.paper_name',
+                    'exp.score_type'
+                )
+                ->join('exam_papers as exp', 'tex.paper_id', '=', 'exp.id')
                 
+                ->where([
+                    ['tex.class_id', $request->class_id],
+                    ['tex.section_id', $request->section_id],
+                    ['tex.subject_id', $request->subject_id],
+                    ['tex.academic_session_id', $request->academic_session_id],
+                    ['tex.exam_id', $request->exam_id]
+                ])
+                ->groupBy('exp.id');
+                if ($request->paper_id != 'All') {
+                    $getpapersQuery->where('exp.id', '=', $request->paper_id);
+                }
+                $examPapers = $getpapersQuery->get();*/
                 $getpapersQuery = $Connection->table('exam_papers as exp')
                     ->select(
                         'exp.id',
@@ -995,8 +1015,6 @@ class ExamreportController extends BaseController
 
                 // Inserting or updating student marks
                 if (isset($existingRow->id)) {
-                Log::info('existingRow ID: ' . json_encode($existingRow->id));
-
                     $Connection->table('student_marks')->where('id', $existingRow->id)->update([
                         'score' => $score ?? null,
                         'points' => $points ?? null,
@@ -1009,7 +1027,6 @@ class ExamreportController extends BaseController
                         'updated_at' => date("Y-m-d H:i:s")
                     ]);
                 } else {
-                    Log::info('student_marsk: ' . json_encode($arrayStudentMarks));
                     $Connection->table('student_marks')->insert($arrayStudentMarks);
                 }
             }
@@ -1031,13 +1048,13 @@ class ExamreportController extends BaseController
     //     $session_id = $request->session_id;
     //     $academic_session_id = $request->academic_session_id;
     //     $fdata = $request->fdata;
-    
+
     //     $batchSize = 100; // Number of records to process in a single batch
     //     $batchInserts = [];
     //     $batchUpdates = [];
-    
+
     //     DB::beginTransaction();
-    
+
     //     try {
     //         // Processing each row of data
     //         foreach ($fdata as $importData) {
@@ -1049,13 +1066,13 @@ class ExamreportController extends BaseController
     //                 $status = ($att == "p" || $att == "present") ? "present" : "absent";
     //                 $mark = ($att != 'a' && !empty($importData[5])) ? $importData[5] : null;
     //                 $memo = $importData[7];
-    
+
     //                 $students = $Connection->table('students')->select('id')->where('register_no', '=', $student_roll)->first();
     //                 if (!$students) {
     //                     continue; // If student not found, skip to next iteration
     //                 }
     //                 $student_id = $students->id;
-    
+
     //                 $getpapersQuery = $Connection->table('exam_papers as ep')
     //                     ->select('ep.id', 'ep.paper_name', 'ep.score_type', 'ep.grade_category')
     //                     ->where([
@@ -1064,14 +1081,14 @@ class ExamreportController extends BaseController
     //                         ['ep.subject_id', '=', $subject_id],
     //                         ['ep.academic_session_id', '=', $academic_session_id]
     //                     ]);
-    
+
     //                 if ($paper_id != 'All') {
     //                     $getpapersQuery->where('ep.id', '=', $paper_id);
     //                 } else {
     //                     $getpapersQuery->where('ep.paper_name', '=', $papername);
     //                     $getpapersQuery->where('ep.score_type', '=', $score_type);
     //                 }
-    
+
     //                 $paper = $getpapersQuery->first();
     //                 if (!$paper) {
     //                     continue; // If paper not found, skip to next iteration
@@ -1079,14 +1096,14 @@ class ExamreportController extends BaseController
     //                 $paperID = $paper->id;
     //                 $grade_category = $paper->grade_category;
     //                 $score_type = $paper->score_type;
-    
+
     //                 $score = null;
     //                 $points = null;
     //                 $freetext = null;
     //                 $grade = null;
     //                 $pass_fail = null;
     //                 $ranking = null;
-    
+
     //                 if ($score_type == 'Grade' || $score_type == 'Mark') {
     //                     if (!empty($mark)) {
     //                         $grade_marks = $Connection->table('grade_marks')->select('grade', 'status')->where([
@@ -1112,7 +1129,7 @@ class ExamreportController extends BaseController
     //                     $freetext = $mark;
     //                     $pass_fail = 'Pass';
     //                 }
-    
+
     //                 $arrayStudentMarks = [
     //                     'student_id' => $student_id,
     //                     'class_id' => $class_id,
@@ -1135,7 +1152,7 @@ class ExamreportController extends BaseController
     //                     'created_at' => date("Y-m-d H:i:s"),
     //                     'updated_at' => date("Y-m-d H:i:s")
     //                 ];
-    
+
     //                 $existingRow = $Connection->table('student_marks')->select('id')->where([
     //                     ['class_id', '=', $class_id],
     //                     ['section_id', '=', $section_id],
@@ -1146,7 +1163,7 @@ class ExamreportController extends BaseController
     //                     ['paper_id', '=', $paperID],
     //                     ['academic_session_id', '=', $academic_session_id]
     //                 ])->first();
-    
+
     //                 if (isset($existingRow->id)) {
     //                     $batchUpdates[] = [
     //                         'id' => $existingRow->id,
@@ -1165,12 +1182,12 @@ class ExamreportController extends BaseController
     //                 } else {
     //                     $batchInserts[] = $arrayStudentMarks;
     //                 }
-    
+
     //                 if (count($batchInserts) >= $batchSize) {
     //                     $Connection->table('student_marks')->insert($batchInserts);
     //                     $batchInserts = [];
     //                 }
-    
+
     //                 if (count($batchUpdates) >= $batchSize) {
     //                     foreach ($batchUpdates as $update) {
     //                         $Connection->table('student_marks')->where('id', $update['id'])->update($update['data']);
@@ -1179,17 +1196,17 @@ class ExamreportController extends BaseController
     //                 }
     //             }
     //         }
-    
+
     //         if (!empty($batchInserts)) {
     //             $Connection->table('student_marks')->insert($batchInserts);
     //         }
-    
+
     //         if (!empty($batchUpdates)) {
     //             foreach ($batchUpdates as $update) {
     //                 $Connection->table('student_marks')->where('id', $update['id'])->update($update['data']);
     //             }
     //         }
-    
+
     //         DB::commit();
     //         return $this->successResponse([], 'Exam Mark Upload Successfully');
     //     } catch (\Exception $e) {
@@ -1197,7 +1214,7 @@ class ExamreportController extends BaseController
     //         return $this->errorResponse($e->getMessage(), 'Error in uploading exam marks');
     //     }
     // }
-    
+
     public function adhocexamuploadmark(Request $request)
     {
         // Extracting request parameters
@@ -1717,20 +1734,20 @@ class ExamreportController extends BaseController
                 $branchID = $request->branch_id;
                 $Connection = $this->createNewConnection($request->branch_id);
                 $getsemester = $Connection->table('semester')->where('academic_session_id', $request->academic_session_id)->orderBy('start_date', 'asc')->get();
-                
+
                 $attendance_list = [];
                 foreach ($getsemester as $sem) {
-                    
+
                     $semester_id = $sem->id;
-                    
+
                     $fromdate = $sem->start_date;
-                    
+
                     $enddate = $sem->end_date;
                     $froms = date('Y-m-01', strtotime($fromdate));
                     $start = new DateTime($froms);
                     $end = new DateTime($enddate);
                     $startmonth = date('m', strtotime($fromdate));
-                  
+
                     $endmonth = date('m', strtotime($enddate));
 
                     $interval = new DateInterval('P1M'); // 1 month interval
@@ -1761,30 +1778,29 @@ class ExamreportController extends BaseController
                         }
                         $suspension = 0;
                         $holidaydatas = $Connection->table('events as hl')
-                        ->select('start_date','end_date')
-                        ->where('hl.holiday', '=', '0')                        
-                        ->where(function ($query) use ($fromdate1,$todate) {
-                            $query->whereBetween('hl.start_date', [$fromdate1,  $todate])
-                                ->orWhereBetween('hl.end_date', [$fromdate1,  $todate])
-                                ->orWhere(function ($query)  use ($fromdate1,$todate) {
-                                    $query->where('hl.start_date', '<', $fromdate1)
-                                        ->where('hl.end_date', '>',  $todate);
-                                });
-                        })->get();
+                            ->select('start_date', 'end_date')
+                            ->where('hl.holiday', '=', '0')
+                            ->where(function ($query) use ($fromdate1, $todate) {
+                                $query->whereBetween('hl.start_date', [$fromdate1,  $todate])
+                                    ->orWhereBetween('hl.end_date', [$fromdate1,  $todate])
+                                    ->orWhere(function ($query)  use ($fromdate1, $todate) {
+                                        $query->where('hl.start_date', '<', $fromdate1)
+                                            ->where('hl.end_date', '>',  $todate);
+                                    });
+                            })->get();
                         $holidaydatas;
-                        $holidays=0;$holidays_array=[];
-                        if(!empty($holidaydatas))
-                        {
-                            foreach($holidaydatas as $holy)
-                            {
-                                
+                        $holidays = 0;
+                        $holidays_array = [];
+                        if (!empty($holidaydatas)) {
+                            foreach ($holidaydatas as $holy) {
+
                                 $start_date = strtotime($holy->start_date);
                                 $end_date = strtotime($holy->end_date);
                                 $current_date = $start_date;
                                 // Loop through each day
                                 while ($current_date <= $end_date) {
-                                    $hdate=date('Y-m-d',$current_date);
-                                    
+                                    $hdate = date('Y-m-d', $current_date);
+
                                     // Check if the current date is in May
                                     if (date("m", $current_date) == $mon) {
                                         $holidays++;
@@ -1798,7 +1814,7 @@ class ExamreportController extends BaseController
                         $start = strtotime($fromdate1);
                         $end = strtotime($todate);
                         $datediff = $end - $start;
-                        $montotaldays = round($datediff / (60 * 60 * 24))+1;
+                        $montotaldays = round($datediff / (60 * 60 * 24)) + 1;
                         $iter = 24 * 60 * 60; // whole day in seconds
                         $count = 0; // keep a count of Sats & Suns
 
@@ -1815,32 +1831,32 @@ class ExamreportController extends BaseController
                             ->where('student_id', $request->student_id)
                             ->where('class_id', $request->class_id)
                             ->where('section_id', $request->section_id)
-                            ->where('status','=',"Approve")
-                            ->where(function ($query) use ($fromdate1,$todate) {
+                            ->where('status', '=', "Approve")
+                            ->where(function ($query) use ($fromdate1, $todate) {
                                 $query->whereBetween('from_leave', [$fromdate1,  $todate])
                                     ->orWhereBetween('to_leave', [$fromdate1,  $todate])
-                                    ->orWhere(function ($query)  use ($fromdate1,$todate) {
+                                    ->orWhere(function ($query)  use ($fromdate1, $todate) {
                                         $query->where('from_leave', '<', $fromdate1)
                                             ->where('to_leave', '>',  $todate);
                                     });
                             })->get();
-                            $absent=0;$sus=0;$late1=0;$early=0;
-                        foreach($getleaves as $leave)
-                        {
-                            if($leave->change_lev_type==1 || $leave->change_lev_type==1)
-                            {
-                                $weekday=array('Saturday','Sunday');
+                        $absent = 0;
+                        $sus = 0;
+                        $late1 = 0;
+                        $early = 0;
+                        foreach ($getleaves as $leave) {
+                            if ($leave->change_lev_type == 1 || $leave->change_lev_type == 1) {
+                                $weekday = array('Saturday', 'Sunday');
                                 $start_date = strtotime($leave->from_leave);
                                 $end_date = strtotime($leave->to_leave);
                                 $current_date = $start_date;
                                 // Loop through each day
                                 while ($current_date <= $end_date) {
-                                    $hdate=date('Y-m-d',$current_date);
-                                    $curday=date('l',strtotime($hdate));
+                                    $hdate = date('Y-m-d', $current_date);
+                                    $curday = date('l', strtotime($hdate));
                                     // Check if the current date is in May
                                     if (date("m", $current_date) == $mon) {
-                                        if(in_array($curday, $weekday))
-                                        {
+                                        if (in_array($curday, $weekday)) {
                                         } elseif (in_array($curday, $holidays_array)) {
                                         } else {
                                             $absent++;
@@ -1917,115 +1933,6 @@ class ExamreportController extends BaseController
                         $totalcoming = $totaldays - $sus;
                         $suspension = $sus;
                         $totpres = $totalcoming - $absent;
-    
-                                        }
-                                        elseif(in_array($curday, $holidays_array))
-                                        {
-    
-                                        }
-                                        else
-                                        {
-                                            $absent++;
-                                        }
-                                    }
-                                    // Move to the next day
-                                    $current_date = strtotime("+1 day", $current_date);
-                                }
-                            }
-                            if($leave->change_lev_type==3 || $leave->change_lev_type==4)
-                            {
-                                $weekday=array('Saturday','Sunday');
-                                $start_date = strtotime($leave->from_leave);
-                                $end_date = strtotime($leave->to_leave);
-                                $current_date = $start_date;
-                                // Loop through each day
-                                while ($current_date <= $end_date) {
-                                    $hdate=date('Y-m-d',$current_date);
-                                    $curday=date('l',strtotime($hdate));
-                                    // Check if the current date is in May
-                                    if (date("m", $current_date) == $mon) {
-                                        if(in_array($curday, $weekday))
-                                        {
-    
-                                        }
-                                        elseif(in_array($curday, $holidays_array))
-                                        {
-    
-                                        }
-                                        else
-                                        {
-                                            $sus++;
-                                        }
-                                    }
-                                    // Move to the next day
-                                    $current_date = strtotime("+1 day", $current_date);
-                                }
-                            }
-                            if($leave->change_lev_type==5)
-                            {
-                                $weekday=array('Saturday','Sunday');
-                                $start_date = strtotime($leave->from_leave);
-                                $end_date = strtotime($leave->to_leave);
-                                $current_date = $start_date;
-                                // Loop through each day
-                                while ($current_date <= $end_date) {
-                                    $hdate=date('Y-m-d',$current_date);
-                                    $curday=date('l',strtotime($hdate));
-                                    // Check if the current date is in May
-                                    if (date("m", $current_date) == $mon) {
-                                        if(in_array($curday, $weekday))
-                                        {
-    
-                                        }
-                                        elseif(in_array($curday, $holidays_array))
-                                        {
-    
-                                        }
-                                        else
-                                        {
-                                            $late1++;
-                                        }
-                                    }
-                                    // Move to the next day
-                                    $current_date = strtotime("+1 day", $current_date);
-                                }
-                            }
-                            if($leave->change_lev_type==6)
-                            {
-                                $weekday=array('Saturday','Sunday');
-                                $start_date = strtotime($leave->from_leave);
-                                $end_date = strtotime($leave->to_leave);
-                                $current_date = $start_date;
-                                // Loop through each day
-                                while ($current_date <= $end_date) {
-                                    $hdate=date('Y-m-d',$current_date);
-                                    $curday=date('l',strtotime($hdate));
-                                    // Check if the current date is in May
-                                    if (date("m", $current_date) == $mon) {
-                                        if(in_array($curday, $weekday))
-                                        {
-    
-                                        }
-                                        elseif(in_array($curday, $holidays_array))
-                                        {
-    
-                                        }
-                                        else
-                                        {
-                                            $early++;
-                                        }
-                                    }
-                                    // Move to the next day
-                                    $current_date = strtotime("+1 day", $current_date);
-                                }
-                            }
-                            
-
-
-                        }
-                        $totalcoming = $totaldays - $sus; 
-                        $suspension=$sus;
-                        $totpres = $totalcoming - $absent;
 
                         $totabs =  $absent;
 
@@ -2041,9 +1948,9 @@ class ExamreportController extends BaseController
                             "totabs" => $totabs,
                             "totlate" => $totlate,
                             "totexc" => $totexc,
-                            "holidays"=> $holidays,
-                            "holidays_array"=>$holidays_array
-                           // "datas" => $getleaves
+                            "holidays" => $holidays,
+                            "holidays_array" => $holidays_array
+                            // "datas" => $getleaves
                         ];
                         array_push($attendance_list, $data);
                     }

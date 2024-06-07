@@ -12457,7 +12457,7 @@ try{
                 $getSubjectMarks = $Connection->table('enrolls as en')
                     ->select(
                         'en.student_id',
-                        // 'en.roll',
+                        'en.roll',
                         DB::raw('CONCAT(st.last_name, " ", st.first_name) as name'),
                         'st.register_no',
                         'sa.id as att_id',
@@ -15685,7 +15685,7 @@ try{
                     'trail_start_date' => $request->trail_start_date,
                     'trail_end_date' => $request->trail_end_date,
                     'official_date' => $request->official_date,
-                    'date_of_termination' => $request->date_of_termination,
+
                     'category_id' => $request->category_id,
                     'first_name' => isset($request->first_name) ? $request->first_name : "",
                     'last_name' => isset($request->last_name) ? $request->last_name : "",
@@ -16707,27 +16707,7 @@ try{
             if (!empty($getparentDetails)) {
                 foreach ($getparentDetails as $key => $suc) {
 
-                    $old = $conn->table('parent as p')                  
-                    ->where('p.id', '=', $parent_id)
-                    ->first();
-
-
-                    // $guardian_old = $staffConn->table('parent as p')->select(
-                    //     'p.middle_name','p.first_name','p.last_name',
-                    //     'p.middle_name_furigana','p.first_name_furigana','p.last_name_furigana',
-                    //     'p.last_name_english','p.middle_name_english','p.first_name_english',
-                    //     'p.mobile_no','p.occupation',
-                    //     'p.email','p.id','st.relation', 
-                    //     'p.company_name_japan','p.company_name_local','p.company_phone_number',
-                    //     'p.employment_status','p.japan_postalcode','p.japan_emergency_sms',
-                    //     'p.japan_contact_no','p.japan_address','p.stay_category',
-                    //     'p.japanese_association_membership_image_supplimental',
-                    //     'p.japanese_association_membership_image_principal'
-
-                    // )
-                    // ->leftJoin('students as st', 'p.id', '=', 'st.guardian_id')
-                    // ->where('p.id', '=', $request->guardian_id)->first();
-
+                    $old = $conn->table('parent')->where('id', '=', $parent_id)->first();
 
                     // dd(${$key});
                     if ($suc) {
@@ -16741,19 +16721,11 @@ try{
                             ${$key}['old_value'] =  Helper::decryptStringData($old->$key);
                             ${$key}['new_value'] =  Helper::decryptStringData($suc);
                         } else if ($key == "relation"){
-                            $realtion = $conn->table('students as stud')
-                            ->select('r.name as old_name')
-                            ->leftJoin('relations as r', function($join) {
-                                $join->on('r.id', '=', 'stud.relation')
-                                    ->whereNotNull('stud.relation');
-                            })
-                            ->where('stud.guardian_id', '=', $parent_id)
-                            ->first();
-                            $realtionnewname = $conn->table('relations')->select('name as new_name')->where('id', '=', $suc)->first();
+                            $realtion = $conn->table('students')->select('relation')->where('guardian_id', '=', $parent_id)->first();
                             
                             ${$key} = [];
-                            ${$key}['old_value'] =   ($realtion!==null)?$realtion->old_name:'';
-                            ${$key}['new_value'] =  $realtionnewname->new_name;
+                            ${$key}['old_value'] =   ($realtion!==null)?$realtion->$key:'';
+                            ${$key}['new_value'] =  $suc;
                         }else {
                             ${$key} = [];
                             ${$key}['old_value'] =  $old->$key;
@@ -16934,9 +16906,7 @@ try{
                             'mobile_no' => $request->father_phone_number,
                             'occupation' => $request->father_occupation,
                             'email' => $request->father_email,
-                            'relation' => $request->relation,
                         ];
-                        // return $father_data;
                         $father_insertArr = [];
                         foreach ($father_old as $key => $o) {
                             // if (isset($father_data[$key])) {
@@ -17054,7 +17024,6 @@ try{
                             'mobile_no' => $request->mother_phone_number,
                             'occupation' => $request->mother_occupation,
                             'email' => $request->mother_email,
-                            'relation' => $request->guardian_relation,
                         ];
                         $mother_insertArr = [];
                         foreach ($mother_old as $key => $o) {
@@ -17118,7 +17087,6 @@ try{
     
                     }
                     if($request->student_id){
-
                         $namesArray= $request->full_name;
                         $namesString = implode(',', $namesArray);
                         $dobArray= $request->sblingdob;
@@ -17130,7 +17098,7 @@ try{
                            'sibling_full_name' =>  $namesString ,
                            'sibling_dob' =>  $dobString,
                            'sibling_relationship' =>  $relationshipString,
-                        //    'relation' =>  $request->guardian_relation,
+                           'relation' =>  $request->guardian_relation,
                             'updated_at' => now()
                         ]);
                     }
@@ -17188,8 +17156,7 @@ try{
                         ->leftJoin('students as st', 'p.id', '=', 'st.guardian_id')
                         ->where('p.id', '=', $request->guardian_id)->first();
     
-                        // return $request;
-                        // return $guardian_old;
+                        // dd($guardian_old);
                         $guardian_data = [
                             'id' => $request->guardian_id,
                             "last_name_furigana" => $request->guardian_last_name_furigana,
@@ -27255,26 +27222,6 @@ try{
                 "guardian_employment_status" => $request->guardian_employment_status,
                 "stay_category" => $request->stay_category,
             ]);
-
-
-            $notifyuser = User::where([
-                ['branch_id', '=', $request->branch_id],
-                ['role_id', '=', 2]
-            ])->get();
-
-              $info_update = [];
-              // $info_update['parent_name'] = $parent_name->name;
-              // $info_update['student_name'] = $old->last_name . ' ' . $old->first_name;
-              $details = [
-                  'branch_id' => $request->branch_id,
-                  'parent_id' => $request->parent_id,
-                  'application_id' => $query,
-                  'student_name' => $request->last_name. ' ' . $request->first_name,
-                  // 'info_update' => $info_update
-              ];
-              // return $details;
-              // notifications sent
-              Notification::send($notifyuser, new UpdateApplication($details));
 
             $success = [];
             if (!$query) {
