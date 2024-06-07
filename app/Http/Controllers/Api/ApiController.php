@@ -16937,7 +16937,7 @@ try{
                             'email' => $request->father_email,
                             'relation' => $request->relation,
                         ];
-                        return $father_data;
+                        // return $father_data;
                         $father_insertArr = [];
                         foreach ($father_old as $key => $o) {
                             // if (isset($father_data[$key])) {
@@ -17131,7 +17131,7 @@ try{
                            'sibling_full_name' =>  $namesString ,
                            'sibling_dob' =>  $dobString,
                            'sibling_relationship' =>  $relationshipString,
-                        //    'relation' =>  $request->guardian_relation,
+                         //'relation' =>  $request->guardian_relation,
                             'updated_at' => now()
                         ]);
                     }
@@ -17474,7 +17474,7 @@ try{
                            'sibling_full_name' =>  $namesString ,
                            'sibling_dob' =>  $dobString,
                            'sibling_relationship' =>  $relationshipString,
-                           'relation' =>  $request->guardian_relation,
+                        //    'relation' =>  $request->guardian_relation,
                             'updated_at' => now()
                         ]);
                     }
@@ -17696,21 +17696,21 @@ try{
 
             $relation['relation'] = isset($insertArr['relation']) ? $insertArr['relation'] : null;
             
-            unset($insertArr['relation']);
+            // unset($insertArr['relation']);
             
-            if($status_count == "Remand" || $status_count == "Reject"){
-                $update_parent = $conn->table('parent')->where('id', '=', $id)->first();
-                $update_parent_email = $update_parent->guardian_email;
-                $data = array(
-                    'parent_name' => $update_parent->last_name . ' '. $update_parent->first_name ,
-                    'status' => $status_count, 
-                );
-                $mailFromAddress = env('MAIL_FROM_ADDRESS', config('constants.client_email'));
-                $query = Mail::send('auth.parent_update_info', $data, function ($message) use ($update_parent_email,$mailFromAddress) {
-                    $message->to($update_parent_email, 'Parent')->subject('Parent Information Update');
-                    $message->from($mailFromAddress, 'Parent Profile Details');
-                });
-            }
+            // if($status_count == "Remand" || $status_count == "Reject"){
+            //     $update_parent = $conn->table('parent')->where('id', '=', $id)->first();
+            //     $update_parent_email = $update_parent->email;
+            //     $data = array(
+            //         'parent_name' => $update_parent->last_name . ' '. $update_parent->first_name ,
+            //         'status' => $status_count, 
+            //     );
+            //     $mailFromAddress = env('MAIL_FROM_ADDRESS', config('constants.client_email'));
+            //     $query = Mail::send('auth.parent_update_info', $data, function ($message) use ($update_parent_email,$mailFromAddress) {
+            //         $message->to($update_parent_email, 'Parent')->subject('Parent Information Update');
+            //         $message->from($mailFromAddress, 'Parent Profile Details');
+            //     });
+            // }
             
             // return $insertArr;
             // $query = true;
@@ -30100,6 +30100,7 @@ try{
 
                         $new = $conn->table('parent_change_info')->where('id', '=', $id)->first();
                         $old = $conn->table('parent')->where('id', '=', $parent_id)->first();
+                       
                         $remarks = $new->remarks;
                         // dd(${$key});
                         if ($suc) {
@@ -30112,7 +30113,21 @@ try{
                                 ${$key} = [];
                                 ${$key}['old_value'] =  Helper::decryptStringData($old->$key);
                                 ${$key}['new_value'] =  Helper::decryptStringData($suc);
-                            } else {
+                            } else if ($key == "relation"){
+                                $realtion = $conn->table('students as stud')
+                                ->select('r.name as old_name')
+                                ->leftJoin('relations as r', function($join) {
+                                    $join->on('r.id', '=', 'stud.relation')
+                                        ->whereNotNull('stud.relation');
+                                })
+                                ->where('stud.guardian_id', '=', $parent_id)
+                                ->first();
+                                $realtionnewname = $conn->table('relations')->select('name as new_name')->where('id', '=', $suc)->first();
+                                
+                                ${$key} = [];
+                                ${$key}['old_value'] =   ($realtion!==null)?$realtion->old_name:'';
+                                ${$key}['new_value'] =  $realtionnewname->new_name;
+                            }else {
                                 ${$key} = [];
                                 ${$key}['old_value'] =  $old->$key;
                                 ${$key}['new_value'] =  $suc;
