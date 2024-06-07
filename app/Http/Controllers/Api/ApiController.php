@@ -3,62 +3,68 @@
 namespace App\Http\Controllers\Api;
 
 // use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\Validator;
-use Illuminate\Support\Facades\Auth;
-use Symfony\Component\HttpFoundation\Response;
-// base controller add
-use Illuminate\Support\Facades\DB;
-use App\Http\Controllers\Api\BaseController as BaseController;
-use Illuminate\Validation\Rule;
-use Illuminate\Support\Str;
-use Illuminate\Support\Facades\Mail;
-use DateTime;
-use DateInterval;
-use DatePeriod;
-use App\Models\Branches;
-use App\Models\Section;
+use App\Helpers\CommonHelper;
 use App\Helpers\Helper;
+use App\Http\Controllers\Api\BaseController as BaseController;
+use App\Models\Branches;
+use App\Models\Category;
+// base controller add
 use App\Models\Classes;
-use App\Models\Role;
 use App\Models\EventType;
-use App\Models\User;
-// db connection
-use App\Models\Forum_posts;
 use App\Models\Forum_count_details;
-use App\Models\Forum_post_replies;
-use Carbon\Carbon;
 use App\Models\Forum_post_replie_counts;
-use Illuminate\Support\Arr;
-// notifications
-use App\Notifications\SendEmail;
-use App\Notifications\LeaveApply;
-use App\Notifications\StudentLeaveApply;
-use App\Notifications\LeaveApprove;
-use App\Notifications\StudentHomeworkSubmit;
-use App\Notifications\TeacherHomework;
-use App\Notifications\ParentEmail;
-use App\Notifications\StudentEmail;
-use App\Notifications\TeacherEmail;
-use App\Notifications\ParentTermination;
+use App\Models\Forum_post_replies;
+use App\Models\Forum_posts;
+use App\Models\Menuaccess;
+use App\Models\Menus;
+use App\Models\Role;
+use App\Models\Section;
+use App\Models\StaffDepartments;
+use App\Models\TeacherAllocation;
+use App\Models\User;
 use App\Notifications\AdminTermination;
-use App\Notifications\ParentInfoUpdate;
-use App\Notifications\StudentInfoUpdate;
+use App\Notifications\ApplicationStatus;
+// db connection
+use App\Notifications\LeaveApply;
+use App\Notifications\LeaveApprove;
 use App\Notifications\LeaveReasonNotification;
 use App\Notifications\NewApplication;
-
-use Illuminate\Support\Facades\Notification;
-// encrypt and decrypt
-use Illuminate\Support\Facades\Crypt;
-use Illuminate\Contracts\Encryption\DecryptException;
-use File;
+use App\Notifications\ParentEmail;
+use App\Notifications\ParentInfoUpdate;
+// notifications
+use App\Notifications\ParentTermination;
+use App\Notifications\SendEmail;
+use App\Notifications\StudentEmail;
+use App\Notifications\StudentHomeworkSubmit;
+use App\Notifications\StudentInfoUpdate;
+use App\Notifications\StudentLeaveApply;
+use App\Notifications\TeacherEmail;
+use App\Notifications\TeacherHomework;
+use App\Notifications\UpdateApplication;
+use Carbon\Carbon;
+use DateInterval;
+use DatePeriod;
+use DateTime;
 use Exception;
+use File;
+
+use Illuminate\Contracts\Encryption\DecryptException;
+// encrypt and decrypt
+use Illuminate\Http\Request;
+use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Config;
+use Illuminate\Support\Facades\Crypt;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
-use App\Models\Menus;
-use App\Models\Menuaccess;
-use App\Helpers\CommonHelper;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Notification;
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
+use Symfony\Component\HttpFoundation\Response;
 
 class ApiController extends BaseController
 {
@@ -26749,11 +26755,11 @@ try{
                         ];
                         
                         if($relation->parent == "1"){
-                            //father is guardian 
+                            //father is guardian
                             $guardian_data['passport_photo'] = $passport_father_fileName;
                             $guardian_data['visa_photo'] = $visa_father_fileName;
                         }else if($relation->parent == "2"){
-                            //mother is guardian 
+                            //mother is guardian
                             $guardian_data['passport_photo'] = $passport_mother_fileName;
                             $guardian_data['visa_photo'] = $visa_mother_fileName;
                         }
@@ -27236,22 +27242,24 @@ try{
 
             $notifyuser = User::where([
                 ['branch_id', '=', $request->branch_id],
-                ['role_id', '=', 2]
-            ])->get();
+                ['email', '=', $request->guardian_email],
+                ['role_id', '=', 5]
+            ])->first();
 
               $info_update = [];
               // $info_update['parent_name'] = $parent_name->name;
               // $info_update['student_name'] = $old->last_name . ' ' . $old->first_name;
               $details = [
                   'branch_id' => $request->branch_id,
-                  'parent_id' => $request->parent_id,
-                  'application_id' => $query,
+                  'application_id' => $request->id,
+                  'guardian_email' => $request->guardian_email,                  
                   'student_name' => $request->last_name. ' ' . $request->first_name,
-                  // 'info_update' => $info_update
+                  'phase_1_status' => $request->status,
+                  'phase_2_status' => $request->phase_2_status,
               ];
               // return $details;
               // notifications sent
-              Notification::send($notifyuser, new UpdateApplication($details));
+              Notification::send($notifyuser, new ApplicationStatus($details));
 
             $success = [];
             if (!$query) {
