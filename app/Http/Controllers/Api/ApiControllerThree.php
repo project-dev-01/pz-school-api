@@ -3615,7 +3615,7 @@ class ApiControllerThree extends BaseController
 
             // Update or Insert student medical histories
             $histories_id = $conn->table('student_medical_histories')->updateOrInsert(
-                ['student_id' => $studentId],
+                ['student_id' => $studentId, 'academic_session_id' => $request->academic_session_id],
                 [
                     'heart_problem' => $request->heart_problem,
                     'epilepsy' => $request->epilepsy,
@@ -3641,7 +3641,7 @@ class ApiControllerThree extends BaseController
             
             // Update or Insert student immunization histories
             $immunization_history_id = $conn->table('student_immunization_histories')->updateOrInsert(
-                ['student_id' => $studentId],
+                ['student_id' => $studentId, 'academic_session_id' => $request->academic_session_id],
                 [
                     'japanese_encephalitis' => $request->japanese_encephalitis,
                     'streptococcus_pneumoniae' => $request->streptococcus_pneumoniae,
@@ -3663,7 +3663,7 @@ class ApiControllerThree extends BaseController
             
             // Update or Insert current health conditions
             $current_health_condition_id = $conn->table('current_health_condition')->updateOrInsert(
-                ['student_id' => $studentId],
+                ['student_id' => $studentId, 'academic_session_id' => $request->academic_session_id],
                 [
                     'develops_fever_easily' => $request->develops_fever,
                     'frequent_headaches' => $request->frequent_headaches,
@@ -3696,7 +3696,7 @@ class ApiControllerThree extends BaseController
             
             // Update or Insert student medical records
             if ($histories_id) {
-               $student_medical_record_id =  $conn->table('student_medical_records')->updateOrInsert(
+               $student_medical_record_id =  $conn->table('student_medical_record')->updateOrInsert(
                     ['student_id' => $studentId, 'academic_session_id' => $request->academic_session_id],
                     [
                         'parent_id' => $request->parent_id,
@@ -3766,7 +3766,7 @@ class ApiControllerThree extends BaseController
             $conn = $this->createNewConnection($request->branch_id);
 
              // Fetch medical records for the specified student_id
-             $medicalRecords = $conn->table('student_medical_records as stm')
+             $medicalRecords = $conn->table('student_medical_record as stm')
              ->select(
                  'stm.*', 
                  'sth.*', 
@@ -3785,7 +3785,7 @@ class ApiControllerThree extends BaseController
          ->leftJoin('allergies_details as ad', function ($join) use ($request) {        
              $join->on('ad.allergies_id', '=', 'sa.id')              
              ->where('ad.student_id', '=', $request->student_id);     }) 
-        ->leftJoin('student_medical_records as stm', 'ad.student_medical_record_id', '=', 'stm.id')    
+        ->leftJoin('student_medical_record as stm', 'ad.student_medical_record_id', '=', 'stm.id')    
          ->select('ad.*', 'sa.id as sa_id')     ->get();
        
          $indexedAllergies = [];
@@ -3835,7 +3835,7 @@ class ApiControllerThree extends BaseController
                     ->leftJoin('classes as cl', 'en.class_id', '=', 'cl.id')
                     ->leftJoin('sections as sc', 'en.section_id', '=', 'sc.id')
                     ->leftJoin('staff_departments as sd', 'en.department_id', '=', 'sd.id')
-                    ->leftJoin('student_medical_records as smr', 'en.student_id', '=', 'smr.student_id')
+                    ->leftJoin('student_medical_record as smr', 'en.student_id', '=', 'smr.student_id')
                     ->where([
                         ['en.class_id', '=', $request->class_id],
                         ['en.section_id', '=', $request->section_id],
@@ -3892,13 +3892,18 @@ class ApiControllerThree extends BaseController
             // create new connection
             $conn = $this->createNewConnection($request->branch_id);
               // Fetch medical records for the specified student_id
-              $medicalRecords = $conn->table('student_medical_records as stm')
+              $medicalRecords = $conn->table('student_medical_record as stm')
               ->select(
                   'stm.*', 
                   'sth.*', 
                   'sti.*', 
                   'stc.*',
                   DB::raw("CONCAT(st1.last_name, ' ', st1.first_name) as name"),
+                  'st1.gender',
+                  'st1.birthday',
+                  'st1.blood_group',
+                  'st1.address_condominium',
+                  'st1.address_district',
               )
               ->leftJoin('student_medical_histories as sth', 'stm.medical_history_id', '=', 'sth.id')
               ->leftJoin('student_immunization_histories as sti', 'stm.immunization_history_id', '=', 'sti.id')
@@ -3912,7 +3917,7 @@ class ApiControllerThree extends BaseController
          ->leftJoin('allergies_details as ad', function ($join) use ($request) {        
              $join->on('ad.allergies_id', '=', 'sa.id')              
              ->where('ad.student_id', '=', $request->student_id);     }) 
-        ->leftJoin('student_medical_records as stm', 'ad.student_medical_record_id', '=', 'stm.id')    
+        ->leftJoin('student_medical_record as stm', 'ad.student_medical_record_id', '=', 'stm.id')    
          ->select('ad.*', 'sa.id as sa_id')     ->get();
        
          $indexedAllergies = [];
