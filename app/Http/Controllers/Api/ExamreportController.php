@@ -44,6 +44,7 @@ use App\Models\Menus;
 use App\Models\Menuaccess;
 use App\Helpers\CommonHelper;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Cache;
 
 class ExamreportController extends BaseController
 {
@@ -1752,6 +1753,96 @@ class ExamreportController extends BaseController
             return $this->commonHelper->generalReturn('403', 'error', $error, 'Error in getec_teacher');
         }
     }
+
+    // public function getsubjectpapermark(Request $request)
+    // {
+    //     try {
+    //         $Connection = $this->createNewConnection($request->branch_id);
+
+    //         $subjectCacheKey = 'subject_' . $request->subject;
+    //         $getsubject = Cache::remember($subjectCacheKey, 3600, function () use ($Connection, $request) {
+    //             return $Connection->table('subjects')
+    //                 ->select('id')
+    //                 ->where('name', 'like', $request->subject)
+    //                 ->first();
+    //         });
+
+    //         if (!$getsubject) {
+    //             return $this->commonHelper->generalReturn('404', 'error', null, 'Subject not found');
+    //         }
+
+    //         $subject_id = $getsubject->id;
+
+    //         $semesterCacheKey = 'semesters_' . $request->academic_session_id;
+    //         $semesters = Cache::remember($semesterCacheKey, 3600, function () use ($Connection, $request) {
+    //             return $Connection->table('semester')
+    //                 ->where('academic_session_id', $request->academic_session_id)
+    //                 ->orderBy('start_date', 'asc')
+    //                 ->get()
+    //                 ->pluck('id')
+    //                 ->toArray();
+    //         });
+
+    //         $paper_list = [];
+
+    //         foreach ($request->papers as $paper) {
+    //             $paperCacheKey = 'paper_' . $request->department_id . '_' . $request->class_id . '_' . $subject_id . '_' . $request->academic_session_id . '_' . $paper;
+    //             $getpapers = Cache::remember($paperCacheKey, 3600, function () use ($Connection, $request, $subject_id, $paper) {
+    //                 return $Connection->table('exam_papers as ep')
+    //                     ->select('ep.id', 'ep.paper_name', 'ep.score_type', 'sb.name')
+    //                     ->leftJoin('subjects as sb', 'sb.id', '=', 'ep.subject_id')
+    //                     ->where([
+    //                         ['ep.department_id', '=', $request->department_id],
+    //                         ['ep.class_id', '=', $request->class_id],
+    //                         ['ep.subject_id', '=', $subject_id],
+    //                         ['ep.academic_session_id', '=', $request->academic_session_id],
+    //                         ['ep.paper_name', 'like', $paper]
+    //                     ])
+    //                     ->first();
+    //             });
+
+    //             if (!$getpapers) {
+    //                 $paper_list[] = [
+    //                     "papers" => $paper,
+    //                     "marks" => ['', '', '']
+    //                 ];
+    //                 continue;
+    //             }
+
+    //             $marks = [];
+
+    //             foreach ($semesters as $semester) {
+    //                 $markCacheKey = 'mark_' . $request->class_id . '_' . $request->section_id . '_' . $request->student_id . '_' . $subject_id . '_' . $getpapers->id . '_' . $semester;
+    //                 $getmark = Cache::remember($markCacheKey, 3600, function () use ($Connection, $request, $subject_id, $getpapers, $semester) {
+    //                     return $Connection->table('student_marks as sa')
+    //                         ->select('sa.score', 'sa.grade', 'sa.points', 'sa.freetext', 'gm.grade as grade_name')
+    //                         ->leftJoin('grade_marks as gm', 'gm.id', '=', 'sa.points')
+    //                         ->where([
+    //                             ['sa.class_id', '=', $request->class_id],
+    //                             ['sa.section_id', '=', $request->section_id],
+    //                             ['sa.student_id', '=', $request->student_id],
+    //                             ['sa.subject_id', '=', $subject_id],
+    //                             ['sa.paper_id', '=', $getpapers->id],
+    //                             ['sa.semester_id', '=', $semester]
+    //                         ])
+    //                         ->first();
+    //                 });
+
+    //                 $marks[] = $getmark;
+    //             }
+
+    //             $paper_list[] = [
+    //                 "papers" => $paper,
+    //                 "marks" => $marks
+    //             ];
+    //         }
+
+    //         return $this->successResponse($paper_list, 'Get Subject Paper Lists');
+    //     } catch (Exception $error) {
+    //         return $this->commonHelper->generalReturn('403', 'error', $error, 'Error in getsubjectpapermark');
+    //     }
+    // }
+
     public function getsubjectpapermark(Request $request)
     {
         try {
@@ -2067,6 +2158,8 @@ class ExamreportController extends BaseController
             return $this->commonHelper->generalReturn('403', 'error', $error, 'Error in getacyeardates');
         }
     }
+
+    // Attentance report Modify code.
     public function getsem_studentattendance(Request $request)
     {
         try {
@@ -2080,33 +2173,33 @@ class ExamreportController extends BaseController
                 $branchID = $request->branch_id;
                 $Connection = $this->createNewConnection($request->branch_id);
                 $getsemester = $Connection->table('semester')->where('academic_session_id', $request->academic_session_id)->orderBy('start_date', 'asc')->get();
- 
+
                 $attendance_list = [];
                 foreach ($getsemester as $sem) {
- 
+
                     $semester_id = $sem->id;
- 
+
                     $fromdate = $sem->start_date;
- 
+
                     $enddate = $sem->end_date;
                     $froms = date('Y-m-01', strtotime($fromdate));
                     $start = new DateTime($froms);
                     $end = new DateTime($enddate);
                     $startmonth = date('m', strtotime($fromdate));
- 
+
                     $endmonth = date('m', strtotime($enddate));
- 
+
                     $interval = new DateInterval('P1M'); // 1 month interval
                     $period = new DatePeriod($start, $interval, $end);
- 
- 
+
+
                     foreach ($period as $date) {
- 
- 
+
+
                         $month = trim($date->format('F') . PHP_EOL);
                         $montotaldays = trim($date->format('t') . PHP_EOL);
                         $mon = trim($date->format('m') . PHP_EOL);
- 
+
                         $year = trim($date->format('Y') . PHP_EOL);
                         /*if($year==2024)
                     {
@@ -2124,8 +2217,8 @@ class ExamreportController extends BaseController
                         }
                         $suspension = 0;
                         $holidaydatas = $Connection->table('events as hl')
-                            ->select('start_date', 'end_date')
-                            ->where('hl.holiday', '=', '0')
+                            ->select('title', 'start_date', 'end_date', 'holiday', 'audience', 'selected_list')
+                            ->where('hl.audience', '<=', '2')
                             ->where(function ($query) use ($fromdate1, $todate) {
                                 $query->whereBetween('hl.start_date', [$fromdate1,  $todate])
                                     ->orWhereBetween('hl.end_date', [$fromdate1,  $todate])
@@ -2136,12 +2229,18 @@ class ExamreportController extends BaseController
                             })->get();
                         $holidaydatas;
                         $holidays = 0;
+                        $sp_event = 0;
                         $holidays_array = [];
+                        $sp_eventsdate = [];
                         if (!empty($holidaydatas)) {
                             foreach ($holidaydatas as $holy) {
- 
+
                                 $start_date = strtotime($holy->start_date);
                                 $end_date = strtotime($holy->end_date);
+                                $title = $holy->title;
+                                $holiday = $holy->holiday;
+                                $audience = $holy->audience;
+                                $grade_list = $holy->selected_list;
                                 $current_date = $start_date;
                                 // Loop through each day
                                 while ($current_date <= $end_date) {
@@ -2150,15 +2249,31 @@ class ExamreportController extends BaseController
                                     // Check if the current date is in May
                                     $weekday = array('Saturday', 'Sunday');
                                     if (date("m", $current_date) == $mon) {
-                                       
-                                        if (in_array($curday, $weekday)) {
+                                        if ($audience == 1 && $holiday == 1) {
+                                            if (in_array($curday, $weekday)) {
+                                                $sp_event++;
+                                                $sed = $hdate . ' - ' . $title;
+                                                array_push($sp_eventsdate, $sed);
+                                            }
+                                        } elseif ($audience == 1 && $holiday == 0) {
+                                            if (!in_array($curday, $weekday)) {
+                                                $holidays++;
+                                                $hd = $hdate . ' - ' . $title;
+                                                array_push($holidays_array, $hdate);
+                                            }
+                                        } elseif ($audience == 2 && $holiday == 1 && $grade_list == $request->class_id) {
+                                            if (in_array($curday, $weekday)) {
+                                                $sp_event++;
+                                                $sed = $hdate . ' - ' . $title;
+                                                array_push($sp_eventsdate, $sed);
+                                            }
+                                        } elseif ($audience == 2 && $holiday == 0 && $grade_list == $request->class_id) {
+                                            if (!in_array($curday, $weekday)) {
+                                                $holidays++;
+                                                $hd = $hdate . ' - ' . $title;
+                                                array_push($holidays_array, $hd);
+                                            }
                                         }
-                                        else
-                                        {
-                                            $holidays++;
-                                            array_push($holidays_array, $hdate);
-                                        }
-                                       
                                     }
                                     // Move to the next day
                                     $current_date = strtotime("+1 day", $current_date);
@@ -2171,16 +2286,16 @@ class ExamreportController extends BaseController
                         $montotaldays = round($datediff / (60 * 60 * 24)) + 1;
                         $iter = 24 * 60 * 60; // whole day in seconds
                         $count = 0; // keep a count of Sats & Suns
- 
+
                         for ($i = $start; $i <= $end; $i = $i + $iter) {
                             if (Date('D', $i) == 'Sat' || Date('D', $i) == 'Sun') {
                                 $count++;
                             }
                         }
- 
+
                         $totalweekends = $count;
- 
-                        $totaldays = $montotaldays - $holidays - $totalweekends;
+
+                        $totaldays = $montotaldays + $sp_event - $holidays - $totalweekends;
                         $getleaves = $Connection->table('student_leaves')
                             ->where('student_id', $request->student_id)
                             ->where('class_id', $request->class_id)
@@ -2212,9 +2327,7 @@ class ExamreportController extends BaseController
                                     if (date("m", $current_date) == $mon) {
                                         if (in_array($curday, $weekday)) {
                                         } elseif (in_array($hdate, $holidays_array)) {
-                                        }
-                                        else
-                                        {
+                                        } else {
                                             $absent++;
                                         }
                                     }
@@ -2234,8 +2347,7 @@ class ExamreportController extends BaseController
                                     // Check if the current date is in May
                                     if (date("m", $current_date) == $mon) {
                                         if (in_array($curday, $weekday)) {
-                                        }
-                                        elseif (in_array($hdate, $holidays_array)) {
+                                        } elseif (in_array($hdate, $holidays_array)) {
                                         } else {
                                             $sus++;
                                         }
@@ -2290,11 +2402,11 @@ class ExamreportController extends BaseController
                         $totalcoming = $totaldays - $sus;
                         $suspension = $sus;
                         $totpres = $totalcoming - $absent;
- 
+
                         $totabs =  $absent;
- 
+
                         $totlate = $late1;
- 
+
                         $totexc = $early;
                         $data = [
                             "month" => $mon,
@@ -2306,14 +2418,15 @@ class ExamreportController extends BaseController
                             "totlate" => $totlate,
                             "totexc" => $totexc,
                             "holidays" => $holidays,
-                            "holidays_array" => $holidays_array
-                            // "datas" => $getleaves
+                            "holidays_array" => $holidays_array,
+                            "special_events" => $sp_eventsdate
+
                         ];
                         array_push($attendance_list, $data);
                     }
                 }
- 
- 
+
+
                 return $this->successResponse($attendance_list, 'Get Pdf Attendance Report successfully');
             }
         } catch (Exception $error) {
