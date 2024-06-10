@@ -27247,8 +27247,6 @@ try{
             ])->first();
 
               $info_update = [];
-              // $info_update['parent_name'] = $parent_name->name;
-              // $info_update['student_name'] = $old->last_name . ' ' . $old->first_name;
               $details = [
                   'branch_id' => $request->branch_id,
                   'application_id' => $request->id,
@@ -27256,8 +27254,7 @@ try{
                   'student_name' => $request->last_name. ' ' . $request->first_name,
                   'phase_1_status' => $request->status,
                   'phase_2_status' => $request->phase_2_status,
-              ];
-              // return $details;
+              ];              
               // notifications sent
               Notification::send($notifyuser, new ApplicationStatus($details));
 
@@ -27297,6 +27294,8 @@ try{
             if ($request->status == "1") {
                 $status = "Approved";
             }
+
+            
             $query = $conn->table('student_applications')->where('id', $id)->update([
                 'status' => $status,
                 'updated_at' => date("Y-m-d H:i:s")
