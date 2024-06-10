@@ -18,10 +18,10 @@ class ApplicationStatus extends Notification
      */
     protected $branch_id;
     protected $application_id;
-    protected $guardian_email;
+    protected $guardian_email;  
     protected $student_name;
-    protected $phase_1_status;
-    protected $phase_2_status;
+    protected $phase_1_status;  
+    protected $phase_2_status;  
 
 
     public function __construct($data)

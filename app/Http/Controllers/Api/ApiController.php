@@ -27241,22 +27241,28 @@ try{
                 "stay_category" => $request->stay_category,
             ]);
 
+            
 
+            $getParentLogin = $conn->table('student_applications as stud_app')->select('p.email as parent_login_email', 'stud_app.created_by_role as parent_login_role')
+            ->leftJoin('parent as p', 'stud_app.created_by', '=', 'p.id')
+            ->where('stud_app.id', '=', $request->id)->first();
+            // return $getParentLogin;
+           
             $notifyuser = User::where([
                 ['branch_id', '=', $request->branch_id],
-                ['email', '=', $request->guardian_email],
-                ['role_id', '=', 5]
-            ])->first();
-
+                ['email', '=', $getParentLogin->parent_login_email],
+                ['role_id', '=', $getParentLogin->parent_login_role],
+            ])->get();
+            // return $notifyuser;
               $info_update = [];
               $details = [
                   'branch_id' => $request->branch_id,
                   'application_id' => $request->id,
-                  'guardian_email' => $request->guardian_email,                  
+                  'guardian_email' => $getParentLogin->parent_login_email,
                   'student_name' => $request->last_name. ' ' . $request->first_name,
                   'phase_1_status' => $request->status,
                   'phase_2_status' => $request->phase_2_status,
-              ];              
+              ];
               // notifications sent
               Notification::send($notifyuser, new ApplicationStatus($details));
 

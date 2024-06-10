@@ -26,8 +26,8 @@ class UpdateApplication extends Notification
         //
         $this->branch_id = $data['branch_id'];
         $this->parent_id = $data['parent_id'];
-        $this->application_id = $data['application_id'];
-        $this->student_name = $data['student_name'];
+        $this->application_id = $data['application_id'];  
+        $this->student_name = $data['student_name'];  
     }
 
     /**
@@ -38,7 +38,7 @@ class UpdateApplication extends Notification
      */
     public function via($notifiable)
     {
-        return ['database'];
+        return ['database']; 
     }
 
     /**
