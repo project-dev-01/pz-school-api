@@ -26958,6 +26958,8 @@ try{
                         'trail_end_date' => $request->trail_end_date,
                         'official_date' => $request->official_date,
 
+                        'type' => $request->type,
+                        'last_date_of_withdrawal' => $request->last_date_of_withdrawal,
                         // 'japanese_association_membership_image_principal' => $image_principal_fileName,
                         // 'japanese_association_membership_image_supplimental' => $image_supplimental_fileName,
                         'passport' => isset($request->passport) ? Crypt::encryptString($request->passport) : "",
