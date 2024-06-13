@@ -2957,14 +2957,21 @@ class ApiControllerThree extends BaseController
                 $conn = $this->createNewConnection($request->branch_id);
                 $termination_status_flag = isset($request->termination_status_flag) ? $request->termination_status_flag : null;
                 // get data
+                 $name_status = $request->name_status;
                 $parent_id = $request->parent_id;
-                $terminationDetails = $conn->table('termination as t')->select('t.*', 'ay.name as academic_year', 's.gender', DB::raw("CONCAT(s.last_name_english, ' ', s.first_name_english) as name_english"), DB::raw("CONCAT(s.last_name, ' ', s.first_name) as name"), 'c.name as class_name', 'sc.name as section_name')
+                $terminationDetails = $conn->table('termination as t')->select('t.*', 
+                'ay.name as academic_year', 
+                's.gender', 
+                DB::raw("CONCAT(s." . ($name_status == 0 ? 'last_name' : 'first_name') . ", ' ', s." . ($name_status == 0 ? 'first_name' : 'last_name') . ") as name"),
+                DB::raw("CONCAT(s." . ($name_status == 0 ? 'last_name_english' : 'first_name_english') . ", ' ', s." . ($name_status == 0 ? 'first_name_english' : 'last_name_english') . ") as name_english"),
+                 'c.name as class_name', 
+                 'sc.name as section_name')
                     ->leftJoin('students as s', 's.id', '=', 't.student_id')
                     ->leftJoin('enrolls as e', 'e.student_id', '=', 's.id')
                     ->leftJoin('classes as c', 'e.class_id', '=', 'c.id')
                     ->leftJoin('sections as sc', 'e.section_id', '=', 'sc.id')
                     ->leftJoin('academic_year as ay', 'e.academic_session_id', '=', 'ay.id')
-                    ->where('e.active_status', '=', '0')
+                    //->where('e.active_status', '=', '0')
                     ->when($parent_id, function ($query, $parent_id) {
                         return $query->where('t.created_by', $parent_id);
                     })
