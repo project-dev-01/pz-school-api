@@ -2773,7 +2773,10 @@ class ApiControllerOne extends BaseController
                 // create new connection
                 $Connection = $this->createNewConnection($request->branch_id);
                 // get data
-                $deptDetails = $Connection->table('academic_year')->where('id', $id)->first();
+                $deptDetails = $Connection->table('academic_year')->select(
+                    'id',
+                    'name'
+                )->where('id', $id)->first();
                 return $this->successResponse($deptDetails, 'Academic year row fetch successfully');
             }
         } catch (Exception $error) {

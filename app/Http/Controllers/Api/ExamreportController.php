@@ -143,8 +143,6 @@ class ExamreportController extends BaseController
     }
     public function getExamByPaper(Request $request)
     {
-
-
         try {
             $validator = \Validator::make($request->all(), [
                 'branch_id' => 'required',
@@ -1643,7 +1641,22 @@ class ExamreportController extends BaseController
         $success[] = '';
         return $this->successResponse($success, 'Exam Mark Upload Successfully');
     }
+    public function get_subject_details(Request $request)
+    {
+        try {
 
+            $Connection = $this->createNewConnection($request->branch_id);
+            $getsubject = $Connection->table('subjects as sb')
+                ->select(
+                    'sb.id as subject_id'
+                )
+                ->where('sb.name', '=', $request->subject_name)
+                ->first();
+            return $this->successResponse($getsubject, 'Get EC Subjects Detatils');
+        } catch (Exception $error) {
+            return $this->commonHelper->generalReturn('403', 'error', $error, 'Error in get_subject_details');
+        }
+    }
     public function getec_marks(Request $request)
     {
         try {
@@ -1658,16 +1671,8 @@ class ExamreportController extends BaseController
             $academic_session_id = $request->academic_session_id;
             $student_id = $request->student_id;
             $paper_name = $request->paper_name;
+            $subject_id = $request->subject_id;
             $Connection = $this->createNewConnection($request->branch_id);
-            $getsubject = $Connection->table('subjects as sb')
-                ->select(
-                    'sb.id as subject_id',
-                    'sb.name'
-                )
-                // ->where('sb.name', '=', 'EC')
-                ->where('sb.name', '=', '英語コミュニケーション')
-                ->first();
-            $subject_id = $getsubject->subject_id;
             // return $getsubject;
             $getSubjectMarks = $Connection->table('exam_papers as ep')
                 ->select(
@@ -1849,8 +1854,7 @@ class ExamreportController extends BaseController
             $Connection = $this->createNewConnection($request->branch_id);
             $getsubject = $Connection->table('subjects as sb')
                 ->select(
-                    'sb.id as subject_id',
-                    'sb.name'
+                    'sb.id as subject_id'
                 )
                 ->where('sb.name', 'like', $request->subject)
                 ->first();
@@ -1875,9 +1879,8 @@ class ExamreportController extends BaseController
                     ])
                     ->first();
                 $getsemester = $Connection->table('semester')->where('academic_session_id', $request->academic_session_id)->orderBy('start_date', 'asc')->get();
-                $mark = ['', '', ''];
+                $mark = [];
                 if (!empty($getpapers)) {
-                    $mark = [];
                     foreach ($getsemester as $sem) {
                         $semester = $sem->id;
                         $paper_id = $getpapers->id;
@@ -1919,39 +1922,64 @@ class ExamreportController extends BaseController
     public function classteacher_principal(Request $request)
     {
         try {
+            // Validate the request
+            $validator = Validator::make($request->all(), [
+                'branch_id' => 'required',
+                'class_id' => 'required',
+                'section_id' => 'required',
+                'academic_session_id' => 'required',
+            ]);
 
+            if (!$validator->passes()) {
+                return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
+            }
+
+            $branch_id = $request->branch_id;
             $class_id = $request->class_id;
             $section_id = $request->section_id;
             $academic_session_id = $request->academic_session_id;
-            $Connection = $this->createNewConnection($request->branch_id);
-            $principaldata = $Connection->table('staffs')
-                ->select(DB::raw("CONCAT(last_name, ' ', first_name) as full_name"))
-                ->where('designation_id', 1)
-                ->first();
+            $cache_time = config('constants.cache_time');
+            $classteacher_principal = config('constants.classteacher_principal');
+            $cacheKey = "{$classteacher_principal}_{$branch_id}_{$class_id}_{$section_id}_{$academic_session_id}";
 
-            $teacherdata = $Connection->table('teacher_allocations as t1')
-                ->select(DB::raw("CONCAT(t2.last_name, ' ', t2.first_name) as full_name"))
-                ->leftJoin('staffs as t2', 't1.teacher_id', '=', 't2.id')
-                ->where('t1.class_id', $class_id)
-                ->where('t1.section_id', $section_id)
-                ->where('t1.academic_session_id', $academic_session_id)
-                ->first();
+            // Check if the data is cached
+            if (Cache::has($cacheKey)) {
+                // If cached, return cached data
+                $teach_data = Cache::get($cacheKey);
+            } else {
+                $Connection = $this->createNewConnection($branch_id);
 
-            $principal = $principaldata->full_name ?? '';
-            $teacher = $teacherdata->full_name ?? '';
+                // Fetch principal data
+                $principal = $Connection->table('staffs')
+                    ->select(DB::raw("CONCAT(last_name, ' ', first_name) as full_name"))
+                    ->where('designation_id', 1)
+                    ->value('full_name') ?? '';
 
-            $data = [
-                "class_id" => $class_id,
-                "section_id" => $section_id,
-                "academic_session_id" => $academic_session_id,
-                "principal" => $principal,
-                "teacher" => $teacher
-            ];
-            return $this->successResponse($data, 'Get Class Teacher & Principal Details Successfully.');
+                // Fetch teacher data
+                $teacher = $Connection->table('teacher_allocations as t1')
+                    ->select(DB::raw("CONCAT(t2.last_name, ' ', t2.first_name) as full_name"))
+                    ->leftJoin('staffs as t2', 't1.teacher_id', '=', 't2.id')
+                    ->where([
+                        ['t1.class_id', $class_id],
+                        ['t1.section_id', $section_id],
+                        ['t1.academic_session_id', $academic_session_id]
+                    ])
+                    ->value('full_name') ?? '';
+
+                $teach_data = [
+                    "principal" => $principal,
+                    "teacher" => $teacher
+                ];
+                Cache::put($cacheKey, $teach_data, now()->addHours($cache_time)); // Cache for 24 hours
+
+            }
+
+            return $this->successResponse($teach_data, 'Get Class Teacher & Principal Details Successfully.');
         } catch (Exception $error) {
             return $this->commonHelper->generalReturn('403', 'error', $error, 'Error in classteacher_principal');
         }
     }
+
     public function stuexam_ppmarklist(Request $request)
     {
         try {
@@ -2005,6 +2033,203 @@ class ExamreportController extends BaseController
             return $this->commonHelper->generalReturn('403', 'error', $error, 'Error in stuexam_ppmarklist');
         }
     }
+    public function stuexam_ppmarkchartlist(Request $request)
+    {
+        try {
+            $exam_id = $request->exam_id;
+            $class_id = $request->class_id;
+            $section_id = $request->section_id;
+            $subject_id = $request->subject_id;
+            $session_id = $request->session_id;
+            $academic_session_id = $request->academic_session_id;
+            $semester_id = $request->semester_id;
+            $paper = $request->paper;
+
+            $Connection = $this->createNewConnection($request->branch_id);
+
+            $getsubject = $Connection->table('subjects as sb')
+                ->select(
+                    'sb.id as subject_id',
+                    'sb.name'
+                )
+                ->where('sb.name', 'like', $request->subject)
+                ->first();
+            $subject_id = $getsubject->subject_id ?? 0;
+            $getpaper = $Connection->table('exam_papers as ep')
+                ->select(
+                    'ep.id',
+                    'ep.paper_name'
+                )
+                ->where([
+                    ['ep.class_id', '=', $request->class_id],
+                    ['ep.subject_id', '=', $subject_id],
+                    ['ep.academic_session_id', '=', $academic_session_id],
+                    ['ep.paper_name', 'like', $paper]
+                ])
+                ->first();
+
+            $paper_id = $getpaper->id ?? 0;
+            $getSemesterMark1 = $Connection->table('student_marks as sa')
+                ->select('1')
+                ->where([
+                    ['sa.class_id', '=', $class_id],
+                    ['sa.section_id', '=', $section_id],
+                    ['sa.semester_id', '=', $semester_id],
+                    ['sa.subject_id', '=', $subject_id],
+                    ['sa.paper_id', '=', $paper_id],
+                    ['sa.exam_id', '=', $exam_id],
+                    ['sa.academic_session_id', '=', $academic_session_id],
+                    ['sa.score', '>=', '0'],
+                    ['sa.score', '<=', '10'],
+                ])
+                ->count();
+            $getSemesterMark2 = $Connection->table('student_marks as sa')
+                ->select('1')
+                ->where([
+                    ['sa.class_id', '=', $class_id],
+                    ['sa.section_id', '=', $section_id],
+                    ['sa.semester_id', '=', $semester_id],
+                    ['sa.subject_id', '=', $subject_id],
+                    ['sa.paper_id', '=', $paper_id],
+                    ['sa.exam_id', '=', $exam_id],
+                    ['sa.academic_session_id', '=', $academic_session_id],
+                    ['sa.score', '>=', '11'],
+                    ['sa.score', '<=', '20'],
+                ])
+                ->count();
+            $getSemesterMark3 = $Connection->table('student_marks as sa')
+                ->select('1')
+                ->where([
+                    ['sa.class_id', '=', $class_id],
+                    ['sa.section_id', '=', $section_id],
+                    ['sa.semester_id', '=', $semester_id],
+                    ['sa.subject_id', '=', $subject_id],
+                    ['sa.paper_id', '=', $paper_id],
+                    ['sa.exam_id', '=', $exam_id],
+                    ['sa.academic_session_id', '=', $academic_session_id],
+                    ['sa.score', '>=', '21'],
+                    ['sa.score', '<=', '30'],
+                ])
+                ->count();
+            $getSemesterMark4 = $Connection->table('student_marks as sa')
+                ->select('1')
+                ->where([
+                    ['sa.class_id', '=', $class_id],
+                    ['sa.section_id', '=', $section_id],
+                    ['sa.semester_id', '=', $semester_id],
+                    ['sa.subject_id', '=', $subject_id],
+                    ['sa.paper_id', '=', $paper_id],
+                    ['sa.exam_id', '=', $exam_id],
+                    ['sa.academic_session_id', '=', $academic_session_id],
+                    ['sa.score', '>=', '31'],
+                    ['sa.score', '<=', '40'],
+                ])
+                ->count();
+            $getSemesterMark5 = $Connection->table('student_marks as sa')
+                ->select('1')
+                ->where([
+                    ['sa.class_id', '=', $class_id],
+                    ['sa.section_id', '=', $section_id],
+                    ['sa.semester_id', '=', $semester_id],
+                    ['sa.subject_id', '=', $subject_id],
+                    ['sa.paper_id', '=', $paper_id],
+                    ['sa.exam_id', '=', $exam_id],
+                    ['sa.academic_session_id', '=', $academic_session_id],
+                    ['sa.score', '>=', '41'],
+                    ['sa.score', '<=', '50'],
+                ])
+                ->count();
+            $getSemesterMark6 = $Connection->table('student_marks as sa')
+                ->select('1')
+                ->where([
+                    ['sa.class_id', '=', $class_id],
+                    ['sa.section_id', '=', $section_id],
+                    ['sa.semester_id', '=', $semester_id],
+                    ['sa.subject_id', '=', $subject_id],
+                    ['sa.paper_id', '=', $paper_id],
+                    ['sa.exam_id', '=', $exam_id],
+                    ['sa.academic_session_id', '=', $academic_session_id],
+                    ['sa.score', '>=', '51'],
+                    ['sa.score', '<=', '60'],
+                ])
+                ->count();
+            $getSemesterMark7 = $Connection->table('student_marks as sa')
+                ->select('1')
+                ->where([
+                    ['sa.class_id', '=', $class_id],
+                    ['sa.section_id', '=', $section_id],
+                    ['sa.semester_id', '=', $semester_id],
+                    ['sa.subject_id', '=', $subject_id],
+                    ['sa.paper_id', '=', $paper_id],
+                    ['sa.exam_id', '=', $exam_id],
+                    ['sa.academic_session_id', '=', $academic_session_id],
+                    ['sa.score', '>=', '61'],
+                    ['sa.score', '<=', '70'],
+                ])
+                ->count();
+            $getSemesterMark8 = $Connection->table('student_marks as sa')
+                ->select('1')
+                ->where([
+                    ['sa.class_id', '=', $class_id],
+                    ['sa.section_id', '=', $section_id],
+                    ['sa.semester_id', '=', $semester_id],
+                    ['sa.subject_id', '=', $subject_id],
+                    ['sa.paper_id', '=', $paper_id],
+                    ['sa.exam_id', '=', $exam_id],
+                    ['sa.academic_session_id', '=', $academic_session_id],
+                    ['sa.score', '>=', '71'],
+                    ['sa.score', '<=', '80'],
+                ])
+                ->count();
+            $getSemesterMark9 = $Connection->table('student_marks as sa')
+                ->select('1')
+                ->where([
+                    ['sa.class_id', '=', $class_id],
+                    ['sa.section_id', '=', $section_id],
+                    ['sa.semester_id', '=', $semester_id],
+                    ['sa.subject_id', '=', $subject_id],
+                    ['sa.paper_id', '=', $paper_id],
+                    ['sa.exam_id', '=', $exam_id],
+                    ['sa.academic_session_id', '=', $academic_session_id],
+                    ['sa.score', '>=', '81'],
+                    ['sa.score', '<=', '90'],
+                ])
+                ->count();
+            $getSemesterMark10 = $Connection->table('student_marks as sa')
+                ->select('1')
+                ->where([
+                    ['sa.class_id', '=', $class_id],
+                    ['sa.section_id', '=', $section_id],
+                    ['sa.semester_id', '=', $semester_id],
+                    ['sa.subject_id', '=', $subject_id],
+                    ['sa.paper_id', '=', $paper_id],
+                    ['sa.exam_id', '=', $exam_id],
+                    ['sa.academic_session_id', '=', $academic_session_id],
+                    ['sa.score', '>=', '91'],
+                    ['sa.score', '<=', '100'],
+                ])
+                ->count();
+
+            $markarray = [
+                '91-100' => $getSemesterMark10,
+                '81-90' => $getSemesterMark9,
+                '70-80' => $getSemesterMark8,
+                '61-70' => $getSemesterMark7,
+                '51-60' => $getSemesterMark6,
+                '40-50' => $getSemesterMark5,
+                '31-40' => $getSemesterMark4,
+                '21-30' => $getSemesterMark3,
+                '11-20' => $getSemesterMark2,
+                '0-10' => $getSemesterMark1
+
+            ];
+
+            return $this->successResponse($markarray, 'Get Personal Point Mark Details Successfully.');
+        } catch (Exception $error) {
+            return $this->commonHelper->generalReturn('403', 'error', $error, 'Error in stuexam_ppmarklist');
+        }
+    }
+
     public function stuexam_ppavgmarklist(Request $request)
     {
         try {
@@ -2170,25 +2395,19 @@ class ExamreportController extends BaseController
                 return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
             } else {
                 // create new connection
-                $branchID = $request->branch_id;
                 $Connection = $this->createNewConnection($request->branch_id);
                 $getsemester = $Connection->table('semester')->where('academic_session_id', $request->academic_session_id)->orderBy('start_date', 'asc')->get();
 
                 $attendance_list = [];
                 foreach ($getsemester as $sem) {
 
-                    $semester_id = $sem->id;
-
                     $fromdate = $sem->start_date;
-
                     $enddate = $sem->end_date;
                     $froms = date('Y-m-01', strtotime($fromdate));
                     $start = new DateTime($froms);
                     $end = new DateTime($enddate);
                     $startmonth = date('m', strtotime($fromdate));
-
                     $endmonth = date('m', strtotime($enddate));
-
                     $interval = new DateInterval('P1M'); // 1 month interval
                     $period = new DatePeriod($start, $interval, $end);
 
@@ -2196,11 +2415,11 @@ class ExamreportController extends BaseController
                     foreach ($period as $date) {
 
 
-                        $month = trim($date->format('F') . PHP_EOL);
+                        // $month = trim($date->format('F') . PHP_EOL);
                         $montotaldays = trim($date->format('t') . PHP_EOL);
                         $mon = trim($date->format('m') . PHP_EOL);
 
-                        $year = trim($date->format('Y') . PHP_EOL);
+                        // $year = trim($date->format('Y') . PHP_EOL);
                         /*if($year==2024)
                     {
                         dd($mon,$year);

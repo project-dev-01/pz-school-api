@@ -123,7 +123,6 @@ class GradeController extends BaseController
         try {
             $validator = \Validator::make($request->all(), [
                 'class_id' => 'required',
-                'token' => 'required',
                 'branch_id' => 'required'
             ]);
 

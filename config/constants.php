@@ -1,6 +1,6 @@
 <?php
 return [
-    'main_db'=>'paxsuze-api',
+    'main_db'=>'apaxsuzenapi',
     // 'main_db'=>'aajskl',
     'client_email'=>'suzen-noreply@suzen.school',
     'student_email_domain' => "@jskl.edu.my",
@@ -33,5 +33,6 @@ return [
     'cache_get_access_menu_list' => "cache_get_access_menu_list_",
     'school_role_access' => "school_role_access_",
     'cache_teacher_students' => "cache_teacher_students",
+    'classteacher_principal' => "classteacher_principal_",
     
 ];

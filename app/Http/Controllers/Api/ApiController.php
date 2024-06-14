@@ -2788,8 +2788,7 @@ class ApiController extends BaseController
         try {
         $validator = \Validator::make($request->all(), [
             'id' => 'required',
-            'branch_id' => 'required',
-            'token' => 'required'
+            'branch_id' => 'required'
         ]);
 
         if (!$validator->passes()) {
@@ -11969,7 +11968,7 @@ try{
             // exam_term
             // ->first();
             $details = $con->table('exam as ex')
-                ->select('ex.*', 'et.name as term_name')
+                ->select('ex.id','ex.name','ex.remarks','et.name as term_name')
                 ->leftJoin('exam_term as et', 'ex.term_id', '=', 'et.id')
                 ->where('ex.id', $id)
                 ->first();

@@ -1189,6 +1189,7 @@ Route::group(['middleware' => ['auth:api', 'throttle:limit_per_user', 'logroute'
     Route::post('personalinterview/individual', [ApiController::class, 'personalinterview_individual']);
     Route::post('personalinterview/overall', [ApiController::class, 'personalinterview_overall']);
     Route::post('exam_result/getec_marks', [ExamreportController::class, 'getec_marks']);
+    Route::post('exam_result/get_subject_details', [ExamreportController::class, 'get_subject_details']);
     Route::post('exam_result/getec_teacher', [ExamreportController::class, 'getec_teacher']);
     Route::post('exam_result/getsubjectpapermark', [ExamreportController::class, 'getsubjectpapermark']);
     Route::post('exam_result/stuexam_ppmarklist', [ExamreportController::class, 'stuexam_ppmarklist']);
@@ -1250,4 +1251,5 @@ Route::group(['middleware' => ['auth:api', 'throttle:limit_per_user', 'logroute'
     Route::post('student/update_info/view', [ApiControllerNameSeq::class, 'getStudentUpdateInfoDetails']);
     Route::post('termination/termination-details', [ApiControllerNameSeq::class, 'getTerminationDetails']);
     Route::get('termination/list', [ApiControllerNameSeq::class, 'getTerminationList']);
+        Route::post('exam_result/stuexam_ppmarkchartlist', [ExamreportController::class, 'stuexam_ppmarkchartlist']);
 });
