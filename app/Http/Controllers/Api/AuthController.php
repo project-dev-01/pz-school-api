@@ -474,14 +474,16 @@ class AuthController extends BaseController
     public function lastlogout(Request $request)
     {
         try {
+            // dd($request);
             // Check if userID is not null
             if ($request->userID !== null) {
                 // Retrieve the latest log history for the given userID and role_id
                 $logHistory = Log_history::where('login_id', $request->userID)
                     ->where('role_id', $request->role_id)
+                    ->where('branch_id', $request->branch_id)
                     ->latest()
                     ->first();
-
+                    // dd($logHistory);
                 // If log history exists, update the logout time
                 if ($logHistory) {
                     $logHistory->update(['logout_time' => date("Y-m-d H:i:s")]);
