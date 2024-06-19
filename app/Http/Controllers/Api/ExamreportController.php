@@ -1879,6 +1879,7 @@ class ExamreportController extends BaseController
                     ])
                     ->first();
                 $getsemester = $Connection->table('semester')->where('academic_session_id', $request->academic_session_id)->orderBy('start_date', 'asc')->get();
+                //$mark = ['', '', ''];
                 $mark = [];
                 if (!empty($getpapers)) {
                     foreach ($getsemester as $sem) {
@@ -2397,12 +2398,15 @@ class ExamreportController extends BaseController
                 // create new connection
                 $Connection = $this->createNewConnection($request->branch_id);
                 $getsemester = $Connection->table('semester')->where('academic_session_id', $request->academic_session_id)->orderBy('start_date', 'asc')->get();
-
+                $students = $Connection->table('students')->select('id','admission_date','date_of_termination')->where('id', '=', $request->student_id)->first();
+                $admission_date=$students->admission_date ?? '';
+                $date_of_termination=$students->date_of_termination ?? '';
                 $attendance_list = [];
                 foreach ($getsemester as $sem) {
-
+                    
                     $fromdate = $sem->start_date;
                     $enddate = $sem->end_date;
+                    
                     $froms = date('Y-m-01', strtotime($fromdate));
                     $start = new DateTime($froms);
                     $end = new DateTime($enddate);
@@ -2411,20 +2415,79 @@ class ExamreportController extends BaseController
                     $interval = new DateInterval('P1M'); // 1 month interval
                     $period = new DatePeriod($start, $interval, $end);
 
-
+                    
                     foreach ($period as $date) {
 
-
+                        if(date('Y-m-t')<(trim($date->format('Y-m-t') . PHP_EOL)))
+                        {
+                            $mon = trim($date->format('m') . PHP_EOL);
+                            $data = [
+                                "month" => $mon,
+                                "no_schooldays" => 0,
+                                "suspension" => 0,
+                                "totalcoming" => 0,
+                                "totpres" => 0,
+                                "totabs" => 0,
+                                "totlate" => 0,
+                                "totexc" => 0,
+                                "holidays" => 0,
+                                "holidays_array" => [],
+                                "special_events" => []
+    
+                            ];
+                        }
+                        elseif($date_of_termination!='' && date('Y-m-d',strtotime($date_of_termination))<(trim($date->format('Y-m-t') . PHP_EOL)))
+                        {
+                            $mon = trim($date->format('m') . PHP_EOL);
+                            $data = [
+                                "month" => $mon,
+                                "no_schooldays" => 0,
+                                "suspension" => 0,
+                                "totalcoming" => 0,
+                                "totpres" => 0,
+                                "totabs" => 0,
+                                "totlate" => 0,
+                                "totexc" => 0,
+                                "holidays" => 0,
+                                "holidays_array" => [],
+                                "special_events" => []
+    
+                            ];
+                        } 
+                        elseif($admission_date!='' && date('Y-m-d',strtotime($admission_date))<(trim($date->format('Y-m-t') . PHP_EOL)))
+                        {
+                            $mon = trim($date->format('m') . PHP_EOL);
+                            $data = [
+                                "month" => $mon,
+                                "no_schooldays" => 0,
+                                "suspension" => 0,
+                                "totalcoming" => 0,
+                                "totpres" => 0,
+                                "totabs" => 0,
+                                "totlate" => 0,
+                                "totexc" => 0,
+                                "holidays" => 0,
+                                "holidays_array" => [],
+                                "special_events" => []
+    
+                            ];
+                        }                      
+                        else
+                        {
                         // $month = trim($date->format('F') . PHP_EOL);
                         $montotaldays = trim($date->format('t') . PHP_EOL);
                         $mon = trim($date->format('m') . PHP_EOL);
-
+                        
                         // $year = trim($date->format('Y') . PHP_EOL);
                         /*if($year==2024)
-                    {
-                        dd($mon,$year);
-                    }*/
-                        if (intval($mon) == intval($startmonth)) {
+                        {
+                            dd($mon,$year);
+                        }*/
+                        if( $admission_date!='' && $fromdate <= $admission_date) {
+                            $fromdate1 = $admission_date;
+                            $todate = trim($date->format('Y-m-t') . PHP_EOL);
+                        }
+                        elseif (intval($mon) == intval($startmonth)) {
                             $fromdate1 = $fromdate;
                             $todate = trim($date->format('Y-m-t') . PHP_EOL);
                         } elseif (intval($mon) == intval($endmonth)) {
@@ -2618,6 +2681,7 @@ class ExamreportController extends BaseController
                                 }
                             }
                         }
+                    
                         $totalcoming = $totaldays - $sus;
                         $suspension = $sus;
                         $totpres = $totalcoming - $absent;
@@ -2641,6 +2705,7 @@ class ExamreportController extends BaseController
                             "special_events" => $sp_eventsdate
 
                         ];
+                        }
                         array_push($attendance_list, $data);
                     }
                 }
@@ -3118,8 +3183,12 @@ class ExamreportController extends BaseController
                     ->get();
 
                 $result = array();
+                $totgrade=($request->department_id==1)?6:3;
+                $c=0;
                 foreach ($class as $cls) {
-
+                $c++;
+                if($c<=$totgrade)
+                {
                     $classsec = $Connection->table('enrolls as t1')
                         ->select('t1.class_id', 't1.section_id', 't1.academic_session_id', 't2.name_numeric', 't3.name as section', 't4.name as academic_year')
                         ->leftJoin('classes as t2', 't1.class_id', '=', 't2.id')
@@ -3187,6 +3256,7 @@ class ExamreportController extends BaseController
 
                     array_push($result, $datas);
                 }
+            }
                 return $this->successResponse($result, 'Get class Section Fetched successfully');
             }
         } catch (Exception $error) {
