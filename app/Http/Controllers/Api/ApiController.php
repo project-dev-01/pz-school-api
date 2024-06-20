@@ -27044,7 +27044,7 @@ try{
             }
             // dd(12);
 
-            // return 1;
+             
             // update data
             $query = $conn->table('student_applications')->where('id', $request->id)->update([
                 'first_name' => isset($request->first_name) ? $request->first_name : "",
@@ -27248,12 +27248,17 @@ try{
             ->leftJoin('parent as p', 'stud_app.created_by', '=', 'p.id')
             ->where('stud_app.id', '=', $request->id)->first();
             // return $getParentLogin;
-           
-            $notifyuser = User::where([
-                ['branch_id', '=', $request->branch_id],
-                ['email', '=', $getParentLogin->parent_login_email],
-                ['role_id', '=', $getParentLogin->parent_login_role],
-            ])->get();
+            if ($request->role_id == "2") {
+                $notifyuser = User::where([
+                    ['branch_id', '=', $request->branch_id],
+                    ['email', '=', $getParentLogin->parent_login_email],
+                    ['role_id', '=', $getParentLogin->parent_login_role],
+                ])->get();
+            }else{
+                $notifyuser =   User::where('branch_id', $request->branch_id,)
+                                ->whereRaw('FIND_IN_SET(?, role_id)', [2])->get();
+            }
+             
             // return $notifyuser;
               $info_update = [];
               $details = [
