@@ -2752,95 +2752,167 @@ class ApiControllerThree extends BaseController
                         foreach ($allClasses as $key => $value) {
                             array_push($classID, $value->id);
                         }
-                    }
-                    $absentCountDetails = $createConnection->table('student_attendances_day')
-                        ->select(
-                            DB::raw('COUNT(*) as no_of_days_attendance'),
-                            DB::raw('SUM(CASE WHEN status = "present" THEN 1 ELSE 0 END) as presentCount'),
-                            DB::raw('SUM(CASE WHEN status = "absent" THEN 1 ELSE 0 END) as absentCount'),
-                            DB::raw('SUM(CASE WHEN status = "late" THEN 1 ELSE 0 END) as lateCount'),
-                            DB::raw('SUM(CASE WHEN status = "excused" THEN 1 ELSE 0 END) as excusedCount')
-                        )
-                        ->whereIn('class_id', $classID)
-                        // when not null comes here
-                        ->when($Day, function ($q)  use ($currentDate) {
-                            $q->where('date', $currentDate);
-                        })
-                        ->when($Month, function ($qs) use ($startDate, $endDate) {
-                            $qs->where('date', '>=', $startDate)
-                                ->where('date', '<=', $endDate);
-                        })
-                        ->when($Term, function ($qd)  use ($termData) {
-                            $qd->where('date', '>=', $termData->start_date ?? now())
-                                ->where('date', '<=', $termData->end_date ?? now());
-                        })
-                        ->when($Year, function ($qds)  use ($yearData) {
-                            $qds->where('date', '>=', $yearData[0]->year_start_date ?? now())
-                                ->where('date', '<=', $yearData[0]->year_end_date ?? now());
-                        })
-                        ->get();
-                    // dd($absentCountDetails);
+                    }    
+                    $absentCountDetails = $createConnection->table('student_leaves as lev')
+                    ->select(DB::raw('
+                        FLOOR(
+                            SUM(
+                                CASE 
+                                    WHEN lev.to_leave >= lev.from_leave THEN
+                                        (
+                                            DATEDIFF(
+                                                LEAST(lev.to_leave, LAST_DAY(CURDATE())), 
+                                                GREATEST(lev.from_leave, DATE_FORMAT(CURDATE(), "%Y-%m-01"))
+                                            ) + 1
+                                        ) -
+                                        (
+                                            (DATEDIFF(LEAST(lev.to_leave, LAST_DAY(CURDATE())), GREATEST(lev.from_leave, DATE_FORMAT(CURDATE(), "%Y-%m-01"))) + 1) / 7 * 2
+                                        ) -
+                                        CASE 
+                                            WHEN WEEKDAY(GREATEST(lev.from_leave, DATE_FORMAT(CURDATE(), "%Y-%m-01"))) <= WEEKDAY(LEAST(lev.to_leave, LAST_DAY(CURDATE()))) THEN
+                                                IF(WEEKDAY(LEAST(lev.to_leave, LAST_DAY(CURDATE()))) = 6, 1, 0) + 
+                                                IF(WEEKDAY(GREATEST(lev.from_leave, DATE_FORMAT(CURDATE(), "%Y-%m-01"))) = 5, 1, 0)
+                                            ELSE
+                                                IF(WEEKDAY(GREATEST(lev.from_leave, DATE_FORMAT(CURDATE(), "%Y-%m-01"))) = 5 OR WEEKDAY(GREATEST(lev.from_leave, DATE_FORMAT(CURDATE(), "%Y-%m-01"))) = 6, 1, 0) +
+                                                IF(WEEKDAY(LEAST(lev.to_leave, LAST_DAY(CURDATE()))) = 6 OR WEEKDAY(LEAST(lev.to_leave, LAST_DAY(CURDATE()))) = 5, 1, 0)
+                                        END
+                                    ELSE
+                                        0
+                                END
+                            ) -
+                            (
+                                SELECT COUNT(*)
+                                FROM events e
+                                WHERE
+                                    (
+                                        (e.start_date <= LEAST(lev.to_leave, LAST_DAY(CURDATE())) AND e.end_date >= GREATEST(lev.from_leave, DATE_FORMAT(CURDATE(), "%Y-%m-01"))) OR
+                                        (e.start_date = lev.from_leave AND e.end_date = lev.to_leave) OR
+                                        (e.start_date BETWEEN lev.from_leave AND lev.to_leave) OR
+                                        (e.end_date BETWEEN lev.from_leave AND lev.to_leave)
+                                    )
+                            )
+                        ) as no_of_days_attendance
+                    '))
+                    ->join('enrolls as en', function ($join) {
+                        $join->on('lev.class_id', '=', 'en.class_id')
+                            ->on('lev.section_id', '=', 'en.section_id')
+                            ->on('lev.student_id', '=', 'en.student_id');
+                    })
+                    ->leftJoin('events as e', function ($join) {
+                        $join->on(function ($query) {
+                            $query->whereRaw('lev.from_leave BETWEEN e.start_date AND e.end_date')
+                                ->orWhereRaw('lev.to_leave BETWEEN e.start_date AND e.end_date')
+                                ->orWhere(function ($query) {
+                                    $query->whereRaw('lev.from_leave < e.start_date')
+                                        ->whereRaw('lev.to_leave > e.end_date');
+                                });
+                        });
+                    })
+                    ->whereIn('lev.class_id', $classID)
+                    ->where('en.department_id', $department_id)
+                    ->when($Day, function ($q) use ($currentDate) {
+                        return $q->where('lev.from_leave', '<=', $currentDate)
+                            ->where('lev.to_leave', '>=', $currentDate);
+                    })
+                    ->when($Month, function ($query) use ($startDate, $endDate) {
+                        return $query->where(function ($query1) use ($startDate, $endDate) {
+                            $query1->where(function ($query2) use ($startDate, $endDate) {
+                                $query2->where('lev.from_leave', '>=', $startDate)
+                                    ->where('lev.to_leave', '<=', $endDate);
+                            })->orWhere(function ($query3) use ($startDate, $endDate) {
+                                $query3->where('lev.from_leave', '<=', $startDate)
+                                    ->where('lev.to_leave', '>=', $endDate);
+                            })->orWhere(function ($query4) use ($startDate, $endDate) {
+                                $query4->where('lev.from_leave', '<=', $endDate)
+                                    ->where('lev.to_leave', '>=', $startDate);
+                            });
+                        });
+                    })
+                    ->when($Term, function ($qd) use ($termData) {
+                        return $qd->where('lev.from_leave', '>=', $termData->start_date ?? now())
+                            ->where('lev.to_leave', '<=', $termData->end_date ?? now());
+                    })
+                    ->when($Year, function ($qds) use ($yearData) {
+                        return $qds->where('lev.from_leave', '>=', $yearData[0]->year_start_date ?? now())
+                            ->where('lev.to_leave', '<=', $yearData[0]->year_end_date ?? now());
+                    })
+                    ->where('en.active_status', '=', '0')
+                    ->where('en.academic_session_id', '=', $request->academic_session_id)
+                    ->where('lev.status', '=', 'Approve')
+                    ->whereRaw('MONTH(lev.from_leave) = MONTH(CURDATE()) OR MONTH(lev.to_leave) = MONTH(CURDATE())')
+                    ->get();
+
+                
                 } else if ($department_id && $class_id && $section_id === null) {
                     $type = "Grade";
                     // Department exists, Class exists, Section is null
-                    $absentCountDetails = $createConnection->table('student_attendances_day')
-                        ->select(
-                            DB::raw('COUNT(*) as no_of_days_attendance'),
-                            DB::raw('SUM(CASE WHEN status = "present" THEN 1 ELSE 0 END) as presentCount'),
-                            DB::raw('SUM(CASE WHEN status = "absent" THEN 1 ELSE 0 END) as absentCount'),
-                            DB::raw('SUM(CASE WHEN status = "late" THEN 1 ELSE 0 END) as lateCount'),
-                            DB::raw('SUM(CASE WHEN status = "excused" THEN 1 ELSE 0 END) as excusedCount')
-                        )
+                    $absentCountDetails = $createConnection->table('student_leaves as lev')
+                    ->select(
+                        DB::raw('COUNT(*) as no_of_days_attendance'),
+                        DB::raw('SUM(CASE WHEN lev.status = "Approve" THEN 1 ELSE 0 END) as absentCount')
+                    )
+                    ->join('enrolls as en', 'lev.student_id', '=', 'en.student_id')
+                    ->when($department_id, function ($query, $department_id) {
+                        return $query->where('en.department_id', $department_id);
+                    })
                         // when not null comes here
-                        ->when($Day, function ($q)  use ($currentDate) {
-                            $q->where('date', $currentDate);
+                        ->when($Day, function ($q) use ($currentDate) {
+                            return $q->where('lev.from_leave', '<=', $currentDate)
+                                    ->where('lev.to_leave', '>=', $currentDate);
                         })
                         ->when($Month, function ($qs) use ($startDate, $endDate) {
-                            $qs->where('date', '>=', $startDate)
-                                ->where('date', '<=', $endDate);
+                            return $qs->where('lev.from_leave', '>=', $startDate)
+                                    ->where('lev.to_leave', '<=', $endDate);
                         })
-                        ->when($Term, function ($qd)  use ($termData) {
-                            $qd->where('date', '>=', $termData->start_date ?? now())
-                                ->where('date', '<=', $termData->end_date ?? now());
+                        ->when($Term, function ($qd) use ($termData) {
+                            return $qd->where('lev.from_leave', '>=', $termData->start_date ?? now())
+                                    ->where('lev.to_leave', '<=', $termData->end_date ?? now());
                         })
-                        ->when($Year, function ($qds)  use ($yearData) {
-                            $qds->where('date', '>=', $yearData[0]->year_start_date ?? now())
-                                ->where('date', '<=', $yearData[0]->year_end_date ?? now());
+                        ->when($Year, function ($qds) use ($yearData) {
+                            return $qds->where('lev.from_leave', '>=', $yearData[0]->year_start_date ?? now())
+                                    ->where('lev.to_leave', '<=', $yearData[0]->year_end_date ?? now());
                         })
-                        ->where('class_id', $class_id)
+                        ->where('en.active_status', '=', '0')
+                        ->where('en.academic_session_id', '=', $request->academic_session_id)
+                        ->where('lev.class_id', $class_id)
                         ->get();
                 } else if ($department_id && $class_id && $section_id) {
                     $type = "Class";
                     // Department exists, Class exists, Section exists
-                    $absentCountDetails = $createConnection->table('student_attendances_day')
-                        ->select(
-                            DB::raw('COUNT(*) as no_of_days_attendance'),
-                            DB::raw('SUM(CASE WHEN status = "present" THEN 1 ELSE 0 END) as presentCount'),
-                            DB::raw('SUM(CASE WHEN status = "absent" THEN 1 ELSE 0 END) as absentCount'),
-                            DB::raw('SUM(CASE WHEN status = "late" THEN 1 ELSE 0 END) as lateCount'),
-                            DB::raw('SUM(CASE WHEN status = "excused" THEN 1 ELSE 0 END) as excusedCount')
-                        )
+                    $absentCountDetails = $createConnection->table('student_leaves as lev')
+                    ->select(
+                        DB::raw('COUNT(*) as no_of_days_attendance'),
+                        DB::raw('SUM(CASE WHEN lev.status = "Approve" THEN 1 ELSE 0 END) as absentCount')
+                    )
                         // when not null comes here
-                        ->when($Day, function ($q)  use ($currentDate) {
-                            $q->where('date', $currentDate);
+                        ->join('enrolls as en', 'lev.student_id', '=', 'en.student_id')
+                        ->when($department_id, function ($query, $department_id) {
+                            return $query->where('en.department_id', $department_id);
                         })
-                        ->when($Month, function ($qs) use ($startDate, $endDate) {
-                            $qs->where('date', '>=', $startDate)
-                                ->where('date', '<=', $endDate);
-                        })
-                        ->when($Term, function ($qd)  use ($termData) {
-                            $qd->where('date', '>=', $termData->start_date ?? now())
-                                ->where('date', '<=', $termData->end_date ?? now());
-                        })
-                        ->when($Year, function ($qds)  use ($yearData) {
-                            $qds->where('date', '>=', $yearData[0]->year_start_date ?? now())
-                                ->where('date', '<=', $yearData[0]->year_end_date ?? now());
-                        })
-                        ->where([
-                            ['class_id', $class_id],
-                            ['section_id', $section_id]
-                        ])
-                        ->get();
+                            // when not null comes here
+                            ->when($Day, function ($q) use ($currentDate) {
+                                return $q->where('lev.from_leave', '<=', $currentDate)
+                                        ->where('lev.to_leave', '>=', $currentDate);
+                            })
+                            ->when($Month, function ($qs) use ($startDate, $endDate) {
+                                return $qs->where('lev.from_leave', '>=', $startDate)
+                                        ->where('lev.to_leave', '<=', $endDate);
+                            })
+                            ->when($Term, function ($qd) use ($termData) {
+                                return $qd->where('lev.from_leave', '>=', $termData->start_date ?? now())
+                                        ->where('lev.to_leave', '<=', $termData->end_date ?? now());
+                            })
+                            ->when($Year, function ($qds) use ($yearData) {
+                                return $qds->where('lev.from_leave', '>=', $yearData[0]->year_start_date ?? now())
+                                        ->where('lev.to_leave', '<=', $yearData[0]->year_end_date ?? now());
+                            })
+                            ->where('en.active_status', '=', '0')
+                            ->where('en.academic_session_id', '=', $request->academic_session_id)
+                            ->where([
+                                ['lev.class_id', $class_id],
+                                ['lev.section_id', $section_id]
+                            ])
+                            ->get();
                 } else if ($department_id === null && $class_id === null && $section_id === null) {
 
                     $type = "Overall Faculty";
@@ -2855,31 +2927,33 @@ class ApiControllerThree extends BaseController
                             array_push($classID, $value->id);
                         }
                     }
-                    $absentCountDetails = $createConnection->table('student_attendances_day')
-                        ->select(
-                            DB::raw('COUNT(*) as no_of_days_attendance'),
-                            DB::raw('SUM(CASE WHEN status = "present" THEN 1 ELSE 0 END) as presentCount'),
-                            DB::raw('SUM(CASE WHEN status = "absent" THEN 1 ELSE 0 END) as absentCount'),
-                            DB::raw('SUM(CASE WHEN status = "late" THEN 1 ELSE 0 END) as lateCount'),
-                            DB::raw('SUM(CASE WHEN status = "excused" THEN 1 ELSE 0 END) as excusedCount')
-                        )
-                        ->whereIn('class_id', $classID)
-                        // when not null comes here
-                        ->when($Day, function ($q)  use ($currentDate) {
-                            $q->where('date', $currentDate);
-                        })
-                        ->when($Month, function ($qs) use ($startDate, $endDate) {
-                            $qs->where('date', '>=', $startDate)
-                                ->where('date', '<=', $endDate);
-                        })
-                        ->when($Term, function ($qd)  use ($termData) {
-                            $qd->where('date', '>=', $termData->start_date ?? now())
-                                ->where('date', '<=', $termData->end_date ?? now());
-                        })
-                        ->when($Year, function ($qds)  use ($yearData) {
-                            $qds->where('date', '>=', $yearData[0]->year_start_date ?? now())
-                                ->where('date', '<=', $yearData[0]->year_end_date ?? now());
-                        })
+                            $absentCountDetails = $createConnection->table('student_leaves as lev')
+                            ->select(
+                                DB::raw('COUNT(*) as no_of_days_attendance'),
+                                DB::raw('SUM(CASE WHEN lev.status = "Approve" THEN 1 ELSE 0 END) as absentCount')
+                            )
+                            ->join('enrolls as en', 'lev.student_id', '=', 'en.student_id')
+                            ->whereIn('lev.class_id', $classID)
+                        
+                            // when not null comes here
+                            ->when($Day, function ($q) use ($currentDate) {
+                                return $q->where('lev.from_leave', '<=', $currentDate)
+                                        ->where('lev.to_leave', '>=', $currentDate);
+                            })
+                            ->when($Month, function ($qs) use ($startDate, $endDate) {
+                                return $qs->where('lev.from_leave', '>=', $startDate)
+                                        ->where('lev.to_leave', '<=', $endDate);
+                            })
+                            ->when($Term, function ($qd) use ($termData) {
+                                return $qd->where('lev.from_leave', '>=', $termData->start_date ?? now())
+                                        ->where('lev.to_leave', '<=', $termData->end_date ?? now());
+                            })
+                            ->when($Year, function ($qds) use ($yearData) {
+                                return $qds->where('lev.from_leave', '>=', $yearData[0]->year_start_date ?? now())
+                                        ->where('lev.to_leave', '<=', $yearData[0]->year_end_date ?? now());
+                            })
+                            ->where('en.active_status', '=', '0')
+                            ->where('en.academic_session_id', '=', $request->academic_session_id)
                         ->get();
                 } else {
                     // Default scenario
@@ -3904,8 +3978,8 @@ class ApiControllerThree extends BaseController
                   'stm.*', 
                   'sth.*', 
                   'sti.*', 
-                  'stc.*',
-                  DB::raw("CONCAT(st1.last_name, ' ', st1.first_name) as name"),
+                  'st1.last_name',
+                  'st1.first_name',
                   'st1.gender',
                   'st1.birthday',
                   'st1.blood_group',
@@ -3914,11 +3988,22 @@ class ApiControllerThree extends BaseController
               )
               ->leftJoin('student_medical_histories as sth', 'stm.medical_history_id', '=', 'sth.id')
               ->leftJoin('student_immunization_histories as sti', 'stm.immunization_history_id', '=', 'sti.id')
-              ->leftJoin('current_health_condition as stc', 'stm.current_health_condition_id', '=', 'stc.id')
               ->leftJoin('students as st1', 'st1.id', '=', 'stm.student_id')
               ->where('stm.student_id', $request->student_id)
               ->where('stm.academic_session_id', $request->academic_session_id)
               ->first();
+            $enrolls_data = $conn->table('enrolls')
+              ->select("*")
+              ->where('student_id',$request->student_id)
+              ->get();
+            $current_health_condition_data = $conn->table('current_health_condition as stc')
+              ->select("stc.*",'en.department_id','en.class_id')
+              ->leftJoin('enrolls as en', function($join) {
+                $join->on('en.student_id', '=', 'stc.student_id')
+                     ->on('en.academic_session_id', '=', 'stc.academic_session_id');
+                 })
+              ->where('stc.student_id',$request->student_id)
+              ->get();
               // Query to fetch details from allergies_details table based on the allergies associated with the student
          $allergiesDetails = $conn->table('student_allergies as sa')     
          ->leftJoin('allergies_details as ad', function ($join) use ($request) {        
@@ -3936,6 +4021,8 @@ class ApiControllerThree extends BaseController
          $getpdfData = [];
          $getpdfData['student'] = $medicalRecords;
          $getpdfData['allergies'] = $indexedAllergies;
+         $getpdfData['enroll_data'] = $enrolls_data;
+         $getpdfData['current_health_condition'] =$current_health_condition_data;
 
              return $this->successResponse($getpdfData, 'Student Medical record pdf fetch successfully');
         }

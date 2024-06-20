@@ -1214,11 +1214,13 @@ class ApiControllerNameSeq extends BaseController
                         'e.section_id',
                         'e.session_id',
                         'e.semester_id',
-                        'e.attendance_no'
+                        'e.attendance_no',
+                        't.date_of_termination'
                     )
                     ->leftJoin('enrolls as e', 's.id', '=', 'e.student_id')
                     ->leftJoin('classes as c', 'e.class_id', '=', 'c.id')
                     ->leftJoin('sections as sec', 'e.section_id', '=', 'sec.id')
+                    ->leftJoin('termination as t', 's.id', '=', 't.student_id' )
                     ->where('s.id', $id)
                     ->get();
                 $studentObj = new \stdClass();
