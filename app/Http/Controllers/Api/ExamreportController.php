@@ -2454,7 +2454,7 @@ class ExamreportController extends BaseController
     
                             ];
                         } 
-                        elseif($admission_date!='' && date('Y-m-d',strtotime($admission_date))<(trim($date->format('Y-m-t') . PHP_EOL)))
+                        elseif($admission_date!='' && date('Y-m-d',strtotime($admission_date))>(trim($date->format('Y-m-t') . PHP_EOL)))
                         {
                             $mon = trim($date->format('m') . PHP_EOL);
                             $data = [

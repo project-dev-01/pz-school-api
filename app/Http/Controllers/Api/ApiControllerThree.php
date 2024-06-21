@@ -1611,7 +1611,7 @@ class ApiControllerThree extends BaseController
                 return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
             } else {
                 // get data
-                $cache_time = config('constants.cache_time');
+                /*$cache_time = config('constants.cache_time');
                 $cache_leaveTypeWiseAllReason = config('constants.cache_leaveTypeWiseAllReason');
                 $cacheKey = $cache_leaveTypeWiseAllReason . $request->branch_id;
 
@@ -1619,7 +1619,7 @@ class ApiControllerThree extends BaseController
                 if (Cache::has($cacheKey)) {
                     // If cached, return cached data
                     $jsonResult = Cache::get($cacheKey);
-                } else {
+                } else {*/
                     // create new connection
                     $conn = $this->createNewConnection($request->branch_id);
                     $results = $conn->select("
@@ -1634,11 +1634,13 @@ class ApiControllerThree extends BaseController
         absent_reasons r ON lt.id = r.student_leave_type_id
     GROUP BY 
         lt.id
+    ORDER BY
+        lt.orderedby ASC
 ");
                     $jsonResult = json_encode($results);
                     // Cache the fetched data for future requests
-                    Cache::put($cacheKey, $jsonResult, now()->addHours($cache_time)); // Cache for 24 hours
-                }
+                   /* Cache::put($cacheKey, $jsonResult, now()->addHours($cache_time)); // Cache for 24 hours
+                }*/
                 return $this->successResponse($jsonResult, 'student leave types fetch successfully');
             }
         } catch (Exception $error) {
