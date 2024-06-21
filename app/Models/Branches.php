@@ -26,5 +26,6 @@ class Branches extends Model
         'logo',
         'db_username',
         'db_password',
+        'firstlastname',
     ];
 }

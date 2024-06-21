@@ -147,25 +147,44 @@ class AuthController extends BaseController
                     $data = [
                         'login_id' => $user->id,
                         'user_id' => $user->user_id,
-                        'role_id' => isset($request->role_id)?$request->role_id:null,
+                        'role_id' => isset($request->role_id) ? $request->role_id : null,
                         'branch_id' => $user->branch_id,
-                        'ip_address' => \Request::getClientIp(true),
+                        'ip_address' => $request->ip ?? 'Unknown',
                         'device' => isset($request->user_device) ? $request->user_device : "other",
                         'browser' => isset($request->user_browser) ? $request->user_browser : "other",
                         'os' => isset($request->user_os) ? $request->user_os : "other",
-                        'country' => isset($country) ? $country : 'Unknown',
-                        'countrycode' => isset($country_code) ? $country_code : 'Unknown',
-                        'ip_info' => json_encode($ip_info),
+                        'country' => $request->country ?? 'Unknown',
+                        'countrycode' => $request->country_code ?? 'Unknown',
+                        'region' => $request->region ?? 'Unknown',
+                        'city' => $request->city ?? 'Unknown',
+                        'latitude' => $request->latitude ?? 'Unknown',
+                        'longitude' => $request->longitude ?? 'Unknown',
                         'login_time' => date("Y-m-d H:i:s"),
                         'created_at' => date("Y-m-d H:i:s")
                     ];
-                    //$query = $staffConn->table('staff_leaves')->insert($data);
+                    $data['ip_info'] = json_encode($data);
+
                     $query = Log_history::insert($data);
 
                     $success['token'] = $token;
                     $success['user'] = $user;
                     $success['role_name'] = $user->role->role_name;
-                    $success['subsDetails'] = $user->subsDetails;
+                    $subsDetails = $user->subsDetails;
+                    // Format as array
+                    $formattedSubsDetails = [
+                        'id' => $subsDetails->id,
+                        'name' => $subsDetails->name,
+                        'school_type' => $subsDetails->school_type,
+                        'school_code' => $subsDetails->school_code,
+                        'school_name' => $subsDetails->school_name,
+                        'logo' => $subsDetails->logo,
+                        'firstlastname' => $subsDetails->firstlastname,
+                    ];
+                    $success['subsDetails'] = $formattedSubsDetails;
+
+                    // Eager load subsDetails with specific fields
+                    // $subsDetails = $user->subsDetails()->select('id', 'name', 'school_name', 'branch_code')->get();
+
                     if ($user->role->id == 5) {
                         $branch_id = $user->subsDetails->id;
                         $Connection = $this->createNewConnection($branch_id);
@@ -433,7 +452,7 @@ class AuthController extends BaseController
             if (Auth::attempt(['email' => $request->email, 'password' => $request->password, 'branch_id' => $request->branch_id])) {
                 $user = Auth::user();
                 $token =  $user->createToken('paxsuzen')->accessToken;
-                
+
                 if ($user->status == 0) {
                     $success['token'] = $token;
                     $success['user'] = $user;
@@ -456,21 +475,19 @@ class AuthController extends BaseController
     {
         try {
             //Request is validated, do logout
-            if($request->branch_id!==null)
-            {
+            if ($request->branch_id !== null) {
                 if (Auth::check()) {
                     Auth::user()->token()->revoke();
                     return $this->successResponse([], 'User has been logged out successfully');
                 } else {
                     return $this->send500Error('Sorry, user cannot be logged out', ['error' => 'Sorry, user cannot be logged out']);
                 }
-             }
-            
+            }
         } catch (Exception $error) {
             return $this->commonHelper->generalReturn('403', 'error', $error, 'Error logout');
         }
     }
-    
+
     public function lastlogout(Request $request)
     {
         try {
@@ -483,7 +500,7 @@ class AuthController extends BaseController
                     ->where('branch_id', $request->branch_id)
                     ->latest()
                     ->first();
-                    // dd($logHistory);
+                // dd($logHistory);
                 // If log history exists, update the logout time
                 if ($logHistory) {
                     $logHistory->update(['logout_time' => date("Y-m-d H:i:s")]);
@@ -662,12 +679,12 @@ class AuthController extends BaseController
                 ->first();
             //  dd($updatePassword);
             if ($updatePassword) {
-                $user = User::where(['email'=> $request->email,'branch_id' => $request->branch_id])
-                    ->update(['password' => bcrypt($request->password),'status' => "0",'login_attempt' => '0',]);
+                $user = User::where(['email' => $request->email, 'branch_id' => $request->branch_id])
+                    ->update(['password' => bcrypt($request->password), 'status' => "0", 'login_attempt' => '0',]);
 
                 DB::table('password_resets')->where(['email' => $request->email, 'branch_id' => $request->branch_id])->delete();
 
-                $user = User::where(['email' => $request->email,'branch_id' => $request->branch_id])->first();
+                $user = User::where(['email' => $request->email, 'branch_id' => $request->branch_id])->first();
                 return $this->successResponse($user, 'Your password has been changed!');
             } else {
                 return $this->send500Error('Invalid token!', ['error' => 'Invalid token!']);

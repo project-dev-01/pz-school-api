@@ -138,14 +138,14 @@ class ApiControllerThree extends BaseController
                 $fileNames = [];
                 if ($fileDetails) {
                     foreach ($fileDetails as $key => $value) {
-                         // Set timezone to Malaysia
-                         $now = now()->setTimezone('Asia/Kuala_Lumpur');
+                        // Set timezone to Malaysia
+                        $now = now()->setTimezone('Asia/Kuala_Lumpur');
 
-                         // Generate formatted timestamp
-                         $timestamp = $now->format('ymdHis'); // Example format: 20240522153000 (YYYYMMDDHHMMSS)
-                         $extension = $value['extension'];
-                         $originalfilename = $value['filename'];
-                         // Construct the file name with the timestamp
+                        // Generate formatted timestamp
+                        $timestamp = $now->format('ymdHis'); // Example format: 20240522153000 (YYYYMMDDHHMMSS)
+                        $extension = $value['extension'];
+                        $originalfilename = $value['filename'];
+                        // Construct the file name with the timestamp
                         $fileName = $originalfilename . '_' . $timestamp . '.' . $extension;
                         $path = '/public/' . $request->branch_id . '/admin-documents/buletin_files/';
                         $base64 = base64_decode($value['base64']);
@@ -642,11 +642,11 @@ class ApiControllerThree extends BaseController
                         $fileDetails = $request->file;
                         $fileNames = [];
                         foreach ($fileDetails as $key => $value) {
-                             // Set timezone to Malaysia
-                             $now = now()->setTimezone('Asia/Kuala_Lumpur');
+                            // Set timezone to Malaysia
+                            $now = now()->setTimezone('Asia/Kuala_Lumpur');
 
-                             // Generate formatted timestamp
-                             $timestamp = $now->format('YmdHis'); // Example format: 20240522153000 (YYYYMMDDHHMMSS)
+                            // Generate formatted timestamp
+                            $timestamp = $now->format('YmdHis'); // Example format: 20240522153000 (YYYYMMDDHHMMSS)
                             $extension = $value['extension'];
                             $originalfilename = $value['filename'];
                             $fileName = $originalfilename . '_' . $timestamp . '.' . $extension;
@@ -2752,9 +2752,9 @@ class ApiControllerThree extends BaseController
                         foreach ($allClasses as $key => $value) {
                             array_push($classID, $value->id);
                         }
-                    }    
+                    }
                     $absentCountDetails = $createConnection->table('student_leaves as lev')
-                    ->select(DB::raw('
+                        ->select(DB::raw('
                         FLOOR(
                             SUM(
                                 CASE 
@@ -2793,84 +2793,82 @@ class ApiControllerThree extends BaseController
                             )
                         ) as no_of_days_attendance
                     '))
-                    ->join('enrolls as en', function ($join) {
-                        $join->on('lev.class_id', '=', 'en.class_id')
-                            ->on('lev.section_id', '=', 'en.section_id')
-                            ->on('lev.student_id', '=', 'en.student_id');
-                    })
-                    ->leftJoin('events as e', function ($join) {
-                        $join->on(function ($query) {
-                            $query->whereRaw('lev.from_leave BETWEEN e.start_date AND e.end_date')
-                                ->orWhereRaw('lev.to_leave BETWEEN e.start_date AND e.end_date')
-                                ->orWhere(function ($query) {
-                                    $query->whereRaw('lev.from_leave < e.start_date')
-                                        ->whereRaw('lev.to_leave > e.end_date');
-                                });
-                        });
-                    })
-                    ->whereIn('lev.class_id', $classID)
-                    ->where('en.department_id', $department_id)
-                    ->when($Day, function ($q) use ($currentDate) {
-                        return $q->where('lev.from_leave', '<=', $currentDate)
-                            ->where('lev.to_leave', '>=', $currentDate);
-                    })
-                    ->when($Month, function ($query) use ($startDate, $endDate) {
-                        return $query->where(function ($query1) use ($startDate, $endDate) {
-                            $query1->where(function ($query2) use ($startDate, $endDate) {
-                                $query2->where('lev.from_leave', '>=', $startDate)
-                                    ->where('lev.to_leave', '<=', $endDate);
-                            })->orWhere(function ($query3) use ($startDate, $endDate) {
-                                $query3->where('lev.from_leave', '<=', $startDate)
-                                    ->where('lev.to_leave', '>=', $endDate);
-                            })->orWhere(function ($query4) use ($startDate, $endDate) {
-                                $query4->where('lev.from_leave', '<=', $endDate)
-                                    ->where('lev.to_leave', '>=', $startDate);
+                        ->join('enrolls as en', function ($join) {
+                            $join->on('lev.class_id', '=', 'en.class_id')
+                                ->on('lev.section_id', '=', 'en.section_id')
+                                ->on('lev.student_id', '=', 'en.student_id');
+                        })
+                        ->leftJoin('events as e', function ($join) {
+                            $join->on(function ($query) {
+                                $query->whereRaw('lev.from_leave BETWEEN e.start_date AND e.end_date')
+                                    ->orWhereRaw('lev.to_leave BETWEEN e.start_date AND e.end_date')
+                                    ->orWhere(function ($query) {
+                                        $query->whereRaw('lev.from_leave < e.start_date')
+                                            ->whereRaw('lev.to_leave > e.end_date');
+                                    });
                             });
-                        });
-                    })
-                    ->when($Term, function ($qd) use ($termData) {
-                        return $qd->where('lev.from_leave', '>=', $termData->start_date ?? now())
-                            ->where('lev.to_leave', '<=', $termData->end_date ?? now());
-                    })
-                    ->when($Year, function ($qds) use ($yearData) {
-                        return $qds->where('lev.from_leave', '>=', $yearData[0]->year_start_date ?? now())
-                            ->where('lev.to_leave', '<=', $yearData[0]->year_end_date ?? now());
-                    })
-                    ->where('en.active_status', '=', '0')
-                    ->where('en.academic_session_id', '=', $request->academic_session_id)
-                    ->where('lev.status', '=', 'Approve')
-                    ->whereRaw('MONTH(lev.from_leave) = MONTH(CURDATE()) OR MONTH(lev.to_leave) = MONTH(CURDATE())')
-                    ->get();
-
-                
+                        })
+                        ->whereIn('lev.class_id', $classID)
+                        ->where('en.department_id', $department_id)
+                        ->when($Day, function ($q) use ($currentDate) {
+                            return $q->where('lev.from_leave', '<=', $currentDate)
+                                ->where('lev.to_leave', '>=', $currentDate);
+                        })
+                        ->when($Month, function ($query) use ($startDate, $endDate) {
+                            return $query->where(function ($query1) use ($startDate, $endDate) {
+                                $query1->where(function ($query2) use ($startDate, $endDate) {
+                                    $query2->where('lev.from_leave', '>=', $startDate)
+                                        ->where('lev.to_leave', '<=', $endDate);
+                                })->orWhere(function ($query3) use ($startDate, $endDate) {
+                                    $query3->where('lev.from_leave', '<=', $startDate)
+                                        ->where('lev.to_leave', '>=', $endDate);
+                                })->orWhere(function ($query4) use ($startDate, $endDate) {
+                                    $query4->where('lev.from_leave', '<=', $endDate)
+                                        ->where('lev.to_leave', '>=', $startDate);
+                                });
+                            });
+                        })
+                        ->when($Term, function ($qd) use ($termData) {
+                            return $qd->where('lev.from_leave', '>=', $termData->start_date ?? now())
+                                ->where('lev.to_leave', '<=', $termData->end_date ?? now());
+                        })
+                        ->when($Year, function ($qds) use ($yearData) {
+                            return $qds->where('lev.from_leave', '>=', $yearData[0]->year_start_date ?? now())
+                                ->where('lev.to_leave', '<=', $yearData[0]->year_end_date ?? now());
+                        })
+                        ->where('en.active_status', '=', '0')
+                        ->where('en.academic_session_id', '=', $request->academic_session_id)
+                        ->where('lev.status', '=', 'Approve')
+                        ->whereRaw('MONTH(lev.from_leave) = MONTH(CURDATE()) OR MONTH(lev.to_leave) = MONTH(CURDATE())')
+                        ->get();
                 } else if ($department_id && $class_id && $section_id === null) {
                     $type = "Grade";
                     // Department exists, Class exists, Section is null
                     $absentCountDetails = $createConnection->table('student_leaves as lev')
-                    ->select(
-                        DB::raw('COUNT(*) as no_of_days_attendance'),
-                        DB::raw('SUM(CASE WHEN lev.status = "Approve" THEN 1 ELSE 0 END) as absentCount')
-                    )
-                    ->join('enrolls as en', 'lev.student_id', '=', 'en.student_id')
-                    ->when($department_id, function ($query, $department_id) {
-                        return $query->where('en.department_id', $department_id);
-                    })
+                        ->select(
+                            DB::raw('COUNT(*) as no_of_days_attendance'),
+                            DB::raw('SUM(CASE WHEN lev.status = "Approve" THEN 1 ELSE 0 END) as absentCount')
+                        )
+                        ->join('enrolls as en', 'lev.student_id', '=', 'en.student_id')
+                        ->when($department_id, function ($query, $department_id) {
+                            return $query->where('en.department_id', $department_id);
+                        })
                         // when not null comes here
                         ->when($Day, function ($q) use ($currentDate) {
                             return $q->where('lev.from_leave', '<=', $currentDate)
-                                    ->where('lev.to_leave', '>=', $currentDate);
+                                ->where('lev.to_leave', '>=', $currentDate);
                         })
                         ->when($Month, function ($qs) use ($startDate, $endDate) {
                             return $qs->where('lev.from_leave', '>=', $startDate)
-                                    ->where('lev.to_leave', '<=', $endDate);
+                                ->where('lev.to_leave', '<=', $endDate);
                         })
                         ->when($Term, function ($qd) use ($termData) {
                             return $qd->where('lev.from_leave', '>=', $termData->start_date ?? now())
-                                    ->where('lev.to_leave', '<=', $termData->end_date ?? now());
+                                ->where('lev.to_leave', '<=', $termData->end_date ?? now());
                         })
                         ->when($Year, function ($qds) use ($yearData) {
                             return $qds->where('lev.from_leave', '>=', $yearData[0]->year_start_date ?? now())
-                                    ->where('lev.to_leave', '<=', $yearData[0]->year_end_date ?? now());
+                                ->where('lev.to_leave', '<=', $yearData[0]->year_end_date ?? now());
                         })
                         ->where('en.active_status', '=', '0')
                         ->where('en.academic_session_id', '=', $request->academic_session_id)
@@ -2880,39 +2878,39 @@ class ApiControllerThree extends BaseController
                     $type = "Class";
                     // Department exists, Class exists, Section exists
                     $absentCountDetails = $createConnection->table('student_leaves as lev')
-                    ->select(
-                        DB::raw('COUNT(*) as no_of_days_attendance'),
-                        DB::raw('SUM(CASE WHEN lev.status = "Approve" THEN 1 ELSE 0 END) as absentCount')
-                    )
+                        ->select(
+                            DB::raw('COUNT(*) as no_of_days_attendance'),
+                            DB::raw('SUM(CASE WHEN lev.status = "Approve" THEN 1 ELSE 0 END) as absentCount')
+                        )
                         // when not null comes here
                         ->join('enrolls as en', 'lev.student_id', '=', 'en.student_id')
                         ->when($department_id, function ($query, $department_id) {
                             return $query->where('en.department_id', $department_id);
                         })
-                            // when not null comes here
-                            ->when($Day, function ($q) use ($currentDate) {
-                                return $q->where('lev.from_leave', '<=', $currentDate)
-                                        ->where('lev.to_leave', '>=', $currentDate);
-                            })
-                            ->when($Month, function ($qs) use ($startDate, $endDate) {
-                                return $qs->where('lev.from_leave', '>=', $startDate)
-                                        ->where('lev.to_leave', '<=', $endDate);
-                            })
-                            ->when($Term, function ($qd) use ($termData) {
-                                return $qd->where('lev.from_leave', '>=', $termData->start_date ?? now())
-                                        ->where('lev.to_leave', '<=', $termData->end_date ?? now());
-                            })
-                            ->when($Year, function ($qds) use ($yearData) {
-                                return $qds->where('lev.from_leave', '>=', $yearData[0]->year_start_date ?? now())
-                                        ->where('lev.to_leave', '<=', $yearData[0]->year_end_date ?? now());
-                            })
-                            ->where('en.active_status', '=', '0')
-                            ->where('en.academic_session_id', '=', $request->academic_session_id)
-                            ->where([
-                                ['lev.class_id', $class_id],
-                                ['lev.section_id', $section_id]
-                            ])
-                            ->get();
+                        // when not null comes here
+                        ->when($Day, function ($q) use ($currentDate) {
+                            return $q->where('lev.from_leave', '<=', $currentDate)
+                                ->where('lev.to_leave', '>=', $currentDate);
+                        })
+                        ->when($Month, function ($qs) use ($startDate, $endDate) {
+                            return $qs->where('lev.from_leave', '>=', $startDate)
+                                ->where('lev.to_leave', '<=', $endDate);
+                        })
+                        ->when($Term, function ($qd) use ($termData) {
+                            return $qd->where('lev.from_leave', '>=', $termData->start_date ?? now())
+                                ->where('lev.to_leave', '<=', $termData->end_date ?? now());
+                        })
+                        ->when($Year, function ($qds) use ($yearData) {
+                            return $qds->where('lev.from_leave', '>=', $yearData[0]->year_start_date ?? now())
+                                ->where('lev.to_leave', '<=', $yearData[0]->year_end_date ?? now());
+                        })
+                        ->where('en.active_status', '=', '0')
+                        ->where('en.academic_session_id', '=', $request->academic_session_id)
+                        ->where([
+                            ['lev.class_id', $class_id],
+                            ['lev.section_id', $section_id]
+                        ])
+                        ->get();
                 } else if ($department_id === null && $class_id === null && $section_id === null) {
 
                     $type = "Overall Faculty";
@@ -2927,33 +2925,33 @@ class ApiControllerThree extends BaseController
                             array_push($classID, $value->id);
                         }
                     }
-                            $absentCountDetails = $createConnection->table('student_leaves as lev')
-                            ->select(
-                                DB::raw('COUNT(*) as no_of_days_attendance'),
-                                DB::raw('SUM(CASE WHEN lev.status = "Approve" THEN 1 ELSE 0 END) as absentCount')
-                            )
-                            ->join('enrolls as en', 'lev.student_id', '=', 'en.student_id')
-                            ->whereIn('lev.class_id', $classID)
-                        
-                            // when not null comes here
-                            ->when($Day, function ($q) use ($currentDate) {
-                                return $q->where('lev.from_leave', '<=', $currentDate)
-                                        ->where('lev.to_leave', '>=', $currentDate);
-                            })
-                            ->when($Month, function ($qs) use ($startDate, $endDate) {
-                                return $qs->where('lev.from_leave', '>=', $startDate)
-                                        ->where('lev.to_leave', '<=', $endDate);
-                            })
-                            ->when($Term, function ($qd) use ($termData) {
-                                return $qd->where('lev.from_leave', '>=', $termData->start_date ?? now())
-                                        ->where('lev.to_leave', '<=', $termData->end_date ?? now());
-                            })
-                            ->when($Year, function ($qds) use ($yearData) {
-                                return $qds->where('lev.from_leave', '>=', $yearData[0]->year_start_date ?? now())
-                                        ->where('lev.to_leave', '<=', $yearData[0]->year_end_date ?? now());
-                            })
-                            ->where('en.active_status', '=', '0')
-                            ->where('en.academic_session_id', '=', $request->academic_session_id)
+                    $absentCountDetails = $createConnection->table('student_leaves as lev')
+                        ->select(
+                            DB::raw('COUNT(*) as no_of_days_attendance'),
+                            DB::raw('SUM(CASE WHEN lev.status = "Approve" THEN 1 ELSE 0 END) as absentCount')
+                        )
+                        ->join('enrolls as en', 'lev.student_id', '=', 'en.student_id')
+                        ->whereIn('lev.class_id', $classID)
+
+                        // when not null comes here
+                        ->when($Day, function ($q) use ($currentDate) {
+                            return $q->where('lev.from_leave', '<=', $currentDate)
+                                ->where('lev.to_leave', '>=', $currentDate);
+                        })
+                        ->when($Month, function ($qs) use ($startDate, $endDate) {
+                            return $qs->where('lev.from_leave', '>=', $startDate)
+                                ->where('lev.to_leave', '<=', $endDate);
+                        })
+                        ->when($Term, function ($qd) use ($termData) {
+                            return $qd->where('lev.from_leave', '>=', $termData->start_date ?? now())
+                                ->where('lev.to_leave', '<=', $termData->end_date ?? now());
+                        })
+                        ->when($Year, function ($qds) use ($yearData) {
+                            return $qds->where('lev.from_leave', '>=', $yearData[0]->year_start_date ?? now())
+                                ->where('lev.to_leave', '<=', $yearData[0]->year_end_date ?? now());
+                        })
+                        ->where('en.active_status', '=', '0')
+                        ->where('en.academic_session_id', '=', $request->academic_session_id)
                         ->get();
                 } else {
                     // Default scenario
@@ -3031,15 +3029,17 @@ class ApiControllerThree extends BaseController
                 $conn = $this->createNewConnection($request->branch_id);
                 $termination_status_flag = isset($request->termination_status_flag) ? $request->termination_status_flag : null;
                 // get data
-                 $name_status = $request->name_status;
+                $name_status = $request->name_status;
                 $parent_id = $request->parent_id;
-                $terminationDetails = $conn->table('termination as t')->select('t.*', 
-                'ay.name as academic_year', 
-                's.gender', 
-                DB::raw("CONCAT(s." . ($name_status == 0 ? 'last_name' : 'first_name') . ", ' ', s." . ($name_status == 0 ? 'first_name' : 'last_name') . ") as name"),
-                DB::raw("CONCAT(s." . ($name_status == 0 ? 'last_name_english' : 'first_name_english') . ", ' ', s." . ($name_status == 0 ? 'first_name_english' : 'last_name_english') . ") as name_english"),
-                 'c.name as class_name', 
-                 'sc.name as section_name')
+                $terminationDetails = $conn->table('termination as t')->select(
+                    't.*',
+                    'ay.name as academic_year',
+                    's.gender',
+                    DB::raw("CONCAT(s." . ($name_status == 0 ? 'last_name' : 'first_name') . ", ' ', s." . ($name_status == 0 ? 'first_name' : 'last_name') . ") as name"),
+                    DB::raw("CONCAT(s." . ($name_status == 0 ? 'last_name_english' : 'first_name_english') . ", ' ', s." . ($name_status == 0 ? 'first_name_english' : 'last_name_english') . ") as name_english"),
+                    'c.name as class_name',
+                    'sc.name as section_name'
+                )
                     ->leftJoin('students as s', 's.id', '=', 't.student_id')
                     ->leftJoin('enrolls as e', 'e.student_id', '=', 's.id')
                     ->leftJoin('classes as c', 'e.class_id', '=', 'c.id')
@@ -3066,8 +3066,7 @@ class ApiControllerThree extends BaseController
         try {
             $validator = \Validator::make($request->all(), [
                 'branch_id' => 'required',
-                'staff_id' => 'required',
-                'unhide_data' => 'required',
+                'staff_id' => 'required'
             ]);
             if (!$validator->passes()) {
                 return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
@@ -3077,53 +3076,60 @@ class ApiControllerThree extends BaseController
 
                 $unhide_data = $request->unhide_data;
                 $staff_id = $request->staff_id;
-                foreach ($unhide_data as $key => $value) {
-                    $order_no = (isset($value['order_no']) ? $value['order_no'] : 0);
-                    $widget_name = (isset($value['widget_name']) ? $value['widget_name'] : null);
-                    $widget_value = (isset($value['widget_value']) ? $value['widget_value'] : null);
-                    $visibility = (isset($value['visibility']) ? $value['visibility'] : null);
-                    $department_id = (isset($value['department_id']) ? $value['department_id'] : null);
-                    $class_id = (isset($value['class_id']) ? $value['class_id'] : null);
-                    $section_id = (isset($value['section_id']) ? $value['section_id'] : null);
-                    $pattern = (isset($value['pattern']) ? $value['pattern'] : null);
-                    $hideUnhideData = array(
-                        'staff_id' => $staff_id,
-                        'order_no' => $order_no,
-                        'widget_name' => $widget_name,
-                        'widget_value' => $widget_value,
-                        'visibility' => $visibility,
-                        'department_id' => $department_id,
-                        'class_id' => $class_id,
-                        'section_id' => $section_id,
-                        'pattern' => $pattern,
-                    );
-                    if (isset($widget_value) && isset($widget_value) && isset($staff_id) && isset($order_no)) {
-                        if ((empty($value['old_id']) || $value['old_id'] == "null")) {
-                            $row = $Connection->table('widget_hide_unhide')->select('id')->where([
-                                ['order_no', '=', $order_no],
-                                ['staff_id', '=', $staff_id]
-                            ])->first();
-                            if (isset($row->id)) {
+                if (!empty($unhide_data)) {
+                    foreach ($unhide_data as $key => $value) {
+                        $order_no = (isset($value['order_no']) ? $value['order_no'] : 0);
+                        $widget_name = (isset($value['widget_name']) ? $value['widget_name'] : null);
+                        $widget_value = (isset($value['widget_value']) ? $value['widget_value'] : null);
+                        $visibility = (isset($value['visibility']) ? $value['visibility'] : null);
+                        $department_id = (isset($value['department_id']) ? $value['department_id'] : null);
+                        $class_id = (isset($value['class_id']) ? $value['class_id'] : null);
+                        $section_id = (isset($value['section_id']) ? $value['section_id'] : null);
+                        $pattern = (isset($value['pattern']) ? $value['pattern'] : null);
+                        $hideUnhideData = array(
+                            'staff_id' => $staff_id,
+                            'order_no' => $order_no,
+                            'widget_name' => $widget_name,
+                            'widget_value' => $widget_value,
+                            'visibility' => $visibility,
+                            'department_id' => $department_id,
+                            'class_id' => $class_id,
+                            'section_id' => $section_id,
+                            'pattern' => $pattern,
+                        );
+                        if (isset($widget_value) && isset($widget_value) && isset($staff_id) && isset($order_no)) {
+                            if ((empty($value['old_id']) || $value['old_id'] == "null")) {
+                                $row = $Connection->table('widget_hide_unhide')->select('id')->where([
+                                    ['order_no', '=', $order_no],
+                                    ['staff_id', '=', $staff_id]
+                                ])->first();
+                                if (isset($row->id)) {
 
+                                    $hideUnhideData['updated_by'] = $staff_id;
+                                    $hideUnhideData['updated_at'] = date("Y-m-d H:i:s");
+                                    $query =  $Connection->table('widget_hide_unhide')->where('id', $row->id)->update($hideUnhideData);
+                                } else {
+                                    $hideUnhideData['created_by'] = $staff_id;
+                                    $hideUnhideData['created_at'] = date("Y-m-d H:i:s");
+                                    $query = $Connection->table('widget_hide_unhide')->insert($hideUnhideData);
+                                }
+                            } else {
                                 $hideUnhideData['updated_by'] = $staff_id;
                                 $hideUnhideData['updated_at'] = date("Y-m-d H:i:s");
-                                $query =  $Connection->table('widget_hide_unhide')->where('id', $row->id)->update($hideUnhideData);
-                            } else {
-                                $hideUnhideData['created_by'] = $staff_id;
-                                $hideUnhideData['created_at'] = date("Y-m-d H:i:s");
-                                $query = $Connection->table('widget_hide_unhide')->insert($hideUnhideData);
+                                $query = $Connection->table('widget_hide_unhide')->where('id', $value['old_id'])->update($hideUnhideData);
                             }
-                        } else {
-                            $hideUnhideData['updated_by'] = $staff_id;
-                            $hideUnhideData['updated_at'] = date("Y-m-d H:i:s");
-                            $query = $Connection->table('widget_hide_unhide')->where('id', $value['old_id'])->update($hideUnhideData);
+                            // Delete records not present in the current data
+                            $Connection->table('widget_hide_unhide')
+                                ->where('staff_id', $staff_id)
+                                ->whereNotIn('order_no', array_column($unhide_data, 'order_no'))
+                                ->delete();
                         }
-                        // Delete records not present in the current data
-                        $Connection->table('widget_hide_unhide')
-                            ->where('staff_id', $staff_id)
-                            ->whereNotIn('order_no', array_column($unhide_data, 'order_no'))
-                            ->delete();
                     }
+                } else {
+                    // Delete all records if unhide_data is empty
+                    $Connection->table('widget_hide_unhide')
+                        ->where('staff_id', $staff_id)
+                        ->delete();
                 }
                 return $this->successResponse([], 'hide unhide data added successfuly.');
             }
@@ -3678,7 +3684,8 @@ class ApiControllerThree extends BaseController
             $this->commonHelper->generalReturn('403', 'error', $error, 'Error in publishEvent');
         }
     }
-    public function addStudentMedicalRecord(Request $request){
+    public function addStudentMedicalRecord(Request $request)
+    {
         //return $request;
         $validator = \Validator::make($request->all(), [
             // 'token' => 'required',
@@ -3719,7 +3726,7 @@ class ApiControllerThree extends BaseController
                     'updated_at' => now(),
                 ]
             );
-            
+
             // Update or Insert student immunization histories
             $immunization_history_id = $conn->table('student_immunization_histories')->updateOrInsert(
                 ['student_id' => $studentId, 'academic_session_id' => $request->academic_session_id],
@@ -3741,7 +3748,7 @@ class ApiControllerThree extends BaseController
                     'updated_at' => now(),
                 ]
             );
-            
+
             // Update or Insert current health conditions
             $current_health_condition_id = $conn->table('current_health_condition')->updateOrInsert(
                 ['student_id' => $studentId, 'academic_session_id' => $request->academic_session_id],
@@ -3773,11 +3780,11 @@ class ApiControllerThree extends BaseController
                     'updated_at' => now(),
                 ]
             );
-           
-            
+
+
             // Update or Insert student medical records
             if ($histories_id) {
-               $student_medical_record_id =  $conn->table('student_medical_record')->updateOrInsert(
+                $student_medical_record_id =  $conn->table('student_medical_record')->updateOrInsert(
                     ['student_id' => $studentId, 'academic_session_id' => $request->academic_session_id],
                     [
                         'parent_id' => $request->parent_id,
@@ -3804,7 +3811,7 @@ class ApiControllerThree extends BaseController
                     $allergyId = $conn->table('student_allergies')
                         ->where('name', $allergyDetails['name'])
                         ->value('id');
-            
+
                     // Update or Insert into allergies_details table
                     $conn->table('allergies_details')->updateOrInsert(
                         [
@@ -3846,40 +3853,40 @@ class ApiControllerThree extends BaseController
             // create new connection
             $conn = $this->createNewConnection($request->branch_id);
 
-             // Fetch medical records for the specified student_id
-             $medicalRecords = $conn->table('student_medical_record as stm')
-             ->select(
-                 'stm.*', 
-                 'sth.*', 
-                 'sti.*', 
-                 'stc.*'
-             )
-             ->leftJoin('student_medical_histories as sth', 'stm.medical_history_id', '=', 'sth.id')
-             ->leftJoin('student_immunization_histories as sti', 'stm.immunization_history_id', '=', 'sti.id')
-             ->leftJoin('current_health_condition as stc', 'stm.current_health_condition_id', '=', 'stc.id')
-             ->where('stm.student_id', $request->student_id)
-             ->where('stm.academic_session_id', $request->academic_session_id)
-             ->first();
-         
-         // Query to fetch details from allergies_details table based on the allergies associated with the student
-         $allergiesDetails = $conn->table('student_allergies as sa')     
-         ->leftJoin('allergies_details as ad', function ($join) use ($request) {        
-             $join->on('ad.allergies_id', '=', 'sa.id')              
-             ->where('ad.student_id', '=', $request->student_id);     }) 
-        ->leftJoin('student_medical_record as stm', 'ad.student_medical_record_id', '=', 'stm.id')    
-         ->select('ad.*', 'sa.id as sa_id')     ->get();
-       
-         $indexedAllergies = [];
- 
-         foreach ($allergiesDetails as $key => $allergies) {
-             $indexedAllergies[$allergies->sa_id] = $allergies;
-                
-         }
-         $results = [];
-         $results['student'] = $medicalRecords;
-         $results['allergies'] = $indexedAllergies;
-         
-             return $this->successResponse($results, 'Studennt Medical list record fetch successfully');
+            // Fetch medical records for the specified student_id
+            $medicalRecords = $conn->table('student_medical_record as stm')
+                ->select(
+                    'stm.*',
+                    'sth.*',
+                    'sti.*',
+                    'stc.*'
+                )
+                ->leftJoin('student_medical_histories as sth', 'stm.medical_history_id', '=', 'sth.id')
+                ->leftJoin('student_immunization_histories as sti', 'stm.immunization_history_id', '=', 'sti.id')
+                ->leftJoin('current_health_condition as stc', 'stm.current_health_condition_id', '=', 'stc.id')
+                ->where('stm.student_id', $request->student_id)
+                ->where('stm.academic_session_id', $request->academic_session_id)
+                ->first();
+
+            // Query to fetch details from allergies_details table based on the allergies associated with the student
+            $allergiesDetails = $conn->table('student_allergies as sa')
+                ->leftJoin('allergies_details as ad', function ($join) use ($request) {
+                    $join->on('ad.allergies_id', '=', 'sa.id')
+                        ->where('ad.student_id', '=', $request->student_id);
+                })
+                ->leftJoin('student_medical_record as stm', 'ad.student_medical_record_id', '=', 'stm.id')
+                ->select('ad.*', 'sa.id as sa_id')->get();
+
+            $indexedAllergies = [];
+
+            foreach ($allergiesDetails as $key => $allergies) {
+                $indexedAllergies[$allergies->sa_id] = $allergies;
+            }
+            $results = [];
+            $results['student'] = $medicalRecords;
+            $results['allergies'] = $indexedAllergies;
+
+            return $this->successResponse($results, 'Studennt Medical list record fetch successfully');
         }
     }
     public function getStudentMedicalReportAdmin(Request $request)
@@ -3935,7 +3942,8 @@ class ApiControllerThree extends BaseController
             return $this->commonHelper->generalReturn('403', 'error', $error, 'Error in getStudentMedicalReportAdmin');
         }
     }
-    public function getAllergiesNameList(Request $request){
+    public function getAllergiesNameList(Request $request)
+    {
         $validator = \Validator::make($request->all(), [
             // 'token' => 'required',
             'branch_id' => 'required',
@@ -3948,14 +3956,14 @@ class ApiControllerThree extends BaseController
 
             // create new connection
             $conn = $this->createNewConnection($request->branch_id);
-             // Fetch medical records for the specified student_id
-             $allergiesNameList = $conn->table('student_allergies')
-             ->select(
-                 'id',
-                 'name'
-             )->get();
+            // Fetch medical records for the specified student_id
+            $allergiesNameList = $conn->table('student_allergies')
+                ->select(
+                    'id',
+                    'name'
+                )->get();
 
-             return $this->successResponse($allergiesNameList, 'Allergies Name list record fetch successfully');
+            return $this->successResponse($allergiesNameList, 'Allergies Name list record fetch successfully');
         }
     }
     public function getStudentMedicalRecordpdf(Request $request)
@@ -3972,59 +3980,59 @@ class ApiControllerThree extends BaseController
 
             // create new connection
             $conn = $this->createNewConnection($request->branch_id);
-              // Fetch medical records for the specified student_id
-              $medicalRecords = $conn->table('student_medical_record as stm')
-              ->select(
-                  'stm.*', 
-                  'sth.*', 
-                  'sti.*', 
-                  'st1.last_name',
-                  'st1.first_name',
-                  'st1.gender',
-                  'st1.birthday',
-                  'st1.blood_group',
-                  'st1.address_condominium',
-                  'st1.address_district',
-              )
-              ->leftJoin('student_medical_histories as sth', 'stm.medical_history_id', '=', 'sth.id')
-              ->leftJoin('student_immunization_histories as sti', 'stm.immunization_history_id', '=', 'sti.id')
-              ->leftJoin('students as st1', 'st1.id', '=', 'stm.student_id')
-              ->where('stm.student_id', $request->student_id)
-              ->where('stm.academic_session_id', $request->academic_session_id)
-              ->first();
+            // Fetch medical records for the specified student_id
+            $medicalRecords = $conn->table('student_medical_record as stm')
+                ->select(
+                    'stm.*',
+                    'sth.*',
+                    'sti.*',
+                    'st1.last_name',
+                    'st1.first_name',
+                    'st1.gender',
+                    'st1.birthday',
+                    'st1.blood_group',
+                    'st1.address_condominium',
+                    'st1.address_district',
+                )
+                ->leftJoin('student_medical_histories as sth', 'stm.medical_history_id', '=', 'sth.id')
+                ->leftJoin('student_immunization_histories as sti', 'stm.immunization_history_id', '=', 'sti.id')
+                ->leftJoin('students as st1', 'st1.id', '=', 'stm.student_id')
+                ->where('stm.student_id', $request->student_id)
+                ->where('stm.academic_session_id', $request->academic_session_id)
+                ->first();
             $enrolls_data = $conn->table('enrolls')
-              ->select("*")
-              ->where('student_id',$request->student_id)
-              ->get();
+                ->select("*")
+                ->where('student_id', $request->student_id)
+                ->get();
             $current_health_condition_data = $conn->table('current_health_condition as stc')
-              ->select("stc.*",'en.department_id','en.class_id')
-              ->leftJoin('enrolls as en', function($join) {
-                $join->on('en.student_id', '=', 'stc.student_id')
-                     ->on('en.academic_session_id', '=', 'stc.academic_session_id');
-                 })
-              ->where('stc.student_id',$request->student_id)
-              ->get();
-              // Query to fetch details from allergies_details table based on the allergies associated with the student
-         $allergiesDetails = $conn->table('student_allergies as sa')     
-         ->leftJoin('allergies_details as ad', function ($join) use ($request) {        
-             $join->on('ad.allergies_id', '=', 'sa.id')              
-             ->where('ad.student_id', '=', $request->student_id);     }) 
-        ->leftJoin('student_medical_record as stm', 'ad.student_medical_record_id', '=', 'stm.id')    
-         ->select('ad.*', 'sa.id as sa_id')     ->get();
-       
-         $indexedAllergies = [];
- 
-         foreach ($allergiesDetails as $key => $allergies) {
-             $indexedAllergies[$allergies->sa_id] = $allergies;
-                
-         }
-         $getpdfData = [];
-         $getpdfData['student'] = $medicalRecords;
-         $getpdfData['allergies'] = $indexedAllergies;
-         $getpdfData['enroll_data'] = $enrolls_data;
-         $getpdfData['current_health_condition'] =$current_health_condition_data;
+                ->select("stc.*", 'en.department_id', 'en.class_id')
+                ->leftJoin('enrolls as en', function ($join) {
+                    $join->on('en.student_id', '=', 'stc.student_id')
+                        ->on('en.academic_session_id', '=', 'stc.academic_session_id');
+                })
+                ->where('stc.student_id', $request->student_id)
+                ->get();
+            // Query to fetch details from allergies_details table based on the allergies associated with the student
+            $allergiesDetails = $conn->table('student_allergies as sa')
+                ->leftJoin('allergies_details as ad', function ($join) use ($request) {
+                    $join->on('ad.allergies_id', '=', 'sa.id')
+                        ->where('ad.student_id', '=', $request->student_id);
+                })
+                ->leftJoin('student_medical_record as stm', 'ad.student_medical_record_id', '=', 'stm.id')
+                ->select('ad.*', 'sa.id as sa_id')->get();
 
-             return $this->successResponse($getpdfData, 'Student Medical record pdf fetch successfully');
+            $indexedAllergies = [];
+
+            foreach ($allergiesDetails as $key => $allergies) {
+                $indexedAllergies[$allergies->sa_id] = $allergies;
+            }
+            $getpdfData = [];
+            $getpdfData['student'] = $medicalRecords;
+            $getpdfData['allergies'] = $indexedAllergies;
+            $getpdfData['enroll_data'] = $enrolls_data;
+            $getpdfData['current_health_condition'] = $current_health_condition_data;
+
+            return $this->successResponse($getpdfData, 'Student Medical record pdf fetch successfully');
         }
     }
 }

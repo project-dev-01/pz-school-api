@@ -20462,7 +20462,7 @@ try{
                     ['lev.to_leave', '>=', $to_leave]
                 ])->count();
             if ($fromLeaveCnt > 0 || $toLeaveCnt > 0) {
-                return $this->send422Error('You have already applied for leave between these dates', ['error' => 'You have already applied for leave between these dates']);
+                return $this->validationFailureResponse([], 'You have already applied for leave between these dates');
             } else {
                 // check if that leave type is available
                 $leaveTypeTotDays =  $staffConn->table('staff_leave_assign as sla')
@@ -20589,7 +20589,8 @@ try{
                         return $this->successResponse($success, 'You have applied for leave');
                     }
                 } else {
-                    return $this->send422Error('Insufficient leave balance', ['error' => 'Insufficient leave balance']);
+                    // return $this->send422Error('Insufficient leave balance', ['error' => 'Insufficient leave balance']);
+                    return $this->validationFailureResponse([], 'Insufficient leave balance');
                 }
             }
         }

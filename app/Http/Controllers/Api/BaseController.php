@@ -9,9 +9,15 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Artisan;
 // db connection
 use App\Helpers\DatabaseConnection;
-
+use App\Helpers\CommonHelper;
+use Exception;
 class BaseController extends Controller
 {
+    protected CommonHelper $commonHelper;
+    public function __construct(CommonHelper $commonHelper)
+    {
+        $this->commonHelper = $commonHelper;
+    }
     /**
      * success response method.
      *
