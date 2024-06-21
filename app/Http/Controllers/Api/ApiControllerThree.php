@@ -2783,7 +2783,7 @@ class ApiControllerThree extends BaseController
                             (
                                 SELECT COUNT(*)
                                 FROM events e
-                                WHERE
+                                WHERE e.holiday = 1 AND e.all_day = "on" AND
                                     (
                                         (e.start_date <= LEAST(lev.to_leave, LAST_DAY(CURDATE())) AND e.end_date >= GREATEST(lev.from_leave, DATE_FORMAT(CURDATE(), "%Y-%m-01"))) OR
                                         (e.start_date = lev.from_leave AND e.end_date = lev.to_leave) OR
@@ -2811,8 +2811,20 @@ class ApiControllerThree extends BaseController
                         ->whereIn('lev.class_id', $classID)
                         ->where('en.department_id', $department_id)
                         ->when($Day, function ($q) use ($currentDate) {
-                            return $q->where('lev.from_leave', '<=', $currentDate)
-                                ->where('lev.to_leave', '>=', $currentDate);
+                            // return $q->where('lev.from_leave', '<=', $currentDate)
+                            //     ->where('lev.to_leave', '>=', $currentDate);
+                                return $q->where(function ($query1) use ($currentDate) {
+                                    $query1->where(function ($query2) use ($currentDate) {
+                                        $query2->where('lev.from_leave', '>=',$currentDate)
+                                            ->where('lev.to_leave', '<=', $currentDate);
+                                    })->orWhere(function ($query3) use ($currentDate) {
+                                        $query3->where('lev.from_leave', '<=', $currentDate)
+                                            ->where('lev.to_leave', '>=', $currentDate);
+                                    })->orWhere(function ($query4) use ($currentDate) {
+                                        $query4->where('lev.from_leave', '<=',$currentDate)
+                                            ->where('lev.to_leave', '>=', $currentDate);
+                                    });
+                                });
                         })
                         ->when($Month, function ($query) use ($startDate, $endDate) {
                             return $query->where(function ($query1) use ($startDate, $endDate) {
@@ -2829,12 +2841,37 @@ class ApiControllerThree extends BaseController
                             });
                         })
                         ->when($Term, function ($qd) use ($termData) {
-                            return $qd->where('lev.from_leave', '>=', $termData->start_date ?? now())
-                                ->where('lev.to_leave', '<=', $termData->end_date ?? now());
+                            // return $qd->where('lev.from_leave', '>=', $termData->start_date ?? now())
+                            //     ->where('lev.to_leave', '<=', $termData->end_date ?? now());
+                                return $qd->where(function ($query1) use ($termData) {
+                                    $query1->where(function ($query2) use ($termData) {
+                                        $query2->where('lev.from_leave', '>=',$termData->start_date ?? now())
+                                            ->where('lev.to_leave', '<=', $termData->end_date ?? now());
+                                    })->orWhere(function ($query3) use ($termData) {
+                                        $query3->where('lev.from_leave', '<=', $termData->start_date ?? now())
+                                            ->where('lev.to_leave', '>=', $termData->end_date ?? now());
+                                    })->orWhere(function ($query4) use ($termData) {
+                                        $query4->where('lev.from_leave', '<=',$termData->end_date ?? now())
+                                            ->where('lev.to_leave', '>=', $termData->start_date ?? now());
+                                    });
+                                });
+                            
                         })
                         ->when($Year, function ($qds) use ($yearData) {
                             return $qds->where('lev.from_leave', '>=', $yearData[0]->year_start_date ?? now())
                                 ->where('lev.to_leave', '<=', $yearData[0]->year_end_date ?? now());
+                                return $qds->where(function ($query1) use ($yearData) {
+                                    $query1->where(function ($query2) use ($yearData) {
+                                        $query2->where('lev.from_leave', '>=',$yearData[0]->year_start_date ?? now())
+                                            ->where('lev.to_leave', '<=', $yearData[0]->year_end_date ?? now());
+                                    })->orWhere(function ($query3) use ($yearData) {
+                                        $query3->where('lev.from_leave', '<=', $yearData[0]->year_start_date ?? now())
+                                            ->where('lev.to_leave', '>=', $yearData[0]->year_end_date ?? now());
+                                    })->orWhere(function ($query4) use ($yearData) {
+                                        $query4->where('lev.from_leave', '<=',$yearData[0]->year_end_date ?? now())
+                                            ->where('lev.to_leave', '>=', $yearData[0]->year_start_date ?? now());
+                                    });
+                                });
                         })
                         ->where('en.active_status', '=', '0')
                         ->where('en.academic_session_id', '=', $request->academic_session_id)
@@ -2845,30 +2882,126 @@ class ApiControllerThree extends BaseController
                     $type = "Grade";
                     // Department exists, Class exists, Section is null
                     $absentCountDetails = $createConnection->table('student_leaves as lev')
-                        ->select(
-                            DB::raw('COUNT(*) as no_of_days_attendance'),
-                            DB::raw('SUM(CASE WHEN lev.status = "Approve" THEN 1 ELSE 0 END) as absentCount')
+                    ->select(DB::raw('
+                    FLOOR(
+                        SUM(
+                            CASE 
+                                WHEN lev.to_leave >= lev.from_leave THEN
+                                    (
+                                        DATEDIFF(
+                                            LEAST(lev.to_leave, LAST_DAY(CURDATE())), 
+                                            GREATEST(lev.from_leave, DATE_FORMAT(CURDATE(), "%Y-%m-01"))
+                                        ) + 1
+                                    ) -
+                                    (
+                                        (DATEDIFF(LEAST(lev.to_leave, LAST_DAY(CURDATE())), GREATEST(lev.from_leave, DATE_FORMAT(CURDATE(), "%Y-%m-01"))) + 1) / 7 * 2
+                                    ) -
+                                    CASE 
+                                        WHEN WEEKDAY(GREATEST(lev.from_leave, DATE_FORMAT(CURDATE(), "%Y-%m-01"))) <= WEEKDAY(LEAST(lev.to_leave, LAST_DAY(CURDATE()))) THEN
+                                            IF(WEEKDAY(LEAST(lev.to_leave, LAST_DAY(CURDATE()))) = 6, 1, 0) + 
+                                            IF(WEEKDAY(GREATEST(lev.from_leave, DATE_FORMAT(CURDATE(), "%Y-%m-01"))) = 5, 1, 0)
+                                        ELSE
+                                            IF(WEEKDAY(GREATEST(lev.from_leave, DATE_FORMAT(CURDATE(), "%Y-%m-01"))) = 5 OR WEEKDAY(GREATEST(lev.from_leave, DATE_FORMAT(CURDATE(), "%Y-%m-01"))) = 6, 1, 0) +
+                                            IF(WEEKDAY(LEAST(lev.to_leave, LAST_DAY(CURDATE()))) = 6 OR WEEKDAY(LEAST(lev.to_leave, LAST_DAY(CURDATE()))) = 5, 1, 0)
+                                    END
+                                ELSE
+                                    0
+                            END
+                        ) -
+                        (
+                            SELECT COUNT(*)
+                            FROM events e
+                            WHERE e.holiday = 1 AND e.all_day = "on" AND
+                                (
+                                    (e.start_date <= LEAST(lev.to_leave, LAST_DAY(CURDATE())) AND e.end_date >= GREATEST(lev.from_leave, DATE_FORMAT(CURDATE(), "%Y-%m-01"))) OR
+                                    (e.start_date = lev.from_leave AND e.end_date = lev.to_leave) OR
+                                    (e.start_date BETWEEN lev.from_leave AND lev.to_leave) OR
+                                    (e.end_date BETWEEN lev.from_leave AND lev.to_leave)
+                                )
                         )
-                        ->join('enrolls as en', 'lev.student_id', '=', 'en.student_id')
-                        ->when($department_id, function ($query, $department_id) {
+                    ) as no_of_days_attendance
+                '))
+                ->join('enrolls as en', function ($join) {
+                    $join->on('lev.class_id', '=', 'en.class_id')
+                        ->on('lev.section_id', '=', 'en.section_id')
+                        ->on('lev.student_id', '=', 'en.student_id');
+                })
+                ->leftJoin('events as e', function ($join) {
+                    $join->on(function ($query) {
+                        $query->whereRaw('lev.from_leave BETWEEN e.start_date AND e.end_date')
+                            ->orWhereRaw('lev.to_leave BETWEEN e.start_date AND e.end_date')
+                            ->orWhere(function ($query) {
+                                $query->whereRaw('lev.from_leave < e.start_date')
+                                    ->whereRaw('lev.to_leave > e.end_date');
+                            });
+                    });
+                }) 
+                ->when($department_id, function ($query, $department_id) {
                             return $query->where('en.department_id', $department_id);
                         })
                         // when not null comes here
                         ->when($Day, function ($q) use ($currentDate) {
-                            return $q->where('lev.from_leave', '<=', $currentDate)
-                                ->where('lev.to_leave', '>=', $currentDate);
+                            // return $q->where('lev.from_leave', '<=', $currentDate)
+                            //     ->where('lev.to_leave', '>=', $currentDate);
+                                return $q->where(function ($query1) use ($currentDate) {
+                                    $query1->where(function ($query2) use ($currentDate) {
+                                        $query2->where('lev.from_leave', '>=',$currentDate)
+                                            ->where('lev.to_leave', '<=', $currentDate);
+                                    })->orWhere(function ($query3) use ($currentDate) {
+                                        $query3->where('lev.from_leave', '<=', $currentDate)
+                                            ->where('lev.to_leave', '>=', $currentDate);
+                                    })->orWhere(function ($query4) use ($currentDate) {
+                                        $query4->where('lev.from_leave', '<=',$currentDate)
+                                            ->where('lev.to_leave', '>=', $currentDate);
+                                    });
+                                });
                         })
-                        ->when($Month, function ($qs) use ($startDate, $endDate) {
-                            return $qs->where('lev.from_leave', '>=', $startDate)
-                                ->where('lev.to_leave', '<=', $endDate);
+                        ->when($Month, function ($query) use ($startDate, $endDate) {
+                            return $query->where(function ($query1) use ($startDate, $endDate) {
+                                $query1->where(function ($query2) use ($startDate, $endDate) {
+                                    $query2->where('lev.from_leave', '>=', $startDate)
+                                        ->where('lev.to_leave', '<=', $endDate);
+                                })->orWhere(function ($query3) use ($startDate, $endDate) {
+                                    $query3->where('lev.from_leave', '<=', $startDate)
+                                        ->where('lev.to_leave', '>=', $endDate);
+                                })->orWhere(function ($query4) use ($startDate, $endDate) {
+                                    $query4->where('lev.from_leave', '<=', $endDate)
+                                        ->where('lev.to_leave', '>=', $startDate);
+                                });
+                            });
                         })
                         ->when($Term, function ($qd) use ($termData) {
-                            return $qd->where('lev.from_leave', '>=', $termData->start_date ?? now())
-                                ->where('lev.to_leave', '<=', $termData->end_date ?? now());
+                            // return $qd->where('lev.from_leave', '>=', $termData->start_date ?? now())
+                            //     ->where('lev.to_leave', '<=', $termData->end_date ?? now());
+                                return $qd->where(function ($query1) use ($termData) {
+                                    $query1->where(function ($query2) use ($termData) {
+                                        $query2->where('lev.from_leave', '>=',$termData->start_date ?? now())
+                                            ->where('lev.to_leave', '<=', $termData->end_date ?? now());
+                                    })->orWhere(function ($query3) use ($termData) {
+                                        $query3->where('lev.from_leave', '<=', $termData->start_date ?? now())
+                                            ->where('lev.to_leave', '>=', $termData->end_date ?? now());
+                                    })->orWhere(function ($query4) use ($termData) {
+                                        $query4->where('lev.from_leave', '<=',$termData->end_date ?? now())
+                                            ->where('lev.to_leave', '>=', $termData->start_date ?? now());
+                                    });
+                                });
+                            
                         })
                         ->when($Year, function ($qds) use ($yearData) {
                             return $qds->where('lev.from_leave', '>=', $yearData[0]->year_start_date ?? now())
                                 ->where('lev.to_leave', '<=', $yearData[0]->year_end_date ?? now());
+                                return $qds->where(function ($query1) use ($yearData) {
+                                    $query1->where(function ($query2) use ($yearData) {
+                                        $query2->where('lev.from_leave', '>=',$yearData[0]->year_start_date ?? now())
+                                            ->where('lev.to_leave', '<=', $yearData[0]->year_end_date ?? now());
+                                    })->orWhere(function ($query3) use ($yearData) {
+                                        $query3->where('lev.from_leave', '<=', $yearData[0]->year_start_date ?? now())
+                                            ->where('lev.to_leave', '>=', $yearData[0]->year_end_date ?? now());
+                                    })->orWhere(function ($query4) use ($yearData) {
+                                        $query4->where('lev.from_leave', '<=',$yearData[0]->year_end_date ?? now())
+                                            ->where('lev.to_leave', '>=', $yearData[0]->year_start_date ?? now());
+                                    });
+                                });
                         })
                         ->where('en.active_status', '=', '0')
                         ->where('en.academic_session_id', '=', $request->academic_session_id)
@@ -2878,31 +3011,127 @@ class ApiControllerThree extends BaseController
                     $type = "Class";
                     // Department exists, Class exists, Section exists
                     $absentCountDetails = $createConnection->table('student_leaves as lev')
-                        ->select(
-                            DB::raw('COUNT(*) as no_of_days_attendance'),
-                            DB::raw('SUM(CASE WHEN lev.status = "Approve" THEN 1 ELSE 0 END) as absentCount')
+                    ->select(DB::raw('
+                    FLOOR(
+                        SUM(
+                            CASE 
+                                WHEN lev.to_leave >= lev.from_leave THEN
+                                    (
+                                        DATEDIFF(
+                                            LEAST(lev.to_leave, LAST_DAY(CURDATE())), 
+                                            GREATEST(lev.from_leave, DATE_FORMAT(CURDATE(), "%Y-%m-01"))
+                                        ) + 1
+                                    ) -
+                                    (
+                                        (DATEDIFF(LEAST(lev.to_leave, LAST_DAY(CURDATE())), GREATEST(lev.from_leave, DATE_FORMAT(CURDATE(), "%Y-%m-01"))) + 1) / 7 * 2
+                                    ) -
+                                    CASE 
+                                        WHEN WEEKDAY(GREATEST(lev.from_leave, DATE_FORMAT(CURDATE(), "%Y-%m-01"))) <= WEEKDAY(LEAST(lev.to_leave, LAST_DAY(CURDATE()))) THEN
+                                            IF(WEEKDAY(LEAST(lev.to_leave, LAST_DAY(CURDATE()))) = 6, 1, 0) + 
+                                            IF(WEEKDAY(GREATEST(lev.from_leave, DATE_FORMAT(CURDATE(), "%Y-%m-01"))) = 5, 1, 0)
+                                        ELSE
+                                            IF(WEEKDAY(GREATEST(lev.from_leave, DATE_FORMAT(CURDATE(), "%Y-%m-01"))) = 5 OR WEEKDAY(GREATEST(lev.from_leave, DATE_FORMAT(CURDATE(), "%Y-%m-01"))) = 6, 1, 0) +
+                                            IF(WEEKDAY(LEAST(lev.to_leave, LAST_DAY(CURDATE()))) = 6 OR WEEKDAY(LEAST(lev.to_leave, LAST_DAY(CURDATE()))) = 5, 1, 0)
+                                    END
+                                ELSE
+                                    0
+                            END
+                        ) -
+                        (
+                            SELECT COUNT(*)
+                            FROM events e
+                            WHERE e.holiday = 1 AND e.all_day = "on" AND
+                                (
+                                    (e.start_date <= LEAST(lev.to_leave, LAST_DAY(CURDATE())) AND e.end_date >= GREATEST(lev.from_leave, DATE_FORMAT(CURDATE(), "%Y-%m-01"))) OR
+                                    (e.start_date = lev.from_leave AND e.end_date = lev.to_leave) OR
+                                    (e.start_date BETWEEN lev.from_leave AND lev.to_leave) OR
+                                    (e.end_date BETWEEN lev.from_leave AND lev.to_leave)
+                                )
                         )
-                        // when not null comes here
-                        ->join('enrolls as en', 'lev.student_id', '=', 'en.student_id')
-                        ->when($department_id, function ($query, $department_id) {
+                    ) as no_of_days_attendance
+                '))
+                  // when not null comes here
+                  ->join('enrolls as en', function ($join) {
+                    $join->on('lev.class_id', '=', 'en.class_id')
+                        ->on('lev.section_id', '=', 'en.section_id')
+                        ->on('lev.student_id', '=', 'en.student_id');
+                })
+                ->leftJoin('events as e', function ($join) {
+                    $join->on(function ($query) {
+                        $query->whereRaw('lev.from_leave BETWEEN e.start_date AND e.end_date')
+                            ->orWhereRaw('lev.to_leave BETWEEN e.start_date AND e.end_date')
+                            ->orWhere(function ($query) {
+                                $query->whereRaw('lev.from_leave < e.start_date')
+                                    ->whereRaw('lev.to_leave > e.end_date');
+                            });
+                    });
+                })
+                ->when($department_id, function ($query, $department_id) {
                             return $query->where('en.department_id', $department_id);
                         })
                         // when not null comes here
                         ->when($Day, function ($q) use ($currentDate) {
-                            return $q->where('lev.from_leave', '<=', $currentDate)
-                                ->where('lev.to_leave', '>=', $currentDate);
+                            // return $q->where('lev.from_leave', '<=', $currentDate)
+                            //     ->where('lev.to_leave', '>=', $currentDate);
+                                return $q->where(function ($query1) use ($currentDate) {
+                                    $query1->where(function ($query2) use ($currentDate) {
+                                        $query2->where('lev.from_leave', '>=',$currentDate)
+                                            ->where('lev.to_leave', '<=', $currentDate);
+                                    })->orWhere(function ($query3) use ($currentDate) {
+                                        $query3->where('lev.from_leave', '<=', $currentDate)
+                                            ->where('lev.to_leave', '>=', $currentDate);
+                                    })->orWhere(function ($query4) use ($currentDate) {
+                                        $query4->where('lev.from_leave', '<=',$currentDate)
+                                            ->where('lev.to_leave', '>=', $currentDate);
+                                    });
+                                });
                         })
-                        ->when($Month, function ($qs) use ($startDate, $endDate) {
-                            return $qs->where('lev.from_leave', '>=', $startDate)
-                                ->where('lev.to_leave', '<=', $endDate);
+                        ->when($Month, function ($query) use ($startDate, $endDate) {
+                            return $query->where(function ($query1) use ($startDate, $endDate) {
+                                $query1->where(function ($query2) use ($startDate, $endDate) {
+                                    $query2->where('lev.from_leave', '>=', $startDate)
+                                        ->where('lev.to_leave', '<=', $endDate);
+                                })->orWhere(function ($query3) use ($startDate, $endDate) {
+                                    $query3->where('lev.from_leave', '<=', $startDate)
+                                        ->where('lev.to_leave', '>=', $endDate);
+                                })->orWhere(function ($query4) use ($startDate, $endDate) {
+                                    $query4->where('lev.from_leave', '<=', $endDate)
+                                        ->where('lev.to_leave', '>=', $startDate);
+                                });
+                            });
                         })
                         ->when($Term, function ($qd) use ($termData) {
-                            return $qd->where('lev.from_leave', '>=', $termData->start_date ?? now())
-                                ->where('lev.to_leave', '<=', $termData->end_date ?? now());
+                            // return $qd->where('lev.from_leave', '>=', $termData->start_date ?? now())
+                            //     ->where('lev.to_leave', '<=', $termData->end_date ?? now());
+                                return $qd->where(function ($query1) use ($termData) {
+                                    $query1->where(function ($query2) use ($termData) {
+                                        $query2->where('lev.from_leave', '>=',$termData->start_date ?? now())
+                                            ->where('lev.to_leave', '<=', $termData->end_date ?? now());
+                                    })->orWhere(function ($query3) use ($termData) {
+                                        $query3->where('lev.from_leave', '<=', $termData->start_date ?? now())
+                                            ->where('lev.to_leave', '>=', $termData->end_date ?? now());
+                                    })->orWhere(function ($query4) use ($termData) {
+                                        $query4->where('lev.from_leave', '<=',$termData->end_date ?? now())
+                                            ->where('lev.to_leave', '>=', $termData->start_date ?? now());
+                                    });
+                                });
+                            
                         })
                         ->when($Year, function ($qds) use ($yearData) {
                             return $qds->where('lev.from_leave', '>=', $yearData[0]->year_start_date ?? now())
                                 ->where('lev.to_leave', '<=', $yearData[0]->year_end_date ?? now());
+                                return $qds->where(function ($query1) use ($yearData) {
+                                    $query1->where(function ($query2) use ($yearData) {
+                                        $query2->where('lev.from_leave', '>=',$yearData[0]->year_start_date ?? now())
+                                            ->where('lev.to_leave', '<=', $yearData[0]->year_end_date ?? now());
+                                    })->orWhere(function ($query3) use ($yearData) {
+                                        $query3->where('lev.from_leave', '<=', $yearData[0]->year_start_date ?? now())
+                                            ->where('lev.to_leave', '>=', $yearData[0]->year_end_date ?? now());
+                                    })->orWhere(function ($query4) use ($yearData) {
+                                        $query4->where('lev.from_leave', '<=',$yearData[0]->year_end_date ?? now())
+                                            ->where('lev.to_leave', '>=', $yearData[0]->year_start_date ?? now());
+                                    });
+                                });
                         })
                         ->where('en.active_status', '=', '0')
                         ->where('en.academic_session_id', '=', $request->academic_session_id)
@@ -2926,29 +3155,124 @@ class ApiControllerThree extends BaseController
                         }
                     }
                     $absentCountDetails = $createConnection->table('student_leaves as lev')
-                        ->select(
-                            DB::raw('COUNT(*) as no_of_days_attendance'),
-                            DB::raw('SUM(CASE WHEN lev.status = "Approve" THEN 1 ELSE 0 END) as absentCount')
+                    ->select(DB::raw('
+                    FLOOR(
+                        SUM(
+                            CASE 
+                                WHEN lev.to_leave >= lev.from_leave THEN
+                                    (
+                                        DATEDIFF(
+                                            LEAST(lev.to_leave, LAST_DAY(CURDATE())), 
+                                            GREATEST(lev.from_leave, DATE_FORMAT(CURDATE(), "%Y-%m-01"))
+                                        ) + 1
+                                    ) -
+                                    (
+                                        (DATEDIFF(LEAST(lev.to_leave, LAST_DAY(CURDATE())), GREATEST(lev.from_leave, DATE_FORMAT(CURDATE(), "%Y-%m-01"))) + 1) / 7 * 2
+                                    ) -
+                                    CASE 
+                                        WHEN WEEKDAY(GREATEST(lev.from_leave, DATE_FORMAT(CURDATE(), "%Y-%m-01"))) <= WEEKDAY(LEAST(lev.to_leave, LAST_DAY(CURDATE()))) THEN
+                                            IF(WEEKDAY(LEAST(lev.to_leave, LAST_DAY(CURDATE()))) = 6, 1, 0) + 
+                                            IF(WEEKDAY(GREATEST(lev.from_leave, DATE_FORMAT(CURDATE(), "%Y-%m-01"))) = 5, 1, 0)
+                                        ELSE
+                                            IF(WEEKDAY(GREATEST(lev.from_leave, DATE_FORMAT(CURDATE(), "%Y-%m-01"))) = 5 OR WEEKDAY(GREATEST(lev.from_leave, DATE_FORMAT(CURDATE(), "%Y-%m-01"))) = 6, 1, 0) +
+                                            IF(WEEKDAY(LEAST(lev.to_leave, LAST_DAY(CURDATE()))) = 6 OR WEEKDAY(LEAST(lev.to_leave, LAST_DAY(CURDATE()))) = 5, 1, 0)
+                                    END
+                                ELSE
+                                    0
+                            END
+                        ) -
+                        (
+                            SELECT COUNT(*)
+                            FROM events e
+                            WHERE e.holiday = 1 AND e.all_day = "on" AND
+                                (
+                                    (e.start_date <= LEAST(lev.to_leave, LAST_DAY(CURDATE())) AND e.end_date >= GREATEST(lev.from_leave, DATE_FORMAT(CURDATE(), "%Y-%m-01"))) OR
+                                    (e.start_date = lev.from_leave AND e.end_date = lev.to_leave) OR
+                                    (e.start_date BETWEEN lev.from_leave AND lev.to_leave) OR
+                                    (e.end_date BETWEEN lev.from_leave AND lev.to_leave)
+                                )
                         )
-                        ->join('enrolls as en', 'lev.student_id', '=', 'en.student_id')
-                        ->whereIn('lev.class_id', $classID)
-
-                        // when not null comes here
-                        ->when($Day, function ($q) use ($currentDate) {
-                            return $q->where('lev.from_leave', '<=', $currentDate)
-                                ->where('lev.to_leave', '>=', $currentDate);
-                        })
-                        ->when($Month, function ($qs) use ($startDate, $endDate) {
-                            return $qs->where('lev.from_leave', '>=', $startDate)
-                                ->where('lev.to_leave', '<=', $endDate);
-                        })
-                        ->when($Term, function ($qd) use ($termData) {
-                            return $qd->where('lev.from_leave', '>=', $termData->start_date ?? now())
-                                ->where('lev.to_leave', '<=', $termData->end_date ?? now());
+                    ) as no_of_days_attendance
+                '))
+                ->join('enrolls as en', function ($join) {
+                    $join->on('lev.class_id', '=', 'en.class_id')
+                        ->on('lev.section_id', '=', 'en.section_id')
+                        ->on('lev.student_id', '=', 'en.student_id');
+                })
+                ->leftJoin('events as e', function ($join) {
+                    $join->on(function ($query) {
+                        $query->whereRaw('lev.from_leave BETWEEN e.start_date AND e.end_date')
+                            ->orWhereRaw('lev.to_leave BETWEEN e.start_date AND e.end_date')
+                            ->orWhere(function ($query) {
+                                $query->whereRaw('lev.from_leave < e.start_date')
+                                    ->whereRaw('lev.to_leave > e.end_date');
+                            });
+                    });
+                })                        
+                ->whereIn('lev.class_id', $classID)
+                     // when not null comes here
+                    ->when($Day, function ($q) use ($currentDate) {
+                        // return $q->where('lev.from_leave', '<=', $currentDate)
+                        //     ->where('lev.to_leave', '>=', $currentDate);
+                            return $q->where(function ($query1) use ($currentDate) {
+                                $query1->where(function ($query2) use ($currentDate) {
+                                    $query2->where('lev.from_leave', '>=',$currentDate)
+                                        ->where('lev.to_leave', '<=', $currentDate);
+                                })->orWhere(function ($query3) use ($currentDate) {
+                                    $query3->where('lev.from_leave', '<=', $currentDate)
+                                        ->where('lev.to_leave', '>=', $currentDate);
+                                })->orWhere(function ($query4) use ($currentDate) {
+                                    $query4->where('lev.from_leave', '<=',$currentDate)
+                                        ->where('lev.to_leave', '>=', $currentDate);
+                                });
+                            });
+                    })
+                    ->when($Month, function ($query) use ($startDate, $endDate) {
+                        return $query->where(function ($query1) use ($startDate, $endDate) {
+                            $query1->where(function ($query2) use ($startDate, $endDate) {
+                                $query2->where('lev.from_leave', '>=', $startDate)
+                                    ->where('lev.to_leave', '<=', $endDate);
+                            })->orWhere(function ($query3) use ($startDate, $endDate) {
+                                $query3->where('lev.from_leave', '<=', $startDate)
+                                    ->where('lev.to_leave', '>=', $endDate);
+                            })->orWhere(function ($query4) use ($startDate, $endDate) {
+                                $query4->where('lev.from_leave', '<=', $endDate)
+                                    ->where('lev.to_leave', '>=', $startDate);
+                            });
+                        });
+                    })
+                    ->when($Term, function ($qd) use ($termData) {
+                        // return $qd->where('lev.from_leave', '>=', $termData->start_date ?? now())
+                        //     ->where('lev.to_leave', '<=', $termData->end_date ?? now());
+                            return $qd->where(function ($query1) use ($termData) {
+                                $query1->where(function ($query2) use ($termData) {
+                                    $query2->where('lev.from_leave', '>=',$termData->start_date ?? now())
+                                        ->where('lev.to_leave', '<=', $termData->end_date ?? now());
+                                })->orWhere(function ($query3) use ($termData) {
+                                    $query3->where('lev.from_leave', '<=', $termData->start_date ?? now())
+                                        ->where('lev.to_leave', '>=', $termData->end_date ?? now());
+                                })->orWhere(function ($query4) use ($termData) {
+                                    $query4->where('lev.from_leave', '<=',$termData->end_date ?? now())
+                                        ->where('lev.to_leave', '>=', $termData->start_date ?? now());
+                                });
+                            });
+    
                         })
                         ->when($Year, function ($qds) use ($yearData) {
                             return $qds->where('lev.from_leave', '>=', $yearData[0]->year_start_date ?? now())
                                 ->where('lev.to_leave', '<=', $yearData[0]->year_end_date ?? now());
+                                return $qds->where(function ($query1) use ($yearData) {
+                                    $query1->where(function ($query2) use ($yearData) {
+                                        $query2->where('lev.from_leave', '>=',$yearData[0]->year_start_date ?? now())
+                                            ->where('lev.to_leave', '<=', $yearData[0]->year_end_date ?? now());
+                                    })->orWhere(function ($query3) use ($yearData) {
+                                        $query3->where('lev.from_leave', '<=', $yearData[0]->year_start_date ?? now())
+                                            ->where('lev.to_leave', '>=', $yearData[0]->year_end_date ?? now());
+                                    })->orWhere(function ($query4) use ($yearData) {
+                                        $query4->where('lev.from_leave', '<=',$yearData[0]->year_end_date ?? now())
+                                            ->where('lev.to_leave', '>=', $yearData[0]->year_start_date ?? now());
+                                    });
+                                });
                         })
                         ->where('en.active_status', '=', '0')
                         ->where('en.academic_session_id', '=', $request->academic_session_id)
