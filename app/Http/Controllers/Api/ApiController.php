@@ -13974,6 +13974,7 @@ try{
 
                         $guardian_name = $request->guardian_first_name . ' ' . $request->guardian_last_name;
 
+                        if(User::where([['email', '=', $request->guardian_email],['branch_id', '=', $request->branch_id], ['role_id', '=', "5"]])->count() < 1){
                             // add User
                             $query = new User();
                             $query->name = $guardian_name;
@@ -13985,6 +13986,7 @@ try{
                             $query->google2fa_secret_enable = '0';
                             $query->password = bcrypt($request->guardian_email);
                             $query->save();
+                        }
                     }
                     
                 

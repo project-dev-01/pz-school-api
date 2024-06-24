@@ -2398,15 +2398,15 @@ class ExamreportController extends BaseController
                 // create new connection
                 $Connection = $this->createNewConnection($request->branch_id);
                 $getsemester = $Connection->table('semester')->where('academic_session_id', $request->academic_session_id)->orderBy('start_date', 'asc')->get();
-                $students = $Connection->table('students')->select('id','admission_date','date_of_termination')->where('id', '=', $request->student_id)->first();
-                $admission_date=$students->admission_date ?? '';
-                $date_of_termination=$students->date_of_termination ?? '';
+                $students = $Connection->table('students')->select('id', 'admission_date', 'date_of_termination')->where('id', '=', $request->student_id)->first();
+                $admission_date = $students->admission_date ?? '';
+                $date_of_termination = $students->date_of_termination ?? '';
                 $attendance_list = [];
                 foreach ($getsemester as $sem) {
-                    
+
                     $fromdate = $sem->start_date;
                     $enddate = $sem->end_date;
-                    
+
                     $froms = date('Y-m-01', strtotime($fromdate));
                     $start = new DateTime($froms);
                     $end = new DateTime($enddate);
@@ -2415,11 +2415,10 @@ class ExamreportController extends BaseController
                     $interval = new DateInterval('P1M'); // 1 month interval
                     $period = new DatePeriod($start, $interval, $end);
 
-                    
+
                     foreach ($period as $date) {
 
-                        if(date('Y-m-t')<(trim($date->format('Y-m-t') . PHP_EOL)))
-                        {
+                        if (date('Y-m-t') < (trim($date->format('Y-m-t') . PHP_EOL))) {
                             $mon = trim($date->format('m') . PHP_EOL);
                             $data = [
                                 "month" => $mon,
@@ -2433,11 +2432,9 @@ class ExamreportController extends BaseController
                                 "holidays" => 0,
                                 "holidays_array" => [],
                                 "special_events" => []
-    
+
                             ];
-                        }
-                        elseif($date_of_termination!='' && date('Y-m-d',strtotime($date_of_termination))<(trim($date->format('Y-m-t') . PHP_EOL)))
-                        {
+                        } elseif ($date_of_termination != '' && date('Y-m-d', strtotime($date_of_termination)) < (trim($date->format('Y-m-t') . PHP_EOL))) {
                             $mon = trim($date->format('m') . PHP_EOL);
                             $data = [
                                 "month" => $mon,
@@ -2451,11 +2448,9 @@ class ExamreportController extends BaseController
                                 "holidays" => 0,
                                 "holidays_array" => [],
                                 "special_events" => []
-    
+
                             ];
-                        } 
-                        elseif($admission_date!='' && date('Y-m-d',strtotime($admission_date))>(trim($date->format('Y-m-t') . PHP_EOL)))
-                        {
+                        } elseif ($admission_date != '' && date('Y-m-d', strtotime($admission_date)) > (trim($date->format('Y-m-t') . PHP_EOL))) {
                             $mon = trim($date->format('m') . PHP_EOL);
                             $data = [
                                 "month" => $mon,
@@ -2469,242 +2464,239 @@ class ExamreportController extends BaseController
                                 "holidays" => 0,
                                 "holidays_array" => [],
                                 "special_events" => []
-    
+
                             ];
-                        }                      
-                        else
-                        {
-                        // $month = trim($date->format('F') . PHP_EOL);
-                        $montotaldays = trim($date->format('t') . PHP_EOL);
-                        $mon = trim($date->format('m') . PHP_EOL);
-                        
-                        // $year = trim($date->format('Y') . PHP_EOL);
-                        /*if($year==2024)
+                        } else {
+                            // $month = trim($date->format('F') . PHP_EOL);
+                            $montotaldays = trim($date->format('t') . PHP_EOL);
+                            $mon = trim($date->format('m') . PHP_EOL);
+
+                            // $year = trim($date->format('Y') . PHP_EOL);
+                            /*if($year==2024)
                         {
                             dd($mon,$year);
                         }*/
-                        if( $admission_date!='' && $fromdate <= $admission_date) {
-                            $fromdate1 = $admission_date;
-                            $todate = trim($date->format('Y-m-t') . PHP_EOL);
-                        }
-                        elseif (intval($mon) == intval($startmonth)) {
-                            $fromdate1 = $fromdate;
-                            $todate = trim($date->format('Y-m-t') . PHP_EOL);
-                        } elseif (intval($mon) == intval($endmonth)) {
-                            $todate = $enddate;
-                            $fromdate1 = trim($date->format('Y-m-01') . PHP_EOL);
-                        } else {
-                            $fromdate1 = trim($date->format('Y-m-01') . PHP_EOL);
-                            $todate = trim($date->format('Y-m-t') . PHP_EOL);
-                        }
-                        $suspension = 0;
-                        $holidaydatas = $Connection->table('events as hl')
-                            ->select('title', 'start_date', 'end_date', 'holiday', 'audience', 'selected_list')
-                            ->where('hl.audience', '<=', '2')
-                            ->where(function ($query) use ($fromdate1, $todate) {
-                                $query->whereBetween('hl.start_date', [$fromdate1,  $todate])
-                                    ->orWhereBetween('hl.end_date', [$fromdate1,  $todate])
-                                    ->orWhere(function ($query)  use ($fromdate1, $todate) {
-                                        $query->where('hl.start_date', '<', $fromdate1)
-                                            ->where('hl.end_date', '>',  $todate);
-                                    });
-                            })->get();
-                        $holidaydatas;
-                        $holidays = 0;
-                        $sp_event = 0;
-                        $holidays_array = [];
-                        $sp_eventsdate = [];
-                        if (!empty($holidaydatas)) {
-                            foreach ($holidaydatas as $holy) {
+                            if ($admission_date != '' && $fromdate <= $admission_date) {
+                                $fromdate1 = $admission_date;
+                                $todate = trim($date->format('Y-m-t') . PHP_EOL);
+                            } elseif (intval($mon) == intval($startmonth)) {
+                                $fromdate1 = $fromdate;
+                                $todate = trim($date->format('Y-m-t') . PHP_EOL);
+                            } elseif (intval($mon) == intval($endmonth)) {
+                                $todate = $enddate;
+                                $fromdate1 = trim($date->format('Y-m-01') . PHP_EOL);
+                            } else {
+                                $fromdate1 = trim($date->format('Y-m-01') . PHP_EOL);
+                                $todate = trim($date->format('Y-m-t') . PHP_EOL);
+                            }
+                            $suspension = 0;
+                            $holidaydatas = $Connection->table('events as hl')
+                                ->select('title', 'start_date', 'end_date', 'holiday', 'audience', 'selected_list')
+                                ->where('hl.audience', '<=', '2')
+                                ->where(function ($query) use ($fromdate1, $todate) {
+                                    $query->whereBetween('hl.start_date', [$fromdate1,  $todate])
+                                        ->orWhereBetween('hl.end_date', [$fromdate1,  $todate])
+                                        ->orWhere(function ($query)  use ($fromdate1, $todate) {
+                                            $query->where('hl.start_date', '<', $fromdate1)
+                                                ->where('hl.end_date', '>',  $todate);
+                                        });
+                                })->get();
+                            $holidaydatas;
+                            $holidays = 0;
+                            $sp_event = 0;
+                            $holidays_array = [];
+                            $sp_eventsdate = [];
+                            if (!empty($holidaydatas)) {
+                                foreach ($holidaydatas as $holy) {
 
-                                $start_date = strtotime($holy->start_date);
-                                $end_date = strtotime($holy->end_date);
-                                $title = $holy->title;
-                                $holiday = $holy->holiday;
-                                $audience = $holy->audience;
-                                $grade_list = $holy->selected_list;
-                                $current_date = $start_date;
-                                // Loop through each day
-                                while ($current_date <= $end_date) {
-                                    $hdate = date('Y-m-d', $current_date);
-                                    $curday = date('l', strtotime($hdate));
-                                    // Check if the current date is in May
+                                    $start_date = strtotime($holy->start_date);
+                                    $end_date = strtotime($holy->end_date);
+                                    $title = $holy->title;
+                                    $holiday = $holy->holiday;
+                                    $audience = $holy->audience;
+                                    $grade_list = $holy->selected_list;
+                                    $current_date = $start_date;
+                                    // Loop through each day
+                                    while ($current_date <= $end_date) {
+                                        $hdate = date('Y-m-d', $current_date);
+                                        $curday = date('l', strtotime($hdate));
+                                        // Check if the current date is in May
+                                        $weekday = array('Saturday', 'Sunday');
+                                        if (date("m", $current_date) == $mon) {
+                                            if ($audience == 1 && $holiday == 1) {
+                                                if (in_array($curday, $weekday)) {
+                                                    $sp_event++;
+                                                    $sed = $hdate . ' - ' . $title;
+                                                    array_push($sp_eventsdate, $sed);
+                                                }
+                                            } elseif ($audience == 1 && $holiday == 0) {
+                                                if (!in_array($curday, $weekday)) {
+                                                    $holidays++;
+                                                    $hd = $hdate . ' - ' . $title;
+                                                    array_push($holidays_array, $hdate);
+                                                }
+                                            } elseif ($audience == 2 && $holiday == 1 && $grade_list == $request->class_id) {
+                                                if (in_array($curday, $weekday)) {
+                                                    $sp_event++;
+                                                    $sed = $hdate . ' - ' . $title;
+                                                    array_push($sp_eventsdate, $sed);
+                                                }
+                                            } elseif ($audience == 2 && $holiday == 0 && $grade_list == $request->class_id) {
+                                                if (!in_array($curday, $weekday)) {
+                                                    $holidays++;
+                                                    $hd = $hdate . ' - ' . $title;
+                                                    array_push($holidays_array, $hd);
+                                                }
+                                            }
+                                        }
+                                        // Move to the next day
+                                        $current_date = strtotime("+1 day", $current_date);
+                                    }
+                                }
+                            }
+                            $start = strtotime($fromdate1);
+                            $end = strtotime($todate);
+                            $datediff = $end - $start;
+                            $montotaldays = round($datediff / (60 * 60 * 24)) + 1;
+                            $iter = 24 * 60 * 60; // whole day in seconds
+                            $count = 0; // keep a count of Sats & Suns
+
+                            for ($i = $start; $i <= $end; $i = $i + $iter) {
+                                if (Date('D', $i) == 'Sat' || Date('D', $i) == 'Sun') {
+                                    $count++;
+                                }
+                            }
+
+                            $totalweekends = $count;
+
+                            $totaldays = $montotaldays + $sp_event - $holidays - $totalweekends;
+                            $getleaves = $Connection->table('student_leaves')
+                                ->where('student_id', $request->student_id)
+                                ->where('class_id', $request->class_id)
+                                ->where('section_id', $request->section_id)
+                                ->where('status', '=', "Approve")
+                                ->where(function ($query) use ($fromdate1, $todate) {
+                                    $query->whereBetween('from_leave', [$fromdate1,  $todate])
+                                        ->orWhereBetween('to_leave', [$fromdate1,  $todate])
+                                        ->orWhere(function ($query)  use ($fromdate1, $todate) {
+                                            $query->where('from_leave', '<', $fromdate1)
+                                                ->where('to_leave', '>',  $todate);
+                                        });
+                                })->get();
+                            $absent = 0;
+                            $sus = 0;
+                            $late1 = 0;
+                            $early = 0;
+                            foreach ($getleaves as $leave) {
+                                if ($leave->change_lev_type == 1 || $leave->change_lev_type == 2) {
                                     $weekday = array('Saturday', 'Sunday');
-                                    if (date("m", $current_date) == $mon) {
-                                        if ($audience == 1 && $holiday == 1) {
+                                    $start_date = strtotime($leave->from_leave);
+                                    $end_date = strtotime($leave->to_leave);
+                                    $current_date = $start_date;
+                                    // Loop through each day
+                                    while ($current_date <= $end_date) {
+                                        $hdate = date('Y-m-d', $current_date);
+                                        $curday = date('l', strtotime($hdate));
+                                        // Check if the current date is in May
+                                        if (date("m", $current_date) == $mon) {
                                             if (in_array($curday, $weekday)) {
-                                                $sp_event++;
-                                                $sed = $hdate . ' - ' . $title;
-                                                array_push($sp_eventsdate, $sed);
+                                            } elseif (in_array($hdate, $holidays_array)) {
+                                            } else {
+                                                $absent++;
                                             }
-                                        } elseif ($audience == 1 && $holiday == 0) {
-                                            if (!in_array($curday, $weekday)) {
-                                                $holidays++;
-                                                $hd = $hdate . ' - ' . $title;
-                                                array_push($holidays_array, $hdate);
-                                            }
-                                        } elseif ($audience == 2 && $holiday == 1 && $grade_list == $request->class_id) {
+                                        }
+                                        // Move to the next day
+                                        $current_date = strtotime("+1 day", $current_date);
+                                    }
+                                }
+                                if ($leave->change_lev_type == 3 || $leave->change_lev_type == 4) {
+                                    $weekday = array('Saturday', 'Sunday');
+                                    $start_date = strtotime($leave->from_leave);
+                                    $end_date = strtotime($leave->to_leave);
+                                    $current_date = $start_date;
+                                    // Loop through each day
+                                    while ($current_date <= $end_date) {
+                                        $hdate = date('Y-m-d', $current_date);
+                                        $curday = date('l', strtotime($hdate));
+                                        // Check if the current date is in May
+                                        if (date("m", $current_date) == $mon) {
                                             if (in_array($curday, $weekday)) {
-                                                $sp_event++;
-                                                $sed = $hdate . ' - ' . $title;
-                                                array_push($sp_eventsdate, $sed);
-                                            }
-                                        } elseif ($audience == 2 && $holiday == 0 && $grade_list == $request->class_id) {
-                                            if (!in_array($curday, $weekday)) {
-                                                $holidays++;
-                                                $hd = $hdate . ' - ' . $title;
-                                                array_push($holidays_array, $hd);
+                                            } elseif (in_array($hdate, $holidays_array)) {
+                                            } else {
+                                                $sus++;
                                             }
                                         }
+                                        // Move to the next day
+                                        $current_date = strtotime("+1 day", $current_date);
                                     }
-                                    // Move to the next day
-                                    $current_date = strtotime("+1 day", $current_date);
                                 }
-                            }
-                        }
-                        $start = strtotime($fromdate1);
-                        $end = strtotime($todate);
-                        $datediff = $end - $start;
-                        $montotaldays = round($datediff / (60 * 60 * 24)) + 1;
-                        $iter = 24 * 60 * 60; // whole day in seconds
-                        $count = 0; // keep a count of Sats & Suns
-
-                        for ($i = $start; $i <= $end; $i = $i + $iter) {
-                            if (Date('D', $i) == 'Sat' || Date('D', $i) == 'Sun') {
-                                $count++;
-                            }
-                        }
-
-                        $totalweekends = $count;
-
-                        $totaldays = $montotaldays + $sp_event - $holidays - $totalweekends;
-                        $getleaves = $Connection->table('student_leaves')
-                            ->where('student_id', $request->student_id)
-                            ->where('class_id', $request->class_id)
-                            ->where('section_id', $request->section_id)
-                            ->where('status', '=', "Approve")
-                            ->where(function ($query) use ($fromdate1, $todate) {
-                                $query->whereBetween('from_leave', [$fromdate1,  $todate])
-                                    ->orWhereBetween('to_leave', [$fromdate1,  $todate])
-                                    ->orWhere(function ($query)  use ($fromdate1, $todate) {
-                                        $query->where('from_leave', '<', $fromdate1)
-                                            ->where('to_leave', '>',  $todate);
-                                    });
-                            })->get();
-                        $absent = 0;
-                        $sus = 0;
-                        $late1 = 0;
-                        $early = 0;
-                        foreach ($getleaves as $leave) {
-                            if ($leave->change_lev_type == 1 || $leave->change_lev_type == 2) {
-                                $weekday = array('Saturday', 'Sunday');
-                                $start_date = strtotime($leave->from_leave);
-                                $end_date = strtotime($leave->to_leave);
-                                $current_date = $start_date;
-                                // Loop through each day
-                                while ($current_date <= $end_date) {
-                                    $hdate = date('Y-m-d', $current_date);
-                                    $curday = date('l', strtotime($hdate));
-                                    // Check if the current date is in May
-                                    if (date("m", $current_date) == $mon) {
-                                        if (in_array($curday, $weekday)) {
-                                        } elseif (in_array($hdate, $holidays_array)) {
-                                        } else {
-                                            $absent++;
+                                if ($leave->change_lev_type == 5) {
+                                    $weekday = array('Saturday', 'Sunday');
+                                    $start_date = strtotime($leave->from_leave);
+                                    $end_date = strtotime($leave->to_leave);
+                                    $current_date = $start_date;
+                                    // Loop through each day
+                                    while ($current_date <= $end_date) {
+                                        $hdate = date('Y-m-d', $current_date);
+                                        $curday = date('l', strtotime($hdate));
+                                        // Check if the current date is in May
+                                        if (date("m", $current_date) == $mon) {
+                                            if (in_array($curday, $weekday)) {
+                                            } elseif (in_array($hdate, $holidays_array)) {
+                                            } else {
+                                                $late1++;
+                                            }
                                         }
+                                        // Move to the next day
+                                        $current_date = strtotime("+1 day", $current_date);
                                     }
-                                    // Move to the next day
-                                    $current_date = strtotime("+1 day", $current_date);
                                 }
-                            }
-                            if ($leave->change_lev_type == 3 || $leave->change_lev_type == 4) {
-                                $weekday = array('Saturday', 'Sunday');
-                                $start_date = strtotime($leave->from_leave);
-                                $end_date = strtotime($leave->to_leave);
-                                $current_date = $start_date;
-                                // Loop through each day
-                                while ($current_date <= $end_date) {
-                                    $hdate = date('Y-m-d', $current_date);
-                                    $curday = date('l', strtotime($hdate));
-                                    // Check if the current date is in May
-                                    if (date("m", $current_date) == $mon) {
-                                        if (in_array($curday, $weekday)) {
-                                        } elseif (in_array($hdate, $holidays_array)) {
-                                        } else {
-                                            $sus++;
+                                if ($leave->change_lev_type == 6) {
+                                    $weekday = array('Saturday', 'Sunday');
+                                    $start_date = strtotime($leave->from_leave);
+                                    $end_date = strtotime($leave->to_leave);
+                                    $current_date = $start_date;
+                                    // Loop through each day
+                                    while ($current_date <= $end_date) {
+                                        $hdate = date('Y-m-d', $current_date);
+                                        $curday = date('l', strtotime($hdate));
+                                        // Check if the current date is in May
+                                        if (date("m", $current_date) == $mon) {
+                                            if (in_array($curday, $weekday)) {
+                                            } elseif (in_array($hdate, $holidays_array)) {
+                                            } else {
+                                                $early++;
+                                            }
                                         }
+                                        // Move to the next day
+                                        $current_date = strtotime("+1 day", $current_date);
                                     }
-                                    // Move to the next day
-                                    $current_date = strtotime("+1 day", $current_date);
                                 }
                             }
-                            if ($leave->change_lev_type == 5) {
-                                $weekday = array('Saturday', 'Sunday');
-                                $start_date = strtotime($leave->from_leave);
-                                $end_date = strtotime($leave->to_leave);
-                                $current_date = $start_date;
-                                // Loop through each day
-                                while ($current_date <= $end_date) {
-                                    $hdate = date('Y-m-d', $current_date);
-                                    $curday = date('l', strtotime($hdate));
-                                    // Check if the current date is in May
-                                    if (date("m", $current_date) == $mon) {
-                                        if (in_array($curday, $weekday)) {
-                                        } elseif (in_array($hdate, $holidays_array)) {
-                                        } else {
-                                            $late1++;
-                                        }
-                                    }
-                                    // Move to the next day
-                                    $current_date = strtotime("+1 day", $current_date);
-                                }
-                            }
-                            if ($leave->change_lev_type == 6) {
-                                $weekday = array('Saturday', 'Sunday');
-                                $start_date = strtotime($leave->from_leave);
-                                $end_date = strtotime($leave->to_leave);
-                                $current_date = $start_date;
-                                // Loop through each day
-                                while ($current_date <= $end_date) {
-                                    $hdate = date('Y-m-d', $current_date);
-                                    $curday = date('l', strtotime($hdate));
-                                    // Check if the current date is in May
-                                    if (date("m", $current_date) == $mon) {
-                                        if (in_array($curday, $weekday)) {
-                                        } elseif (in_array($hdate, $holidays_array)) {
-                                        } else {
-                                            $early++;
-                                        }
-                                    }
-                                    // Move to the next day
-                                    $current_date = strtotime("+1 day", $current_date);
-                                }
-                            }
-                        }
-                    
-                        $totalcoming = $totaldays - $sus;
-                        $suspension = $sus;
-                        $totpres = $totalcoming - $absent;
 
-                        $totabs =  $absent;
+                            $totalcoming = $totaldays - $sus;
+                            $suspension = $sus;
+                            $totpres = $totalcoming - $absent;
 
-                        $totlate = $late1;
+                            $totabs =  $absent;
 
-                        $totexc = $early;
-                        $data = [
-                            "month" => $mon,
-                            "no_schooldays" => $totaldays,
-                            "suspension" => $suspension,
-                            "totalcoming" => $totalcoming,
-                            "totpres" => $totpres,
-                            "totabs" => $totabs,
-                            "totlate" => $totlate,
-                            "totexc" => $totexc,
-                            "holidays" => $holidays,
-                            "holidays_array" => $holidays_array,
-                            "special_events" => $sp_eventsdate
+                            $totlate = $late1;
 
-                        ];
+                            $totexc = $early;
+                            $data = [
+                                "month" => $mon,
+                                "no_schooldays" => $totaldays,
+                                "suspension" => $suspension,
+                                "totalcoming" => $totalcoming,
+                                "totpres" => $totpres,
+                                "totabs" => $totabs,
+                                "totlate" => $totlate,
+                                "totexc" => $totexc,
+                                "holidays" => $holidays,
+                                "holidays_array" => $holidays_array,
+                                "special_events" => $sp_eventsdate
+
+                            ];
                         }
                         array_push($attendance_list, $data);
                     }
@@ -3183,80 +3175,79 @@ class ExamreportController extends BaseController
                     ->get();
 
                 $result = array();
-                $totgrade=($request->department_id==1)?6:3;
-                $c=0;
+                $totgrade = ($request->department_id == 1) ? 6 : 3;
+                $c = 0;
                 foreach ($class as $cls) {
-                $c++;
-                if($c<=$totgrade)
-                {
-                    $classsec = $Connection->table('enrolls as t1')
-                        ->select('t1.class_id', 't1.section_id', 't1.academic_session_id', 't2.name_numeric', 't3.name as section', 't4.name as academic_year')
-                        ->leftJoin('classes as t2', 't1.class_id', '=', 't2.id')
-                        ->leftJoin('sections as t3', 't1.section_id', '=', 't3.id')
-                        ->leftJoin('academic_year as t4', 't1.academic_session_id', '=', 't4.id')
-                        ->distinct()
-                        ->where('t1.student_id', $studentId)
-                        ->where('t2.id', $cls->id)
-                        ->first();
+                    $c++;
+                    if ($c <= $totgrade) {
+                        $classsec = $Connection->table('enrolls as t1')
+                            ->select('t1.class_id', 't1.section_id', 't1.academic_session_id', 't2.name_numeric', 't3.name as section', 't4.name as academic_year')
+                            ->leftJoin('classes as t2', 't1.class_id', '=', 't2.id')
+                            ->leftJoin('sections as t3', 't1.section_id', '=', 't3.id')
+                            ->leftJoin('academic_year as t4', 't1.academic_session_id', '=', 't4.id')
+                            ->distinct()
+                            ->where('t1.student_id', $studentId)
+                            ->where('t2.id', $cls->id)
+                            ->first();
 
-                    $class_id = (isset($classsec->class_id) && $classsec->class_id != null) ? $classsec->class_id : '';
-                    $section_id = (isset($classsec->section_id) && $classsec->section_id != null) ? $classsec->section_id : '';
-                    $academic_session_id = (isset($classsec->academic_session_id) && $classsec->academic_session_id != null) ? $classsec->academic_session_id : '';
-                    $academic_year = (isset($classsec->academic_year) && $classsec->academic_year != null) ? $classsec->academic_year : '';
-                    $studentPlace = '';
-                    if (isset($classsec->class_id) && $classsec->class_id != null) {
-                        $results = $Connection->table('enrolls as t1')
-                            ->select('student_id', 'id', DB::raw('ROW_NUMBER() OVER (ORDER BY id) as student_place'))
-                            ->where('class_id', $class_id)
-                            ->where('section_id', $section_id)
-                            ->where('academic_session_id', $academic_session_id)
-                            ->get();
+                        $class_id = (isset($classsec->class_id) && $classsec->class_id != null) ? $classsec->class_id : '';
+                        $section_id = (isset($classsec->section_id) && $classsec->section_id != null) ? $classsec->section_id : '';
+                        $academic_session_id = (isset($classsec->academic_session_id) && $classsec->academic_session_id != null) ? $classsec->academic_session_id : '';
+                        $academic_year = (isset($classsec->academic_year) && $classsec->academic_year != null) ? $classsec->academic_year : '';
+                        $studentPlace = '';
+                        if (isset($classsec->class_id) && $classsec->class_id != null) {
+                            $results = $Connection->table('enrolls as t1')
+                                ->select('student_id', 'id', DB::raw('ROW_NUMBER() OVER (ORDER BY id) as student_place'))
+                                ->where('class_id', $class_id)
+                                ->where('section_id', $section_id)
+                                ->where('academic_session_id', $academic_session_id)
+                                ->get();
 
-                        foreach ($results as $res) {
+                            foreach ($results as $res) {
 
-                            if ($studentId == $res->student_id) {
-                                $studentPlace = $res->student_place;
+                                if ($studentId == $res->student_id) {
+                                    $studentPlace = $res->student_place;
+                                }
                             }
                         }
-                    }
-                    $principal = '';
-                    $teacher = '';
-                    if ($academic_year != '') {
-                        $principaldata = $Connection->table('staffs')
-                            ->select('first_name', 'last_name')
-                            ->where('designation_id', '1')
-                            ->first();
-                        $teacherdata = $Connection->table('teacher_allocations as t1')
-                            ->select('t1.teacher_id', 't2.first_name', 't2.last_name')
-                            ->leftJoin('staffs as t2', 't1.teacher_id', '=', 't2.id')
-                            ->where('t1.class_id', $class_id)
-                            ->where('t1.section_id', $section_id)
-                            ->where('t1.academic_session_id', $academic_session_id)
-                            ->first();
-                        $pfirst_name = (isset($principaldata->first_name) && $principaldata->first_name != null) ? $principaldata->first_name : '';
-                        $plast_name = (isset($principaldata->last_name) && $principaldata->last_name != null) ? $principaldata->last_name : '';
-                        $tfirst_name = (isset($teacherdata->first_name) && $teacherdata->first_name != null) ? $teacherdata->first_name : '';
-                        $tlast_name = (isset($teacherdata->last_name) && $teacherdata->last_name != null) ? $teacherdata->last_name : '';
+                        $principal = '';
+                        $teacher = '';
+                        if ($academic_year != '') {
+                            $principaldata = $Connection->table('staffs')
+                                ->select('first_name', 'last_name')
+                                ->where('designation_id', '1')
+                                ->first();
+                            $teacherdata = $Connection->table('teacher_allocations as t1')
+                                ->select('t1.teacher_id', 't2.first_name', 't2.last_name')
+                                ->leftJoin('staffs as t2', 't1.teacher_id', '=', 't2.id')
+                                ->where('t1.class_id', $class_id)
+                                ->where('t1.section_id', $section_id)
+                                ->where('t1.academic_session_id', $academic_session_id)
+                                ->first();
+                            $pfirst_name = (isset($principaldata->first_name) && $principaldata->first_name != null) ? $principaldata->first_name : '';
+                            $plast_name = (isset($principaldata->last_name) && $principaldata->last_name != null) ? $principaldata->last_name : '';
+                            $tfirst_name = (isset($teacherdata->first_name) && $teacherdata->first_name != null) ? $teacherdata->first_name : '';
+                            $tlast_name = (isset($teacherdata->last_name) && $teacherdata->last_name != null) ? $teacherdata->last_name : '';
 
-                        $principal = $plast_name . ' ' . $pfirst_name;
-                        $teacher = $tlast_name . ' ' . $tfirst_name;
-                    }
-                    $datas = [
-                        "class" => $cls->name,
-                        "class_numeric" => $cls->name_numeric,
-                        "class_id" => $class_id,
-                        "section" => (isset($classsec->section) && $classsec->section != null) ? $classsec->section : '',
-                        "section_id" => $section_id,
-                        "academic_session_id" => $academic_session_id,
-                        "academic_year" => (isset($classsec->academic_year) && $classsec->academic_year != null) ? $classsec->academic_year : '',
-                        "studentPlace" => $studentPlace,
-                        "principal" => $principal,
-                        "teacher" => $teacher
-                    ];
+                            $principal = $plast_name . ' ' . $pfirst_name;
+                            $teacher = $tlast_name . ' ' . $tfirst_name;
+                        }
+                        $datas = [
+                            "class" => $cls->name,
+                            "class_numeric" => $cls->name_numeric,
+                            "class_id" => $class_id,
+                            "section" => (isset($classsec->section) && $classsec->section != null) ? $classsec->section : '',
+                            "section_id" => $section_id,
+                            "academic_session_id" => $academic_session_id,
+                            "academic_year" => (isset($classsec->academic_year) && $classsec->academic_year != null) ? $classsec->academic_year : '',
+                            "studentPlace" => $studentPlace,
+                            "principal" => $principal,
+                            "teacher" => $teacher
+                        ];
 
-                    array_push($result, $datas);
+                        array_push($result, $datas);
+                    }
                 }
-            }
                 return $this->successResponse($result, 'Get class Section Fetched successfully');
             }
         } catch (Exception $error) {

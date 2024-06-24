@@ -1611,7 +1611,7 @@ class ApiControllerThree extends BaseController
                 return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
             } else {
                 // get data
-                /*$cache_time = config('constants.cache_time');
+                $cache_time = config('constants.cache_time');
                 $cache_leaveTypeWiseAllReason = config('constants.cache_leaveTypeWiseAllReason');
                 $cacheKey = $cache_leaveTypeWiseAllReason . $request->branch_id;
 
@@ -1619,7 +1619,7 @@ class ApiControllerThree extends BaseController
                 if (Cache::has($cacheKey)) {
                     // If cached, return cached data
                     $jsonResult = Cache::get($cacheKey);
-                } else {*/
+                } else {
                     // create new connection
                     $conn = $this->createNewConnection($request->branch_id);
                     $results = $conn->select("
@@ -1639,8 +1639,8 @@ class ApiControllerThree extends BaseController
 ");
                     $jsonResult = json_encode($results);
                     // Cache the fetched data for future requests
-                   /* Cache::put($cacheKey, $jsonResult, now()->addHours($cache_time)); // Cache for 24 hours
-                }*/
+                    Cache::put($cacheKey, $jsonResult, now()->addHours($cache_time)); // Cache for 24 hours
+                }
                 return $this->successResponse($jsonResult, 'student leave types fetch successfully');
             }
         } catch (Exception $error) {
@@ -3829,7 +3829,7 @@ class ApiControllerThree extends BaseController
             if ($validator->fails()) {
                 return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
             }
-
+            $role_id = $request->role_id ?? null;
             $dataClear = [
                 'cache_academic_years' => "academic_years_",
                 'cache_departments' => "departments_",
@@ -3860,12 +3860,18 @@ class ApiControllerThree extends BaseController
                 'school_role_access' => "school_role_access_",
                 'school_role_access' => "school_role_access_",
             ];
-
             foreach ($dataClear as $key => $prefix) {
                 $cacheKey = $prefix . $request->branch_id;
                 Cache::forget($cacheKey);
             }
-
+            if ($role_id) {
+                $Mainmenu = config('constants.cache_get_access_menu_list') . $request->branch_id . $role_id . "Mainmenu";
+                $Submenu = config('constants.cache_get_access_menu_list') . $request->branch_id . $role_id . "Submenu";
+                $Childmenu = config('constants.cache_get_access_menu_list') . $request->branch_id . $role_id . "Childmenu";
+                Cache::forget($Mainmenu);
+                Cache::forget($Submenu);
+                Cache::forget($Childmenu);
+            }
             return $this->successResponse([], 'Clear Api Cache Branch');
         } catch (\Exception $e) {
             // Log the error or handle it accordingly
