@@ -16898,9 +16898,9 @@ try{
                             $father_passport_suc = file_put_contents($father_passport_file, $father_passport_base64);
                         }
                         $father_old = $staffConn->table('parent')->select(
-                            'middle_name','first_name','last_name',
-                            'middle_name_furigana','first_name_furigana','last_name_furigana',
-                            'last_name_english','middle_name_english','first_name_english',
+                            'first_name', 'middle_name', 'last_name',
+                            'first_name_furigana', 'middle_name_furigana', 'last_name_furigana',
+                            'first_name_english', 'middle_name_english', 'last_name_english',
                             'nationality','mobile_no','occupation','passport_photo','visa_photo',
                             'email','id'
     
@@ -16924,30 +16924,56 @@ try{
                             'relation' => $request->relation,
                         ];
                         $father_insertArr = [];
+                        $father_oldValue = [];
                         foreach ($father_old as $key => $o) {
                             // if (isset($father_data[$key])) {
                                 if ($key == "mobile_no") {
                                     // $encrypt = Helper::decryptStringData($old->$key);
                                     // dd(Crypt::encryptString($old->$key));
                                     if (Helper::decryptStringData($father_old->$key) != $father_data[$key]) {
+                                        $father_oldValue[$key] = Crypt::encryptString($o);
                                         $father_insertArr[$key] = Crypt::encryptString($father_data[$key]);
                                     }
                                 } else if ($key == "passport_photo") {
                                     if($father_passport_fileName){
+                                        $father_oldValue[$key] = $o;
                                         $father_insertArr[$key] = $father_passport_fileName;
                                     }
                                 } else if ($key == "visa_photo") {
                                     if($father_visa_fileName){
+                                        $father_oldValue[$key] = $o;
                                         $father_insertArr[$key] = $father_visa_fileName;
                                     }
                                 }  else {
                                     if ($father_old->$key != $father_data[$key]) {
+                                        $father_oldValue[$key] = $o;
                                         $father_insertArr[$key] = $father_data[$key];
                                     }
                                 }
                             // }
                         }
+                        
+                        
+
                         if (count($father_insertArr) > 0) {
+                                
+                            $resultsOfFather = [];
+                                foreach ($father_oldValue as $key => $req) {               
+                                        $resultsOfFather[$key] = [
+                                            'old_value' => isset($father_oldValue[$key]) ? $father_oldValue[$key] : null,
+                                            'new_value' => isset($father_insertArr[$key]) ? $father_insertArr[$key] : null,
+                                            'status' => '',
+                                            'remark' => '',
+                                        ];
+                                }
+                                $resultsOfFather['status'] = "Admin";
+                                $resultsOfFather['remark'] = '';
+                                $encodedResultsFather = json_encode($resultsOfFather);
+
+                            $father_insertArr['new_values'] = json_encode($father_insertArr);
+                            $father_insertArr['old_values'] = json_encode($father_oldValue);
+                            $father_insertArr['result'] =  $encodedResultsFather;
+
                             $father_insertArr['status'] = "Admin";
                             $father_insertArr['parent_id'] = $request->father_id;
                             // if ($staffConn->table('parent_change_info')->where('parent_id', $request->father_id)->count() > 0) {
@@ -17016,9 +17042,9 @@ try{
                         }
 
                         $mother_old = $staffConn->table('parent')->select(
-                            'middle_name','first_name','last_name',
-                            'middle_name_furigana','first_name_furigana','last_name_furigana',
-                            'last_name_english','middle_name_english','first_name_english',
+                            'first_name', 'middle_name','last_name',
+                            'first_name_furigana', 'middle_name_furigana', 'last_name_furigana',
+                            'first_name_english','middle_name_english', 'last_name_english',
                             'nationality','mobile_no','occupation','passport_photo','visa_photo',
                             'email','id'
     
@@ -17043,23 +17069,27 @@ try{
                             'relation' => $request->guardian_relation,
                         ];
                         $mother_insertArr = [];
+                        $mother_oldValue = [];
                         foreach ($mother_old as $key => $o) {
                             // if (isset($mother_data[$key])) {
                                 if ($key == "mobile_no") {
                                     if (Helper::decryptStringData($mother_old->$key) != $mother_data[$key]) {
+                                        $mother_oldValue[$key] =$o;
                                         $mother_insertArr[$key] = Crypt::encryptString($mother_data[$key]);
                                     }
                                 } else if ($key == "passport_photo") {
                                     if($mother_passport_fileName){
+                                        $mother_oldValue[$key] = $o;
                                         $mother_insertArr[$key] = $mother_passport_fileName;
                                     }
                                 } else if ($key == "visa_photo") {
                                     if($mother_visa_fileName){
+                                        $mother_oldValue[$key] = $o;
                                         $mother_insertArr[$key] = $mother_visa_fileName;
                                     }
                                 }  else {
-
                                     if ($mother_old->$key != $mother_data[$key]) {
+                                        $mother_oldValue[$key] = $o;
                                         $mother_insertArr[$key] = $mother_data[$key];
                                     }
                                 }
@@ -17067,7 +17097,25 @@ try{
                             // }
                         }
                         if (count($mother_insertArr) > 0) {
-                            $mother_insertArr['status'] = "Admin";
+
+                            $resultsOfMother = [];
+                                foreach ($mother_oldValue as $key => $req) {               
+                                        $resultsOfMother[$key] = [
+                                            'old_value' => isset($mother_oldValue[$key]) ? $mother_oldValue[$key] : null,
+                                            'new_value' => isset($mother_insertArr[$key]) ? $mother_insertArr[$key] : null,
+                                            'status' => '',
+                                            'remark' => '',
+                                        ];
+                                }
+                                $resultsOfMother['status'] = "Admin";
+                                $resultsOfMother['remark'] = '';
+                                $encodedResultsmother = json_encode($resultsOfMother);
+
+                            $mother_insertArr['new_values'] = json_encode($mother_insertArr);
+                            $mother_insertArr['old_values'] = json_encode($mother_oldValue);  
+                            $mother_insertArr['result'] =  $encodedResultsmother;
+
+                            $mother_insertArr['status'] = "Admin";                            
                             $mother_insertArr['parent_id'] = $request->mother_id;
                             // if ($staffConn->table('parent_change_info')->where('parent_id', $request->mother_id)->count() > 0) {
                             //     $staffConn->table('parent_change_info')->where('parent_id', '=', $request->mother_id)->update($mother_insertArr);
@@ -17158,16 +17206,16 @@ try{
                             $suc = file_put_contents($file, $base64);
                         }
                         $guardian_old = $staffConn->table('parent as p')->select(
-                            'p.middle_name','p.first_name','p.last_name',
-                            'p.middle_name_furigana','p.first_name_furigana','p.last_name_furigana',
-                            'p.last_name_english','p.middle_name_english','p.first_name_english',
+                            'p.first_name', 'p.middle_name','p.last_name',
+                            'p.first_name_furigana','p.middle_name_furigana','p.last_name_furigana',
+                            'p.first_name_english','p.middle_name_english', 'p.last_name_english',
                             'p.mobile_no','p.occupation',
-                            'p.email','p.id','st.relation', 
+                            'p.email','st.relation', 
                             'p.company_name_japan','p.company_name_local','p.company_phone_number',
                             'p.employment_status','p.japan_postalcode','p.japan_emergency_sms',
                             'p.japan_contact_no','p.japan_address','p.stay_category',
                             'p.japanese_association_membership_image_supplimental',
-                            'p.japanese_association_membership_image_principal'
+                            'p.japanese_association_membership_image_principal','p.id'
 
                         )
                         ->leftJoin('students as st', 'p.id', '=', 'st.guardian_id')
@@ -17201,22 +17249,40 @@ try{
                             
                         ];
                         $guardian_insertArr = [];
+                        $guardian_newValue = [];
+                        $guardian_oldValue = [];
                         foreach ($guardian_old as $key => $o) {
                             // if (isset($guardian_data[$key])) {
                                 if ($key == "mobile_no" || $key == "company_phone_number"  || $key == "japan_contact_no" || $key == "japan_emergency_sms") {
                                     if (Helper::decryptStringData($guardian_old->$key) != $guardian_data[$key]) {
+                                        $guardian_oldValue[$key] = $o;
+                                        $guardian_newValue[$key] = Crypt::encryptString($guardian_data[$key]);
                                         $guardian_insertArr[$key] = Crypt::encryptString($guardian_data[$key]);
                                     }
                                 } else if ($key == "japanese_association_membership_image_supplimental") {
                                     if($supplimental_fileName){
+                                        $guardian_oldValue[$key] = $o;
+                                        $guardian_newValue[$key] = $supplimental_fileName;
                                         $guardian_insertArr[$key] = $supplimental_fileName;
                                     }
                                 } else if ($key == "japanese_association_membership_image_principal") {
                                     if($image_principal_fileName){
+                                        $guardian_oldValue[$key] = $o;
+                                        $guardian_newValue[$key] = $image_principal_fileName;
                                         $guardian_insertArr[$key] = $image_principal_fileName;
                                     }
-                                } else {
+                                } else if ($key == "relation") {
+                                    $relationOldV = $staffConn->table('relations')
+                                    ->select('name',)->where('id', '=', $o)->first();
+                                    $relationNewV = $staffConn->table('relations')
+                                    ->select('name',)->where('id', '=', $guardian_data[$key])->first();
+                                    $guardian_oldValue[$key] = $relationOldV->name;
+                                    $guardian_newValue[$key] = $relationNewV->name;
+                                    $guardian_insertArr[$key] = $guardian_data[$key];
+                                }else {
                                     if ($guardian_old->$key != $guardian_data[$key]) {
+                                        $guardian_oldValue[$key] = $o;
+                                        $guardian_newValue[$key] = $guardian_data[$key];
                                         $guardian_insertArr[$key] = $guardian_data[$key];
                                     }
                                 }
@@ -17224,7 +17290,25 @@ try{
                             // }
                         }
                         if (count($guardian_insertArr) > 0) {
-                            $guardian_insertArr['status'] = "Admin";
+
+                            $resultsOfGuardian = [];
+                            foreach ($guardian_oldValue as $key => $req) {               
+                                    $resultsOfGuardian[$key] = [
+                                        'old_value' => isset($guardian_oldValue[$key]) ? $guardian_oldValue[$key] : null,
+                                        'new_value' => isset($guardian_newValue[$key]) ? $guardian_newValue[$key] : null,
+                                        'status' => '',
+                                        'remark' => '',
+                                    ];
+                            }
+                            $resultsOfGuardian['status'] = "Admin";
+                            $resultsOfGuardian['remark'] = '';
+                            $encodedResultsGuardian = json_encode($resultsOfGuardian);
+
+                            $guardian_insertArr['new_values'] = json_encode($guardian_newValue);
+                            $guardian_insertArr['old_values'] = json_encode($guardian_oldValue);   
+                            $guardian_insertArr['result'] =  $encodedResultsGuardian;
+                            
+                            $guardian_insertArr['status'] = "Admin";                            
                             $guardian_insertArr['parent_id'] = $request->guardian_id;
                             if ($staffConn->table('parent_change_info')->where('parent_id', $request->guardian_id)->count() > 0) {
                                 $staffConn->table('parent_change_info')->where('parent_id', '=', $request->guardian_id)->update($guardian_insertArr);
@@ -17633,6 +17717,8 @@ try{
             $changeInfo = [];
             $changeInfo['status'] = "Parent";
             $changeInfo['remarks'] = $request->remarks;
+
+
             foreach ($request->request as $key => $req) {
                 // dd($req);
                 $new = $conn->table('parent_change_info')->where('parent_id', '=', $id)->first();
@@ -17695,7 +17781,27 @@ try{
             //     });
             // }
             
-            // return $insertArr;
+            
+            $getOldNewValue = $conn->table('parent_change_info')->where('parent_id', '=', $id)->first();
+            if (!empty($getOldNewValue)) {
+                $OldValues = json_decode($getOldNewValue->old_values, true); 
+                $NewValues = json_decode($getOldNewValue->new_values, true);
+
+                $results = [];
+                foreach ($OldValues as $key => $req) {               
+                    $remarkcol = $key . "_remark";
+                        $results[$key] = [
+                            'old_value' => isset($OldValues[$key]) ? $OldValues[$key] : null,
+                            'new_value' => isset($NewValues[$key]) ? $NewValues[$key] : null,
+                            'status' => $request->$key,
+                            'remark' => $request->$remarkcol,
+                        ];
+                }
+                $results['status'] = "Parent";
+                $results['remark'] = $request->remarks;
+                $encodedResults = json_encode($results);
+                $changeInfo['result'] =  $encodedResults;
+            }
             // $query = true;
             if (!empty($insertArr)) {
                 // return $insertArr;
@@ -17807,6 +17913,31 @@ try{
                 $status_count = "Accept";
             }
             $changeInfo['status_parent'] = $status_count;
+
+
+            $getOldNewValue = $conn->table('student_change_info')->where('student_id', '=', $id)->first();
+            if (!empty($getOldNewValue)) {
+                $OldValues = json_decode($getOldNewValue->old_values, true); 
+                $NewValues = json_decode($getOldNewValue->new_values, true);
+
+                $results = [];
+                foreach ($OldValues as $key => $req) {               
+                    $remarkcol = $key . "_remark";
+                        $results[$key] = [
+                            'old_value' => isset($OldValues[$key]) ? $OldValues[$key] : null,
+                            'new_value' => isset($NewValues[$key]) ? $NewValues[$key] : null,
+                            'status' => $request->$key,
+                            'remark' => $request->$remarkcol,
+                        ];
+                }
+                $results['status'] = "Parent";
+                $results['remark'] = $request->remarks;
+                $encodedResults = json_encode($results);
+                $changeInfo['result'] =  $encodedResults;
+            }
+
+
+
             if (!empty($insertArr)) {
 
                 // return $insertArr;
@@ -29645,11 +29776,12 @@ try{
                 'school_name','school_country','school_state',
                 'school_city','school_postal_code','school_enrollment_status',
                 'school_enrollment_status_tendency'
-
             )
             ->where('id', '=', $id)->first();
             $insertArr = [];
-            $insertArr['status'] = "Admin";
+            $student_oldValue = [];
+            $student_newValue = [];
+            
             // return Helper::decryptStringData($old->$passport);
             foreach ($old as $key => $o) {
                 if ($request->has($key)) {
@@ -29658,16 +29790,36 @@ try{
                         // dd(Crypt::encryptString($old->$key));
                         if (Helper::decryptStringData($old->$key) != $request->$key) {
                             $insertArr[$key] = Crypt::encryptString($request->$key);
+                            $student_oldValue[$key] = $o;
+                            $student_newValue[$key] = Crypt::encryptString($request->$key);
                         }
                     } else if ($key == "passport_photo") {
                         $insertArr[$key] = $passport_fileName;
+                        $student_oldValue[$key] = $o;
+                        $student_newValue[$key] = $passport_fileName;
                     } else if ($key == "visa_photo") {
                         $insertArr[$key] = $visa_fileName;
+                        $student_oldValue[$key] = $o;
+                        $student_newValue[$key] = $visa_fileName;
                     }  else if ($key == "nric_photo") {
                         $insertArr[$key] = $nric_fileName;
-                    }  else {
+                        $student_oldValue[$key] = $o;
+                        $student_newValue[$key] = $nric_fileName;
+                    }  else if ($key == "religion") {
+                        $relationOldV = $conn->table('religions')
+                        ->select('name',)->where('id', '=', $o)->first();
+                        $relationNewV = $conn->table('religions')
+                        ->select('name',)->where('id', '=', $request->$key)->first();
+
+                        $student_oldValue[$key] = $relationOldV->name;
+                        $student_newValue[$key] = $relationNewV->name;
+                        $insertArr[$key] = $request->$key;
+
+                    }else {
                         if ($old->$key != $request->$key) {
                             $insertArr[$key] = $request->$key;
+                            $student_oldValue[$key] = $o;
+                            $student_newValue[$key] = $request->$key;
                         }
                     }
                 }
@@ -29675,6 +29827,24 @@ try{
             // return $insertArr;
             // dd($insertArr);
             if (count($insertArr) > 0) {
+                $resultsOfstudent = [];
+                foreach ($student_oldValue as $key => $req) {               
+                        $resultsOfstudent[$key] = [
+                            'old_value' => isset($student_oldValue[$key]) ? $student_oldValue[$key] : null,
+                            'new_value' => isset($student_newValue[$key]) ? $student_newValue[$key] : null,
+                            'status' => '',
+                            'remark' => '',
+                        ];
+                }
+                $resultsOfstudent['status'] = "Admin";
+                $resultsOfstudent['remark'] = '';
+                $encodedResultsstudent = json_encode($resultsOfstudent);
+
+                $insertArr['new_values'] = json_encode($student_newValue);
+                $insertArr['old_values'] = json_encode($student_oldValue);   
+                $insertArr['result'] =  $encodedResultsstudent;
+
+                $insertArr['status'] = "Admin";
                 $insertArr['student_id'] = $id;
                 $insertArr['parent_id'] = $request->parent_id;
                 if ($conn->table('student_change_info')->where('student_id', $id)->count() > 0) {
@@ -30083,12 +30253,13 @@ try{
                         'stay_category',
                         'japanese_association_membership_image_principal',
                         'japanese_association_membership_image_supplimental',
-
+                        // 'result'
 
                         // DB::raw("CONCAT(s.last_name, ' ', s.first_name) as name")
                     )
                     ->where('pci.id', $id)
                     ->first();
+                    
                 $parent_id = $getparentDetails->parent_id;
                 unset($getparentDetails->id, $getparentDetails->parent_id, $getparentDetails->created_at, $getparentDetails->updated_at);
                 // dd($getparentDetails);
@@ -30140,9 +30311,14 @@ try{
                 }
                 $output = [];
                 $output['remarks'] = $remarks;
-                $output['data'] = $parentObj;
 
-                return $this->successResponse($output, 'Parent row fetch successfully');
+
+                $output['data'] = $parentObj;
+                $getResult = $conn->table('parent_change_info')
+                    ->select('id','result')->where('id', $id)->first();
+                $resultOutput = json_decode($getResult->result) ;
+                
+                return $this->successResponse($resultOutput, 'Parent row fetch successfully');
             } else if ($type == "Student") {
                 // get data
                 $getstudentDetails = $conn->table('student_change_info as sci')
@@ -30268,7 +30444,10 @@ try{
                 $output = [];
                 $output['remarks'] = $remarks;
                 $output['data'] = $studentObj;
-                return $this->successResponse($output, 'Student row fetch successfully');
+                $getResult = $conn->table('student_change_info')
+                    ->select('id','result')->where('id', $id)->first();
+                $resultOutput = json_decode($getResult->result) ;
+                return $this->successResponse($resultOutput, 'Student row fetch successfully');
             }
         }
         }
