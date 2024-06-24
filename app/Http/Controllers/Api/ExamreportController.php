@@ -2398,8 +2398,8 @@ class ExamreportController extends BaseController
                 // create new connection
                 $Connection = $this->createNewConnection($request->branch_id);
                 $getsemester = $Connection->table('semester')->where('academic_session_id', $request->academic_session_id)->orderBy('start_date', 'asc')->get();
-                $students = $Connection->table('students')->select('id', 'admission_date', 'date_of_termination')->where('id', '=', $request->student_id)->first();
-                $admission_date = $students->admission_date ?? '';
+                $students = $Connection->table('students')->select('id','official_date','admission_date', 'date_of_termination')->where('id', '=', $request->student_id)->first();
+                $admission_date = $students->official_date ?? '';
                 $date_of_termination = $students->date_of_termination ?? '';
                 $attendance_list = [];
                 foreach ($getsemester as $sem) {
