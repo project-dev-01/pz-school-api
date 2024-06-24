@@ -1252,4 +1252,5 @@ Route::group(['middleware' => ['auth:api', 'throttle:limit_per_user', 'logroute'
     Route::post('termination/termination-details', [ApiControllerNameSeq::class, 'getTerminationDetails']);
     Route::get('termination/list', [ApiControllerNameSeq::class, 'getTerminationList']);
     Route::post('exam_result/stuexam_ppmarkchartlist', [ExamreportController::class, 'stuexam_ppmarkchartlist']);
+    Route::post('exam_result/stuexam_pptotmarkchartlist', [ExamreportController::class, 'stuexam_pptotmarkchartlist']);
 });

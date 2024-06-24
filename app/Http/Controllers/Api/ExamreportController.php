@@ -519,6 +519,7 @@ class ExamreportController extends BaseController
             ->where('enrolls.section_id', '=', $section_id)
             ->where('enrolls.department_id', '=', $department_id)
             ->where('enrolls.academic_session_id', '=', $academic_session_id)
+            ->where('enrolls.active_status', '=', '0')
             ->get();
         $getpapers = $Connection->table('subjects as sb')
             ->select('sb.name as subject_name')
@@ -2034,6 +2035,177 @@ class ExamreportController extends BaseController
             return $this->commonHelper->generalReturn('403', 'error', $error, 'Error in stuexam_ppmarklist');
         }
     }
+    public function stuexam_pptotmarkchartlist(Request $request)
+    {
+        try {
+        $exam_id = $request->exam_id;
+        $class_id = $request->class_id;
+        $section_id = $request->section_id;
+        $academic_session_id = $request->academic_session_id;
+        $semester_id = $request->semester_id;
+        $paper = $request->paper;
+        $Connection = $this->createNewConnection($request->branch_id);
+
+        // Array of subjects to retrieve total marks for
+        $subjects = $request->subject;
+
+        // Initialize total marks array
+        
+        $studentdetails = $Connection->table('enrolls as en')
+        ->select(
+            'en.student_id',           
+        )
+        ->where([
+            ['en.department_id', '=', $request->department_id],
+            ['en.class_id', '=', $request->class_id],
+            ['en.section_id', '=', $request->section_id],
+            ['en.academic_session_id', '=', $request->academic_session_id]
+            
+        ])
+        ->get();
+        $subjectpaper=[];
+        foreach ($subjects as $subject) {
+           
+            // Get subject ID
+            $getsubject = $Connection->table('subjects as sb')
+                ->select('sb.id as subject_id')
+                ->where('sb.name', 'like', $subject)
+                ->first();
+            $subject_id = $getsubject->subject_id ?? 0;
+
+            // Get paper details for the subject
+            $getpaper = $Connection->table('exam_papers as ep')
+                ->select('ep.id')
+                ->where([
+                    ['ep.class_id', '=', $class_id],
+                    ['ep.subject_id', '=', $subject_id],
+                    ['ep.academic_session_id', '=', $academic_session_id],
+                    ['ep.paper_name', 'like', $paper]
+                ])
+                ->first();
+            $paper_id = $getpaper->id ?? 0;
+                $data=[
+                    'subject_id'=>$subject_id,
+                    'paper_id'=>$paper_id,
+                ];
+            array_push($subjectpaper,$data);
+        }
+        // Initialize arrays to store counts for each range
+        $marks_distribution5s = [
+            '451-500' => 0,
+            '401-450' => 0,
+            '351-400' => 0,
+            '301-350' => 0,
+            '251-300' => 0,
+            '201-250' => 0,
+            '151-200' => 0,
+            '101-150' => 0,
+            '51-100' => 0,
+            '0-50' => 0,
+        ];
+
+        $marks_distribution9s = [
+            '811-900' => 0,
+            '721-810' => 0,
+            '631-720' => 0,
+            '541-630' => 0,
+            '451-540' => 0,
+            '361-450' => 0,
+            '271-360' => 0,
+            '181-270' => 0,
+            '91-180' => 0,
+            '0-90' => 0,
+        ];
+
+        foreach($studentdetails as $students) {
+            $student_id = $students->student_id;
+            
+            $total5 = 0;
+            $total9 = 0;
+            $sb=0;
+            foreach($subjectpaper as $subject) {
+                $sb++;
+                if($subject['subject_id'] != 0 && $subject['paper_id'] != 0) {
+                    // Get total marks for the subject
+                    $totalMarks = $Connection->table('student_marks as sa')
+                        ->select('sa.score')
+                        ->where([
+                            ['sa.class_id', '=', $class_id],
+                            ['sa.section_id', '=', $section_id],
+                            ['sa.semester_id', '=', $semester_id],
+                            ['sa.subject_id', '=', $subject['subject_id']],
+                            ['sa.paper_id', '=', $subject['paper_id']],
+                            ['sa.exam_id', '=', $exam_id],
+                            ['sa.student_id', '=', $student_id],
+                            ['sa.academic_session_id', '=', $academic_session_id],
+                        ])
+                        ->first();
+
+                    $mark = $totalMarks->score ?? 0;
+                    if($sb<=5)
+                    {
+                        $total5 += $mark;
+                    }                   
+                    $total9 += $mark;
+                }
+            }
+
+            // Determine which range $total5 falls into and increment the corresponding count
+            if ($total5 >= 451 && $total5 <= 500) {
+                $marks_distribution5s['451-500']++;
+            } elseif ($total5 >= 401 && $total5 <= 450) {
+                $marks_distribution5s['401-450']++;
+            } elseif ($total5 >= 351 && $total5 <= 400) {
+                $marks_distribution5s['351-400']++;
+            } elseif ($total5 >= 301 && $total5 <= 350) {
+                $marks_distribution5s['301-350']++;
+            } elseif ($total5 >= 251 && $total5 <= 300) {
+                $marks_distribution5s['251-300']++;
+            } elseif ($total5 >= 201 && $total5 <= 250) {
+                $marks_distribution5s['201-250']++;
+            } elseif ($total5 >= 151 && $total5 <= 200) {
+                $marks_distribution5s['151-200']++;
+            } elseif ($total5 >= 101 && $total5 <= 150) {
+                $marks_distribution5s['101-150']++;
+            } elseif ($total5 >= 51 && $total5 <= 100) {
+                $marks_distribution5s['51-100']++;
+            } elseif ($total5 >= 0 && $total5 <= 50) {
+                $marks_distribution5s['0-50']++;
+            }
+
+            // Determine which range $total9 falls into and increment the corresponding count
+            if ($total9 >= 811 && $total9 <= 900) {
+                $marks_distribution9s['811-900']++;
+            } elseif ($total9 >= 721 && $total9 <= 810) {
+                $marks_distribution9s['721-810']++;
+            } elseif ($total9 >= 631 && $total9 <= 720) {
+                $marks_distribution9s['631-720']++;
+            } elseif ($total9 >= 541 && $total9 <= 630) {
+                $marks_distribution9s['541-630']++;
+            } elseif ($total9 >= 451 && $total9 <= 540) {
+                $marks_distribution9s['451-540']++;
+            } elseif ($total9 >= 361 && $total9 <= 450) {
+                $marks_distribution9s['361-450']++;
+            } elseif ($total9 >= 271 && $total9 <= 360) {
+                $marks_distribution9s['271-360']++;
+            } elseif ($total9 >= 181 && $total9 <= 270) {
+                $marks_distribution9s['181-270']++;
+            } elseif ($total9 >= 91 && $total9 <= 180) {
+                $marks_distribution9s['91-180']++;
+            } elseif ($total9 >= 0 && $total9 <= 90) {
+                $marks_distribution9s['0-90']++;
+            }
+        }
+        $totaldatas=[
+            'marks_distribution5s'=>$marks_distribution5s,
+            'marks_distribution9s'=>$marks_distribution9s
+        ];
+
+        return $this->successResponse($totaldatas, 'Get Personal Point Mark Details Successfully.');
+        } catch (Exception $error) {
+            return $this->commonHelper->generalReturn('403', 'error', $error, 'Error in stuexam_pptotmarkchartlist');
+        }
+    }
     public function stuexam_ppmarkchartlist(Request $request)
     {
         try {
@@ -2227,7 +2399,7 @@ class ExamreportController extends BaseController
 
             return $this->successResponse($markarray, 'Get Personal Point Mark Details Successfully.');
         } catch (Exception $error) {
-            return $this->commonHelper->generalReturn('403', 'error', $error, 'Error in stuexam_ppmarklist');
+            return $this->commonHelper->generalReturn('403', 'error', $error, 'Error in stuexam_ppmarkchartlist');
         }
     }
 
@@ -2729,7 +2901,7 @@ class ExamreportController extends BaseController
                     ['en.department_id', '=', $request->department_id],
                     ['en.class_id', '=', $request->class_id],
                     ['en.section_id', '=', $request->section_id],
-                    ['en.academic_session_id', '=', $request->academic_session_id],
+                    ['en.academic_session_id', '=', $request->academic_session_id],                   
                 ])
                 ->get();
 
@@ -2759,7 +2931,7 @@ class ExamreportController extends BaseController
                     ['en.class_id', '=', $request->class_id],
                     ['en.section_id', '=', $request->section_id],
                     ['en.academic_session_id', '=', $request->academic_session_id],
-                    ['en.student_id', '=', $request->student_id],
+                    ['en.student_id', '=', $request->student_id]
                 ])
                 ->first();
 
