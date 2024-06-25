@@ -65,6 +65,7 @@ use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Symfony\Component\HttpFoundation\Response;
+use App\Mail\VerifyMail;
 
 class ApiController extends BaseController
 {
@@ -26347,66 +26348,139 @@ try{
             return $this->commonHelper->generalReturn('403','error',$error,'Error in emailApplication');
         }
     }
+    // public function verifyApplication(Request $request)
+    // {
+
+    //     try{
+    //         $validator = \Validator::make($request->all(), [
+    //             'branch_id' => 'required',
+    //             'email' => 'required'
+    //         ]);
+    //         if (!$validator->passes()) {
+    //             return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
+    //         } else {
+    //             // create new connection
+    //             $conn = $this->createNewConnection($request->branch_id);
+
+    //             $email =  $request->email;
+
+    //             $token = Str::random(60);
+    //             if(User::where([['email', '=', $request->email],['branch_id', '=', $request->branch_id], ['role_id', '=', "5"]])->count() < 1){
+    //                 if ($conn->table('guest')->where([['email', '=', $email]])->count() > 0) {
+    //                     if ($conn->table('guest')->where([['email', '=', $email], ['email_verify', '=', "0"]])->count() > 0) {
+    //                         $guest_id = $conn->table('guest')->where('email', '=', $email)->update([
+    //                             'token' => $token,
+    //                             'created_at' => date("Y-m-d H:i:s")
+    //                         ]);
+    //                     } else if ($conn->table('guest')->where([['email', '=', $email], ['email_verify', '=', "1"]])->count() > 0) {
+    //                         return $this->send422Error('Email Already Verified', ['error' => 'Email Already Verified']);
+    //                     }
+    //                 } else {
+    //                     // insert data
+    //                     $guest_id = $conn->table('guest')->insert([
+    //                         'email' => $email,
+    //                         'token' => $token,
+    //                         'created_at' => date("Y-m-d H:i:s")
+    //                     ]);
+    //                 }
+
+
+    //                 $link = $request->url . '/application/email/' . $request->branch_id . '/' . $token;
+    //                 $mailFromAddress = env('MAIL_FROM_ADDRESS', config('constants.client_email'));
+    //                 if ($email) {
+    //                     $data = array('link' => $link, 'email' => $email);
+    //                     // Dispatch the VerifyMail Mailable to the queue
+    //                     // $query = Mail::to($email)->queue(new VerifyMail($data));
+    //                     // Mail::send(new VerifyMail($loginId, $password));
+    //                     $query = Mail::to($email)
+    //                         ->send(new VerifyMail($data));
+    //                     // $query = Mail::send('auth.verify_mail', $data, function ($message) use ($email,$mailFromAddress) {
+    //                     //     $message->to($email, 'Guest')->subject('Email Verification');
+    //                     //     $message->from($mailFromAddress, 'Email Verification');
+    //                     // });
+    //                 }
+    //             }else{
+    //                 return $this->send422Error('User Account Already Exist', ['error' => 'User Account Already Exist']);
+    //             }
+    //             $success = [];
+    //             if (!$query) {
+    //                 return $this->send500Error('Something went wrong.', ['error' => 'Something went wrong']);
+    //             } else {
+    //                 return $this->successResponse($success, 'Verification has been Sended Successfully');
+    //             }
+    //         }
+    //     }
+    //     catch(Exception $error) {
+    //         return $this->commonHelper->generalReturn('403','error',$error,'Error in verifyApplication');
+    //     }
+    // }
     public function verifyApplication(Request $request)
     {
-
-        try{
+        try {
             $validator = \Validator::make($request->all(), [
                 'branch_id' => 'required',
-                'email' => 'required'
+                'email' => 'required|email'
             ]);
-            if (!$validator->passes()) {
+    
+            if ($validator->fails()) {
                 return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
-            } else {
-                // create new connection
-                $conn = $this->createNewConnection($request->branch_id);
-
-                $email =  $request->email;
-
-                $token = Str::random(60);
-                if(User::where([['email', '=', $request->email],['branch_id', '=', $request->branch_id], ['role_id', '=', "5"]])->count() < 1){
-                    if ($conn->table('guest')->where([['email', '=', $email]])->count() > 0) {
-                        if ($conn->table('guest')->where([['email', '=', $email], ['email_verify', '=', "0"]])->count() > 0) {
-                            $guest_id = $conn->table('guest')->where('email', '=', $email)->update([
-                                'token' => $token,
-                                'created_at' => date("Y-m-d H:i:s")
-                            ]);
-                        } else if ($conn->table('guest')->where([['email', '=', $email], ['email_verify', '=', "1"]])->count() > 0) {
-                            return $this->send422Error('Email Already Verified', ['error' => 'Email Already Verified']);
-                        }
-                    } else {
-                        // insert data
-                        $guest_id = $conn->table('guest')->insert([
-                            'email' => $email,
-                            'token' => $token,
-                            'created_at' => date("Y-m-d H:i:s")
-                        ]);
-                    }
-                    $link = $request->url . '/application/email/' . $request->branch_id . '/' . $token;
-                    $mailFromAddress = env('MAIL_FROM_ADDRESS', config('constants.client_email'));
-                    if ($email) {
-                        $data = array('link' => $link, 'email' => $email);
-                        $query = Mail::send('auth.verify_mail', $data, function ($message) use ($email,$mailFromAddress) {
-                            $message->to($email, 'Guest')->subject('Email Verification');
-                            $message->from($mailFromAddress, 'Email Verification');
-                        });
-                    }
-                }else{
-                    return $this->send422Error('User Account Already Exist', ['error' => 'User Account Already Exist']);
-                }
-                $success = [];
-                if (!$query) {
-                    return $this->send500Error('Something went wrong.', ['error' => 'Something went wrong']);
-                } else {
-                    return $this->successResponse($success, 'Verification has been Sended Successfully');
-                }
             }
-        }
-        catch(Exception $error) {
-            return $this->commonHelper->generalReturn('403','error',$error,'Error in verifyApplication');
+    
+            $branchId = $request->branch_id;
+            $email = $request->email;
+    
+            // Check if the user already exists with the same branch_id and email
+            if (User::where('email', $email)->where('branch_id', $branchId)->where('role_id', 5)->exists()) {
+                return $this->send422Error('User Account Already Exists', ['error' => 'User Account Already Exists']);
+            }
+    
+            // Create a new database connection based on $branchId
+            $conn = $this->createNewConnection($branchId);
+    
+            // Generate a verification token
+            $token = Str::random(60);
+    
+            // Check if the guest already exists in the guest table
+            $guest = $conn->table('guest')->where('email', $email)->first();
+    
+            if ($guest) {
+                if ($guest->email_verify == 0) {
+                    // Update existing guest record with new token
+                    $conn->table('guest')
+                        ->where('email', $email)
+                        ->update([
+                            'token' => $token,
+                            'created_at' => now()
+                        ]);
+                } else {
+                    return $this->send422Error('Email Already Verified', ['error' => 'Email Already Verified']);
+                }
+            } else {
+                // Insert new guest record
+                $conn->table('guest')->insert([
+                    'email' => $email,
+                    'token' => $token,
+                    'created_at' => now()
+                ]);
+            }
+    
+            // Generate the verification link
+            $link = $request->url . '/application/email/' . $branchId . '/' . $token;
+    
+            // Prepare data to be passed to the email template
+            $data = ['link' => $link, 'email' => $email];
+    
+            // Send verification email
+            Mail::to($email)->send(new VerifyMail($data));
+    
+            // Success response
+            return $this->successResponse([], 'Verification email has been sent successfully.');
+    
+        } catch (\Exception $e) {
+            // Log the exception or handle it appropriately
+            return $this->send500Error('Something went wrong.', ['error' => $e->getMessage()]);
         }
     }
-
 
     // get application list
     public function getApplicationList(Request $request)
