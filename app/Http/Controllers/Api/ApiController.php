@@ -66,7 +66,7 @@ use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Symfony\Component\HttpFoundation\Response;
 use App\Mail\VerifyMail;
-
+use App\Mail\EmailTermination;
 class ApiController extends BaseController
 {
     protected CommonHelper $commonHelper;
@@ -30836,7 +30836,6 @@ try{
         try{
         $id = $request->id;
         $validator = \Validator::make($request->all(), [
-            'token' => 'required',
             'branch_id' => 'required',
         ]);
 
@@ -30868,7 +30867,6 @@ try{
                     ['user_id', '=', $termination_info->created_by]
                 ])->get();
 
-
                 $parent = $conn->table('parent as p')->select("email")
                             ->where('p.id', $termination_info->created_by)->first();
                 $student_name = $conn->table('students as s')
@@ -30893,16 +30891,26 @@ try{
 
                 if($email){
 
-                    $data = array(
+                    // $data = array(
+                    //     'student' => isset($student_name->name) ? $student_name->name : "",
+                    //     'termination_status' => $request->termination_status,
+                    //     'date' => isset($request->date_of_termination) ? $request->date_of_termination : "",
+                    // );
+                    $data = [
                         'student' => isset($student_name->name) ? $student_name->name : "",
+                        'termination_status' => $request->termination_status,
                         'date' => isset($request->date_of_termination) ? $request->date_of_termination : "",
-                    );
+                    ];
+                    // dd($data);
                     // return $data;
-                    $mailFromAddress = env('MAIL_FROM_ADDRESS', config('constants.client_email'));
-                    Mail::send('auth.email_termination', $data, function ($message) use ($email,$mailFromAddress) {
-                        $message->to($email, 'Parent')->subject('Termination Approval');
-                        $message->from($mailFromAddress, 'Termination');
-                    });
+                    // $mailFromAddress = env('MAIL_FROM_ADDRESS', config('constants.client_email'));
+                    // Prepare data to be passed to the email template    
+                    // Send verification email
+                    Mail::to($email)->send(new EmailTermination($data));
+                    // Mail::send('auth.email_termination', $data, function ($message) use ($email,$mailFromAddress) {
+                    //     $message->to($email, 'Parent')->subject('Termination Approval');
+                    //     $message->from($mailFromAddress, 'Termination');
+                    // });
                 }
             }
             $success = [];
