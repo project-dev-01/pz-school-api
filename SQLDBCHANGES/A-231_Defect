@@ -1,0 +1,4 @@
+
+ALTER TABLE `parent_change_info` ADD `old_values` TEXT NULL AFTER `status_parent`, ADD `new_values` TEXT NULL AFTER `old_values`; ALTER TABLE `parent_change_info` ADD `result` TEXT NULL AFTER `new_values`;
+
+ALTER TABLE `student_change_info` ADD `old_values` TEXT NULL AFTER `status_parent`, ADD `new_values` TEXT NULL AFTER `old_values`; ALTER TABLE `student_change_info` ADD `result` TEXT NULL AFTER `new_values`;
