@@ -646,7 +646,7 @@ class AuthController extends BaseController
             if ($email) {
                 $data = array('link' => $link, 'name' => $user->name);
                 $mailFromAddress = env('MAIL_FROM_ADDRESS', config('constants.client_email'));
-                Mail::send('auth.mail', $data, function ($message) use ($email, $mailFromAddress) {
+                Mail::send('auth.password_reset_mail', $data, function ($message) use ($email, $mailFromAddress) {
                     $message->to($email, 'User')->subject('Password Reset');
                     $message->from($mailFromAddress, env('MAIL_FROM_NAME'));
                 });

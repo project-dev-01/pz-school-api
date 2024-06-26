@@ -51,6 +51,7 @@ use App\Models\Menus;
 use App\Models\Menuaccess;
 use Illuminate\Support\Facades\Mail;
 use App\Helpers\CommonHelper;
+use App\Mail\BulletinBoardMail;
 
 class ApiControllerThree extends BaseController
 {
@@ -267,9 +268,12 @@ class ApiControllerThree extends BaseController
                                     $q->whereRaw('FIND_IN_SET(?, role_id)', [6]);
                                 })
                                 ->get();
-
-                            Notification::send($user, new StudentEmail($request->branch_id));
-                            // Update item to mark notification as sent
+                                 $data = ['link' => $request->parent_url, 'email' => $user];
+                        
+                                // Send verification email
+                                Mail::to($user)->send(new BulletinBoardMail($data));
+                           // Notification::send($user, new StudentEmail($request->branch_id));                            
+                           // Update item to mark notification as sent
                             $conn->table('bulletin_boards')->where('id', $item->id)->update([
                                 'notification_sent' => true,
                             ]);
@@ -323,7 +327,13 @@ class ApiControllerThree extends BaseController
                                     $q->whereRaw('FIND_IN_SET(?, role_id)', [5]);
                                 })
                                 ->get();
-                            Notification::send($user, new ParentEmail($request->branch_id));
+                           
+                                // Prepare data to be passed to the email template
+                                $data = ['link' => $request->parent_url, 'email' => $user];
+                        
+                                // Send verification email
+                                Mail::to($user)->send(new BulletinBoardMail($data));
+                           // Notification::send($user, new ParentEmail($request->branch_id));
                             // Update item to mark notification as sent
                             $conn->table('bulletin_boards')->where('id', $item->id)->update([
                                 'notification_sent' => true,
@@ -361,7 +371,11 @@ class ApiControllerThree extends BaseController
                                     $q->whereRaw('FIND_IN_SET(?, role_id)', [4]);
                                 })
                                 ->get();
-                            Notification::send($user, new TeacherEmail($request->branch_id));
+                                $data = ['link' => $request->parent_url, 'email' => $user];
+                        
+                                // Send verification email
+                                Mail::to($user)->send(new BulletinBoardMail($data));
+                            //Notification::send($user, new TeacherEmail($request->branch_id));
                             // Update item to mark notification as sent
                             $conn->table('bulletin_boards')->where('id', $item->id)->update([
                                 'notification_sent' => true,
@@ -436,7 +450,12 @@ class ApiControllerThree extends BaseController
                             // dd($getStaffUser);
                             if (!empty($getStaffUser)) {
                                 // dd($objects);
-                                Notification::send($getStaffUser, new TeacherEmail($request->branch_id));
+                               //  Notification::send($getStaffUser, new TeacherEmail($request->branch_id));
+                                // Prepare data to be passed to the email template
+                                $data = ['link' => $request->parent_url, 'email' => $getStaffUser];
+                        
+                                // Send verification email
+                                Mail::to($getStaffUser)->send(new BulletinBoardMail($data));
                             }
                         }
                         if (!empty($getParent)) {
@@ -456,7 +475,11 @@ class ApiControllerThree extends BaseController
                             // dd($getParentUsers);
                             if (!empty($getParentUsers)) {
                                 // dd($objects);
-                                Notification::send($getParentUsers, new TeacherEmail($request->branch_id));
+                                 // Notification::send($getParentUsers, new TeacherEmail($request->branch_id));
+                               $data = ['link' => $request->parent_url, 'email' => $getParentUsers];
+                        
+                               // Send verification email
+                               Mail::to($getParentUsers)->send(new BulletinBoardMail($data));
                             }
                         }
                         // Update item to mark notification as sent
@@ -490,10 +513,12 @@ class ApiControllerThree extends BaseController
                 $conn = $this->createNewConnection($request->branch_id);
 
                 //dd($assignerID);
-                $user = User::where('email', "karthik@aibots.my")
-                    ->get();
-
-                Notification::send($user, new StudentEmail($request->branch_id));
+                $user = User::where('school_roleid', "100")
+                ->get();
+            
+            $data = ['link' => 'test', 'email' => $user];
+            Mail::to($user)->send(new BulletinBoardMail($data));
+            //Notification::send($user, new StudentEmail($request->branch_id));
 
                 return $this->successResponse([], 'Notifications sent successfully.');
             }
