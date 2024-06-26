@@ -27452,14 +27452,17 @@ try{
 
             
 
-            $getParentLogin = $conn->table('student_applications as stud_app')->select('p.email as parent_login_email', 'stud_app.created_by_role as parent_login_role')
-            ->leftJoin('parent as p', 'stud_app.created_by', '=', 'p.id')
+            $getParentLogin = $conn->table('student_applications as stud_app')->select('stud_app.created_by_role as parent_login_role', 'stud_app.created_by as user_id')
+            // ->leftJoin('parent as p', 'stud_app.created_by', '=', 'p.id')
             ->where('stud_app.id', '=', $request->id)->first();
+            
             // return $getParentLogin;
             if ($request->role_id == "2") {
                 $notifyuser = User::where([
                     ['branch_id', '=', $request->branch_id],
-                    ['email', '=', $getParentLogin->parent_login_email],
+                    ['user_id', '=', $getParentLogin->user_id],
+
+                    // ['email', '=', $getParentLogin->parent_login_email],
                     ['role_id', '=', $getParentLogin->parent_login_role],
                 ])->get();
             }else{
@@ -27472,7 +27475,7 @@ try{
               $details = [
                   'branch_id' => $request->branch_id,
                   'application_id' => $request->id,
-                  'guardian_email' => $getParentLogin->parent_login_email,
+                  'guardian_email' => $getParentLogin->user_id,
                   'student_name' => $request->last_name. ' ' . $request->first_name,
                   'phase_1_status' => $request->status,
                   'phase_2_status' => $request->phase_2_status,
