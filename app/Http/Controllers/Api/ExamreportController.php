@@ -2574,6 +2574,7 @@ class ExamreportController extends BaseController
                 $admission_date = $students->official_date ?? '';
                 $date_of_termination = $students->date_of_termination ?? '';
                 $attendance_list = [];
+                $fd=0;
                 foreach ($getsemester as $sem) {
 
                     $fromdate = $sem->start_date;
@@ -2587,7 +2588,7 @@ class ExamreportController extends BaseController
                     $interval = new DateInterval('P1M'); // 1 month interval
                     $period = new DatePeriod($start, $interval, $end);
 
-
+                    
                     foreach ($period as $date) {
 
                         if (date('Y-m-t') < (trim($date->format('Y-m-t') . PHP_EOL))) {
@@ -2648,9 +2649,10 @@ class ExamreportController extends BaseController
                         {
                             dd($mon,$year);
                         }*/
-                            if ($admission_date != '' && $fromdate <= $admission_date) {
+                            if ($fd=0 && $admission_date != '' && $fromdate <= $admission_date) {
                                 $fromdate1 = $admission_date;
                                 $todate = trim($date->format('Y-m-t') . PHP_EOL);
+                                $fd++;
                             } elseif (intval($mon) == intval($startmonth)) {
                                 $fromdate1 = $fromdate;
                                 $todate = trim($date->format('Y-m-t') . PHP_EOL);
@@ -2740,7 +2742,7 @@ class ExamreportController extends BaseController
                             }
 
                             $totalweekends = $count;
-
+ 
                             $totaldays = $montotaldays + $sp_event - $holidays - $totalweekends;
                             $getleaves = $Connection->table('student_leaves')
                                 ->where('student_id', $request->student_id)
