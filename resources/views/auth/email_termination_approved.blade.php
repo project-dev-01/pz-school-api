@@ -3,7 +3,7 @@
 
 <head>
 	<meta charset="utf-8" />
-	<title>Student Termination</title>
+	<title>Student Termination Approved</title>
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<meta name="description" content="To learn as much as I can, attain good grades and advance my education further. I believe that self-motivation and a strict routine has helped me achieve my goals so far, and I will use the same method in the future.">
 	<style>
@@ -122,7 +122,7 @@
 								<table width="100%">
 									<tr>
 										<td class="header-container">
-											<img src="https://api.suzen.school/common-asset/images/logo_jskl.jpeg" class="header" alt="School Logo">
+											<img src="../A-245/images/logo_jskl.jpeg" class="header" alt="School Logo">
 										</td>
 									</tr>
 									<tr>
@@ -134,22 +134,16 @@
 										<td>
 											<hr style="margin-top:3px;">
 											<h4 class="head">
-												{{ $data['parent_email'] }}様
+												{{ $data['parent_email'] }} 様
 											</h4>
 										</td>
 									</tr>
 									<tr>
 										<td>
-											<p>いつもＳｕｚｅｎご利用いただきありがとうございます。</p>
-											<p>ご提出した退学届が{{  $data['termination_status']  }}されました。</p>
-											<p>下記の手順に従い、学校側からのコメントをご確認していただくようにお願いします。</p>
-											<ol>
-												<li style="text-align:left;">保護者ポータルへログイン<a href="{{  $data['link']  }}">{{  $data['link']  }}</a></li>
-												<li style="text-align:left;">サイドメニューの「退学届」をクリック</li>
-												<li style="text-align:left;">サイドメニューの「リスト」をクリック</li>
-												<li style="text-align:left;">リストにて確認したい入学願書申請の「編集」をクリック</li>
-												<li style="text-align:left;">下方にある「備考」欄にて学校側からのコメントをご確認いただけます。</li>
-											</ol>
+											<p>いつもＳｕｚｅｎご利用いただきありがとうございます</p>
+											<p>お子様（{{ $data['student'] }}）の退学届の申請が承認されました。</p>
+											<p>退学日は　{{ $data['date'] }}　となります。</p>
+											<p>※退学日は変更されることがございますので、最新の退学日は保護者ポータルにてご確認ください。</p>
 										</td>
 									</tr>
 									<tr>
@@ -176,15 +170,13 @@
 									<tr>
 										<td>
 											<p>Thank you for using Suzen.</p>
-											<p>The withdrawal application you submitted has been {{  $data['termination_status']  }}.</p>
-											<p>Please follow the steps below to check the comments from the school.</p>
-											<ol>
-												<li style="text-align:left;">Login to parent portal <a href="{{  $data['link']  }}">{{  $data['link']  }}</a></li>
-												<li style="text-align:left;">Click “Withdrawal” on the side menu</li>
-												<li style="text-align:left;">Click “Withdrawal List” on the side menu</li>
-												<li style="text-align:left;">Click "Edit" button on the Withdrawal application you want to check</li>
-												<li style="text-align:left;">You can check the comments from the school in the "Remarks" section at bottom.</li>
-											</ol>
+										</td>
+									</tr>
+									<tr>
+										<td>
+											<p>The withdrawal application you submitted for your children （{{ $data['student'] }}） has been {{ $data['termination_status'] }}.</p>
+											<p>Withdrawal date will be {{ $data['date'] }}　</p>
+											<p>* The withdrawal date is subject to change, please kindly check the parent portal for the latest withdrawal date.</p>
 										</td>
 									</tr>
 									<tr>

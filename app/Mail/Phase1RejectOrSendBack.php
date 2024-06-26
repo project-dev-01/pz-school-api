@@ -9,16 +9,17 @@ use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
 
-class EmailTermination extends Mailable
+class Phase1RejectOrSendBack extends Mailable
 {
     use Queueable, SerializesModels;
+
     public $data;
+
     /**
      * Create a new message instance.
      */
     public function __construct(array $data)
     {
-        //
         $this->data = $data;
     }
 
@@ -29,7 +30,7 @@ class EmailTermination extends Mailable
     {
         return new Envelope(
             from: env('MAIL_FROM_ADDRESS', config('constants.client_email')),
-            subject: 'Student Withdraw',
+            subject: 'Phase1 Application Status',
         );
     }
 
@@ -39,7 +40,7 @@ class EmailTermination extends Mailable
     public function content(): Content
     {
         return new Content(
-            view: 'auth.email_termination',
+            view: 'auth.phase1_reject_send_back',
         );
     }
 

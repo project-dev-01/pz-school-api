@@ -9,7 +9,7 @@ use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
 
-class EmailTermination extends Mailable
+class EmailTerminationApproved extends Mailable
 {
     use Queueable, SerializesModels;
     public $data;
@@ -29,7 +29,7 @@ class EmailTermination extends Mailable
     {
         return new Envelope(
             from: env('MAIL_FROM_ADDRESS', config('constants.client_email')),
-            subject: 'Student Withdraw',
+            subject: 'Student Withdraw Approved',
         );
     }
 
@@ -39,7 +39,7 @@ class EmailTermination extends Mailable
     public function content(): Content
     {
         return new Content(
-            view: 'auth.email_termination',
+            view: 'auth.email_termination_approved',
         );
     }
 

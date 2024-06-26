@@ -67,6 +67,14 @@ use Illuminate\Validation\Rule;
 use Symfony\Component\HttpFoundation\Response;
 use App\Mail\VerifyMail;
 use App\Mail\EmailTermination;
+use App\Mail\EmailTerminationApproved;
+use App\Mail\GuestLoginDetails;
+use App\Mail\Phase1RejectOrSendBack;
+use App\Mail\Phase1Approved;
+use App\Mail\Phase2RejectOrSendBack;
+use App\Mail\Phase2Approved;
+use App\Mail\ParentLoginDetails;
+
 class ApiController extends BaseController
 {
     protected CommonHelper $commonHelper;
@@ -26324,13 +26332,17 @@ try{
                     $email = $guest->email;
                     // return $update;
                     $link = $request->url . '/guest/login';
-                    $data = array('link' => $link, 'email' => $email, 'password' => $guest->email);
                     
-                    $mailFromAddress = env('MAIL_FROM_ADDRESS', config('constants.client_email'));
-                    $query = Mail::send('auth.login_credentials_mail', $data, function ($message) use ($email,$mailFromAddress) {
-                        $message->to($email, 'Guest')->subject('Login Details');
-                        $message->from($mailFromAddress, 'Login Details');
-                    });
+                    $data = ['link' => $link, 'email' => $email, 'password' => $guest->email];
+    
+                    // Send verification email
+                    Mail::to($email)->send(new GuestLoginDetails($data));
+
+                    // $mailFromAddress = env('MAIL_FROM_ADDRESS', config('constants.client_email'));
+                    // $query = Mail::send('auth.login_credentials_mail', $data, function ($message) use ($email,$mailFromAddress) {
+                    //     $message->to($email, 'Guest')->subject('Login Details');
+                    //     $message->from($mailFromAddress, 'Login Details');
+                    // });
                 }
             } else {
                 return $this->send422Error('Link Has been Expired', ['error' => 'Link Has been Expired']);
@@ -26348,72 +26360,6 @@ try{
             return $this->commonHelper->generalReturn('403','error',$error,'Error in emailApplication');
         }
     }
-    // public function verifyApplication(Request $request)
-    // {
-
-    //     try{
-    //         $validator = \Validator::make($request->all(), [
-    //             'branch_id' => 'required',
-    //             'email' => 'required'
-    //         ]);
-    //         if (!$validator->passes()) {
-    //             return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
-    //         } else {
-    //             // create new connection
-    //             $conn = $this->createNewConnection($request->branch_id);
-
-    //             $email =  $request->email;
-
-    //             $token = Str::random(60);
-    //             if(User::where([['email', '=', $request->email],['branch_id', '=', $request->branch_id], ['role_id', '=', "5"]])->count() < 1){
-    //                 if ($conn->table('guest')->where([['email', '=', $email]])->count() > 0) {
-    //                     if ($conn->table('guest')->where([['email', '=', $email], ['email_verify', '=', "0"]])->count() > 0) {
-    //                         $guest_id = $conn->table('guest')->where('email', '=', $email)->update([
-    //                             'token' => $token,
-    //                             'created_at' => date("Y-m-d H:i:s")
-    //                         ]);
-    //                     } else if ($conn->table('guest')->where([['email', '=', $email], ['email_verify', '=', "1"]])->count() > 0) {
-    //                         return $this->send422Error('Email Already Verified', ['error' => 'Email Already Verified']);
-    //                     }
-    //                 } else {
-    //                     // insert data
-    //                     $guest_id = $conn->table('guest')->insert([
-    //                         'email' => $email,
-    //                         'token' => $token,
-    //                         'created_at' => date("Y-m-d H:i:s")
-    //                     ]);
-    //                 }
-
-
-    //                 $link = $request->url . '/application/email/' . $request->branch_id . '/' . $token;
-    //                 $mailFromAddress = env('MAIL_FROM_ADDRESS', config('constants.client_email'));
-    //                 if ($email) {
-    //                     $data = array('link' => $link, 'email' => $email);
-    //                     // Dispatch the VerifyMail Mailable to the queue
-    //                     // $query = Mail::to($email)->queue(new VerifyMail($data));
-    //                     // Mail::send(new VerifyMail($loginId, $password));
-    //                     $query = Mail::to($email)
-    //                         ->send(new VerifyMail($data));
-    //                     // $query = Mail::send('auth.verify_mail', $data, function ($message) use ($email,$mailFromAddress) {
-    //                     //     $message->to($email, 'Guest')->subject('Email Verification');
-    //                     //     $message->from($mailFromAddress, 'Email Verification');
-    //                     // });
-    //                 }
-    //             }else{
-    //                 return $this->send422Error('User Account Already Exist', ['error' => 'User Account Already Exist']);
-    //             }
-    //             $success = [];
-    //             if (!$query) {
-    //                 return $this->send500Error('Something went wrong.', ['error' => 'Something went wrong']);
-    //             } else {
-    //                 return $this->successResponse($success, 'Verification has been Sended Successfully');
-    //             }
-    //         }
-    //     }
-    //     catch(Exception $error) {
-    //         return $this->commonHelper->generalReturn('403','error',$error,'Error in verifyApplication');
-    //     }
-    // }
     public function verifyApplication(Request $request)
     {
         try {
@@ -27021,11 +26967,12 @@ try{
                                         'parent_password' => $parent_password,
                                     );
                                     
-                                    $mailFromAddress = env('MAIL_FROM_ADDRESS', config('constants.client_email'));
-                                    $query = Mail::send('auth.application', $data, function ($message) use ($parent_email,$mailFromAddress) {
-                                        $message->to($parent_email, 'Parent')->subject('Login Details');
-                                        $message->from($mailFromAddress, 'Login Details');
-                                    });
+                                    // $mailFromAddress = env('MAIL_FROM_ADDRESS', config('constants.client_email'));
+                                    Mail::to($parent_email)->send(new ParentLoginDetails($data));
+                                    // $query = Mail::send('auth.application', $data, function ($message) use ($parent_email,$mailFromAddress) {
+                                    //     $message->to($parent_email, 'Parent')->subject('Login Details');
+                                    //     $message->from($mailFromAddress, 'Login Details');
+                                    // });
                                 }
                             }
                         }
@@ -27384,25 +27331,33 @@ try{
             ]);
 
             // return $request;
-
+            $link = $request->url . '/guest/login';
             if ($request->role_id == "2") {
                 if ($request->status != $request->status_old){
                     if($request->status != "Applied"){
                         
                     
                         $phase_1_email = $request->guardian_email;
-                        $data = array(
+                         $data = array(
                             'parent_name' => $request->guardian_last_name .' '. $request->guardian_first_name ,
                             'child_name' => $request->last_name  .' '. $request->first_name,
                             'status' => $request->status, 
+                            'link' =>$link, 
                             'phase' => "Phase 1", 
                         );
-                        
-                        $mailFromAddress = env('MAIL_FROM_ADDRESS', config('constants.client_email'));
-                        $query = Mail::send('auth.application_status', $data, function ($message) use ($phase_1_email,$mailFromAddress) {
-                            $message->to($phase_1_email, 'Parent')->subject('Student Application');
-                            $message->from($mailFromAddress, 'Application Details');
-                        });
+                        if($request->status == "Send Back" || $request->status == "Reject"){
+                            // Send verification email
+                            Mail::to($phase_1_email)->send(new Phase1RejectOrSendBack($data));
+                        }
+                        if($request->status == "Approved"){
+                            // Send verification email
+                            Mail::to($phase_1_email)->send(new Phase1Approved($data));
+                        }
+                        // $mailFromAddress = env('MAIL_FROM_ADDRESS', config('constants.client_email'));
+                        // $query = Mail::send('auth.application_status', $data, function ($message) use ($phase_1_email,$mailFromAddress) {
+                        //     $message->to($phase_1_email, 'Parent')->subject('Student Application');
+                        //     $message->from($mailFromAddress, 'Application Details');
+                        // });
                     }
 
                 }
@@ -27416,15 +27371,23 @@ try{
                         $data = array(
                             'parent_name' => $request->guardian_last_name .' '. $request->guardian_first_name ,
                             'child_name' => $request->last_name  .' '. $request->first_name,
-                            'status' => $request->phase_2_status,  
+                            'status' => $request->phase_2_status,
+                            'link' =>$link,  
                             'phase' => "Phase 2", 
                         );
-                        
-                        $mailFromAddress = env('MAIL_FROM_ADDRESS', config('constants.client_email'));
-                        $query = Mail::send('auth.application_status', $data, function ($message) use ($phase_2_email,$mailFromAddress) {
-                            $message->to($phase_2_email, 'Parent')->subject('Student Application');
-                            $message->from($mailFromAddress, 'Application Details');
-                        });
+                        if($request->status == "Send Back" || $request->status == "Reject"){
+                            // Send verification email
+                            Mail::to($phase_2_email)->send(new Phase2RejectOrSendBack($data));
+                        }
+                        if($request->status == "Approved"){
+                            // Send verification email
+                            Mail::to($phase_2_email)->send(new Phase2Approved($data));
+                        }
+                        // $mailFromAddress = env('MAIL_FROM_ADDRESS', config('constants.client_email'));
+                        // $query = Mail::send('auth.application_status', $data, function ($message) use ($phase_2_email,$mailFromAddress) {
+                        //     $message->to($phase_2_email, 'Parent')->subject('Student Application');
+                        //     $message->from($mailFromAddress, 'Application Details');
+                        // });
                     }
 
                 }
@@ -30891,7 +30854,7 @@ try{
                 Notification::send($user, new AdminTermination($details));
 
                 $email = isset($parent->email) ? $parent->email : "";
-
+                $parent_link = $request->url . '/parent/login';
                 if($email){
 
                     // $data = array(
@@ -30900,16 +30863,23 @@ try{
                     //     'date' => isset($request->date_of_termination) ? $request->date_of_termination : "",
                     // );
                     $data = [
+                        'parent_email' => $email,
+                        'link' => $parent_link,
                         'student' => isset($student_name->name) ? $student_name->name : "",
                         'termination_status' => $request->termination_status,
                         'date' => isset($request->date_of_termination) ? $request->date_of_termination : "",
                     ];
+                    if ($request->termination_status == "Send Back" || $request->termination_status == "Rejected"){
+                        Mail::to($email)->send(new EmailTermination($data));
+                    }
+                    if ($request->termination_status == "Approved"){
+                        Mail::to($email)->send(new EmailTerminationApproved($data));
+                    }
                     // dd($data);
                     // return $data;
                     // $mailFromAddress = env('MAIL_FROM_ADDRESS', config('constants.client_email'));
                     // Prepare data to be passed to the email template    
                     // Send verification email
-                    Mail::to($email)->send(new EmailTermination($data));
                     // Mail::send('auth.email_termination', $data, function ($message) use ($email,$mailFromAddress) {
                     //     $message->to($email, 'Parent')->subject('Termination Approval');
                     //     $message->from($mailFromAddress, 'Termination');

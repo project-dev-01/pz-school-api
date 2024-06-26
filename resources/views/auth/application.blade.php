@@ -1,12 +1,216 @@
-<div style="width: 100%; display:block;">
-<h2>Hi {{ $parent_name }}</h2>
+<!DOCTYPE html>
+<html lang="en">
 
-<b>Your Application Student Has Been Approved</b>
-<p>
-	<strong></strong><br>
-	<h4>Parent Login Details:</h4>
-	<h2>Link : {{ $parent_link }}</h2>
-	<h2>Email : {{ $parent_email }}</h2>
-	<h2>Password : {{ $parent_password }}</h2>
-</p>
-</div>
+<head>
+	<meta charset="utf-8" />
+	<title>Login Details</title>
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<meta name="description" content="To learn as much as I can, attain good grades and advance my education further. I believe that self-motivation and a strict routine has helped me achieve my goals so far, and I will use the same method in the future.">
+	<style>
+		body {
+			font-family: "Yu Gothic", sans-serif;
+		}
+
+		.body-wrap {
+			width: 100%;
+			background-color: #FFFFFF;
+		}
+
+		.container {
+			display: block !important;
+			max-width: 600px !important;
+			margin: 0 auto;
+			/* Center the container */
+		}
+
+		.content {
+			padding: 20px;
+			margin-top: 20px;
+		}
+
+		.content-wrap {
+			text-align: center;
+			/* Center text inside the content */
+			line-height: 20px;
+			padding: 30px;
+			background: #F2F2F2;
+			border-top: 6px solid #6FC6CC;
+			max-width: 600px;
+			/* Optional: Set a maximum width for better control */
+			margin: 0 auto;
+			/* Center the content-wrap within its container */
+		}
+
+		.schoolname {
+			font-size: 15px;
+			color: #343556;
+			font-weight: 800;
+			margin-top: -37px;
+			text-align: right;
+		}
+
+		hr {
+			margin-top: 1.5rem;
+			margin-bottom: 0.5rem;
+			border: 0;
+			border-top: 2px solid #D9D9D9;
+		}
+
+		.head {
+			font-family: "Yu Gothic", sans-serif;
+			font-weight: 700;
+			line-height: 28px;
+			letter-spacing: 0em;
+			text-align: left;
+			/* Center header text */
+			color: #000000;
+			margin-bottom: 20px;
+		}
+
+		P {
+			font-family: "Yu Gothic", sans-serif;
+			font-size: 14px;
+			font-weight: 500;
+			line-height: 18.4px;
+			letter-spacing: 0em;
+			text-align: justify;
+			color: #000000;
+		}
+
+		li {
+			font-family: "Yu Gothic", sans-serif;
+			font-size: 14px;
+			font-weight: 500;
+			line-height: 18.4px;
+			letter-spacing: 0em;
+			text-align: justify;
+			color: #000000;
+		}
+
+		.header-container {
+			display: flex;
+			align-items: center;
+			/* Vertically center the image and text */
+			justify-content: space-between;
+			/* Space between the image and text */
+		}
+
+		.header {
+			display: block;
+			/* Ensure the image is treated as a block element */
+			border-radius: 50%;
+			/* To make it rounded */
+			margin-right: 10px;
+			/* Space between the image and the text */
+			max-width: 50px;
+			/* Adjust as needed */
+			height: auto;
+			/* Maintain aspect ratio */
+		}
+	</style>
+</head>
+
+<body>
+	<table class="body-wrap">
+		<tr>
+			<td class="container">
+				<div class="content">
+					<table>
+						<tr>
+							<td class="content-wrap">
+								<!-- Start Header-->
+								<table width="100%">
+									<tr>
+										<td class="header-container">
+											<img src="https://api.suzen.school/common-asset/images/logo_jskl.jpeg" class="header" alt="School Logo">
+										</td>
+									</tr>
+									<tr>
+										<td>
+											<p class="schoolname">Japanese School Kuala Lumpur</p>
+										</td>
+									</tr>
+									<tr>
+										<td>
+											<hr style="margin-top:3px;">
+											<h4 class="head">
+												{{ $data['parent_name']  }}様
+											</h4>
+										</td>
+									</tr>
+									<tr>
+										<td>
+											<p>いつもＳｕｚｅｎご利用いただきありがとうございます。</p>
+											<p>ご提出された入学願書が正式に受理され、システムへの登録が完了いたしました。</p>
+											<p>下記の詳細に従い、保護者ポータルへログインしてください。</p>
+											<p>保護者ポータルリンク: {{ $data['parent_link']  }} </p>
+											<p>ログインアカウント: {{ $data['parent_email ']  }} </p>
+											<p>パスワード: {{ $data['parent_password ']  }} </p>
+										</td>
+									</tr>
+									<tr>
+										<td>
+											<p>セキュリティ強化のため、ログイン後パスワードの変更をお勧めしております。</p>
+											<p>パスワード変更の手順やその他機能の操作方法につきまして、</p>
+											<p>ログイン後サイドメニューにある「よくある質問」にて、ユーザーマニュアルをご参照ください。</p>
+										</td>
+									</tr>
+									<tr>
+										<td>
+											<p>以上。</p>
+										</td>
+									</tr>
+								</table>
+								<!-- End Header-->
+								<!-- Footer Table-->
+								<table>
+									<tr>
+										<td>
+											<hr style="width: 552px; height: 1px;margin-top:3px;">
+										</td>
+									</tr>
+									<tr>
+										<td>
+											<h4 class="head">
+												Dear {{ $data['parent_name']  }}
+											</h4>
+										</td>
+									</tr>
+									<tr>
+										<td>
+											<p>Thank you for using Suzen.</p>
+											<p>Your application for admission has been accepted. </p>
+											<p>Please log into the Parent Portal using the details below. </p>
+										</td>
+									</tr>
+									<tr>
+										<td>
+											<p>Parent portal link: {{ $data['parent_link']  }}</p>
+											<p>Login account: {{ $data['parent_email ']  }}</p>
+											<p>Password: {{ $data['parent_password ']  }}</p>
+										</td>
+									</tr>
+									<tr>
+										<td>
+											<p>To strengthen security, we recommend you changing your password after logging in. </p>
+											<p>Regarding the steps for changing passwords or how to use other functions,</p>
+											<p>Please refer to the user manual under "Frequently Asked Questions" in the side menu after logging in.</p>
+										</td>
+									</tr>
+									<tr>
+										<td>
+											<p>Thank you</p>
+										</td>
+									</tr>
+								</table>
+								<!--End Footer Table-->
+							</td>
+						</tr>
+					</table>
+				</div>
+			</td>
+		</tr>
+	</table>
+</body>
+
+</html>

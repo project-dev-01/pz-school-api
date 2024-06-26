@@ -2,7 +2,7 @@
 <html lang="en">
    <head>
       <meta charset="utf-8" />
-      <title>Application Status</title>
+      <title>Phase1 Application Status</title>
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
       <meta name="description" content="To learn as much as I can, attain good grades and advance my education further. I believe that self-motivation and a strict routine has helped me achieve my goals so far, and I will use the same method in the future.">
       <style>
