@@ -175,6 +175,7 @@ Route::group(['middleware' => ['auth:api', 'throttle:limit_per_user', 'logroute'
     Route::post('event_type/update', [ApiController::class, 'updateEventType']);
     Route::post('event_type/delete', [ApiController::class, 'deleteEventType']);
     Route::get('event_type/holidays_list_event', [ApiControllerOne::class, 'getHolidaysEventList']);
+    Route::get('event_type/holidays_normal_list_event', [ApiControllerOne::class, 'getNormalHolidaysEventList']);
 
     // Event routes
     Route::post('event/add', [ApiController::class, 'addEvent']);
@@ -864,7 +865,7 @@ Route::group(['middleware' => ['auth:api', 'throttle:limit_per_user', 'logroute'
     Route::post('soap_log/add', [ApiControllerOne::class, 'addSoapLog']);
     // add fees
     Route::post('fees/yearly/add', [ApiControllerOne::class, 'feesYearlyAdd']);
-    // Route::post('get_student_details', [ApiControllerOne::class, 'getStudentDetails']);
+    Route::post('get_student_details', [ApiControllerOne::class, 'getStudentDetails']);
 
     // Payment Mode routes
     Route::post('payment_mode/add', [ApiControllerOne::class, 'addPaymentMode']);

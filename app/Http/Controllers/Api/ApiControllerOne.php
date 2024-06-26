@@ -5652,7 +5652,7 @@ class ApiControllerOne extends BaseController
                     ->get();
                 return $this->successResponse($studentData, 'students data fetch successfully');
             }
-        } catch (Exception $error) {
+        } catch (Exception $error) { 
             return $this->commonHelper->generalReturn('403', 'error', $error, 'Error in getStudentDetails');
         }
     }
@@ -12685,7 +12685,7 @@ class ApiControllerOne extends BaseController
                 $secConn = $this->createNewConnection($request->branch_id);
                 // get data
                 $section = $secConn->table('events')
-                    ->select('start_date')
+                    ->select('start_date','end_date')
                     ->where('holiday', '=', '1')
                     ->orderBy('start_date', 'DESC')
                     ->get();
@@ -12694,6 +12694,31 @@ class ApiControllerOne extends BaseController
             }
         } catch (Exception $error) {
             return $this->commonHelper->generalReturn('403', 'error', $error, 'Error in getHolidaysEventList');
+        }
+    }
+    public function getNormalHolidaysEventList(Request $request)
+    {
+        try {
+            $validator = \Validator::make($request->all(), [
+                'branch_id' => 'required'
+            ]);
+            if (!$validator->passes()) {
+                return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
+            } else {
+                // create new connection
+                $secConn = $this->createNewConnection($request->branch_id);
+                // get data
+                $section = $secConn->table('events')
+                    ->select('start_date','end_date')
+                    ->where('holiday', '=', '0')
+                    ->where('all_day', '=', 'on')
+                    ->orderBy('start_date', 'DESC')
+                    ->get();
+
+                return $this->successResponse($section, 'Event Normal Holidays record fetch successfully');
+            }
+        } catch (Exception $error) {
+            return $this->commonHelper->generalReturn('403', 'error', $error, 'Error in getNormalHolidaysEventList');
         }
     }
     protected function clearCache($cache_name, $branchId)

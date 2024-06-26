@@ -1671,82 +1671,84 @@ class ApiControllerThree extends BaseController
                 $staffConn = $this->createNewConnection($request->branch_id);
                 $from_leave = date('Y-m-d', strtotime($request['frm_leavedate']));
                 $to_leave = date('Y-m-d', strtotime($request['to_leavedate']));
-                // check leave exist
-                $fromLeaveCnt = $staffConn->table('student_leaves as lev')
-                    ->where([
-                        ['lev.student_id', '=', $request->student_id],
-                        ['lev.class_id', '=', $request->class_id],
-                        ['lev.section_id', '=', $request->section_id],
-                        ['lev.from_leave', '<=', $from_leave],
-                        ['lev.to_leave', '>=', $from_leave],
-                    ])->count();
-                $toLeaveCnt = $staffConn->table('student_leaves as lev')
-                    ->where([
-                        ['lev.student_id', '=', $request->student_id],
-                        ['lev.class_id', '=', $request->class_id],
-                        ['lev.section_id', '=', $request->section_id],
-                        ['lev.from_leave', '<=', $to_leave],
-                        ['lev.to_leave', '>=', $to_leave]
-                    ])->count();
-                if ($fromLeaveCnt > 0 || $toLeaveCnt > 0) {
-                    // return 
-                    return $this->validationFailureResponse([], 'You have already applied for leave between these dates');
-                    // return $this->sendCommonError('You have already applied for leave between these dates', ['error' => 'You have already applied for leave between these dates']);
+    
+                // check leave exist only if change_lev_type is not 5 or 6
+                if (!in_array($request->change_lev_type, [5, 6])) {
+                    $fromLeaveCnt = $staffConn->table('student_leaves as lev')
+                        ->where([
+                            ['lev.student_id', '=', $request->student_id],
+                            ['lev.class_id', '=', $request->class_id],
+                            ['lev.section_id', '=', $request->section_id],
+                            ['lev.from_leave', '<=', $from_leave],
+                            ['lev.to_leave', '>=', $from_leave],
+                        ])->count();
+                    $toLeaveCnt = $staffConn->table('student_leaves as lev')
+                        ->where([
+                            ['lev.student_id', '=',  $request->student_id],
+                            ['lev.class_id', '=', $request->class_id],
+                            ['lev.section_id', '=', $request->section_id],
+                            ['lev.from_leave', '<=', $to_leave],
+                            ['lev.to_leave', '>=', $to_leave]
+                        ])->count();
+    
+                    if ($fromLeaveCnt > 0 || $toLeaveCnt > 0) {
+                        // return 
+                        return $this->validationFailureResponse([], 'You have already applied for leave between these dates');
+                    }
+                }
+    
+                $student_data = $staffConn->table('enrolls as en')
+                    ->select('p.id')
+                    ->join('students as st', 'st.id', '=', 'en.student_id')
+                    ->leftjoin('parent as p', function ($join) {
+                        $join->on('st.father_id', '=', 'p.id');
+                        $join->orOn('st.mother_id', '=', 'p.id');
+                        $join->orOn('st.guardian_id', '=', 'p.id');
+                    })
+                    ->where('en.active_status', '=', '0')
+                    ->where('en.student_id', '=', $request->student_id)
+                    ->first();
+    
+                // insert data
+                if (isset($request->file)) {
+                    $now = now();
+                    $name = strtotime($now);
+                    $extension = $request->file_extension;
+                    $fileName = $name . "." . $extension;
+                    $path = '/public/' . $request->branch_id . '/teacher/student-leaves/';
+                    $base64 = base64_decode($request->file);
+                    File::ensureDirectoryExists(base_path() . $path);
+                    $file = base_path() . $path . $fileName;
+                    $suc = file_put_contents($file, $base64);
                 } else {
-                    $student_data = $staffConn->table('enrolls as en')
-                        ->select(
-                            'p.id'
-                        )
-                        ->join('students as st', 'st.id', '=', 'en.student_id')
-                        ->leftjoin('parent as p', function ($join) {
-                            $join->on('st.father_id', '=', 'p.id');
-                            $join->orOn('st.mother_id', '=', 'p.id');
-                            $join->orOn('st.guardian_id', '=', 'p.id');
-                        })
-                        ->where('en.active_status', '=', '0')
-                        ->where('en.student_id', '=', $request->student_id)
-                        ->first();
-                    // dd($student_data->id);
-                    // insert data
-                    if (isset($request->file)) {
-                        $now = now();
-                        $name = strtotime($now);
-                        $extension = $request->file_extension;
-                        $fileName = $name . "." . $extension;
-                        $path = '/public/' . $request->branch_id . '/teacher/student-leaves/';
-                        $base64 = base64_decode($request->file);
-                        File::ensureDirectoryExists(base_path() . $path);
-                        $file = base_path() . $path . $fileName;
-                        $suc = file_put_contents($file, $base64);
-                    } else {
-                        $fileName = null;
-                    }
-                    $data = [
-                        'student_id' => $request['student_id'],
-                        'parent_id' => isset($student_data->id) ? $student_data->id : 0,
-                        'class_id' => $request['class_id'],
-                        'section_id' => $request['section_id'],
-                        'from_leave' => $from_leave,
-                        'to_leave' => $to_leave,
-                        'total_leave' => $request['total_leave'],
-                        'change_lev_type' => $request['change_lev_type'],
-                        'reasonid' => $request['reason_id'],
-                        'remarks' => $request['remarks'],
-                        'document' => $fileName,
-                        'status' => $request['status'],
-                        // 'home_teacher_status' => $request['status'],
-                        'nursing_teacher_status' => $request['status'],
-                        'direct_approval_status' => $request['direct_approval_status'],
-                        'direct_approval_by' => $request['direct_approval_by'],
-                        'created_at' => date("Y-m-d H:i:s")
-                    ];
-                    $query = $staffConn->table('student_leaves')->insert($data);
-                    $success = [];
-                    if (!$query) {
-                        return $this->send500Error('Something went wrong.', ['error' => 'Something went wrong']);
-                    } else {
-                        return $this->successResponse($success, 'Direct approval successfully');
-                    }
+                    $fileName = null;
+                }
+    
+                $data = [
+                    'student_id' => $request['student_id'],
+                    'parent_id' => isset($student_data->id) ? $student_data->id : 0,
+                    'class_id' => $request['class_id'],
+                    'section_id' => $request['section_id'],
+                    'from_leave' => $from_leave,
+                    'to_leave' => $to_leave,
+                    'total_leave' => $request['total_leave'],
+                    'change_lev_type' => $request['change_lev_type'],
+                    'reasonid' => $request['reason_id'],
+                    'remarks' => $request['remarks'],
+                    'document' => $fileName,
+                    'status' => $request['status'],
+                    'nursing_teacher_status' => $request['status'],
+                    'direct_approval_status' => $request['direct_approval_status'],
+                    'direct_approval_by' => $request['direct_approval_by'],
+                    'created_at' => date("Y-m-d H:i:s")
+                ];
+    
+                $query = $staffConn->table('student_leaves')->insert($data);
+                $success = [];
+                if (!$query) {
+                    return $this->send500Error('Something went wrong.', ['error' => 'Something went wrong']);
+                } else {
+                    return $this->successResponse($success, 'Direct approval successfully');
                 }
             }
         } catch (Exception $error) {
