@@ -2649,7 +2649,7 @@ class ExamreportController extends BaseController
                         {
                             dd($mon,$year);
                         }*/
-                            if ($fd=0 && $admission_date != '' && $fromdate <= $admission_date) {
+                            if ($fd==0 && $admission_date != '' && $fromdate <= $admission_date) {
                                 $fromdate1 = $admission_date;
                                 $todate = trim($date->format('Y-m-t') . PHP_EOL);
                                 $fd++;
