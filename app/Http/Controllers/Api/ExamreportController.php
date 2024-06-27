@@ -2607,7 +2607,7 @@ class ExamreportController extends BaseController
                                 "special_events" => []
 
                             ];
-                        } elseif ($date_of_termination != '' && date('Y-m-d', strtotime($date_of_termination)) < (trim($date->format('Y-m-t') . PHP_EOL))) {
+                        } elseif ($date_of_termination != '' && date('Y-m-d', strtotime($date_of_termination)) < (trim($date->format('Y-m-01') . PHP_EOL))) {
                             $mon = trim($date->format('m') . PHP_EOL);
                             $data = [
                                 "month" => $mon,
@@ -2662,6 +2662,10 @@ class ExamreportController extends BaseController
                             } else {
                                 $fromdate1 = trim($date->format('Y-m-01') . PHP_EOL);
                                 $todate = trim($date->format('Y-m-t') . PHP_EOL);
+                            }
+                            if($date_of_termination != '' && date('Y-m-d', strtotime($date_of_termination)) < $todate)
+                            {
+                                $todate = $date_of_termination;
                             }
                             $suspension = 0;
                             $holidaydatas = $Connection->table('events as hl')
