@@ -17772,6 +17772,8 @@ try{
             } else if ($accept > 0 && $remand == 0 && $reject == 0) {
 
                 $status_count = "Accept";
+            } else {
+                $status_count = "Remand"; // Default fallback value
             }
             $changeInfo['status_parent'] = $status_count;
 
@@ -30866,11 +30868,7 @@ try{
                 $email = isset($parent->email) ? $parent->email : "";
                 $parent_name = isset($parent->parent_name) ? $parent->parent_name : "";
                 // if parent table user exist parent login otherwise guest login
-                if(isset($parent->id)){
-                    $parent_link = $request->url . '/parent/login';
-                }else{
-                    $parent_link = $request->url . '/guest/login';
-                }
+                $parent_link = $request->url . '/parent/login';
                 if($email){
 
                     // $data = array(
