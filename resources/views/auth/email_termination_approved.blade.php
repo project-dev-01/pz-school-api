@@ -122,7 +122,7 @@
 								<table width="100%">
 									<tr>
 										<td class="header-container">
-											<img src="../A-245/images/logo_jskl.jpeg" class="header" alt="School Logo">
+											<img src="https://api.suzen.school/common-asset/images/logo_jskl.jpeg" class="header" alt="School Logo">
 										</td>
 									</tr>
 									<tr>
@@ -134,7 +134,7 @@
 										<td>
 											<hr style="margin-top:3px;">
 											<h4 class="head">
-												{{ $data['parent_email'] }} 様
+												{{ $data['parent_name'] }} 様
 											</h4>
 										</td>
 									</tr>
@@ -163,7 +163,7 @@
 									<tr>
 										<td>
 											<h4 class="head">
-												Dear {{ $data['parent_email'] }}
+												Dear {{ $data['parent_name'] }}
 											</h4>
 										</td>
 									</tr>

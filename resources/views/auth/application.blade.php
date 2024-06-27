@@ -134,7 +134,7 @@
 										<td>
 											<hr style="margin-top:3px;">
 											<h4 class="head">
-												{{ $data['parent_name']  }}様
+												{{ $data['parent_name'] }}様
 											</h4>
 										</td>
 									</tr>
@@ -143,9 +143,9 @@
 											<p>いつもＳｕｚｅｎご利用いただきありがとうございます。</p>
 											<p>ご提出された入学願書が正式に受理され、システムへの登録が完了いたしました。</p>
 											<p>下記の詳細に従い、保護者ポータルへログインしてください。</p>
-											<p>保護者ポータルリンク: {{ $data['parent_link']  }} </p>
-											<p>ログインアカウント: {{ $data['parent_email ']  }} </p>
-											<p>パスワード: {{ $data['parent_password ']  }} </p>
+											<p>保護者ポータルリンク: {{ $data['parent_link'] }} </p>
+											<p>ログインアカウント: {{ $data['parent_email'] }} </p>
+											<p>パスワード: {{ $data['parent_password'] }} </p>
 										</td>
 									</tr>
 									<tr>
@@ -172,7 +172,7 @@
 									<tr>
 										<td>
 											<h4 class="head">
-												Dear {{ $data['parent_name']  }}
+												Dear {{ $data['parent_name'] }}
 											</h4>
 										</td>
 									</tr>
@@ -185,9 +185,9 @@
 									</tr>
 									<tr>
 										<td>
-											<p>Parent portal link: {{ $data['parent_link']  }}</p>
-											<p>Login account: {{ $data['parent_email ']  }}</p>
-											<p>Password: {{ $data['parent_password ']  }}</p>
+											<p>Parent portal link: {{ $data['parent_link'] }}</p>
+											<p>Login account: {{ $data['parent_email'] }}</p>
+											<p>Password: {{ $data['parent_password'] }}</p>
 										</td>
 									</tr>
 									<tr>

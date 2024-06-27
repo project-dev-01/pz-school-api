@@ -74,6 +74,7 @@ use App\Mail\Phase1Approved;
 use App\Mail\Phase2RejectOrSendBack;
 use App\Mail\Phase2Approved;
 use App\Mail\ParentLoginDetails;
+use App\Mail\ParentProfileUpdate;
 
 class ApiController extends BaseController
 {
@@ -17776,21 +17777,26 @@ try{
 
             $relation['relation'] = isset($insertArr['relation']) ? $insertArr['relation'] : null;
             
-            // unset($insertArr['relation']);
-            
-            // if($status_count == "Remand" || $status_count == "Reject"){
-            //     $update_parent = $conn->table('parent')->where('id', '=', $id)->first();
-            //     $update_parent_email = $update_parent->guardian_email;
-            //     $data = array(
-            //         'parent_name' => $update_parent->last_name . ' '. $update_parent->first_name ,
-            //         'status' => $status_count, 
-            //     );
-            //     $mailFromAddress = env('MAIL_FROM_ADDRESS', config('constants.client_email'));
-            //     $query = Mail::send('auth.parent_update_info', $data, function ($message) use ($update_parent_email,$mailFromAddress) {
-            //         $message->to($update_parent_email, 'Parent')->subject('Parent Information Update');
-            //         $message->from($mailFromAddress, 'Parent Profile Details');
-            //     });
-            // }
+            unset($insertArr['relation']);
+            if($status_count == "Remand" || $status_count == "Reject"){
+                $update_parent = $conn->table('parent')->where('id', '=', $id)->first();
+                Log::info(json_encode($update_parent));
+                $update_parent_email = $update_parent->email;
+                $parent_link = $request->url . '/parent/login';
+                $data = array(
+                    'link' => $parent_link ,
+                    'parent_name' => $update_parent->last_name . ' '. $update_parent->first_name ,
+                    'status' => $status_count, 
+                );
+                Log::info(json_encode($data));
+
+                $query = Mail::to($update_parent_email)->send(new ParentProfileUpdate($data));
+                // $mailFromAddress = env('MAIL_FROM_ADDRESS', config('constants.client_email'));
+                // $query = Mail::send('auth.parent_update_info', $data, function ($message) use ($update_parent_email,$mailFromAddress) {
+                //     $message->to($update_parent_email, 'Parent')->subject('Parent Information Update');
+                //     $message->from($mailFromAddress, 'Parent Profile Details');
+                // });
+            }
             
             
             $getOldNewValue = $conn->table('parent_change_info')->where('parent_id', '=', $id)->first();
@@ -17830,8 +17836,8 @@ try{
             //     $query = $conn->table('students')->where('guardian_id', $id)->update($relation);
             // }
             // cache clear start
-            $cache_parentDetails = config('constants.cache_parentDetails');
-            $this->clearCache($cache_parentDetails,$request->branch_id);
+            // $cache_parentDetails = config('constants.cache_parentDetails');
+            // $this->clearCache($cache_parentDetails,$request->branch_id);
             // cache clear end
             $success = [];
             if ($query) {
@@ -27375,11 +27381,11 @@ try{
                             'link' =>$link,  
                             'phase' => "Phase 2", 
                         );
-                        if($request->status == "Send Back" || $request->status == "Reject"){
+                        if($request->phase_2_status == "Send Back" || $request->phase_2_status == "Reject"){
                             // Send verification email
                             Mail::to($phase_2_email)->send(new Phase2RejectOrSendBack($data));
                         }
-                        if($request->status == "Approved"){
+                        if($request->phase_2_status == "Approved"){
                             // Send verification email
                             Mail::to($phase_2_email)->send(new Phase2Approved($data));
                         }
@@ -30833,7 +30839,7 @@ try{
                     ['user_id', '=', $termination_info->created_by]
                 ])->get();
 
-                $parent = $conn->table('parent as p')->select("email")
+                $parent = $conn->table('parent as p')->select("p.email",DB::raw("CONCAT(p.last_name, ' ', p.first_name) as parent_name"))
                             ->where('p.id', $termination_info->created_by)->first();
                 $student_name = $conn->table('students as s')
                     ->select(DB::raw("CONCAT(s.last_name, ' ', s.first_name) as name"))
@@ -30854,7 +30860,12 @@ try{
                 Notification::send($user, new AdminTermination($details));
 
                 $email = isset($parent->email) ? $parent->email : "";
-                $parent_link = $request->url . '/parent/login';
+                $parent_name = isset($parent->parent_name) ? $parent->parent_name : "";
+                if($request->role_id == '5'){
+                    $parent_link = $request->url . '/parent/login';
+                }else{
+                    $parent_link = $request->url . '/guest/login';
+                }
                 if($email){
 
                     // $data = array(
@@ -30864,6 +30875,7 @@ try{
                     // );
                     $data = [
                         'parent_email' => $email,
+                        'parent_name' => $parent_name,
                         'link' => $parent_link,
                         'student' => isset($student_name->name) ? $student_name->name : "",
                         'termination_status' => $request->termination_status,

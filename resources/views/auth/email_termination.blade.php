@@ -134,7 +134,7 @@
 										<td>
 											<hr style="margin-top:3px;">
 											<h4 class="head">
-												{{ $data['parent_email'] }}様
+												{{ $data['parent_name'] }}様
 											</h4>
 										</td>
 									</tr>
@@ -169,7 +169,7 @@
 									<tr>
 										<td>
 											<h4 class="head">
-												Dear {{ $data['parent_email'] }}
+												Dear {{ $data['parent_name'] }}
 											</h4>
 										</td>
 									</tr>
