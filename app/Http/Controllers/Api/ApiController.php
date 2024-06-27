@@ -27335,9 +27335,13 @@ try{
                 "stay_category" => $request->stay_category,
                 'updated_at' => date("Y-m-d H:i:s")
             ]);
-
+            // check if exist email parent portal otherwise guest
+            if(User::where([['email', '=', $request->guardian_email],['branch_id', '=', $request->branch_id], ['role_id', '=', "5"]])->count() < 1){
+                $link = $request->url . '/parent/login';
+            }else{
+                $link = $request->url . '/guest/login';
+            }
             // return $request;
-            $link = $request->url . '/guest/login';
             if ($request->role_id == "2") {
                 if ($request->status != $request->status_old){
                     if($request->status != "Applied"){
@@ -30861,7 +30865,8 @@ try{
 
                 $email = isset($parent->email) ? $parent->email : "";
                 $parent_name = isset($parent->parent_name) ? $parent->parent_name : "";
-                if($request->role_id == '5'){
+                // if parent table user exist parent login otherwise guest login
+                if(isset($parent->id)){
                     $parent_link = $request->url . '/parent/login';
                 }else{
                     $parent_link = $request->url . '/guest/login';
