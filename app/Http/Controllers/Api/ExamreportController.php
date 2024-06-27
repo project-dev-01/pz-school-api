@@ -2692,7 +2692,7 @@ class ExamreportController extends BaseController
                                     $title = $holy->title;
                                     $holiday = $holy->holiday;
                                     $audience = $holy->audience;
-                                    $grade_list = $holy->selected_list;
+                                    $grade_list = explode(',',$holy->selected_list);
                                     $current_date = $start_date;
                                     // Loop through each day
                                     while ($current_date <= $end_date) {
@@ -2713,13 +2713,13 @@ class ExamreportController extends BaseController
                                                     $hd = $hdate . ' - ' . $title;
                                                     array_push($holidays_array, $hdate);
                                                 }
-                                            } elseif ($audience == 2 && $holiday == 1 && $grade_list == $request->class_id) {
+                                            } elseif ($audience == 2 && $holiday == 1 && in_array($request->class_id, $grade_list)) {
                                                 if (in_array($curday, $weekday)) {
                                                     $sp_event++;
                                                     $sed = $hdate . ' - ' . $title;
                                                     array_push($sp_eventsdate, $sed);
                                                 }
-                                            } elseif ($audience == 2 && $holiday == 0 && $grade_list == $request->class_id) {
+                                            } elseif ($audience == 2 && $holiday == 0 && in_array($request->class_id, $grade_list)) {
                                                 if (!in_array($curday, $weekday)) {
                                                     $holidays++;
                                                     $hd = $hdate . ' - ' . $title;
