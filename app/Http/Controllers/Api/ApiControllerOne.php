@@ -12239,7 +12239,6 @@ class ApiControllerOne extends BaseController
             $currentDateTime = Carbon::now();
             $buletinDetails = $conn->table('bulletin_boards as b')
                 ->select("b.file", "b.title", "b.publish_date", "b.id", "b.discription")
-
                 ->where("b.target_user", '2,4')
                 ->where(function ($query) use ($department) {
                     $query->whereRaw("FIND_IN_SET('$department', b.department_id)")
@@ -12683,12 +12682,18 @@ class ApiControllerOne extends BaseController
             } else {
                 // create new connection
                 $secConn = $this->createNewConnection($request->branch_id);
+                $class_id = $request->class_id ?? null ;
                 // get data
-                $section = $secConn->table('events')
-                    ->select('start_date','end_date')
-                    ->where('holiday', '=', '1')
-                    ->orderBy('start_date', 'DESC')
-                    ->get();
+                $section = $secConn->table('events as e')
+                ->select('e.start_date','e.end_date','e.holiday','e.all_day')
+                ->when($class_id, function ($query, $class_id) {
+                    return   $query->whereRaw("FIND_IN_SET('$class_id', e.selected_list)")
+                    ->orWhereNull('e.selected_list');;
+                }) 
+                // ->whereIn('holiday', ['0', '1']) 
+                ->where('e.all_day', '=', 'on')
+                ->orderBy('e.start_date', 'DESC')
+                ->get();
 
                 return $this->successResponse($section, 'Event Holidays record fetch successfully');
             }
@@ -12696,31 +12701,8 @@ class ApiControllerOne extends BaseController
             return $this->commonHelper->generalReturn('403', 'error', $error, 'Error in getHolidaysEventList');
         }
     }
-    public function getNormalHolidaysEventList(Request $request)
-    {
-        try {
-            $validator = \Validator::make($request->all(), [
-                'branch_id' => 'required'
-            ]);
-            if (!$validator->passes()) {
-                return $this->send422Error('Validation error.', ['error' => $validator->errors()->toArray()]);
-            } else {
-                // create new connection
-                $secConn = $this->createNewConnection($request->branch_id);
-                // get data
-                $section = $secConn->table('events')
-                    ->select('start_date','end_date')
-                    ->where('holiday', '=', '0')
-                    ->where('all_day', '=', 'on')
-                    ->orderBy('start_date', 'DESC')
-                    ->get();
+ 
 
-                return $this->successResponse($section, 'Event Normal Holidays record fetch successfully');
-            }
-        } catch (Exception $error) {
-            return $this->commonHelper->generalReturn('403', 'error', $error, 'Error in getNormalHolidaysEventList');
-        }
-    }
     protected function clearCache($cache_name, $branchId)
     {
         $cacheKey = $cache_name . $branchId;
