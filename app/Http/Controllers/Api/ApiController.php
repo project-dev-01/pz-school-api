@@ -27338,11 +27338,8 @@ try{
                 'updated_at' => date("Y-m-d H:i:s")
             ]);
             // check if exist email parent portal otherwise guest
-            if(User::where([['email', '=', $request->guardian_email],['branch_id', '=', $request->branch_id], ['role_id', '=', "5"]])->count() < 1){
-                $link = $request->url . '/parent/login';
-            }else{
-                $link = $request->url . '/guest/login';
-            }
+            $parent_link = $request->url . '/parent/login';
+            $guest_link = $request->url . '/guest/login';
             // return $request;
             if ($request->role_id == "2") {
                 if ($request->status != $request->status_old){
@@ -27354,7 +27351,8 @@ try{
                             'parent_name' => $request->guardian_last_name .' '. $request->guardian_first_name ,
                             'child_name' => $request->last_name  .' '. $request->first_name,
                             'status' => $request->status, 
-                            'link' =>$link, 
+                            'parent_link' =>$parent_link, 
+                            'guest_link' =>$guest_link, 
                             'phase' => "Phase 1", 
                         );
                         if($request->status == "Send Back" || $request->status == "Reject"){
@@ -27384,7 +27382,8 @@ try{
                             'parent_name' => $request->guardian_last_name .' '. $request->guardian_first_name ,
                             'child_name' => $request->last_name  .' '. $request->first_name,
                             'status' => $request->phase_2_status,
-                            'link' =>$link,  
+                            'parent_link' =>$parent_link, 
+                            'guest_link' =>$guest_link,
                             'phase' => "Phase 2", 
                         );
                         if($request->phase_2_status == "Send Back" || $request->phase_2_status == "Reject"){
@@ -30869,6 +30868,7 @@ try{
                 $parent_name = isset($parent->parent_name) ? $parent->parent_name : "";
                 // if parent table user exist parent login otherwise guest login
                 $parent_link = $request->url . '/parent/login';
+                $guest_link = $request->url . '/guest/login';
                 if($email){
 
                     // $data = array(
@@ -30879,7 +30879,8 @@ try{
                     $data = [
                         'parent_email' => $email,
                         'parent_name' => $parent_name,
-                        'link' => $parent_link,
+                        'parent_link' => $parent_link,
+                        'guest_link' => $guest_link,
                         'student' => isset($student_name->name) ? $student_name->name : "",
                         'termination_status' => $request->termination_status,
                         'date' => isset($request->date_of_termination) ? $request->date_of_termination : "",

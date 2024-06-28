@@ -144,7 +144,10 @@
                                  <p>ご提出した入学願書（ {{ $data['phase'] }} ）が{{ $data['status']  }}されました。</p>
                                  <p>下記の手順に従い、学校側からのコメントをご確認していただくようにお願いします。</p>
                                  <ol>
-                                    <li style="text-align:left;">ゲストポータルへログイン <a href="{{  $data['link']  }}">{{ $data['link']  }}</a></li>
+                                    <li style="text-align:left;">Ｓｕｚｅｎへログイン
+                                       a. これから編入準備の保護者様　：　ゲストポータル　<a href="{{  $data['guest_link']  }}">{{ $data['guest_link']  }}</a>
+                                       b. 在籍している園児・生徒の保護者様：保護者ポータル　<a href="{{  $data['parent_link']  }}">{{ $data['parent_link']  }}</a>
+                                    </li>
                                     <li style="text-align:left;">サイドメニューの「入学願書」をクリック</li>
                                     <li style="text-align:left;">サイドメニューの「リスト」をクリック</li>
                                     <li style="text-align:left;">リストにて確認したい入学願書申請の「編集」をクリック</li>
@@ -179,7 +182,10 @@
                                  <p>The admission application （ {{ $data['phase'] }} ） you submitted has been {{ $data['status']  }}.</p>
                                  <p>Please follow the steps below to check the comments from the school.</p>
                                  <ol>
-                                    <li style="text-align:left;">Login to guest portal <a href="{{  $data['link']  }}">{{ $data['link']  }}</a></li>
+                                    <li style="text-align:left;">1. Login to Suzen
+                                       a. For newcomer’s parent : guest portal <a href="{{  $data['guest_link']  }}">{{ $data['guest_link']  }}</a>
+                                       b. For enrolled student’s parent : parent portal <a href="{{  $data['parent_link']  }}">{{ $data['parent_link']  }}</a>
+                                    </li>
                                     <li style="text-align:left;">Click “Application” on the side menu</li>
                                     <li style="text-align:left;">Click “List” on the side menu</li>
                                     <li style="text-align:left;">Click "Edit" button on the admission application you want to check</li>

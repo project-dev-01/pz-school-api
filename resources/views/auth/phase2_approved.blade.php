@@ -152,9 +152,9 @@
                            </tr>
                            <tr>
                               <td>
-                                 <p>また、後ほどSuzenから保護者ポータルのアカウント情報の案内メールが届きますため、</p>
-                                 <p>そちらをご覧ください。</p>
-                                 <p>※現在ご利用している「ゲストポータル」はアクセスできなくなりますので、ご注意ください。</p>
+                                 <p>また、「ゲストポータル」をご利用している保護者には、所属年組が決定された後Suzenから「保護者ポータ</p>
+                                 <p>ル」のアカウント情報の案内メールが届きますため、そちらをご覧ください。</p>
+                                 <p>「保護者ポータル」のアカウント情報の案内メールが届くと、「ゲストポータル」へアクセスできなくなりますので、ご注意ください。</p>
                                  <p>※追加の手続き等に関して、保護者ポータルより行っていただくようにお願いいたします。</p>
                               </td>
                            </tr>
@@ -198,8 +198,8 @@
                            </tr>
                            <tr>
                               <td>
-                                 <p>Additionally, you will receive an email from Suzen later about your Parent Portal account credential.</p>
-                                 <p>*Please note that you will no longer be able to access the "Guest Portal" that you are currently using.</p>
+                                 <p>Parents who are using the "Guest Portal" will receive an email from Suzen regards on "Parent Portal" account information after the children’s grade and class was fixed.</p>
+                                 <p>Please note that once you received the email regards on the account information of "Parent Portal", you will no longer be able to access the "Guest Portal".</p>
                                  <p>*Please use the parent portal for further application.</p>
                               </td>
                            </tr>
