@@ -232,7 +232,7 @@ class ApiControllerThree extends BaseController
                         $section_id = $item->section_id;
                         $student_id  = $item->student_id;
                         $getStudent = $conn->table('enrolls as e')->select('s.id', DB::raw('CONCAT(s.last_name, " ", s.first_name) as name'), 's.register_no', 's.roll_no', 's.mobile_no', 's.email', 's.gender', 's.photo')
-                            ->leftJoin('students as s', 'e.student_id', '=', 's.id')
+                            ->join('students as s', 'e.student_id', '=', 's.id')
                             // ->when($class_id, function ($query, $class_id) {
                             //     return $query->where('e.class_id', $class_id);
                             // })
@@ -268,12 +268,12 @@ class ApiControllerThree extends BaseController
                                     $q->whereRaw('FIND_IN_SET(?, role_id)', [6]);
                                 })
                                 ->get();
-                                 $data = ['link' => $request->parent_url, 'email' => $user];
-                        
-                                // Send verification email
-                                Mail::to($user)->send(new BulletinBoardMail($data));
-                           // Notification::send($user, new StudentEmail($request->branch_id));                            
-                           // Update item to mark notification as sent
+                            $data = ['link' => $request->parent_url, 'email' => $user];
+
+                            // Send verification email
+                            // Mail::to($user)->send(new BulletinBoardMail($data));
+                            Notification::send($user, new StudentEmail($request->branch_id));                            
+                            // Update item to mark notification as sent
                             $conn->table('bulletin_boards')->where('id', $item->id)->update([
                                 'notification_sent' => true,
                             ]);
@@ -286,11 +286,7 @@ class ApiControllerThree extends BaseController
                         $parent_id  = $item->parent_id;
                         $getParent = $conn->table('enrolls as e')->select('p.id', DB::raw('CONCAT(p.last_name, " ", p.first_name) as parent_name'))
                             ->leftJoin('students as s', 'e.student_id', '=', 's.id')
-                            ->leftjoin('parent as p', function ($join) {
-                                $join->on('s.father_id', '=', 'p.id');
-                                $join->orOn('s.mother_id', '=', 'p.id');
-                                $join->orOn('s.guardian_id', '=', 'p.id');
-                            })
+                            ->join('parent as p', 'p.id', '=', 's.guardian_id')
                             // ->when($class_id, function ($query, $class_id) {
                             //     return $query->where('e.class_id', $class_id);
                             // })
@@ -327,13 +323,13 @@ class ApiControllerThree extends BaseController
                                     $q->whereRaw('FIND_IN_SET(?, role_id)', [5]);
                                 })
                                 ->get();
-                           
-                                // Prepare data to be passed to the email template
-                                $data = ['link' => $request->parent_url, 'email' => $user];
-                        
-                                // Send verification email
-                                Mail::to($user)->send(new BulletinBoardMail($data));
-                           // Notification::send($user, new ParentEmail($request->branch_id));
+
+                            // Prepare data to be passed to the email template
+                            $data = ['link' => $request->parent_url, 'email' => $user];
+
+                            // Send verification email
+                            // Mail::to($user)->send(new BulletinBoardMail($data));
+                            Notification::send($user, new ParentEmail($request->branch_id));
                             // Update item to mark notification as sent
                             $conn->table('bulletin_boards')->where('id', $item->id)->update([
                                 'notification_sent' => true,
@@ -371,10 +367,10 @@ class ApiControllerThree extends BaseController
                                     $q->whereRaw('FIND_IN_SET(?, role_id)', [4]);
                                 })
                                 ->get();
-                                $data = ['link' => $request->parent_url, 'email' => $user];
-                        
-                                // Send verification email
-                                Mail::to($user)->send(new BulletinBoardMail($data));
+                            $data = ['link' => $request->parent_url, 'email' => $user];
+
+                            // Send verification email
+                            Mail::to($user)->send(new BulletinBoardMail($data));
                             //Notification::send($user, new TeacherEmail($request->branch_id));
                             // Update item to mark notification as sent
                             $conn->table('bulletin_boards')->where('id', $item->id)->update([
@@ -405,24 +401,27 @@ class ApiControllerThree extends BaseController
                             ->where('stf.is_active', '=', '0')
                             ->groupBy('stf.id')
                             ->get();
-
+                        // dd($getStaff);
                         $getParent = $conn->table('enrolls as e')->select('p.id', 'p.email')
                             ->join('students as s', 'e.student_id', '=', 's.id')
-                            ->leftjoin('parent as p', function ($join) {
-                                $join->on('s.father_id', '=', 'p.id');
-                                $join->orOn('s.mother_id', '=', 'p.id');
-                                $join->orOn('s.guardian_id', '=', 'p.id');
-                            })
+                            ->join('parent as p', 'p.id', '=', 's.guardian_id')
                             ->when($deptId, function ($query, $deptId) {
-                                return $query->where('e.department_id', $deptId);
+                                $departmentIDsArray = explode(",", $deptId);
+                                // Use orWhereRaw for multiple department IDs
+                                $query->where(function ($q) use ($departmentIDsArray) {
+                                    foreach ($departmentIDsArray as $departmentID) {
+                                        $q->orWhereRaw("FIND_IN_SET(?, e.department_id) > 0", [$departmentID]);
+                                    }
+                                });
                             })
                             ->when($class_id, function ($query, $class_id) {
                                 $classIDsArray = explode(",", $class_id);
-                                // Iterate over departmentIDs array to add conditions
-                                foreach ($classIDsArray as $classID) {
-                                    // Add condition for each department ID using FIND_IN_SET
-                                    $query->orWhereRaw("FIND_IN_SET('$classID', e.class_id) > 0");
-                                }
+                                // Use orWhereRaw for multiple class IDs
+                                $query->where(function ($q) use ($classIDsArray) {
+                                    foreach ($classIDsArray as $classID) {
+                                        $q->orWhereRaw("FIND_IN_SET(?, e.class_id) > 0", [$classID]);
+                                    }
+                                });
                             })
                             ->when($section_id, function ($query, $section_id) {
                                 return $query->where('e.section_id', $section_id);
@@ -430,7 +429,7 @@ class ApiControllerThree extends BaseController
                             ->when($student_id, function ($query, $student_id) {
                                 return $query->where('e.student_id', $student_id);
                             })
-                            // ->where('e.active_status', '=', "0")
+                            ->where('e.active_status', '=', "0")
                             ->groupBy('e.student_id')
                             ->get();
                         if (!empty($getStaff)) {
@@ -450,12 +449,11 @@ class ApiControllerThree extends BaseController
                             // dd($getStaffUser);
                             if (!empty($getStaffUser)) {
                                 // dd($objects);
-                               //  Notification::send($getStaffUser, new TeacherEmail($request->branch_id));
+                                Notification::send($getStaffUser, new TeacherEmail($request->branch_id));
                                 // Prepare data to be passed to the email template
                                 $data = ['link' => $request->parent_url, 'email' => $getStaffUser];
-                        
                                 // Send verification email
-                                Mail::to($getStaffUser)->send(new BulletinBoardMail($data));
+                                // Mail::to($getStaffUser)->send(new BulletinBoardMail($data));
                             }
                         }
                         if (!empty($getParent)) {
@@ -475,11 +473,11 @@ class ApiControllerThree extends BaseController
                             // dd($getParentUsers);
                             if (!empty($getParentUsers)) {
                                 // dd($objects);
-                                 // Notification::send($getParentUsers, new TeacherEmail($request->branch_id));
-                               $data = ['link' => $request->parent_url, 'email' => $getParentUsers];
-                        
-                               // Send verification email
-                               Mail::to($getParentUsers)->send(new BulletinBoardMail($data));
+                                Notification::send($getParentUsers, new TeacherEmail($request->branch_id));
+                                $data = ['link' => $request->parent_url, 'email' => $getParentUsers];
+
+                                // Send verification email
+                                // Mail::to($getParentUsers)->send(new BulletinBoardMail($data));
                             }
                         }
                         // Update item to mark notification as sent
@@ -512,13 +510,12 @@ class ApiControllerThree extends BaseController
                 // create new connection
                 $conn = $this->createNewConnection($request->branch_id);
 
-                //dd($assignerID);
-                $user = User::where('school_roleid', "100")
-                ->get();
-            
-            $data = ['link' => 'test', 'email' => $user];
-            Mail::to($user)->send(new BulletinBoardMail($data));
-            //Notification::send($user, new StudentEmail($request->branch_id));
+                $user = User::select('id', 'email')->where('school_roleid', "100")
+                    ->get();
+                dd(json_encode($user));
+                $data = ['link' => 'test', 'email' => $user];
+                // Mail::to($user)->send(new BulletinBoardMail($data));
+                //Notification::send($user, new StudentEmail($request->branch_id));
 
                 return $this->successResponse([], 'Notifications sent successfully.');
             }
@@ -1696,7 +1693,7 @@ class ApiControllerThree extends BaseController
                 $staffConn = $this->createNewConnection($request->branch_id);
                 $from_leave = date('Y-m-d', strtotime($request['frm_leavedate']));
                 $to_leave = date('Y-m-d', strtotime($request['to_leavedate']));
-    
+
                 // check leave exist only if change_lev_type is not 5 or 6
                 if (!in_array($request->change_lev_type, [5, 6])) {
                     $fromLeaveCnt = $staffConn->table('student_leaves as lev')
@@ -1715,13 +1712,13 @@ class ApiControllerThree extends BaseController
                             ['lev.from_leave', '<=', $to_leave],
                             ['lev.to_leave', '>=', $to_leave]
                         ])->count();
-    
+
                     if ($fromLeaveCnt > 0 || $toLeaveCnt > 0) {
                         // return 
                         return $this->validationFailureResponse([], 'You have already applied for leave between these dates');
                     }
                 }
-    
+
                 $student_data = $staffConn->table('enrolls as en')
                     ->select('p.id')
                     ->join('students as st', 'st.id', '=', 'en.student_id')
@@ -1733,7 +1730,7 @@ class ApiControllerThree extends BaseController
                     ->where('en.active_status', '=', '0')
                     ->where('en.student_id', '=', $request->student_id)
                     ->first();
-    
+
                 // insert data
                 if (isset($request->file)) {
                     $now = now();
@@ -1748,7 +1745,7 @@ class ApiControllerThree extends BaseController
                 } else {
                     $fileName = null;
                 }
-    
+
                 $data = [
                     'student_id' => $request['student_id'],
                     'parent_id' => isset($student_data->id) ? $student_data->id : 0,
@@ -1767,7 +1764,7 @@ class ApiControllerThree extends BaseController
                     'direct_approval_by' => $request['direct_approval_by'],
                     'created_at' => date("Y-m-d H:i:s")
                 ];
-    
+
                 $query = $staffConn->table('student_leaves')->insert($data);
                 $success = [];
                 if (!$query) {
@@ -2782,9 +2779,9 @@ class ApiControllerThree extends BaseController
                             array_push($classID, $value->id);
                         }
                     }
-        
+
                     $absentCountDetails = $createConnection->table('student_leaves as lev')
-                    ->select(DB::raw('
+                        ->select(DB::raw('
                         FLOOR(
                             ABS(
                                 SUM(
@@ -2816,64 +2813,64 @@ class ApiControllerThree extends BaseController
                             )
                         ) as no_of_days_attendance
                     '))
-                    ->join('enrolls as en', function ($join) {
-                        $join->on('lev.class_id', '=', 'en.class_id')
-                            ->on('lev.section_id', '=', 'en.section_id')
-                            ->on('lev.student_id', '=', 'en.student_id');
-                    })
-                    ->leftJoin('events as e', function ($join) {
-                        $join->on(function ($query) {
-                            $query->whereRaw('lev.from_leave BETWEEN e.start_date AND e.end_date')
-                                ->orWhereRaw('lev.to_leave BETWEEN e.start_date AND e.end_date')
-                                ->orWhere(function ($query) {
-                                    $query->whereRaw('lev.from_leave < e.start_date')
-                                        ->whereRaw('lev.to_leave > e.end_date');
+                        ->join('enrolls as en', function ($join) {
+                            $join->on('lev.class_id', '=', 'en.class_id')
+                                ->on('lev.section_id', '=', 'en.section_id')
+                                ->on('lev.student_id', '=', 'en.student_id');
+                        })
+                        ->leftJoin('events as e', function ($join) {
+                            $join->on(function ($query) {
+                                $query->whereRaw('lev.from_leave BETWEEN e.start_date AND e.end_date')
+                                    ->orWhereRaw('lev.to_leave BETWEEN e.start_date AND e.end_date')
+                                    ->orWhere(function ($query) {
+                                        $query->whereRaw('lev.from_leave < e.start_date')
+                                            ->whereRaw('lev.to_leave > e.end_date');
+                                    });
+                            });
+                        })
+                        ->whereIn('lev.class_id', $classID)
+                        ->where('en.department_id', $department_id)
+                        ->when($Day, function ($q) use ($currentDate) {
+                            return $q->where(function ($query) use ($currentDate) {
+                                $query->where('lev.from_leave', '<=', $currentDate)
+                                    ->where('lev.to_leave', '>=', $currentDate);
+                            });
+                        })
+                        ->when($Month, function ($query) use ($startDate, $endDate) {
+                            return $query->where(function ($query) use ($startDate, $endDate) {
+                                $query->where('lev.from_leave', '<=', $endDate)
+                                    ->where('lev.to_leave', '>=', $startDate);
+                            });
+                        })
+                        ->when($Term, function ($query) use ($termData) {
+                            if ($termData) {
+                                $start = $termData->start_date;
+                                $end = $termData->end_date;
+                                return $query->where(function ($query) use ($start, $end) {
+                                    $query->where('lev.from_leave', '<=', $end)
+                                        ->where('lev.to_leave', '>=', $start);
                                 });
-                        });
-                    })
-                    ->whereIn('lev.class_id', $classID)
-                    ->where('en.department_id', $department_id)
-                    ->when($Day, function ($q) use ($currentDate) {
-                        return $q->where(function ($query) use ($currentDate) {
-                            $query->where('lev.from_leave', '<=', $currentDate)
-                                ->where('lev.to_leave', '>=', $currentDate);
-                        });
-                    })
-                    ->when($Month, function ($query) use ($startDate, $endDate) {
-                        return $query->where(function ($query) use ($startDate, $endDate) {
-                            $query->where('lev.from_leave', '<=', $endDate)
-                                ->where('lev.to_leave', '>=', $startDate);
-                        });
-                    })
-                    ->when($Term, function ($query) use ($termData) {
-                        if ($termData) {
-                            $start = $termData->start_date;
-                            $end = $termData->end_date;
-                            return $query->where(function ($query) use ($start, $end) {
-                                $query->where('lev.from_leave', '<=', $end)
-                                    ->where('lev.to_leave', '>=', $start);
-                            });
-                        }
-                    })
-                    ->when($Year, function ($query) use ($yearData) {
-                        if ($yearData) {
-                            $start = $yearData[0]->year_start_date;
-                            $end = $yearData[0]->year_end_date;
-                            return $query->where(function ($query) use ($start, $end) {
-                                $query->where('lev.from_leave', '<=', $end)
-                                    ->where('lev.to_leave', '>=', $start);
-                            });
-                        }
-                    })
-                    ->where('en.active_status', '=', '0')
-                    ->where('en.academic_session_id', '=', $request->academic_session_id)
-                    ->where('lev.status', '=', 'Approve')
-                    ->get();
+                            }
+                        })
+                        ->when($Year, function ($query) use ($yearData) {
+                            if ($yearData) {
+                                $start = $yearData[0]->year_start_date;
+                                $end = $yearData[0]->year_end_date;
+                                return $query->where(function ($query) use ($start, $end) {
+                                    $query->where('lev.from_leave', '<=', $end)
+                                        ->where('lev.to_leave', '>=', $start);
+                                });
+                            }
+                        })
+                        ->where('en.active_status', '=', '0')
+                        ->where('en.academic_session_id', '=', $request->academic_session_id)
+                        ->where('lev.status', '=', 'Approve')
+                        ->get();
                 } else if ($department_id && $class_id && $section_id === null) {
                     $type = "Grade";
                     // Department exists, Class exists, Section is null
                     $absentCountDetails = $createConnection->table('student_leaves as lev')
-                    ->select(DB::raw('
+                        ->select(DB::raw('
                         FLOOR(
                             ABS(
                                 SUM(
@@ -2905,22 +2902,22 @@ class ApiControllerThree extends BaseController
                             )
                         ) as no_of_days_attendance
                     '))
-                    ->join('enrolls as en', function ($join) {
-                        $join->on('lev.class_id', '=', 'en.class_id')
-                            ->on('lev.section_id', '=', 'en.section_id')
-                            ->on('lev.student_id', '=', 'en.student_id');
-                    })
-                    ->leftJoin('events as e', function ($join) {
-                        $join->on(function ($query) {
-                            $query->whereRaw('lev.from_leave BETWEEN e.start_date AND e.end_date')
-                                ->orWhereRaw('lev.to_leave BETWEEN e.start_date AND e.end_date')
-                                ->orWhere(function ($query) {
-                                    $query->whereRaw('lev.from_leave < e.start_date')
-                                        ->whereRaw('lev.to_leave > e.end_date');
-                                });
-                        });
-                    })
-                ->when($department_id, function ($query, $department_id) {
+                        ->join('enrolls as en', function ($join) {
+                            $join->on('lev.class_id', '=', 'en.class_id')
+                                ->on('lev.section_id', '=', 'en.section_id')
+                                ->on('lev.student_id', '=', 'en.student_id');
+                        })
+                        ->leftJoin('events as e', function ($join) {
+                            $join->on(function ($query) {
+                                $query->whereRaw('lev.from_leave BETWEEN e.start_date AND e.end_date')
+                                    ->orWhereRaw('lev.to_leave BETWEEN e.start_date AND e.end_date')
+                                    ->orWhere(function ($query) {
+                                        $query->whereRaw('lev.from_leave < e.start_date')
+                                            ->whereRaw('lev.to_leave > e.end_date');
+                                    });
+                            });
+                        })
+                        ->when($department_id, function ($query, $department_id) {
                             return $query->where('en.department_id', $department_id);
                         })
                         // when not null comes here
@@ -2964,7 +2961,7 @@ class ApiControllerThree extends BaseController
                     $type = "Class";
                     // Department exists, Class exists, Section exists
                     $absentCountDetails = $createConnection->table('student_leaves as lev')
-                    ->select(DB::raw('
+                        ->select(DB::raw('
                         FLOOR(
                             ABS(
                                 SUM(
@@ -2996,22 +2993,22 @@ class ApiControllerThree extends BaseController
                             )
                         ) as no_of_days_attendance
                     '))
-                    ->join('enrolls as en', function ($join) {
-                        $join->on('lev.class_id', '=', 'en.class_id')
-                            ->on('lev.section_id', '=', 'en.section_id')
-                            ->on('lev.student_id', '=', 'en.student_id');
-                    })
-                    ->leftJoin('events as e', function ($join) {
-                        $join->on(function ($query) {
-                            $query->whereRaw('lev.from_leave BETWEEN e.start_date AND e.end_date')
-                                ->orWhereRaw('lev.to_leave BETWEEN e.start_date AND e.end_date')
-                                ->orWhere(function ($query) {
-                                    $query->whereRaw('lev.from_leave < e.start_date')
-                                        ->whereRaw('lev.to_leave > e.end_date');
-                                });
-                        });
-                    })
-                ->when($department_id, function ($query, $department_id) {
+                        ->join('enrolls as en', function ($join) {
+                            $join->on('lev.class_id', '=', 'en.class_id')
+                                ->on('lev.section_id', '=', 'en.section_id')
+                                ->on('lev.student_id', '=', 'en.student_id');
+                        })
+                        ->leftJoin('events as e', function ($join) {
+                            $join->on(function ($query) {
+                                $query->whereRaw('lev.from_leave BETWEEN e.start_date AND e.end_date')
+                                    ->orWhereRaw('lev.to_leave BETWEEN e.start_date AND e.end_date')
+                                    ->orWhere(function ($query) {
+                                        $query->whereRaw('lev.from_leave < e.start_date')
+                                            ->whereRaw('lev.to_leave > e.end_date');
+                                    });
+                            });
+                        })
+                        ->when($department_id, function ($query, $department_id) {
                             return $query->where('en.department_id', $department_id);
                         })
                         // when not null comes here
@@ -3069,7 +3066,7 @@ class ApiControllerThree extends BaseController
                         }
                     }
                     $absentCountDetails = $createConnection->table('student_leaves as lev')
-                    ->select(DB::raw('
+                        ->select(DB::raw('
                         FLOOR(
                             ABS(
                                 SUM(
@@ -3101,55 +3098,55 @@ class ApiControllerThree extends BaseController
                             )
                         ) as no_of_days_attendance
                     '))
-                    ->join('enrolls as en', function ($join) {
-                        $join->on('lev.class_id', '=', 'en.class_id')
-                            ->on('lev.section_id', '=', 'en.section_id')
-                            ->on('lev.student_id', '=', 'en.student_id');
-                    })
-                    ->leftJoin('events as e', function ($join) {
-                        $join->on(function ($query) {
-                            $query->whereRaw('lev.from_leave BETWEEN e.start_date AND e.end_date')
-                                ->orWhereRaw('lev.to_leave BETWEEN e.start_date AND e.end_date')
-                                ->orWhere(function ($query) {
-                                    $query->whereRaw('lev.from_leave < e.start_date')
-                                        ->whereRaw('lev.to_leave > e.end_date');
+                        ->join('enrolls as en', function ($join) {
+                            $join->on('lev.class_id', '=', 'en.class_id')
+                                ->on('lev.section_id', '=', 'en.section_id')
+                                ->on('lev.student_id', '=', 'en.student_id');
+                        })
+                        ->leftJoin('events as e', function ($join) {
+                            $join->on(function ($query) {
+                                $query->whereRaw('lev.from_leave BETWEEN e.start_date AND e.end_date')
+                                    ->orWhereRaw('lev.to_leave BETWEEN e.start_date AND e.end_date')
+                                    ->orWhere(function ($query) {
+                                        $query->whereRaw('lev.from_leave < e.start_date')
+                                            ->whereRaw('lev.to_leave > e.end_date');
+                                    });
+                            });
+                        })
+                        ->whereIn('lev.class_id', $classID)
+                        // when not null comes here
+                        ->when($Day, function ($q) use ($currentDate) {
+                            return $q->where(function ($query) use ($currentDate) {
+                                $query->where('lev.from_leave', '<=', $currentDate)
+                                    ->where('lev.to_leave', '>=', $currentDate);
+                            });
+                        })
+                        ->when($Month, function ($query) use ($startDate, $endDate) {
+                            return $query->where(function ($query) use ($startDate, $endDate) {
+                                $query->where('lev.from_leave', '<=', $endDate)
+                                    ->where('lev.to_leave', '>=', $startDate);
+                            });
+                        })
+                        ->when($Term, function ($query) use ($termData) {
+                            if ($termData) {
+                                $start = $termData->start_date;
+                                $end = $termData->end_date;
+                                return $query->where(function ($query) use ($start, $end) {
+                                    $query->where('lev.from_leave', '<=', $end)
+                                        ->where('lev.to_leave', '>=', $start);
                                 });
-                        });
-                    })                       
-                ->whereIn('lev.class_id', $classID)
-                     // when not null comes here
-                     ->when($Day, function ($q) use ($currentDate) {
-                        return $q->where(function ($query) use ($currentDate) {
-                            $query->where('lev.from_leave', '<=', $currentDate)
-                                ->where('lev.to_leave', '>=', $currentDate);
-                        });
-                    })
-                    ->when($Month, function ($query) use ($startDate, $endDate) {
-                        return $query->where(function ($query) use ($startDate, $endDate) {
-                            $query->where('lev.from_leave', '<=', $endDate)
-                                ->where('lev.to_leave', '>=', $startDate);
-                        });
-                    })
-                    ->when($Term, function ($query) use ($termData) {
-                        if ($termData) {
-                            $start = $termData->start_date;
-                            $end = $termData->end_date;
-                            return $query->where(function ($query) use ($start, $end) {
-                                $query->where('lev.from_leave', '<=', $end)
-                                    ->where('lev.to_leave', '>=', $start);
-                            });
-                        }
-                    })
-                    ->when($Year, function ($query) use ($yearData) {
-                        if ($yearData) {
-                            $start = $yearData[0]->year_start_date;
-                            $end = $yearData[0]->year_end_date;
-                            return $query->where(function ($query) use ($start, $end) {
-                                $query->where('lev.from_leave', '<=', $end)
-                                    ->where('lev.to_leave', '>=', $start);
-                            });
-                        }
-                    })
+                            }
+                        })
+                        ->when($Year, function ($query) use ($yearData) {
+                            if ($yearData) {
+                                $start = $yearData[0]->year_start_date;
+                                $end = $yearData[0]->year_end_date;
+                                return $query->where(function ($query) use ($start, $end) {
+                                    $query->where('lev.from_leave', '<=', $end)
+                                        ->where('lev.to_leave', '>=', $start);
+                                });
+                            }
+                        })
                         ->where('en.active_status', '=', '0')
                         ->where('en.academic_session_id', '=', $request->academic_session_id)
                         ->get();
